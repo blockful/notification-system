@@ -1,12 +1,22 @@
 {
-  "name": "notificationsystem",
-  "version": "1.0.0",
-  "main": "index.js",
+  "name": "notification-system",
+  "private": true,
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "build": "turbo build",
+    "dev": "turbo dev",
+    "lint": "turbo lint",
+    "test": "turbo test",
+    "clean": "turbo clean",
+    "format": "prettier --write \"**/*.{ts,tsx,md}\""
   },
-  "keywords": [],
-  "author": "",
-  "license": "ISC",
-  "description": ""
+  "devDependencies": {
+    "@changesets/cli": "^2.26.0",
+    "prettier": "^3.1.0",
+    "turbo": "^2.5.0"
+  },
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "packageManager": "npm@10.2.3"
 }
