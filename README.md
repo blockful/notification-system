@@ -1,84 +1,63 @@
-# Turborepo starter
+# Notification System
 
-This Turborepo starter is maintained by the Turborepo core team.
+Asynchronous event-based notification system with pipeline processing and message broker distribution.
 
-## Using this example
+## 🏗️ Architecture
 
-Run the following command:
+The system consists of four main components:
 
-```sh
-npx create-turbo@latest
-```
+### 1. Logic System (Trigger System)
+- Responsible for pulling data from Anticapture DB
+- Processes business logic to determine when notifications should be sent
+- Implements conditional rules (if X happens, then send Y)
+- Sends events to Message Broker when a notification should be generated
 
-## What's inside?
+### 2. Message Broker
+- Pub/sub queue system for asynchronous message management
+- Manages the event queue between Logic System and Dispatcher
+- Ensures unprocessed messages remain in the queue
 
-This Turborepo includes the following packages/apps:
+### 3. Dispatcher
+System responsible for managing and sending notifications:
+- **Subscription Checker**: Verifies who should receive the notification (integration with Notification System DB)
+- **Build Message**: Assembles the message payload
+- **Send Message**: Sends the message to the Consumer
 
-### Apps and Packages
+### 4. Consumer
+- Responsible for presenting notifications to the user
+- Ex: Telegram and Slack
 
-- `docs`: a [Next.js](https://nextjs.org/) app
-- `web`: another [Next.js](https://nextjs.org/) app
-- `@repo/ui`: a stub React component library shared by both `web` and `docs` applications
-- `@repo/eslint-config`: `eslint` configurations (includes `eslint-config-next` and `eslint-config-prettier`)
-- `@repo/typescript-config`: `tsconfig.json`s used throughout the monorepo
+## 🚀 Technologies
 
-Each package/app is 100% [TypeScript](https://www.typescriptlang.org/).
+- TypeScript
+- Turborepo (Monorepo)
 
-### Utilities
-
-This Turborepo has some additional tools already setup for you:
-
-- [TypeScript](https://www.typescriptlang.org/) for static type checking
-- [ESLint](https://eslint.org/) for code linting
-- [Prettier](https://prettier.io) for code formatting
-
-### Build
-
-To build all apps and packages, run the following command:
+## 📦 Monorepo Structure
 
 ```
-cd my-turborepo
-pnpm build
+apps/
+  ├── trigger-system/   # Logic and rules system
+  ├── dispatcher/       # Dispatch system
+  ├── consumers/       # Message consumers
 ```
 
-### Develop
+## 🛠️ Project Setup
 
-To develop all apps and packages, run the following command:
-
+1. Install dependencies:
+```bash
+pnpm install
 ```
-cd my-turborepo
+
+2. Run in development mode:
+```bash
 pnpm dev
 ```
 
-### Remote Caching
+## 🔄 Processing Pipeline
 
-> [!TIP]
-> Vercel Remote Cache is free for all plans. Get started today at [vercel.com](https://vercel.com/signup?/signup?utm_source=remote-cache-sdk&utm_campaign=free_remote_cache).
-
-Turborepo can use a technique known as [Remote Caching](https://turbo.build/docs/core-concepts/remote-caching) to share cache artifacts across machines, enabling you to share build caches with your team and CI/CD pipelines.
-
-By default, Turborepo will cache locally. To enable Remote Caching you will need an account with Vercel. If you don't have an account you can [create one](https://vercel.com/signup?utm_source=turborepo-examples), then enter the following commands:
-
-```
-cd my-turborepo
-npx turbo login
-```
-
-This will authenticate the Turborepo CLI with your [Vercel account](https://vercel.com/docs/concepts/personal-accounts/overview).
-
-Next, you can link your Turborepo to your Remote Cache by running the following command from the root of your Turborepo:
-
-```
-npx turbo link
-```
-
-## Useful Links
-
-Learn more about the power of Turborepo:
-
-- [Tasks](https://turbo.build/docs/core-concepts/monorepos/running-tasks)
-- [Caching](https://turbo.build/docs/core-concepts/caching)
-- [Remote Caching](https://turbo.build/docs/core-concepts/remote-caching)
-- [Filtering](https://turbo.build/docs/core-concepts/monorepos/filtering)
-- [Configuration Options](https://turbo.build/docs/reference/configuration)
-- [CLI Usage](https://turbo.build/docs/reference/command-line-reference)
+1. Trigger System pulls data from Anticapture DB
+2. Applies business rules and sends events to Message Broker
+3. Message Broker keeps events in queue until consumed
+4. Dispatcher consumes events and checks recipients in Notification System DB
+5. Dispatcher builds and sends messages to Consumer
+6. Consumer processes and displays notifications to users
