@@ -70,12 +70,12 @@ export interface Proposal_Repository {
      * @param id - The proposal ID
      * @returns The proposal if found, null otherwise
      */
-    getById(id: string): Promise<Proposal_On_Chain | null>;
+    get_by_id(id: string): Promise<Proposal_On_Chain | null>;
 
     /**
      * Lists proposals with pagination and filtering
      * @param options - Listing options for pagination and filtering
      * @returns Array of proposals matching the criteria
      */
-    listAll(options?: List_Proposals_Options): Promise<Proposal_On_Chain[]>;
+    list_all(options?: List_Proposals_Options): Promise<Proposal_On_Chain[]>;
 }

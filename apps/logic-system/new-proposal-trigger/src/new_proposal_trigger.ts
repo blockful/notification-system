@@ -27,7 +27,7 @@ export async function new_proposal_trigger_logic(
       status: 'active'
     };
     
-    const active_proposals = await proposal_repository.listAll(options);
+    const active_proposals = await proposal_repository.list_all(options);
 
     if (active_proposals.length === 0) {
       return MESSAGES.NO_PROPOSALS;
@@ -47,7 +47,7 @@ export async function new_proposal_trigger_logic(
     };
 
     try {
-      const result = await queue_repository.publishMessage(message);
+      const result = await queue_repository.publish_message(message);
       
       if (!result.success) {
         throw new Error(result.error || 'Unknown error publishing message');

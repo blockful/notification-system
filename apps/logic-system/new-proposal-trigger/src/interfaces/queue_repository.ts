@@ -27,5 +27,5 @@ export interface Queue_Repository {
      * @param message - The message to publish
      * @returns Result of the publish operation
      */
-    publishMessage(message: Message): Promise<Publish_Result>;
+    publish_message(message: Message): Promise<Publish_Result>;
 }
