@@ -6,8 +6,9 @@
  * @module new_proposal_trigger
  */
 
-import { Proposal_Repository, List_Proposals_Options } from "./interfaces/proposal_repository";
-import { Queue_Repository, Message } from './interfaces/queue_repository'
+import { Trigger } from '../../core/interfaces/trigger';
+import { Proposal_On_Chain, List_Proposals_Options } from './interfaces/proposal_repository';
+import { Queue_Repository, Message } from './interfaces/queue_repository';
 
 const TRIGGER_ID = 'new_proposal_trigger';
 const MESSAGES = {
@@ -17,37 +18,42 @@ const MESSAGES = {
   ERROR_PUBLISHING: 'Error publishing message:'
 } as const;
 
-export async function new_proposal_trigger_logic(
-  proposal_repository: Proposal_Repository, 
-  queue_repository: Queue_Repository
-): Promise<string> {
-  try {
-    // Get only active proposals
-    const options: List_Proposals_Options = {
-      status: 'active'
-    };
-    
-    const active_proposals = await proposal_repository.list_all(options);
+export class NewProposalTrigger implements Trigger<Proposal_On_Chain, List_Proposals_Options> {
+  public readonly id: string;
+  public readonly interval: number;
 
-    if (active_proposals.length === 0) {
+  constructor(
+    private readonly queue_repository: Queue_Repository,
+    interval: number
+  ) {
+    this.id = TRIGGER_ID;
+    this.interval = interval;
+  }
+
+  async filter(data: Proposal_On_Chain[], options?: List_Proposals_Options): Promise<Proposal_On_Chain[]> {
+    if (!options?.status) {
+      throw new Error('Status is required in filter options');
+    }
+    return data.filter(proposal => proposal?.status === options.status);
+  }
+
+  async process(filteredData: Proposal_On_Chain[]): Promise<string> {
+    if (filteredData.length === 0) {
       return MESSAGES.NO_PROPOSALS;
     }
 
     const message: Message = {
-      trigger_id: TRIGGER_ID,
-      context: JSON.stringify(active_proposals
-        .map(proposal => proposal && {
-          ...proposal,
-          for_votes: proposal.for_votes.toString(),
-          against_votes: proposal.against_votes.toString(),
-          abstain_votes: proposal.abstain_votes.toString()
-        })
-        .filter(Boolean)
-      )
+      trigger_id: this.id,
+      context: JSON.stringify(filteredData.map(proposal => ({
+        ...proposal,
+        for_votes: proposal.for_votes.toString(),
+        against_votes: proposal.against_votes.toString(),
+        abstain_votes: proposal.abstain_votes.toString()
+      })))
     };
 
     try {
-      const result = await queue_repository.publish_message(message);
+      const result = await this.queue_repository.publish_message(message);
       
       if (!result.success) {
         throw new Error(result.error || 'Unknown error publishing message');
@@ -58,9 +64,6 @@ export async function new_proposal_trigger_logic(
       console.error(`${MESSAGES.ERROR_PUBLISHING} ${error}`);
       throw error;
     }
-  } catch (error) {
-    console.error(`${MESSAGES.ERROR_FETCHING} ${error}`);
-    throw error;
   }
 }
 
