@@ -1,11 +1,12 @@
 import { describe, expect, it, beforeEach, jest } from '@jest/globals';
-import { new_proposal_trigger_logic } from '../src/new_proposal_trigger';
+import { NewProposalTrigger } from '../src/new_proposal_trigger';
 import { Proposal_Repository, Proposal_On_Chain } from '../src/interfaces/proposal_repository';
 import { Queue_Repository, Message, Publish_Result } from '../src/interfaces/queue_repository';
 
-describe('New Proposal Trigger Logic', () => {
+describe('New Proposal Trigger', () => {
   // Test constants
   const TRIGGER_ID = 'new_proposal_trigger';
+  const INTERVAL = 1000; // 1 second
   const MESSAGES = {
     SUCCESS: 'New proposal sent to the queue.',
     NO_PROPOSALS: 'There are no new proposals.'
@@ -49,7 +50,8 @@ describe('New Proposal Trigger Logic', () => {
 
   // Repository mocks
   let mock_proposal_repository: jest.Mocked<Proposal_Repository>;
-  let mock_queue_repository: jest.Mocked<Queue_Repository>;
+  let mock_queue_repository: Queue_Repository;
+  let trigger: NewProposalTrigger;
 
   beforeAll(() => {
     jest.spyOn(console, 'error').mockImplementation(jest.fn());
@@ -65,25 +67,28 @@ describe('New Proposal Trigger Logic', () => {
       list_all: jest.fn()
     } as jest.Mocked<Proposal_Repository>;
 
-    const publish_message_mock = jest.fn().mockImplementation(
-      (message: Message): Promise<Publish_Result> => Promise.resolve(success_result)
-    );
-
     mock_queue_repository = {
-      publish_message: publish_message_mock
-    } as jest.Mocked<Queue_Repository>;
+      publish_message: jest.fn().mockImplementation(
+        () => Promise.resolve(success_result)
+      )
+    } as Queue_Repository;
+
+    trigger = new NewProposalTrigger(
+      mock_queue_repository,
+      INTERVAL
+    );
 
     jest.clearAllMocks();
   });
 
   describe('Success scenarios', () => {
     it('should process active proposals correctly', async () => {
-      mock_proposal_repository.list_all.mockResolvedValue([mock_active_proposal]);
+      const data = [mock_active_proposal];
       
-      const result = await new_proposal_trigger_logic(mock_proposal_repository, mock_queue_repository);
+      const filteredData = await trigger.filter(data, { status: 'active' });
+      const result = await trigger.process(filteredData);
       
       expect(result).toBe(MESSAGES.SUCCESS);
-      expect(mock_proposal_repository.list_all).toHaveBeenCalledWith({ status: 'active' });
       expect(mock_queue_repository.publish_message).toHaveBeenCalledTimes(1);
       expect(mock_queue_repository.publish_message).toHaveBeenCalledWith({
         trigger_id: TRIGGER_ID,
@@ -92,48 +97,59 @@ describe('New Proposal Trigger Logic', () => {
     });
 
     it('should return no proposals message when no active proposals exist', async () => {
-      mock_proposal_repository.list_all.mockResolvedValue([]);
+      const data: Proposal_On_Chain[] = [];
       
-      const result = await new_proposal_trigger_logic(mock_proposal_repository, mock_queue_repository);
+      const filteredData = await trigger.filter(data, { status: 'active' });
+      const result = await trigger.process(filteredData);
       
       expect(result).toBe(MESSAGES.NO_PROPOSALS);
       expect(mock_queue_repository.publish_message).not.toHaveBeenCalled();
     });
+
+    it('should filter out non-active proposals', async () => {
+      const inactiveProposal = { ...mock_active_proposal, status: 'executed' as const };
+      const data = [inactiveProposal, mock_active_proposal];
+      
+      const filteredData = await trigger.filter(data, { status: 'active' });
+      
+      expect(filteredData).toHaveLength(1);
+      expect(filteredData[0]).toEqual(mock_active_proposal);
+    });
+
+    it('should filter by any provided status', async () => {
+      const executedProposal = { ...mock_active_proposal, status: 'executed' as const };
+      const data = [executedProposal, mock_active_proposal];
+      
+      const filteredData = await trigger.filter(data, { status: 'executed' });
+      
+      expect(filteredData).toHaveLength(1);
+      expect(filteredData[0]).toEqual(executedProposal);
+    });
+
+    it('should throw error when status is not provided', async () => {
+      const data = [mock_active_proposal];
+      
+      await expect(trigger.filter(data)).rejects.toThrow('Status is required in filter options');
+    });
   });
 
   describe('Error handling', () => {
-    it('should throw error when proposal repository fails', async () => {
-      const error = new Error('Database connection failed');
-      mock_proposal_repository.list_all.mockRejectedValue(error);
-      
-      await expect(new_proposal_trigger_logic(mock_proposal_repository, mock_queue_repository))
-        .rejects
-        .toThrow(error);
-      
-      expect(mock_queue_repository.publish_message).not.toHaveBeenCalled();
-    });
-
     it('should throw error when queue repository fails', async () => {
-      mock_proposal_repository.list_all.mockResolvedValue([mock_active_proposal]);
-      mock_queue_repository.publish_message.mockResolvedValue(failure_result);
+      jest.spyOn(mock_queue_repository, 'publish_message').mockResolvedValue(failure_result);
       
-      await expect(new_proposal_trigger_logic(mock_proposal_repository, mock_queue_repository))
+      const data = [mock_active_proposal];
+      const filteredData = await trigger.filter(data, { status: 'active' });
+      
+      await expect(trigger.process(filteredData))
         .rejects
         .toThrow(failure_result.error);
     });
   });
 
-  describe('Edge cases', () => {
-    it('should handle null/undefined values in proposal list', async () => {
-      mock_proposal_repository.list_all.mockResolvedValue([null, mock_active_proposal, undefined] as any);
-      
-      const result = await new_proposal_trigger_logic(mock_proposal_repository, mock_queue_repository);
-      
-      expect(result).toBe(MESSAGES.SUCCESS);
-      expect(mock_queue_repository.publish_message).toHaveBeenCalledWith({
-        trigger_id: TRIGGER_ID,
-        context: JSON.stringify([serialized_active_proposal])
-      });
+  describe('Trigger configuration', () => {
+    it('should be configured with correct ID and interval', () => {
+      expect(trigger.id).toBe(TRIGGER_ID);
+      expect(trigger.interval).toBe(INTERVAL);
     });
   });
 });
