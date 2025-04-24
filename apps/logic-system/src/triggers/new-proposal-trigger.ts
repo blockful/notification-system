@@ -2,13 +2,11 @@
  * @fileoverview Trigger logic for handling new proposals in the dB.
  * This module monitors for active proposals and publishes them to a message queue
  * for further processing.
- * 
- * @module new_proposal_trigger
  */
 
-import { Trigger } from '../../core/interfaces/trigger';
-import { Proposal_On_Chain, List_Proposals_Options } from './interfaces/proposal_repository';
-import { Queue_Repository, Message } from './interfaces/queue_repository';
+import { Trigger } from '../interfaces/core/trigger.interface';
+import { ProposalOnChain, ListProposalsOptions } from '../interfaces/repositories/proposal-repository.interface';
+import { QueueRepository, Message } from '../interfaces/repositories/queue-repository.interface';
 
 const TRIGGER_ID = 'new_proposal_trigger';
 const MESSAGES = {
@@ -18,26 +16,26 @@ const MESSAGES = {
   ERROR_PUBLISHING: 'Error publishing message:'
 } as const;
 
-export class NewProposalTrigger implements Trigger<Proposal_On_Chain, List_Proposals_Options> {
+export class NewProposalTrigger implements Trigger<ProposalOnChain, ListProposalsOptions> {
   public readonly id: string;
   public readonly interval: number;
 
   constructor(
-    private readonly queue_repository: Queue_Repository,
+    private readonly queueRepository: QueueRepository,
     interval: number
   ) {
     this.id = TRIGGER_ID;
     this.interval = interval;
   }
 
-  async filter(data: Proposal_On_Chain[], options?: List_Proposals_Options): Promise<Proposal_On_Chain[]> {
+  async filter(data: ProposalOnChain[], options?: ListProposalsOptions): Promise<ProposalOnChain[]> {
     if (!options?.status) {
       throw new Error('Status is required in filter options');
     }
     return data.filter(proposal => proposal?.status === options.status);
   }
 
-  async process(filteredData: Proposal_On_Chain[]): Promise<string> {
+  async process(filteredData: ProposalOnChain[]): Promise<string> {
     if (filteredData.length === 0) {
       return MESSAGES.NO_PROPOSALS;
     }
@@ -53,7 +51,7 @@ export class NewProposalTrigger implements Trigger<Proposal_On_Chain, List_Propo
     };
 
     try {
-      const result = await this.queue_repository.publish_message(message);
+      const result = await this.queueRepository.publishMessage(message);
       
       if (!result.success) {
         throw new Error(result.error || 'Unknown error publishing message');
@@ -65,6 +63,4 @@ export class NewProposalTrigger implements Trigger<Proposal_On_Chain, List_Propo
       throw error;
     }
   }
-}
-
-
+} 

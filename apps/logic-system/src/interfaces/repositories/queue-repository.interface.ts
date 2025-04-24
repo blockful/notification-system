@@ -11,7 +11,7 @@ export interface Message {
 /**
  * Result of a message publish operation
  */
-export interface Publish_Result {
+export interface PublishResult {
     /** Whether the message was successfully published */
     success: boolean;
     /** Error message if publish failed */
@@ -21,11 +21,11 @@ export interface Publish_Result {
 /**
  * Repository interface for queue operations
  */
-export interface Queue_Repository {
+export interface QueueRepository {
     /**
      * Publishes a single message to the queue
      * @param message - The message to publish
      * @returns Result of the publish operation
      */
-    publish_message(message: Message): Promise<Publish_Result>;
-}
+    publishMessage(message: Message): Promise<PublishResult>;
+} 

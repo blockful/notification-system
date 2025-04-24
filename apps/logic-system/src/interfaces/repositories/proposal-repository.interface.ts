@@ -1,7 +1,7 @@
 /**
  * Represents a proposal in the dB
  */
-export interface Proposal_On_Chain {
+export interface ProposalOnChain {
     /** Unique identifier of the proposal */
     id: string;
     /** DAO identifier this proposal belongs to */
@@ -50,7 +50,7 @@ export type ProposalStatus =
 /**
  * Options for listing proposals
  */
-export interface List_Proposals_Options {
+export interface ListProposalsOptions {
     /** Number of proposals to skip */
     offset?: number;
     /** Maximum number of proposals to return */
@@ -64,18 +64,18 @@ export interface List_Proposals_Options {
 /**
  * Repository interface for accessing proposal data
  */
-export interface Proposal_Repository {
+export interface ProposalRepository {
     /**
      * Retrieves a proposal by its ID
      * @param id - The proposal ID
      * @returns The proposal if found, null otherwise
      */
-    get_by_id(id: string): Promise<Proposal_On_Chain | null>;
+    getById(id: string): Promise<ProposalOnChain | null>;
 
     /**
      * Lists proposals with pagination and filtering
      * @param options - Listing options for pagination and filtering
      * @returns Array of proposals matching the criteria
      */
-    list_all(options?: List_Proposals_Options): Promise<Proposal_On_Chain[]>;
-}
+    listAll(options?: ListProposalsOptions): Promise<ProposalOnChain[]>;
+} 
