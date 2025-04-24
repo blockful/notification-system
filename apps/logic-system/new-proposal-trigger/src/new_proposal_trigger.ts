@@ -3,11 +3,11 @@
  * This module monitors for active proposals and publishes them to a message queue
  * for further processing.
  * 
- * @module newProposalTrigger
+ * @module new_proposal_trigger
  */
 
-import { ProposalRepository, ListProposalsOptions } from "./interfaces/proposalRepository";
-import { QueueRepository, Message } from './interfaces/queueRepository'
+import { Proposal_Repository, List_Proposals_Options } from "./interfaces/proposal_repository";
+import { Queue_Repository, Message } from './interfaces/queue_repository'
 
 const TRIGGER_ID = 'new_proposal_trigger';
 const MESSAGES = {
@@ -18,16 +18,16 @@ const MESSAGES = {
 } as const;
 
 export async function new_proposal_trigger_logic(
-  proposalRepository: ProposalRepository, 
-  queueRepository: QueueRepository
+  proposal_repository: Proposal_Repository, 
+  queue_repository: Queue_Repository
 ): Promise<string> {
   try {
     // Get only active proposals
-    const options: ListProposalsOptions = {
+    const options: List_Proposals_Options = {
       status: 'active'
     };
     
-    const active_proposals = await proposalRepository.listAll(options);
+    const active_proposals = await proposal_repository.listAll(options);
 
     if (active_proposals.length === 0) {
       return MESSAGES.NO_PROPOSALS;
@@ -47,7 +47,7 @@ export async function new_proposal_trigger_logic(
     };
 
     try {
-      const result = await queueRepository.publishMessage(message);
+      const result = await queue_repository.publishMessage(message);
       
       if (!result.success) {
         throw new Error(result.error || 'Unknown error publishing message');
