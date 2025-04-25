@@ -5,9 +5,9 @@ export interface ProposalOnChain {
     /** Unique identifier of the proposal */
     id: string;
     /** DAO identifier this proposal belongs to */
-    dao_id: string;
+    daoId: string;
     /** Account that created the proposal */
-    proposer_account_id: string;
+    proposerAccountId: string;
     /** List of contract addresses to call */
     targets: string[];
     /** List of values (in wei) to send with each call */
@@ -17,9 +17,9 @@ export interface ProposalOnChain {
     /** Encoded parameters for each function call */
     calldatas: string[];
     /** Block number when voting starts */
-    start_block: number;
+    startBlock: number;
     /** Block number when voting ends */
-    end_block: number;
+    endBlock: number;
     /** Human readable description of the proposal */
     description: string;
     /** ISO timestamp of proposal creation */
@@ -27,11 +27,11 @@ export interface ProposalOnChain {
     /** Current status of the proposal */
     status: ProposalStatus;
     /** Number of votes in favor (in wei) */
-    for_votes: bigint;
+    forVotes: bigint;
     /** Number of votes against (in wei) */
-    against_votes: bigint;
+    againstVotes: bigint;
     /** Number of abstain votes (in wei) */
-    abstain_votes: bigint;
+    abstainVotes: bigint;
 }
 
 /**
@@ -58,7 +58,7 @@ export interface ListProposalsOptions {
     /** Filter by status */
     status?: ProposalStatus;
     /** Filter by DAO */
-    dao_id?: string;
+    daoId?: string;
 }
 
 /**

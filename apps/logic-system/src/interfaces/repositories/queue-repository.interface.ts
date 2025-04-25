@@ -3,7 +3,7 @@
  */
 export interface Message {
     /** Identifier of the trigger that generated this message */
-    trigger_id: string;
+    triggerId: string;
     /** JSON serialized context data */
     context: string;
 }

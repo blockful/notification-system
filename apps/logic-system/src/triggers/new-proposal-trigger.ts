@@ -8,7 +8,7 @@ import { Trigger } from '../interfaces/core/trigger.interface';
 import { ProposalOnChain, ListProposalsOptions } from '../interfaces/repositories/proposal-repository.interface';
 import { ApiRepository, ApiMessage } from '../interfaces/repositories/api-repository.interface';
 
-const TRIGGER_ID = 'new_proposal_trigger';
+const triggerId = 'newProposalTrigger';
 const MESSAGES = {
   SUCCESS: 'New proposal sent to the API.',
   NO_PROPOSALS: 'There are no new proposals.',
@@ -24,7 +24,7 @@ export class NewProposalTrigger implements Trigger<ProposalOnChain, ListProposal
     private readonly apiRepository: ApiRepository,
     interval: number
   ) {
-    this.id = TRIGGER_ID;
+    this.id = triggerId;
     this.interval = interval;
   }
 
@@ -41,12 +41,12 @@ export class NewProposalTrigger implements Trigger<ProposalOnChain, ListProposal
     }
 
     const message: ApiMessage = {
-      trigger_id: this.id,
+      triggerId: this.id,
       context: JSON.stringify(filteredData.map(proposal => ({
         ...proposal,
-        for_votes: proposal.for_votes.toString(),
-        against_votes: proposal.against_votes.toString(),
-        abstain_votes: proposal.abstain_votes.toString()
+        forVotes: proposal.forVotes.toString(),
+        againstVotes: proposal.againstVotes.toString(),
+        abstainVotes: proposal.abstainVotes.toString()
       })))
     };
 

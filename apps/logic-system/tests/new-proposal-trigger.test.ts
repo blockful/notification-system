@@ -9,20 +9,20 @@ describe('NewProposalTrigger', () => {
   
   const mockProposal: ProposalOnChain = {
     id: '1',
-    dao_id: 'dao1',
-    proposer_account_id: 'user1',
+    daoId: 'dao1',
+    proposerAccountId: 'user1',
     targets: ['0x123'],
     values: ['0'],
     signatures: ['vote()'],
     calldatas: ['0x0'],
-    start_block: 100,
-    end_block: 200,
+    startBlock: 100,
+    endBlock: 200,
     description: 'Test proposal',
     timestamp: '2023-01-01T00:00:00Z',
     status: 'active' as ProposalStatus,
-    for_votes: BigInt(100),
-    against_votes: BigInt(50),
-    abstain_votes: BigInt(10)
+    forVotes: BigInt(100),
+    againstVotes: BigInt(50),
+    abstainVotes: BigInt(10)
   };
 
   beforeEach(() => {
@@ -72,7 +72,7 @@ describe('NewProposalTrigger', () => {
       expect(mockApiRepository.sendMessage).toHaveBeenCalledTimes(1);
       expect(mockApiRepository.sendMessage).toHaveBeenCalledWith(
         expect.objectContaining({
-          trigger_id: 'new_proposal_trigger',
+          triggerId: 'newProposalTrigger',
           context: expect.any(String)
         })
       );
