@@ -27,7 +27,7 @@ export function initializeLogicSystem(config: {
     );
 
     // Start the interval directly
-    const timer = setInterval(async () => {
+    const timer = setInterval(async () => { //TODO vai pra dentro do trigger // Cada um vai ter sua propria query pro banco
         try {
             const proposals = await proposalRepository.listAll();
             // Agora process lida com a filtragem internamente
@@ -46,11 +46,3 @@ export function initializeLogicSystem(config: {
         }
     };
 }
-
-// Export trigger-related types for external use
-export type { Trigger } from './interfaces/core/trigger.interface';
-
-// Export interfaces
-export * from './interfaces/repositories/proposal-repository.interface';
-export * from './interfaces/repositories/queue-repository.interface';
-export * from './interfaces/repositories/api-repository.interface';
