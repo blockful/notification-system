@@ -1,25 +1,25 @@
 /**
  * @fileoverview Trigger logic for handling new proposals in the dB.
- * This module monitors for active proposals and sends them to an API endpoint
- * for further processing.
+ * This module monitors for active proposals and sends them to a subscription checker
+ * to determine who should be notified.
  */
 
 import { Trigger } from '../interfaces/core/trigger.interface';
 import { ProposalOnChain, ListProposalsOptions, ProposalDB } from '../interfaces/services/proposal.interface';
-import { ApiService, ApiMessage } from '../interfaces/services/api-service.interface';
+import { SubscriptionCheckerService, EventContextMessage } from '../interfaces/services/subscription-checker.interface';
 
 const triggerId = 'newProposalTrigger';
 const MESSAGES = {
-  SUCCESS: 'New proposal sent to the API.',
+  SUCCESS: 'New proposal notification processed.',
   NO_PROPOSALS: 'There are no new proposals.',
   ERROR_FETCHING: 'Error fetching proposals:',
-  ERROR_SENDING: 'Error sending message to API:',
+  ERROR_CHECKING: 'Error checking subscriptions:',
   STATUS_REQUIRED: 'Status is required in filter options'
 } as const;
 
 export class NewProposalTrigger extends Trigger<ProposalOnChain, ListProposalsOptions> {
   constructor(
-    private readonly apiService: ApiService,
+    private readonly subscriptionChecker: SubscriptionCheckerService,
     private readonly proposalDB: ProposalDB,
     interval: number
   ) {
@@ -40,7 +40,7 @@ export class NewProposalTrigger extends Trigger<ProposalOnChain, ListProposalsOp
       return MESSAGES.NO_PROPOSALS;
     }
 
-    const message: ApiMessage = {
+    const message: EventContextMessage = {
       triggerId: this.id,
       context: JSON.stringify(filteredData.map(proposal => ({
         ...proposal,
@@ -51,15 +51,15 @@ export class NewProposalTrigger extends Trigger<ProposalOnChain, ListProposalsOp
     };
 
     try {
-      const result = await this.apiService.sendMessage(message);
+      const result = await this.subscriptionChecker.checkSubscribers(message);
       
       if (!result.success) {
-        throw new Error(result.error || 'Unknown error sending message to API');
+        throw new Error(result.error || 'Unknown error checking subscriptions');
       }
       
       return MESSAGES.SUCCESS;
     } catch (error) {
-      console.error(`${MESSAGES.ERROR_SENDING} ${error}`);
+      console.error(`${MESSAGES.ERROR_CHECKING} ${error}`);
       throw error;
     }
   }

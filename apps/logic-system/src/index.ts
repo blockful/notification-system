@@ -1,18 +1,18 @@
 import { NewProposalTrigger } from './triggers/new-proposal-trigger';
 import { PostgresProposalDB } from './implementations/proposal-db';
-import { HttpApiService } from './implementations/api-service';
+import { HttpSubscriptionChecker } from './implementations/subscription-checker';
 import { loadEnvConfig } from './config/env';
 
 // Load and validate environment variables
 const config = loadEnvConfig();
 
-// Create database and API service implementations
+// Create database and subscription checker implementations
 const proposalDB = new PostgresProposalDB(config.DATABASE_URL);
-const apiService = new HttpApiService(config.API_URL);
+const subscriptionChecker = new HttpSubscriptionChecker(config.API_URL);
 
 // Create and start the trigger
 const trigger = new NewProposalTrigger(
-  apiService,
+  subscriptionChecker,
   proposalDB,
   config.TRIGGER_INTERVAL
 );

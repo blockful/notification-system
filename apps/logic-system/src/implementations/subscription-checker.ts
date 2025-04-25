@@ -1,14 +1,14 @@
 import axios from 'axios';
-import { ApiService, ApiMessage, ApiCallResult } from '../interfaces/services/api-service.interface';
+import { SubscriptionCheckerService, EventContextMessage, SubscriptionCheckResult } from '../interfaces/services/subscription-checker.interface';
 
-export class HttpApiService implements ApiService {
+export class HttpSubscriptionChecker implements SubscriptionCheckerService {
   private apiUrl: string;
 
   constructor(apiUrl: string) {
     this.apiUrl = apiUrl;
   }
 
-  async sendMessage(message: ApiMessage): Promise<ApiCallResult> {
+  async checkSubscribers(message: EventContextMessage): Promise<SubscriptionCheckResult> {
     try {
       const response = await axios.post(this.apiUrl, message);
       

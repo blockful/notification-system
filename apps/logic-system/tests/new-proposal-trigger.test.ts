@@ -1,10 +1,10 @@
 import { describe, it, expect, jest, beforeEach, afterEach } from '@jest/globals';
 import { NewProposalTrigger } from '../src/triggers/new-proposal-trigger';
-import { ApiService, ApiCallResult } from '../src/interfaces/services/api-service.interface';
+import { SubscriptionCheckerService, SubscriptionCheckResult } from '../src/interfaces/services/subscription-checker.interface';
 import { ProposalOnChain, ProposalStatus, ProposalDB } from '../src/interfaces/services/proposal.interface';
 
 describe('NewProposalTrigger', () => {
-  let mockApiService: jest.Mocked<ApiService>;
+  let mockSubscriptionChecker: jest.Mocked<SubscriptionCheckerService>;
   let mockProposalDB: jest.Mocked<ProposalDB>;
   let trigger: NewProposalTrigger;
   let originalConsoleError: any;
@@ -32,8 +32,8 @@ describe('NewProposalTrigger', () => {
     originalConsoleError = console.error;
     console.error = jest.fn();
     
-    mockApiService = {
-      sendMessage: jest.fn()
+    mockSubscriptionChecker = {
+      checkSubscribers: jest.fn()
     };
     
     mockProposalDB = {
@@ -42,7 +42,7 @@ describe('NewProposalTrigger', () => {
     };
     
     trigger = new NewProposalTrigger(
-      mockApiService,
+      mockSubscriptionChecker,
       mockProposalDB,
       60000
     );
@@ -64,11 +64,11 @@ describe('NewProposalTrigger', () => {
       const result = await trigger.process([mockProposal], { status: 'pending' });
       
       expect(result).toBe('There are no new proposals.');
-      expect(mockApiService.sendMessage).not.toHaveBeenCalled();
+      expect(mockSubscriptionChecker.checkSubscribers).not.toHaveBeenCalled();
     });
 
-    it('should filter proposals by status and send matching ones to API', async () => {
-      mockApiService.sendMessage.mockResolvedValue({ success: true } as ApiCallResult);
+    it('should filter proposals by status and send matching ones to subscription checker', async () => {
+      mockSubscriptionChecker.checkSubscribers.mockResolvedValue({ success: true } as SubscriptionCheckResult);
       
       const proposals = [
         { ...mockProposal, status: 'active' },
@@ -78,38 +78,38 @@ describe('NewProposalTrigger', () => {
       
       const result = await trigger.process(proposals, { status: 'active' });
       
-      expect(result).toBe('New proposal sent to the API.');
-      expect(mockApiService.sendMessage).toHaveBeenCalledTimes(1);
+      expect(result).toBe('New proposal notification processed.');
+      expect(mockSubscriptionChecker.checkSubscribers).toHaveBeenCalledTimes(1);
       
-      const calledWith = mockApiService.sendMessage.mock.calls[0][0];
+      const calledWith = mockSubscriptionChecker.checkSubscribers.mock.calls[0][0];
       const sentData = JSON.parse(calledWith.context);
       expect(sentData).toHaveLength(2);
       expect(sentData.map((p: ProposalOnChain) => p.id).sort()).toEqual(['1', '3']);
     });
 
-    it('should throw error when API call fails', async () => {
-      mockApiService.sendMessage.mockResolvedValue({ 
+    it('should throw error when subscription check fails', async () => {
+      mockSubscriptionChecker.checkSubscribers.mockResolvedValue({ 
         success: false, 
-        error: 'Failed to send to API' 
-      } as ApiCallResult);
+        error: 'Failed to check subscriptions' 
+      } as SubscriptionCheckResult);
       
-      await expect(trigger.process([mockProposal], { status: 'active' })).rejects.toThrow('Failed to send to API');
+      await expect(trigger.process([mockProposal], { status: 'active' })).rejects.toThrow('Failed to check subscriptions');
       expect(console.error).toHaveBeenCalled();
     });
 
-    it('should throw error when API call fails without error message', async () => {
-      mockApiService.sendMessage.mockResolvedValue({ 
+    it('should throw error when subscription check fails without error message', async () => {
+      mockSubscriptionChecker.checkSubscribers.mockResolvedValue({ 
         success: false,
         error: undefined 
-      } as ApiCallResult);
+      } as SubscriptionCheckResult);
       
-      await expect(trigger.process([mockProposal], { status: 'active' })).rejects.toThrow('Unknown error sending message to API');
+      await expect(trigger.process([mockProposal], { status: 'active' })).rejects.toThrow('Unknown error checking subscriptions');
       expect(console.error).toHaveBeenCalled();
     });
 
-    it('should throw and log error when API service throws an exception', async () => {
+    it('should throw and log error when subscription checker throws an exception', async () => {
       const errorMessage = 'Network error';
-      mockApiService.sendMessage.mockRejectedValue(new Error(errorMessage));
+      mockSubscriptionChecker.checkSubscribers.mockRejectedValue(new Error(errorMessage));
       
       await expect(trigger.process([mockProposal], { status: 'active' })).rejects.toThrow(errorMessage);
       expect(console.error).toHaveBeenCalled();
@@ -120,7 +120,7 @@ describe('NewProposalTrigger', () => {
     beforeEach(() => {
       jest.useFakeTimers();
       mockProposalDB.listAll.mockResolvedValue([mockProposal]);
-      mockApiService.sendMessage.mockResolvedValue({ success: true } as ApiCallResult);
+      mockSubscriptionChecker.checkSubscribers.mockResolvedValue({ success: true } as SubscriptionCheckResult);
     });
     
     afterEach(() => {
