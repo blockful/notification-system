@@ -62,9 +62,9 @@ export interface ListProposalsOptions {
 }
 
 /**
- * Repository interface for accessing proposal data
+ * Interface for accessing proposal data from the database
  */
-export interface ProposalRepository {
+export interface ProposalDB {
     /**
      * Retrieves a proposal by its ID
      * @param id - The proposal ID

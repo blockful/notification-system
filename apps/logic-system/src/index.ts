@@ -1,35 +1,35 @@
 import { NewProposalTrigger } from './triggers/new-proposal-trigger';
-import { ProposalRepository, ProposalStatus } from './interfaces/repositories/proposal-repository.interface';
-import { ApiRepository } from './interfaces/repositories/api-repository.interface';
+import { ProposalDB, ProposalStatus } from './interfaces/repositories/proposal.interface';
+import { ApiService } from './interfaces/repositories/api-service.interface';
 
 /**
  * Initializes the logic system with a new proposal trigger
- * @param config Configuration object containing repositories and options
+ * @param config Configuration object containing services and options
  * @returns Object with methods to control the trigger
  */
 export function initializeLogicSystem(config: {
-    proposalRepository: ProposalRepository;
-    apiRepository: ApiRepository;
+    proposalDB: ProposalDB;
+    apiService: ApiService;
     interval?: number;
     status: ProposalStatus;
 }) {
     const { 
-        proposalRepository, 
-        apiRepository, 
+        proposalDB, 
+        apiService, 
         interval = 60000,
         status
     } = config;
 
     // Create the new proposal trigger
     const trigger = new NewProposalTrigger(
-        apiRepository,
+        apiService,
         interval
     );
 
     // Start the interval directly
     const timer = setInterval(async () => { //TODO vai pra dentro do trigger // Cada um vai ter sua propria query pro banco
         try {
-            const proposals = await proposalRepository.listAll();
+            const proposals = await proposalDB.listAll();
             // Agora process lida com a filtragem internamente
             await trigger.process(proposals, { status });
         } catch (error) {

@@ -19,9 +19,9 @@ export interface PublishResult {
 }
 
 /**
- * Repository interface for queue operations
+ * Service interface for queue operations
  */
-export interface QueueRepository {
+export interface Queue {
     /**
      * Publishes a single message to the queue
      * @param message - The message to publish

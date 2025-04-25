@@ -1,10 +1,10 @@
 import { describe, it, expect, jest, beforeEach } from '@jest/globals';
 import { NewProposalTrigger } from '../src/triggers/new-proposal-trigger';
-import { ApiRepository, ApiCallResult } from '../src/interfaces/repositories/api-repository.interface';
-import { ProposalOnChain, ProposalStatus } from '../src/interfaces/repositories/proposal-repository.interface';
+import { ApiService, ApiCallResult } from '../src/interfaces/repositories/api-service.interface';
+import { ProposalOnChain, ProposalStatus } from '../src/interfaces/repositories/proposal.interface';
 
 describe('NewProposalTrigger', () => {
-  let mockApiRepository: jest.Mocked<ApiRepository>;
+  let mockApiService: jest.Mocked<ApiService>;
   let trigger: NewProposalTrigger;
   
   const mockProposal: ProposalOnChain = {
@@ -26,11 +26,11 @@ describe('NewProposalTrigger', () => {
   };
 
   beforeEach(() => {
-    mockApiRepository = {
+    mockApiService = {
       sendMessage: jest.fn()
     };
     
-    trigger = new NewProposalTrigger(mockApiRepository, 60000);
+    trigger = new NewProposalTrigger(mockApiService, 60000);
   });
 
   describe('process', () => {
@@ -44,11 +44,11 @@ describe('NewProposalTrigger', () => {
       const result = await trigger.process([mockProposal], { status: 'pending' });
       
       expect(result).toBe('There are no new proposals.');
-      expect(mockApiRepository.sendMessage).not.toHaveBeenCalled();
+      expect(mockApiService.sendMessage).not.toHaveBeenCalled();
     });
 
     it('should filter proposals by status and send matching ones to API', async () => {
-      mockApiRepository.sendMessage.mockResolvedValue({ success: true } as ApiCallResult);
+      mockApiService.sendMessage.mockResolvedValue({ success: true } as ApiCallResult);
       
       const proposals = [
         { ...mockProposal, status: 'active' },
@@ -59,16 +59,16 @@ describe('NewProposalTrigger', () => {
       const result = await trigger.process(proposals, { status: 'active' });
       
       expect(result).toBe('New proposal sent to the API.');
-      expect(mockApiRepository.sendMessage).toHaveBeenCalledTimes(1);
+      expect(mockApiService.sendMessage).toHaveBeenCalledTimes(1);
       
-      const calledWith = mockApiRepository.sendMessage.mock.calls[0][0];
+      const calledWith = mockApiService.sendMessage.mock.calls[0][0];
       const sentData = JSON.parse(calledWith.context);
       expect(sentData).toHaveLength(2);
       expect(sentData.map((p: ProposalOnChain) => p.id).sort()).toEqual(['1', '3']);
     });
 
     it('should throw error when API call fails', async () => {
-      mockApiRepository.sendMessage.mockResolvedValue({ 
+      mockApiService.sendMessage.mockResolvedValue({ 
         success: false, 
         error: 'Failed to send to API' 
       } as ApiCallResult);

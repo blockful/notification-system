@@ -5,8 +5,8 @@
  */
 
 import { Trigger } from '../interfaces/core/trigger.interface';
-import { ProposalOnChain, ListProposalsOptions } from '../interfaces/repositories/proposal-repository.interface';
-import { ApiRepository, ApiMessage } from '../interfaces/repositories/api-repository.interface';
+import { ProposalOnChain, ListProposalsOptions } from '../interfaces/repositories/proposal.interface';
+import { ApiService, ApiMessage } from '../interfaces/repositories/api-service.interface';
 
 const triggerId = 'newProposalTrigger';
 const MESSAGES = {
@@ -22,7 +22,7 @@ export class NewProposalTrigger implements Trigger<ProposalOnChain, ListProposal
   public readonly interval: number;
 
   constructor(
-    private readonly apiRepository: ApiRepository,
+    private readonly apiService: ApiService,
     interval: number
   ) {
     this.id = triggerId;
@@ -55,7 +55,7 @@ export class NewProposalTrigger implements Trigger<ProposalOnChain, ListProposal
     };
 
     try {
-      const result = await this.apiRepository.sendMessage(message);
+      const result = await this.apiService.sendMessage(message);
       
       if (!result.success) {
         throw new Error(result.error || 'Unknown error sending message to API');

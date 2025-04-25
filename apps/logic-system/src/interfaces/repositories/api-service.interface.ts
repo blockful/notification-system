@@ -19,9 +19,9 @@ export interface ApiCallResult {
 }
 
 /**
- * Repository interface for API operations
+ * Service interface for API operations
  */
-export interface ApiRepository {
+export interface ApiService {
     /**
      * Sends data to an API endpoint
      * @param message - The message to send
