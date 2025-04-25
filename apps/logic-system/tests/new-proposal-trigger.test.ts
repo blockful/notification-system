@@ -64,7 +64,7 @@ describe('NewProposalTrigger', () => {
       const calledWith = mockApiRepository.sendMessage.mock.calls[0][0];
       const sentData = JSON.parse(calledWith.context);
       expect(sentData).toHaveLength(2);
-      expect(sentData.map(p => p.id).sort()).toEqual(['1', '3']);
+      expect(sentData.map((p: ProposalOnChain) => p.id).sort()).toEqual(['1', '3']);
     });
 
     it('should throw error when API call fails', async () => {
