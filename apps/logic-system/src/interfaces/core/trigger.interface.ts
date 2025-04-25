@@ -24,4 +24,15 @@ export abstract class Trigger<TData, TFilterOptions = void> {
      * @returns Result of the processing
      */
     abstract process(data: TData[], options?: TFilterOptions): Promise<string>;
+
+    /**
+     * Starts the trigger to run at the specified interval
+     * @param options Options for filtering data
+     */
+    abstract start(options: TFilterOptions): void;
+
+    /**
+     * Stops the trigger and cleans up resources
+     */
+    abstract stop(): void;
 } 

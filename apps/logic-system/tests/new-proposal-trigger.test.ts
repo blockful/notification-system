@@ -1,11 +1,13 @@
-import { describe, it, expect, jest, beforeEach } from '@jest/globals';
+import { describe, it, expect, jest, beforeEach, afterEach } from '@jest/globals';
 import { NewProposalTrigger } from '../src/triggers/new-proposal-trigger';
 import { ApiService, ApiCallResult } from '../src/interfaces/repositories/api-service.interface';
-import { ProposalOnChain, ProposalStatus } from '../src/interfaces/repositories/proposal.interface';
+import { ProposalOnChain, ProposalStatus, ProposalDB } from '../src/interfaces/repositories/proposal.interface';
 
 describe('NewProposalTrigger', () => {
   let mockApiService: jest.Mocked<ApiService>;
+  let mockProposalDB: jest.Mocked<ProposalDB>;
   let trigger: NewProposalTrigger;
+  let originalConsoleError: any;
   
   const mockProposal: ProposalOnChain = {
     id: '1',
@@ -26,11 +28,29 @@ describe('NewProposalTrigger', () => {
   };
 
   beforeEach(() => {
+    // Save original console.error and replace it with a mock
+    originalConsoleError = console.error;
+    console.error = jest.fn();
+    
     mockApiService = {
       sendMessage: jest.fn()
     };
     
-    trigger = new NewProposalTrigger(mockApiService, 60000);
+    mockProposalDB = {
+      getById: jest.fn(),
+      listAll: jest.fn()
+    };
+    
+    trigger = new NewProposalTrigger(
+      mockApiService,
+      mockProposalDB,
+      60000
+    );
+  });
+  
+  afterEach(() => {
+    // Restore original console.error
+    console.error = originalConsoleError;
   });
 
   describe('process', () => {
@@ -74,6 +94,72 @@ describe('NewProposalTrigger', () => {
       } as ApiCallResult);
       
       await expect(trigger.process([mockProposal], { status: 'active' })).rejects.toThrow('Failed to send to API');
+      expect(console.error).toHaveBeenCalled();
+    });
+
+    it('should throw error when API call fails without error message', async () => {
+      mockApiService.sendMessage.mockResolvedValue({ 
+        success: false,
+        error: undefined 
+      } as ApiCallResult);
+      
+      await expect(trigger.process([mockProposal], { status: 'active' })).rejects.toThrow('Unknown error sending message to API');
+      expect(console.error).toHaveBeenCalled();
+    });
+
+    it('should throw and log error when API service throws an exception', async () => {
+      const errorMessage = 'Network error';
+      mockApiService.sendMessage.mockRejectedValue(new Error(errorMessage));
+      
+      await expect(trigger.process([mockProposal], { status: 'active' })).rejects.toThrow(errorMessage);
+      expect(console.error).toHaveBeenCalled();
+    });
+  });
+  
+  describe('start and stop', () => {
+    beforeEach(() => {
+      jest.useFakeTimers();
+      mockProposalDB.listAll.mockResolvedValue([mockProposal]);
+      mockApiService.sendMessage.mockResolvedValue({ success: true } as ApiCallResult);
+    });
+    
+    afterEach(() => {
+      jest.useRealTimers();
+    });
+    
+    it('should start the interval and fetch proposals', () => {
+      trigger.start({ status: 'active' });
+      
+      jest.advanceTimersByTime(60000);
+      
+      expect(mockProposalDB.listAll).toHaveBeenCalledTimes(1);
+    });
+    
+    it('should stop and restart the interval if start is called twice', () => {
+      const stopSpy = jest.spyOn(trigger, 'stop');
+      
+      trigger.start({ status: 'active' });
+      trigger.start({ status: 'pending' });
+      
+      expect(stopSpy).toHaveBeenCalledTimes(1);
+      
+      jest.advanceTimersByTime(60000);
+      
+      // The second start should use the new options
+      expect(mockProposalDB.listAll).toHaveBeenCalledTimes(1);
+    });
+    
+    it('should stop the interval when stop is called', () => {
+      trigger.start({ status: 'active' });
+      
+      jest.advanceTimersByTime(60000);
+      expect(mockProposalDB.listAll).toHaveBeenCalledTimes(1);
+      
+      trigger.stop();
+      
+      mockProposalDB.listAll.mockClear();
+      jest.advanceTimersByTime(60000);
+      expect(mockProposalDB.listAll).not.toHaveBeenCalled();
     });
   });
 }); 

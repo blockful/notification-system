@@ -5,7 +5,7 @@
  */
 
 import { Trigger } from '../interfaces/core/trigger.interface';
-import { ProposalOnChain, ListProposalsOptions } from '../interfaces/repositories/proposal.interface';
+import { ProposalOnChain, ListProposalsOptions, ProposalDB } from '../interfaces/repositories/proposal.interface';
 import { ApiService, ApiMessage } from '../interfaces/repositories/api-service.interface';
 
 const triggerId = 'newProposalTrigger';
@@ -20,9 +20,12 @@ const MESSAGES = {
 export class NewProposalTrigger implements Trigger<ProposalOnChain, ListProposalsOptions> {
   public readonly id: string;
   public readonly interval: number;
+  private timer: NodeJS.Timeout | null = null;
+  private options?: ListProposalsOptions;
 
   constructor(
     private readonly apiService: ApiService,
+    private readonly proposalDB: ProposalDB,
     interval: number
   ) {
     this.id = triggerId;
@@ -37,7 +40,6 @@ export class NewProposalTrigger implements Trigger<ProposalOnChain, ListProposal
   }
 
   async process(data: ProposalOnChain[], options?: ListProposalsOptions): Promise<string> {
-
     const filteredData = this.filterData(data, options);
     
     if (filteredData.length === 0) {
@@ -65,6 +67,37 @@ export class NewProposalTrigger implements Trigger<ProposalOnChain, ListProposal
     } catch (error) {
       console.error(`${MESSAGES.ERROR_SENDING} ${error}`);
       throw error;
+    }
+  }
+
+  /**
+   * Starts the trigger to run at the specified interval
+   * @param options Options for filtering proposals
+   */
+  start(options: ListProposalsOptions): void {
+    if (this.timer) {
+      this.stop();
+    }
+    
+    this.options = options;
+    
+    this.timer = setInterval(async () => {
+      try {
+        const proposals = await this.proposalDB.listAll();
+        await this.process(proposals, this.options);
+      } catch (error) {
+        console.error('Error in trigger execution:', error);
+      }
+    }, this.interval);
+  }
+
+  /**
+   * Stops the trigger and cleans up resources
+   */
+  stop(): void {
+    if (this.timer) {
+      clearInterval(this.timer);
+      this.timer = null;
     }
   }
 } 

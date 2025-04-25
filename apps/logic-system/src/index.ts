@@ -20,29 +20,22 @@ export function initializeLogicSystem(config: {
         status
     } = config;
 
-    // Create the new proposal trigger
+    // Create the new proposal trigger with its own interval management
     const trigger = new NewProposalTrigger(
         apiService,
+        proposalDB,
         interval
     );
 
-    // Start the interval directly
-    const timer = setInterval(async () => { //TODO vai pra dentro do trigger // Cada um vai ter sua propria query pro banco
-        try {
-            const proposals = await proposalDB.listAll();
-            // Agora process lida com a filtragem internamente
-            await trigger.process(proposals, { status });
-        } catch (error) {
-            console.error('Error in trigger execution:', error);
-        }
-    }, trigger.interval);
+    // Start the trigger with the specified status
+    trigger.start({ status });
 
     return {
         /**
          * Stops the trigger and cleans up resources
          */
         stop: () => {
-            clearInterval(timer);
+            trigger.stop();
         }
     };
 }
