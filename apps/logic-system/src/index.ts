@@ -1,6 +1,6 @@
 import { NewProposalTrigger } from './triggers/new-proposal-trigger';
 import { ProposalRepository, ProposalStatus } from './interfaces/repositories/proposal-repository.interface';
-import { QueueRepository } from './interfaces/repositories/queue-repository.interface';
+import { ApiRepository } from './interfaces/repositories/api-repository.interface';
 
 /**
  * Initializes the logic system with a new proposal trigger
@@ -9,20 +9,20 @@ import { QueueRepository } from './interfaces/repositories/queue-repository.inte
  */
 export function initializeLogicSystem(config: {
     proposalRepository: ProposalRepository;
-    queueRepository: QueueRepository;
+    apiRepository: ApiRepository;
     interval?: number;
     status: ProposalStatus;
 }) {
     const { 
         proposalRepository, 
-        queueRepository, 
+        apiRepository, 
         interval = 60000,
         status
     } = config;
 
     // Create the new proposal trigger
     const trigger = new NewProposalTrigger(
-        queueRepository,
+        apiRepository,
         interval
     );
 
@@ -48,4 +48,5 @@ export type { Trigger } from './interfaces/core/trigger.interface';
 
 // Export interfaces
 export * from './interfaces/repositories/proposal-repository.interface';
-export * from './interfaces/repositories/queue-repository.interface'; 
+export * from './interfaces/repositories/queue-repository.interface';
+export * from './interfaces/repositories/api-repository.interface';

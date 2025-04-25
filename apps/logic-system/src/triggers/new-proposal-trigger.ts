@@ -1,19 +1,19 @@
 /**
  * @fileoverview Trigger logic for handling new proposals in the dB.
- * This module monitors for active proposals and publishes them to a message queue
+ * This module monitors for active proposals and sends them to an API endpoint
  * for further processing.
  */
 
 import { Trigger } from '../interfaces/core/trigger.interface';
 import { ProposalOnChain, ListProposalsOptions } from '../interfaces/repositories/proposal-repository.interface';
-import { QueueRepository, Message } from '../interfaces/repositories/queue-repository.interface';
+import { ApiRepository, ApiMessage } from '../interfaces/repositories/api-repository.interface';
 
 const TRIGGER_ID = 'new_proposal_trigger';
 const MESSAGES = {
-  SUCCESS: 'New proposal sent to the queue.',
+  SUCCESS: 'New proposal sent to the API.',
   NO_PROPOSALS: 'There are no new proposals.',
   ERROR_FETCHING: 'Error fetching proposals:',
-  ERROR_PUBLISHING: 'Error publishing message:'
+  ERROR_SENDING: 'Error sending message to API:'
 } as const;
 
 export class NewProposalTrigger implements Trigger<ProposalOnChain, ListProposalsOptions> {
@@ -21,7 +21,7 @@ export class NewProposalTrigger implements Trigger<ProposalOnChain, ListProposal
   public readonly interval: number;
 
   constructor(
-    private readonly queueRepository: QueueRepository,
+    private readonly apiRepository: ApiRepository,
     interval: number
   ) {
     this.id = TRIGGER_ID;
@@ -40,7 +40,7 @@ export class NewProposalTrigger implements Trigger<ProposalOnChain, ListProposal
       return MESSAGES.NO_PROPOSALS;
     }
 
-    const message: Message = {
+    const message: ApiMessage = {
       trigger_id: this.id,
       context: JSON.stringify(filteredData.map(proposal => ({
         ...proposal,
@@ -51,15 +51,15 @@ export class NewProposalTrigger implements Trigger<ProposalOnChain, ListProposal
     };
 
     try {
-      const result = await this.queueRepository.publishMessage(message);
+      const result = await this.apiRepository.sendMessage(message);
       
       if (!result.success) {
-        throw new Error(result.error || 'Unknown error publishing message');
+        throw new Error(result.error || 'Unknown error sending message to API');
       }
       
       return MESSAGES.SUCCESS;
     } catch (error) {
-      console.error(`${MESSAGES.ERROR_PUBLISHING} ${error}`);
+      console.error(`${MESSAGES.ERROR_SENDING} ${error}`);
       throw error;
     }
   }

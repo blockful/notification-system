@@ -1,10 +1,10 @@
 import { describe, it, expect, jest, beforeEach } from '@jest/globals';
 import { NewProposalTrigger } from '../src/triggers/new-proposal-trigger';
-import { QueueRepository, PublishResult } from '../src/interfaces/repositories/queue-repository.interface';
+import { ApiRepository, ApiCallResult } from '../src/interfaces/repositories/api-repository.interface';
 import { ProposalOnChain, ProposalStatus } from '../src/interfaces/repositories/proposal-repository.interface';
 
 describe('NewProposalTrigger', () => {
-  let mockQueueRepository: jest.Mocked<QueueRepository>;
+  let mockApiRepository: jest.Mocked<ApiRepository>;
   let trigger: NewProposalTrigger;
   
   const mockProposal: ProposalOnChain = {
@@ -26,11 +26,11 @@ describe('NewProposalTrigger', () => {
   };
 
   beforeEach(() => {
-    mockQueueRepository = {
-      publishMessage: jest.fn()
+    mockApiRepository = {
+      sendMessage: jest.fn()
     };
     
-    trigger = new NewProposalTrigger(mockQueueRepository, 60000);
+    trigger = new NewProposalTrigger(mockApiRepository, 60000);
   });
 
   describe('filter', () => {
@@ -60,17 +60,17 @@ describe('NewProposalTrigger', () => {
       const result = await trigger.process([]);
       
       expect(result).toBe('There are no new proposals.');
-      expect(mockQueueRepository.publishMessage).not.toHaveBeenCalled();
+      expect(mockApiRepository.sendMessage).not.toHaveBeenCalled();
     });
 
-    it('should publish message to queue when proposals exist', async () => {
-      mockQueueRepository.publishMessage.mockResolvedValue({ success: true } as PublishResult);
+    it('should send message to API when proposals exist', async () => {
+      mockApiRepository.sendMessage.mockResolvedValue({ success: true } as ApiCallResult);
       
       const result = await trigger.process([mockProposal]);
       
-      expect(result).toBe('New proposal sent to the queue.');
-      expect(mockQueueRepository.publishMessage).toHaveBeenCalledTimes(1);
-      expect(mockQueueRepository.publishMessage).toHaveBeenCalledWith(
+      expect(result).toBe('New proposal sent to the API.');
+      expect(mockApiRepository.sendMessage).toHaveBeenCalledTimes(1);
+      expect(mockApiRepository.sendMessage).toHaveBeenCalledWith(
         expect.objectContaining({
           trigger_id: 'new_proposal_trigger',
           context: expect.any(String)
@@ -78,13 +78,13 @@ describe('NewProposalTrigger', () => {
       );
     });
 
-    it('should throw error when publishing fails', async () => {
-      mockQueueRepository.publishMessage.mockResolvedValue({ 
+    it('should throw error when API call fails', async () => {
+      mockApiRepository.sendMessage.mockResolvedValue({ 
         success: false, 
-        error: 'Failed to publish' 
-      } as PublishResult);
+        error: 'Failed to send to API' 
+      } as ApiCallResult);
       
-      await expect(trigger.process([mockProposal])).rejects.toThrow('Failed to publish');
+      await expect(trigger.process([mockProposal])).rejects.toThrow('Failed to send to API');
     });
   });
 }); 
