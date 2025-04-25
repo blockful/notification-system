@@ -41,7 +41,6 @@ describe('NewProposalTrigger', () => {
     });
 
     it('should return NO_PROPOSALS message when filtered result is empty', async () => {
-      // Nenhuma proposta com status 'pending'
       const result = await trigger.process([mockProposal], { status: 'pending' });
       
       expect(result).toBe('There are no new proposals.');
@@ -62,7 +61,6 @@ describe('NewProposalTrigger', () => {
       expect(result).toBe('New proposal sent to the API.');
       expect(mockApiRepository.sendMessage).toHaveBeenCalledTimes(1);
       
-      // Verificar que apenas as propostas com status 'active' foram enviadas
       const calledWith = mockApiRepository.sendMessage.mock.calls[0][0];
       const sentData = JSON.parse(calledWith.context);
       expect(sentData).toHaveLength(2);

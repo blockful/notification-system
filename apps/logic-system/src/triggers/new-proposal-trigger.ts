@@ -37,7 +37,7 @@ export class NewProposalTrigger implements Trigger<ProposalOnChain, ListProposal
   }
 
   async process(data: ProposalOnChain[], options?: ListProposalsOptions): Promise<string> {
-    // Filtrar os dados antes de processá-los
+
     const filteredData = this.filterData(data, options);
     
     if (filteredData.length === 0) {
