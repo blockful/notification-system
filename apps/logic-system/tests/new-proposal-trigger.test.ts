@@ -1,7 +1,7 @@
 import { describe, it, expect, jest, beforeEach, afterEach } from '@jest/globals';
 import { NewProposalTrigger } from '../src/triggers/new-proposal-trigger';
-import { SubscriptionCheckerService, SubscriptionCheckResult } from '../src/interfaces/services/subscription-checker.interface';
-import { ProposalOnChain, ProposalStatus, ProposalDB } from '../src/interfaces/services/proposal.interface';
+import { SubscriptionCheckerService, SubscriptionCheckResult } from '../src/interfaces/subscription-checker.interface';
+import { ProposalOnChain, ProposalStatus, ProposalDB } from '../src/interfaces/proposal.interface';
 
 describe('NewProposalTrigger', () => {
   let mockSubscriptionChecker: jest.Mocked<SubscriptionCheckerService>;

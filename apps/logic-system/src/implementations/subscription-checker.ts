@@ -1,5 +1,5 @@
 import axios from 'axios';
-import { SubscriptionCheckerService, EventContextMessage, SubscriptionCheckResult } from '../interfaces/services/subscription-checker.interface';
+import { SubscriptionCheckerService, EventContextMessage, SubscriptionCheckResult } from '../interfaces/subscription-checker.interface';
 
 export class HttpSubscriptionChecker implements SubscriptionCheckerService {
   private apiUrl: string;

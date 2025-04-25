@@ -4,9 +4,9 @@
  * to determine who should be notified.
  */
 
-import { Trigger } from '../interfaces/core/trigger.interface';
-import { ProposalOnChain, ListProposalsOptions, ProposalDB } from '../interfaces/services/proposal.interface';
-import { SubscriptionCheckerService, EventContextMessage } from '../interfaces/services/subscription-checker.interface';
+import { Trigger } from './base-trigger';
+import { ProposalOnChain, ListProposalsOptions, ProposalDB } from '../interfaces/proposal.interface';
+import { SubscriptionCheckerService, EventContextMessage } from '../interfaces/subscription-checker.interface';
 
 const triggerId = 'newProposalTrigger';
 const MESSAGES = {

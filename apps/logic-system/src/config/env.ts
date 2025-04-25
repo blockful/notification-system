@@ -1,5 +1,5 @@
 import dotenv from 'dotenv';
-import { ProposalStatus } from '../interfaces/services/proposal.interface';
+import { ProposalStatus } from '../interfaces/proposal.interface';
 import { z } from 'zod';
 
 // Load environment variables
