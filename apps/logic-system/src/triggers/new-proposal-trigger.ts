@@ -17,19 +17,13 @@ const MESSAGES = {
   STATUS_REQUIRED: 'Status is required in filter options'
 } as const;
 
-export class NewProposalTrigger implements Trigger<ProposalOnChain, ListProposalsOptions> {
-  public readonly id: string;
-  public readonly interval: number;
-  private timer: NodeJS.Timeout | null = null;
-  private options?: ListProposalsOptions;
-
+export class NewProposalTrigger extends Trigger<ProposalOnChain, ListProposalsOptions> {
   constructor(
     private readonly apiService: ApiService,
     private readonly proposalDB: ProposalDB,
     interval: number
   ) {
-    this.id = triggerId;
-    this.interval = interval;
+    super(triggerId, interval);
   }
 
   private filterData(data: ProposalOnChain[], options?: ListProposalsOptions): ProposalOnChain[] {
@@ -71,33 +65,15 @@ export class NewProposalTrigger implements Trigger<ProposalOnChain, ListProposal
   }
 
   /**
-   * Starts the trigger to run at the specified interval
-   * @param options Options for filtering proposals
+   * Fetches proposals from the database
+   * @returns Array of proposals
    */
-  start(options: ListProposalsOptions): void {
-    if (this.timer) {
-      this.stop();
-    }
-    
-    this.options = options;
-    
-    this.timer = setInterval(async () => {
-      try {
-        const proposals = await this.proposalDB.listAll();
-        await this.process(proposals, this.options);
-      } catch (error) {
-        console.error('Error in trigger execution:', error);
-      }
-    }, this.interval);
-  }
-
-  /**
-   * Stops the trigger and cleans up resources
-   */
-  stop(): void {
-    if (this.timer) {
-      clearInterval(this.timer);
-      this.timer = null;
+  protected async fetchData(): Promise<ProposalOnChain[]> {
+    try {
+      return await this.proposalDB.listAll();
+    } catch (error) {
+      console.error(`${MESSAGES.ERROR_FETCHING} ${error}`);
+      return [];
     }
   }
 } 

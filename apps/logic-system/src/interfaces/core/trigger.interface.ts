@@ -12,6 +12,18 @@ export abstract class Trigger<TData, TFilterOptions = void> {
      */
     readonly interval: number;
 
+    /**
+     * Timer reference for the interval
+     * @protected
+     */
+    protected timer: NodeJS.Timeout | null = null;
+
+    /**
+     * Current filter options
+     * @protected
+     */
+    protected options?: TFilterOptions;
+
     constructor(id: string, interval: number) {
         this.id = id;
         this.interval = interval;
@@ -26,13 +38,40 @@ export abstract class Trigger<TData, TFilterOptions = void> {
     abstract process(data: TData[], options?: TFilterOptions): Promise<string>;
 
     /**
+     * Fetches data for processing
+     * @protected
+     * @returns Array of data objects
+     */
+    protected abstract fetchData(): Promise<TData[]>;
+
+    /**
      * Starts the trigger to run at the specified interval
      * @param options Options for filtering data
      */
-    abstract start(options: TFilterOptions): void;
+    start(options: TFilterOptions): void {
+        if (this.timer) {
+            this.stop();
+        }
+        
+        this.options = options;
+        
+        this.timer = setInterval(async () => {
+            try {
+                const data = await this.fetchData();
+                await this.process(data, this.options);
+            } catch (error) {
+                console.error(`Error in trigger execution (${this.id}):`, error);
+            }
+        }, this.interval);
+    }
 
     /**
      * Stops the trigger and cleans up resources
      */
-    abstract stop(): void;
+    stop(): void {
+        if (this.timer) {
+            clearInterval(this.timer);
+            this.timer = null;
+        }
+    }
 } 
