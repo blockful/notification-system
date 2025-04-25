@@ -28,9 +28,13 @@ export function initializeLogicSystem(config: {
 
     // Start the interval directly
     const timer = setInterval(async () => {
-        const proposals = await proposalRepository.listAll();
-        const filteredProposals = await trigger.filter(proposals, { status });
-        await trigger.process(filteredProposals);
+        try {
+            const proposals = await proposalRepository.listAll();
+            // Agora process lida com a filtragem internamente
+            await trigger.process(proposals, { status });
+        } catch (error) {
+            console.error('Error in trigger execution:', error);
+        }
     }, trigger.interval);
 
     return {

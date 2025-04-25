@@ -13,17 +13,10 @@ export interface Trigger<TData, TFilterOptions = void> {
     readonly interval: number;
 
     /**
-     * Filter data from the database before processing
+     * Process data with built-in filtering and perform trigger actions
      * @param data Raw data from the database
      * @param options Optional filter options
-     * @returns Filtered data ready for processing
-     */
-    filter(data: TData[], options?: TFilterOptions): Promise<TData[]>;
-
-    /**
-     * Process the filtered data and perform trigger actions
-     * @param filteredData Data that has been filtered and is ready for processing
      * @returns Result of the processing
      */
-    process(filteredData: TData[]): Promise<string>;
+    process(data: TData[], options?: TFilterOptions): Promise<string>;
 } 

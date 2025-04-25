@@ -33,49 +33,40 @@ describe('NewProposalTrigger', () => {
     trigger = new NewProposalTrigger(mockApiRepository, 60000);
   });
 
-  describe('filter', () => {
-    it('should filter proposals by status', async () => {
-      const proposals = [
-        { ...mockProposal, status: 'active' },
-        { ...mockProposal, id: '2', status: 'pending' },
-        { ...mockProposal, id: '3', status: 'active' }
-      ] as ProposalOnChain[];
-
-      const result = await trigger.filter(proposals, { status: 'active' });
-      
-      expect(result).toHaveLength(2);
-      expect(result[0].id).toBe('1');
-      expect(result[1].id).toBe('3');
-    });
-
-    it('should throw error if status is not provided', async () => {
+  describe('process', () => {
+    it('should throw error if status option is not provided', async () => {
       const proposals = [mockProposal];
       
-      await expect(trigger.filter(proposals, {})).rejects.toThrow('Status is required');
+      await expect(trigger.process(proposals, {})).rejects.toThrow('Status is required');
     });
-  });
 
-  describe('process', () => {
-    it('should return NO_PROPOSALS message when no proposals are provided', async () => {
-      const result = await trigger.process([]);
+    it('should return NO_PROPOSALS message when filtered result is empty', async () => {
+      // Nenhuma proposta com status 'pending'
+      const result = await trigger.process([mockProposal], { status: 'pending' });
       
       expect(result).toBe('There are no new proposals.');
       expect(mockApiRepository.sendMessage).not.toHaveBeenCalled();
     });
 
-    it('should send message to API when proposals exist', async () => {
+    it('should filter proposals by status and send matching ones to API', async () => {
       mockApiRepository.sendMessage.mockResolvedValue({ success: true } as ApiCallResult);
       
-      const result = await trigger.process([mockProposal]);
+      const proposals = [
+        { ...mockProposal, status: 'active' },
+        { ...mockProposal, id: '2', status: 'pending' },
+        { ...mockProposal, id: '3', status: 'active' }
+      ] as ProposalOnChain[];
+      
+      const result = await trigger.process(proposals, { status: 'active' });
       
       expect(result).toBe('New proposal sent to the API.');
       expect(mockApiRepository.sendMessage).toHaveBeenCalledTimes(1);
-      expect(mockApiRepository.sendMessage).toHaveBeenCalledWith(
-        expect.objectContaining({
-          triggerId: 'newProposalTrigger',
-          context: expect.any(String)
-        })
-      );
+      
+      // Verificar que apenas as propostas com status 'active' foram enviadas
+      const calledWith = mockApiRepository.sendMessage.mock.calls[0][0];
+      const sentData = JSON.parse(calledWith.context);
+      expect(sentData).toHaveLength(2);
+      expect(sentData.map(p => p.id).sort()).toEqual(['1', '3']);
     });
 
     it('should throw error when API call fails', async () => {
@@ -84,7 +75,7 @@ describe('NewProposalTrigger', () => {
         error: 'Failed to send to API' 
       } as ApiCallResult);
       
-      await expect(trigger.process([mockProposal])).rejects.toThrow('Failed to send to API');
+      await expect(trigger.process([mockProposal], { status: 'active' })).rejects.toThrow('Failed to send to API');
     });
   });
 }); 

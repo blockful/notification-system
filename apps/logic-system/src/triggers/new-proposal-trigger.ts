@@ -13,7 +13,8 @@ const MESSAGES = {
   SUCCESS: 'New proposal sent to the API.',
   NO_PROPOSALS: 'There are no new proposals.',
   ERROR_FETCHING: 'Error fetching proposals:',
-  ERROR_SENDING: 'Error sending message to API:'
+  ERROR_SENDING: 'Error sending message to API:',
+  STATUS_REQUIRED: 'Status is required in filter options'
 } as const;
 
 export class NewProposalTrigger implements Trigger<ProposalOnChain, ListProposalsOptions> {
@@ -28,14 +29,17 @@ export class NewProposalTrigger implements Trigger<ProposalOnChain, ListProposal
     this.interval = interval;
   }
 
-  async filter(data: ProposalOnChain[], options?: ListProposalsOptions): Promise<ProposalOnChain[]> {
+  private filterData(data: ProposalOnChain[], options?: ListProposalsOptions): ProposalOnChain[] {
     if (!options?.status) {
-      throw new Error('Status is required in filter options');
+      throw new Error(MESSAGES.STATUS_REQUIRED);
     }
     return data.filter(proposal => proposal?.status === options.status);
   }
 
-  async process(filteredData: ProposalOnChain[]): Promise<string> {
+  async process(data: ProposalOnChain[], options?: ListProposalsOptions): Promise<string> {
+    // Filtrar os dados antes de processá-los
+    const filteredData = this.filterData(data, options);
+    
     if (filteredData.length === 0) {
       return MESSAGES.NO_PROPOSALS;
     }
