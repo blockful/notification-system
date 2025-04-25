@@ -1,5 +1,5 @@
 import dotenv from 'dotenv';
-import { ProposalStatus } from '../interfaces/repositories/proposal.interface';
+import { ProposalStatus } from '../interfaces/services/proposal.interface';
 
 export interface EnvConfig {
   DATABASE_URL: string;

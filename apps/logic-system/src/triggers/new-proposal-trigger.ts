@@ -5,8 +5,8 @@
  */
 
 import { Trigger } from '../interfaces/core/trigger.interface';
-import { ProposalOnChain, ListProposalsOptions, ProposalDB } from '../interfaces/repositories/proposal.interface';
-import { ApiService, ApiMessage } from '../interfaces/repositories/api-service.interface';
+import { ProposalOnChain, ListProposalsOptions, ProposalDB } from '../interfaces/services/proposal.interface';
+import { ApiService, ApiMessage } from '../interfaces/services/api-service.interface';
 
 const triggerId = 'newProposalTrigger';
 const MESSAGES = {

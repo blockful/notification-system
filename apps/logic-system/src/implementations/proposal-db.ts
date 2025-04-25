@@ -1,5 +1,5 @@
 import { Pool } from 'pg';
-import { ProposalDB, ProposalOnChain, ListProposalsOptions, ProposalStatus } from '../interfaces/repositories/proposal.interface';
+import { ProposalDB, ProposalOnChain, ListProposalsOptions, ProposalStatus } from '../interfaces/services/proposal.interface';
 
 export class PostgresProposalDB implements ProposalDB {
   private pool: Pool;

@@ -1,5 +1,5 @@
 import axios from 'axios';
-import { ApiService, ApiMessage, ApiCallResult } from '../interfaces/repositories/api-service.interface';
+import { ApiService, ApiMessage, ApiCallResult } from '../interfaces/services/api-service.interface';
 
 export class HttpApiService implements ApiService {
   private apiUrl: string;
