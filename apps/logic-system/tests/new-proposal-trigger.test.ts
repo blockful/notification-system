@@ -1,7 +1,7 @@
 import { describe, it, expect, jest, beforeEach, afterEach } from '@jest/globals';
 import { NewProposalTrigger } from '../src/triggers/new-proposal-trigger';
-import { ApiService, ApiCallResult } from '../src/interfaces/repositories/api-service.interface';
-import { ProposalOnChain, ProposalStatus, ProposalDB } from '../src/interfaces/repositories/proposal.interface';
+import { ApiService, ApiCallResult } from '../src/interfaces/services/api-service.interface';
+import { ProposalOnChain, ProposalStatus, ProposalDB } from '../src/interfaces/services/proposal.interface';
 
 describe('NewProposalTrigger', () => {
   let mockApiService: jest.Mocked<ApiService>;
