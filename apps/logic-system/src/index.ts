@@ -1,41 +1,36 @@
 import { NewProposalTrigger } from './triggers/new-proposal-trigger';
-import { ProposalDB, ProposalStatus } from './interfaces/repositories/proposal.interface';
-import { ApiService } from './interfaces/repositories/api-service.interface';
+import { PostgresProposalDB } from './implementations/proposal-db';
+import { HttpApiService } from './implementations/api-service';
+import { loadEnvConfig } from './config/env';
 
-/**
- * Initializes the logic system with a new proposal trigger
- * @param config Configuration object containing services and options
- * @returns Object with methods to control the trigger
- */
-export function initializeLogicSystem(config: {
-    proposalDB: ProposalDB;
-    apiService: ApiService;
-    interval?: number;
-    status: ProposalStatus;
-}) {
-    const { 
-        proposalDB, 
-        apiService, 
-        interval = 60000,
-        status
-    } = config;
+// Load and validate environment variables
+const config = loadEnvConfig();
 
-    // Create the new proposal trigger with its own interval management
-    const trigger = new NewProposalTrigger(
-        apiService,
-        proposalDB,
-        interval
-    );
+// Create database and API service implementations
+const proposalDB = new PostgresProposalDB(config.DATABASE_URL);
+const apiService = new HttpApiService(config.API_URL);
 
-    // Start the trigger with the specified status
-    trigger.start({ status });
+// Create and start the trigger
+const trigger = new NewProposalTrigger(
+  apiService,
+  proposalDB,
+  config.TRIGGER_INTERVAL
+);
 
-    return {
-        /**
-         * Stops the trigger and cleans up resources
-         */
-        stop: () => {
-            trigger.stop();
-        }
-    };
-}
+// Start the trigger with the specified status
+trigger.start({ status: config.PROPOSAL_STATUS });
+
+// Set up graceful shutdown
+process.on('SIGINT', () => {
+  console.log('Received SIGINT. Shutting down...');
+  trigger.stop();
+  process.exit(0);
+});
+
+process.on('SIGTERM', () => {
+  console.log('Received SIGTERM. Shutting down...');
+  trigger.stop();
+  process.exit(0);
+});
+
+console.log('Logic system is running. Press Ctrl+C to stop.');
