@@ -1,3 +1,9 @@
+//@ts-ignore
+//This line is to avoid the error "Do not know how to serialize a BigInt"
+BigInt.prototype.toJSON = function () {
+  return this.toString();
+};
+
 import { NewProposalTrigger } from './triggers/new-proposal-trigger';
 import { PostgresProposalDB } from './implementations/proposal-db';
 import { HttpSubscriptionChecker } from './implementations/subscription-checker';
