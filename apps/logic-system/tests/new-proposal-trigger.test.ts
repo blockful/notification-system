@@ -77,7 +77,9 @@ describe('NewProposalTrigger', () => {
       const calledWith = mockSubscriptionChecker.checkSubscribers.mock.calls[0][0];
       const sentData = JSON.parse(calledWith.context);
       expect(sentData).toHaveLength(2);
-      expect(sentData.map((p: ProposalOnChain) => p.id).sort()).toEqual(['1', '2']);
+      const ids = sentData.map((p: ProposalOnChain) => p.id);
+      expect(ids).toContain('1');
+      expect(ids).toContain('2');
     });
 
     it('should throw error when subscription check fails without error message', async () => {
