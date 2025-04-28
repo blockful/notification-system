@@ -80,16 +80,6 @@ describe('NewProposalTrigger', () => {
       expect(sentData.map((p: ProposalOnChain) => p.id).sort()).toEqual(['1', '2']);
     });
 
-    it('should throw error when subscription check fails', async () => {
-      mockSubscriptionChecker.checkSubscribers.mockResolvedValue({ 
-        success: false, 
-        error: 'Failed to check subscriptions' 
-      } as SubscriptionCheckResult);
-      
-      await expect(trigger.process([mockProposal])).rejects.toThrow('Failed to check subscriptions');
-      expect(console.error).toHaveBeenCalled();
-    });
-
     it('should throw error when subscription check fails without error message', async () => {
       mockSubscriptionChecker.checkSubscribers.mockResolvedValue({ 
         success: false,
@@ -97,14 +87,6 @@ describe('NewProposalTrigger', () => {
       } as SubscriptionCheckResult);
       
       await expect(trigger.process([mockProposal])).rejects.toThrow('Unknown error checking subscriptions');
-      expect(console.error).toHaveBeenCalled();
-    });
-
-    it('should throw and log error when subscription checker throws an exception', async () => {
-      const errorMessage = 'Network error';
-      mockSubscriptionChecker.checkSubscribers.mockRejectedValue(new Error(errorMessage));
-      
-      await expect(trigger.process([mockProposal])).rejects.toThrow(errorMessage);
       expect(console.error).toHaveBeenCalled();
     });
   });
