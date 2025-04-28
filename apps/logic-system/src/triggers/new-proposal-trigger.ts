@@ -26,23 +26,14 @@ export class NewProposalTrigger extends Trigger<ProposalOnChain, ListProposalsOp
     super(triggerId, interval);
   }
 
-  private filterData(data: ProposalOnChain[], options?: ListProposalsOptions): ProposalOnChain[] {
-    if (!options?.status) {
-      throw new Error(MESSAGES.STATUS_REQUIRED);
-    }
-    return data.filter(proposal => proposal?.status === options.status);
-  }
-
-  async process(data: ProposalOnChain[], options?: ListProposalsOptions): Promise<string> {
-    const filteredData = this.filterData(data, options);
-    
-    if (filteredData.length === 0) {
+  async process(data: ProposalOnChain[]): Promise<string> {
+    if (data.length === 0) {
       return MESSAGES.NO_PROPOSALS;
     }
 
     const message: EventContextMessage = {
       triggerId: this.id,
-      context: JSON.stringify(filteredData.map(proposal => ({
+      context: JSON.stringify(data.map(proposal => ({
         ...proposal,
         forVotes: proposal.forVotes.toString(),
         againstVotes: proposal.againstVotes.toString(),
@@ -68,9 +59,12 @@ export class NewProposalTrigger extends Trigger<ProposalOnChain, ListProposalsOp
    * Fetches proposals from the database
    * @returns Array of proposals
    */
-  protected async fetchData(): Promise<ProposalOnChain[]> {
+  protected async fetchData(options?: ListProposalsOptions): Promise<ProposalOnChain[]> {
     try {
-      return await this.proposalDB.listAll();
+      if (!options?.status) {
+        throw new Error(MESSAGES.STATUS_REQUIRED);
+      }
+      return await this.proposalDB.listAll({ status: options.status });
     } catch (error) {
       console.error(`${MESSAGES.ERROR_FETCHING} ${error}`);
       return [];

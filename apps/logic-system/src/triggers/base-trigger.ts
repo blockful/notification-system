@@ -42,7 +42,7 @@ export abstract class Trigger<TData, TFilterOptions = void> {
      * @protected
      * @returns Array of data objects
      */
-    protected abstract fetchData(): Promise<TData[]>;
+    protected abstract fetchData(options: TFilterOptions): Promise<TData[]>;
 
     /**
      * Starts the trigger to run at the specified interval
@@ -57,7 +57,7 @@ export abstract class Trigger<TData, TFilterOptions = void> {
         
         this.timer = setInterval(async () => {
             try {
-                const data = await this.fetchData();
+                const data = await this.fetchData(options);
                 await this.process(data, this.options);
             } catch (error) {
                 console.error(`Error in trigger execution (${this.id}):`, error);
