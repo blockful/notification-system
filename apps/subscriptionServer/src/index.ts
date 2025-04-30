@@ -22,7 +22,7 @@ app.register(fastifySwagger, {
   }
 });
 app.register(fastifySwaggerUi, {
-  routePrefix: '/documentation',
+  routePrefix: '/docs',
 });
 app.register(initial_routes);
 app.listen({ port: 3000 }, () => {
