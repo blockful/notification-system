@@ -153,5 +153,50 @@ describe('Subscription Service', () => {
 
       expect(mockLogger.error).toHaveBeenCalled();
     });
+
+    test('should handle database error when querying preferences', async () => {
+      knexQueryMock.first
+        .mockResolvedValueOnce(mockUser)
+        .mockRejectedValueOnce(new Error('DB Error'));
+
+      await expect(handleSubscription({
+        ...baseSubscriptionArgs,
+        is_active: true
+      })).rejects.toThrow(SUBSCRIPTION_MESSAGES.ERROR_QUERY_PREF);
+
+      expect(mockLogger.error).toHaveBeenCalled();
+    });
+
+    test('should handle database error when creating preference', async () => {
+      knexQueryMock.first
+        .mockResolvedValueOnce(mockUser)
+        .mockResolvedValueOnce(null);
+      
+      knexQueryMock.returning
+        .mockRejectedValueOnce(new Error('DB Error'));
+
+      await expect(handleSubscription({
+        ...baseSubscriptionArgs,
+        is_active: true
+      })).rejects.toThrow(SUBSCRIPTION_MESSAGES.ERROR_CREATE_PREF);
+
+      expect(mockLogger.error).toHaveBeenCalled();
+    });
+
+    test('should handle database error when updating preference', async () => {
+      knexQueryMock.first
+        .mockResolvedValueOnce(mockUser)
+        .mockResolvedValueOnce(mockPreference);
+      
+      knexQueryMock.returning
+        .mockRejectedValueOnce(new Error('DB Error'));
+
+      await expect(handleSubscription({
+        ...baseSubscriptionArgs,
+        is_active: false
+      })).rejects.toThrow(SUBSCRIPTION_MESSAGES.ERROR_UPDATE_PREF);
+
+      expect(mockLogger.error).toHaveBeenCalled();
+    });
   });
 }); 
