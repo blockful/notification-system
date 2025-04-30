@@ -25,10 +25,10 @@ export async function getUserByChannelAndId(knex: Knex, channel: string, channel
 
 export async function createUser(knex: Knex, channel: string, channel_user_id: string, log?: { error: (msg: string) => void }) {
   try {
-    const [userId] = await knex('users')
+    const [user] = await knex('users')
       .insert({ channel, channel_user_id, created_at: new Date() })
-      .returning('id');
-    return { id: userId, channel, channel_user_id };
+      .returning(['id', 'channel', 'channel_user_id', 'is_active']);
+    return user;
   } catch (err: any) {
     log?.error?.(`Error creating user: ${err.message}`);
     throw new Error(SUBSCRIPTION_MESSAGES.ERROR_CREATE_USER);
