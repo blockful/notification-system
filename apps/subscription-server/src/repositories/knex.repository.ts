@@ -85,4 +85,19 @@ export class KnexPreferenceRepository implements IPreferenceRepository {
       .returning('*');
     return preference;
   }
+
+  /**
+   * Finds all users with active subscriptions to a specific DAO
+   * @param daoId - The DAO's ID
+   * @returns An array of user preferences joined with user details
+   */
+  async findActiveSubscribersByDao(daoId: string): Promise<(UserPreference & User)[]> {
+    return this.knex<UserPreference>('user_preferences')
+      .join('users', 'user_preferences.user_id', '=', 'users.id')
+      .where({ 
+        'user_preferences.dao_id': daoId,
+        'user_preferences.is_active': true
+      })
+      .select('users.*', 'user_preferences.*');
+  }
 } 

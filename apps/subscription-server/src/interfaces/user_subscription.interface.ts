@@ -41,4 +41,5 @@ export interface IPreferenceRepository {
   findByUserAndDao(userId: string, daoId: string): Promise<UserPreference | undefined>;
   create(data: Omit<UserPreference, 'id' | 'created_at' | 'updated_at'>): Promise<UserPreference>;
   update(id: string, data: Partial<UserPreference>): Promise<UserPreference>;
+  findActiveSubscribersByDao(daoId: string): Promise<(UserPreference & User)[]>;
 } 
