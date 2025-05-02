@@ -1,3 +1,5 @@
+// Carregar variáveis de ambiente do arquivo .env
+import * as dotenv from 'dotenv';
 import fastify from 'fastify';
 import { validatorCompiler, serializerCompiler, jsonSchemaTransform } from 'fastify-type-provider-zod';
 import fastifyCors from '@fastify/cors';
@@ -6,6 +8,7 @@ import fastifySwaggerUi from '@fastify/swagger-ui';
 import { initial_routes } from './controllers/initial_routes';
 import { daoHandlers } from './controllers/dao.controller';
 import Knex from 'knex';
+dotenv.config();
 export const knexInstance = Knex({
   client: 'pg',
   connection: process.env.DATABASE_URL || 'postgresql://postgres:postgres@localhost:5432/'
