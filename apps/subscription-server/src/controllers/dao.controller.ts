@@ -5,7 +5,7 @@ import {
   subscriptionResponseSchema,
   daoSubscribersResponseSchema
 } from '../schemas/subscription.schema';
-import { daoSubscriptionHandler, getDaoSubscribersHandler } from '../handlers/dao.handlers';
+import { postDaoSubscriptionHandler, getDaoSubscribersHandler } from '../handlers/dao.handlers';
 
 /**
  * Registers DAO subscription routes in the Fastify app.
@@ -20,7 +20,7 @@ export async function daoHandlers(app: FastifyTypedInstance) {
       body: subscriptionBodySchema,
       response: subscriptionResponseSchema
     },
-  }, daoSubscriptionHandler);
+  }, postDaoSubscriptionHandler);
 
   app.get('/subscriptions/:dao', {
     schema: {
