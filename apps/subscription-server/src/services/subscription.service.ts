@@ -1,4 +1,4 @@
-import type { Knex } from 'knex';
+import { SubscriptionParams } from '../interfaces/subscription.interface';
 
 export const SUBSCRIPTION_MESSAGES = {
   ERROR_QUERY_USER: 'Database query failed (users)',
@@ -12,122 +12,51 @@ export const SUBSCRIPTION_MESSAGES = {
   SUCCESS_DEACTIVATED: 'Subscription deactivated for user',
 };
 
-export async function getUserByChannelAndId(knex: Knex, channel: string, channel_user_id: string, log?: { error: (msg: string) => void }) {
-  try {
-    return await knex('users')
-      .where({ channel, channel_user_id })
-      .first();
-  } catch (err: any) {
-    log?.error?.(`Error querying users table: ${err.message}`);
-    throw new Error(SUBSCRIPTION_MESSAGES.ERROR_QUERY_USER);
-  }
-}
-
-export async function createUser(knex: Knex, channel: string, channel_user_id: string, log?: { error: (msg: string) => void }) {
-  try {
-    const [user] = await knex('users')
-      .insert({ channel, channel_user_id, created_at: new Date() })
-      .returning(['id', 'channel', 'channel_user_id', 'is_active']);
-    return user;
-  } catch (err: any) {
-    log?.error?.(`Error creating user: ${err.message}`);
-    throw new Error(SUBSCRIPTION_MESSAGES.ERROR_CREATE_USER);
-  }
-}
-
-export async function getUserPreference(knex: Knex, user_id: string, dao_id: string, log?: { error: (msg: string) => void }) {
-  try {
-    return await knex('user_preferences')
-      .where({ user_id, dao_id })
-      .first();
-  } catch (err: any) {
-    log?.error?.(`Error querying preferences table: ${err.message}`);
-    throw new Error(SUBSCRIPTION_MESSAGES.ERROR_QUERY_PREF);
-  }
-}
-
-export async function createUserPreference(knex: Knex, user_id: string, dao_id: string, is_active: boolean, log?: { error: (msg: string) => void }) {
-  try {
-    const [preference] = await knex('user_preferences')
-      .insert({
-        user_id,
-        dao_id,
-        is_active,
-        created_at: new Date(),
-        updated_at: new Date()
-      })
-      .returning('*');
-    return preference;
-  } catch (err: any) {
-    log?.error?.(`Error creating preference: ${err.message}`);
-    throw new Error(SUBSCRIPTION_MESSAGES.ERROR_CREATE_PREF);
-  }
-}
-
-export async function updateUserPreference(knex: Knex, preference_id: string, is_active: boolean, log?: { error: (msg: string) => void }) {
-  try {
-    const [preference] = await knex('user_preferences')
-      .where({ id: preference_id })
-      .update({
-        is_active,
-        updated_at: new Date()
-      })
-      .returning('*');
-    return preference;
-  } catch (err: any) {
-    log?.error?.(`Error updating preference: ${err.message}`);
-    throw new Error(SUBSCRIPTION_MESSAGES.ERROR_UPDATE_PREF);
-  }
-}
-
 export async function handleSubscription({
-  knex,
+  userRepo,
+  prefRepo,
   dao,
   channel,
   channel_user_id,
   is_active,
   log
-}: {
-  knex: Knex,
-  dao: string,
-  channel: string,
-  channel_user_id: string,
-  is_active: boolean,
-  log: { error: (msg: string) => void }
-}) {
-  let user = await getUserByChannelAndId(knex, channel, channel_user_id, log);
-  let userWasCreated = false;
-
-  if (!user) {
-    user = await createUser(knex, channel, channel_user_id, log);
-    userWasCreated = true;
-  }
-
-  let result;
-  let message;
-
-  if (userWasCreated) {
-    result = await createUserPreference(knex, user.id, dao, is_active, log);
-    message = SUBSCRIPTION_MESSAGES.SUCCESS_NEW_SUB;
-  } else {
-    let existingPreference = await getUserPreference(knex, user.id, dao, log);
+}: SubscriptionParams) {
+  try {
+    let user = await userRepo.findByChannelAndId(channel, channel_user_id);
+    
+    if (!user) {
+      user = await userRepo.create({
+        channel,
+        channel_user_id,
+        is_active: true
+      });
+    }
+    let existingPreference = await prefRepo.findByUserAndDao(user.id, dao);
+    let result;
+    let message;
     if (existingPreference) {
       if (existingPreference.is_active !== is_active) {
-        result = await updateUserPreference(knex, existingPreference.id, is_active, log);
+        result = await prefRepo.update(existingPreference.id, { is_active });
         message = is_active ? SUBSCRIPTION_MESSAGES.SUCCESS_ACTIVATED : SUBSCRIPTION_MESSAGES.SUCCESS_DEACTIVATED;
       } else {
         result = existingPreference;
         message = SUBSCRIPTION_MESSAGES.SUCCESS_ALREADY;
       }
     } else {
-      result = await createUserPreference(knex, user.id, dao, is_active, log);
+      result = await prefRepo.create({
+        user_id: user.id,
+        dao_id: dao,
+        is_active
+      });
       message = SUBSCRIPTION_MESSAGES.SUCCESS_NEW_SUB;
     }
+    return {
+      user,
+      result,
+      message
+    };
+  } catch (error: any) {
+    log.error(`Error in subscription service: ${error.message}`);
+    throw error;
   }
-
-  return {
-    user,
-    result,
-    message
-  };
 } 

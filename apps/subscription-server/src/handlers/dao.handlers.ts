@@ -1,5 +1,9 @@
 import { handleSubscription } from '../services/subscription.service';
+import { KnexUserRepository, KnexPreferenceRepository } from '../repositories/knex.repository';
 import { knexInstance } from '../index';
+
+const userRepo = new KnexUserRepository(knexInstance);
+const prefRepo = new KnexPreferenceRepository(knexInstance);
 
 /**
  * Handles the subscription logic for DAO users.
@@ -11,7 +15,8 @@ export async function daoSubscriptionHandler(request: any, reply: any) {
     const { channel, channel_user_id, is_active = true } = request.body;
 
     const { user, result, message } = await handleSubscription({
-      knex: knexInstance,
+      userRepo,
+      prefRepo,
       dao,
       channel,
       channel_user_id,
