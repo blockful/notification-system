@@ -6,7 +6,7 @@ import { knexInstance } from '../index';
  * Handles the subscription logic for DAO users.
  * Acts as the handler layer, processing HTTP requests and responses.
  */
-export async function daoSubscriptionHandler(request: any, reply: any) {
+export async function postDaoSubscriptionHandler(request: any, reply: any) {
   try {
     const userRepo = new KnexUserRepository(knexInstance);
     const prefRepo = new KnexPreferenceRepository(knexInstance);
