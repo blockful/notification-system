@@ -128,7 +128,6 @@ describe('DAO handlers', () => {
       expect(Array.isArray(res.data.data)).toBe(true);
       expect(res.data.data.length).toBe(2);
       
-      // Validate the structure of returned data
       const firstSubscriber = res.data.data[0];
       expect(firstSubscriber).toHaveProperty('id');
       expect(firstSubscriber).toHaveProperty('user_id');
@@ -138,7 +137,6 @@ describe('DAO handlers', () => {
     });
 
     test('should handle case when no subscribers exist', async () => {
-      // Mock an empty array response for this test
       knexMock.select.mockResolvedValueOnce([]);
       
       const res = await axios.get(`${serverAddress}/subscriptions/unknown-dao`);
