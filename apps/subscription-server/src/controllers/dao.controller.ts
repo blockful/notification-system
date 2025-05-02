@@ -2,8 +2,8 @@ import type { FastifyTypedInstance } from "../interfaces";
 import {
   subscriptionParamsSchema,
   subscriptionBodySchema,
-  subscriptionResponseSchema,
-  daoSubscribersResponseSchema
+  createUpdateSubscriptionResponseSchema,
+  getDaoSubscribersResponseSchema
 } from '../schemas/subscription.schema';
 import { postDaoSubscriptionHandler, getDaoSubscribersHandler } from '../handlers/dao.handlers';
 
@@ -18,7 +18,7 @@ export async function daoHandlers(app: FastifyTypedInstance) {
       description: 'Create or update dao subscription for user',
       params: subscriptionParamsSchema,
       body: subscriptionBodySchema,
-      response: subscriptionResponseSchema
+      response: createUpdateSubscriptionResponseSchema
     },
   }, postDaoSubscriptionHandler);
 
@@ -27,7 +27,7 @@ export async function daoHandlers(app: FastifyTypedInstance) {
       tags: ['dao'],
       description: 'Get all users subscribed to a specific DAO',
       params: subscriptionParamsSchema,
-      response: daoSubscribersResponseSchema
+      response: getDaoSubscribersResponseSchema
     }
   }, getDaoSubscribersHandler);
 } 
