@@ -1,7 +1,8 @@
 import { describe, test, expect, jest, beforeEach } from '@jest/globals';
 import { handleSubscription, SUBSCRIPTION_MESSAGES } from './subscription.service';
-import { User, Preference } from '../interfaces';
-import type { Knex } from 'knex';
+import { User, UserPreference } from '../interfaces/repository.interface';
+import { IUserRepository, IPreferenceRepository } from '../interfaces/repository.interface';
+import { Logger } from '../interfaces/subscription.interface';
 
 // ---- MOCKS ----
 const mockUser: User = {
@@ -11,7 +12,7 @@ const mockUser: User = {
   is_active: true
 };
 
-const mockPreference: Preference = {
+const mockPreference: UserPreference = {
   id: '456',
   user_id: '123',
   dao_id: 'dao123',
@@ -20,40 +21,42 @@ const mockPreference: Preference = {
   updated_at: new Date()
 };
 
-const mockLogger = {
+const mockLogger: Logger = {
   error: jest.fn()
 };
 
-const createKnexMock = () => {
-  const mock = {
-    where: jest.fn().mockReturnThis(),
-    first: jest.fn(),
-    insert: jest.fn().mockReturnThis(),
-    update: jest.fn().mockReturnThis(),
-    returning: jest.fn()
-  };
+// ---- REPOSITORY MOCKS ----
+const createMockUserRepo = (): jest.Mocked<IUserRepository> => ({
+  findByChannelAndId: jest.fn(),
+  create: jest.fn()
+});
 
-  return jest.fn(() => mock) as unknown as jest.MockedFunction<Knex>;
-};
+const createMockPrefRepo = (): jest.Mocked<IPreferenceRepository> => ({
+  findByUserAndDao: jest.fn(),
+  create: jest.fn(),
+  update: jest.fn()
+});
 
 // ---- TESTS ----
 describe('Subscription Service', () => {
-  let knexMock: jest.MockedFunction<Knex>;
-  let knexQueryMock: any;
+  let userRepo: jest.Mocked<IUserRepository>;
+  let prefRepo: jest.Mocked<IPreferenceRepository>;
   let baseSubscriptionArgs: {
-    knex: Knex;
+    userRepo: IUserRepository;
+    prefRepo: IPreferenceRepository;
     dao: string;
     channel: string;
     channel_user_id: string;
-    log: typeof mockLogger;
+    log: Logger;
   };
 
   beforeEach(() => {
     jest.clearAllMocks();
-    knexMock = createKnexMock();
-    knexQueryMock = knexMock();
+    userRepo = createMockUserRepo();
+    prefRepo = createMockPrefRepo();
     baseSubscriptionArgs = {
-      knex: knexMock as unknown as Knex,
+      userRepo,
+      prefRepo,
       dao: 'dao123',
       channel: 'telegram',
       channel_user_id: 'user123',
@@ -63,9 +66,10 @@ describe('Subscription Service', () => {
 
   describe('handleSubscription', () => {
     test('should create new user and subscription', async () => {
-      knexQueryMock.returning
-        .mockResolvedValueOnce([mockUser]) 
-        .mockResolvedValueOnce([mockPreference]); 
+      userRepo.findByChannelAndId.mockResolvedValueOnce(undefined);
+      userRepo.create.mockResolvedValueOnce(mockUser);
+      prefRepo.findByUserAndDao.mockResolvedValueOnce(undefined);
+      prefRepo.create.mockResolvedValueOnce(mockPreference);
 
       const result = await handleSubscription({
         ...baseSubscriptionArgs,
@@ -80,12 +84,9 @@ describe('Subscription Service', () => {
     test('should update existing subscription', async () => {
       const updatedPreference = { ...mockPreference, is_active: false };
       
-      knexQueryMock.first
-        .mockResolvedValueOnce(mockUser)
-        .mockResolvedValueOnce(mockPreference);
-      
-      knexQueryMock.returning
-        .mockResolvedValueOnce([updatedPreference]);
+      userRepo.findByChannelAndId.mockResolvedValueOnce(mockUser);
+      prefRepo.findByUserAndDao.mockResolvedValueOnce(mockPreference);
+      prefRepo.update.mockResolvedValueOnce(updatedPreference);
 
       const result = await handleSubscription({
         ...baseSubscriptionArgs,
@@ -97,9 +98,8 @@ describe('Subscription Service', () => {
     });
 
     test('should return already subscribed message if no change needed', async () => {
-      knexQueryMock.first
-        .mockResolvedValueOnce(mockUser)
-        .mockResolvedValueOnce(mockPreference);
+      userRepo.findByChannelAndId.mockResolvedValueOnce(mockUser);
+      prefRepo.findByUserAndDao.mockResolvedValueOnce(mockPreference);
 
       const result = await handleSubscription({
         ...baseSubscriptionArgs,
@@ -111,12 +111,9 @@ describe('Subscription Service', () => {
     });
 
     test('should create new subscription for existing user', async () => {
-      knexQueryMock.first
-        .mockResolvedValueOnce(mockUser)
-        .mockResolvedValueOnce(null);
-      
-      knexQueryMock.returning
-        .mockResolvedValueOnce([mockPreference]);
+      userRepo.findByChannelAndId.mockResolvedValueOnce(mockUser);
+      prefRepo.findByUserAndDao.mockResolvedValueOnce(undefined);
+      prefRepo.create.mockResolvedValueOnce(mockPreference);
 
       const result = await handleSubscription({
         ...baseSubscriptionArgs,
@@ -127,74 +124,63 @@ describe('Subscription Service', () => {
       expect(result.result).toEqual(mockPreference);
     });
 
-    test('should handle database error when querying user', async () => {
-      knexQueryMock.first
-        .mockRejectedValueOnce(new Error('DB Error'));
+    test('should handle error when finding user', async () => {
+      userRepo.findByChannelAndId.mockRejectedValueOnce(new Error('DB Error'));
 
       await expect(handleSubscription({
         ...baseSubscriptionArgs,
         is_active: true
-      })).rejects.toThrow(SUBSCRIPTION_MESSAGES.ERROR_QUERY_USER);
+      })).rejects.toThrow('DB Error');
 
       expect(mockLogger.error).toHaveBeenCalled();
     });
 
-    test('should handle database error when creating user', async () => {
-      knexQueryMock.first
-        .mockResolvedValueOnce(null);
-      
-      knexQueryMock.returning
-        .mockRejectedValueOnce(new Error('DB Error'));
+    test('should handle error when creating user', async () => {
+      userRepo.findByChannelAndId.mockResolvedValueOnce(undefined);
+      userRepo.create.mockRejectedValueOnce(new Error('DB Error'));
 
       await expect(handleSubscription({
         ...baseSubscriptionArgs,
         is_active: true
-      })).rejects.toThrow(SUBSCRIPTION_MESSAGES.ERROR_CREATE_USER);
+      })).rejects.toThrow('DB Error');
 
       expect(mockLogger.error).toHaveBeenCalled();
     });
 
-    test('should handle database error when querying preferences', async () => {
-      knexQueryMock.first
-        .mockResolvedValueOnce(mockUser)
-        .mockRejectedValueOnce(new Error('DB Error'));
+    test('should handle error when finding preference', async () => {
+      userRepo.findByChannelAndId.mockResolvedValueOnce(mockUser);
+      prefRepo.findByUserAndDao.mockRejectedValueOnce(new Error('DB Error'));
 
       await expect(handleSubscription({
         ...baseSubscriptionArgs,
         is_active: true
-      })).rejects.toThrow(SUBSCRIPTION_MESSAGES.ERROR_QUERY_PREF);
+      })).rejects.toThrow('DB Error');
 
       expect(mockLogger.error).toHaveBeenCalled();
     });
 
-    test('should handle database error when creating preference', async () => {
-      knexQueryMock.first
-        .mockResolvedValueOnce(mockUser)
-        .mockResolvedValueOnce(null);
-      
-      knexQueryMock.returning
-        .mockRejectedValueOnce(new Error('DB Error'));
+    test('should handle error when creating preference', async () => {
+      userRepo.findByChannelAndId.mockResolvedValueOnce(mockUser);
+      prefRepo.findByUserAndDao.mockResolvedValueOnce(undefined);
+      prefRepo.create.mockRejectedValueOnce(new Error('DB Error'));
 
       await expect(handleSubscription({
         ...baseSubscriptionArgs,
         is_active: true
-      })).rejects.toThrow(SUBSCRIPTION_MESSAGES.ERROR_CREATE_PREF);
+      })).rejects.toThrow('DB Error');
 
       expect(mockLogger.error).toHaveBeenCalled();
     });
 
-    test('should handle database error when updating preference', async () => {
-      knexQueryMock.first
-        .mockResolvedValueOnce(mockUser)
-        .mockResolvedValueOnce(mockPreference);
-      
-      knexQueryMock.returning
-        .mockRejectedValueOnce(new Error('DB Error'));
+    test('should handle error when updating preference', async () => {
+      userRepo.findByChannelAndId.mockResolvedValueOnce(mockUser);
+      prefRepo.findByUserAndDao.mockResolvedValueOnce(mockPreference);
+      prefRepo.update.mockRejectedValueOnce(new Error('DB Error'));
 
       await expect(handleSubscription({
         ...baseSubscriptionArgs,
         is_active: false
-      })).rejects.toThrow(SUBSCRIPTION_MESSAGES.ERROR_UPDATE_PREF);
+      })).rejects.toThrow('DB Error');
 
       expect(mockLogger.error).toHaveBeenCalled();
     });
