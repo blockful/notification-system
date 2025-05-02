@@ -2,15 +2,15 @@ import { handleSubscription } from '../services/subscription.service';
 import { KnexUserRepository, KnexPreferenceRepository } from '../repositories/knex.repository';
 import { knexInstance } from '../index';
 
-const userRepo = new KnexUserRepository(knexInstance);
-const prefRepo = new KnexPreferenceRepository(knexInstance);
-
 /**
  * Handles the subscription logic for DAO users.
  * Acts as the handler layer, processing HTTP requests and responses.
  */
 export async function daoSubscriptionHandler(request: any, reply: any) {
   try {
+    const userRepo = new KnexUserRepository(knexInstance);
+    const prefRepo = new KnexPreferenceRepository(knexInstance);
+    
     const { dao } = request.params;
     const { channel, channel_user_id, is_active = true } = request.body;
 
@@ -36,6 +36,38 @@ export async function daoSubscriptionHandler(request: any, reply: any) {
     };
   } catch (error: any) {
     console.error('Error in subscription handler:', error);
+    return reply.code(500).send({
+      success: false,
+      message: error.message || 'Internal server error',
+      error: error.stack
+    });
+  }
+}
+
+/**
+ * Handles retrieving all users subscribed to a specific DAO.
+ * @param request - The HTTP request object
+ * @param reply - The HTTP reply object
+ */
+export async function getDaoSubscribersHandler(request: any, reply: any) {
+  try {
+    const prefRepo = new KnexPreferenceRepository(knexInstance);
+    const { dao } = request.params;
+    const subscribers = await prefRepo.findActiveSubscribersByDao(dao);
+    const formattedSubscribers = subscribers.map(subscriber => ({
+      id: subscriber.id,
+      user_id: subscriber.user_id,
+      channel: subscriber.channel,
+      channel_user_id: subscriber.channel_user_id,
+      is_active: subscriber.is_active
+    }));
+    return {
+      success: true,
+      message: `Found ${formattedSubscribers.length} active subscribers for DAO: ${dao}`,
+      data: formattedSubscribers
+    };
+  } catch (error: any) {
+    console.error('Error in get DAO subscribers handler:', error);
     return reply.code(500).send({
       success: false,
       message: error.message || 'Internal server error',
