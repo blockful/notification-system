@@ -3,7 +3,7 @@
  * Handles the business logic for managing user subscriptions to DAOs
  */
 
-import { SubscriptionParams } from '../interfaces';
+import { SubscriptionParams, GetDaoSubscribersParams } from '../interfaces';
 
 /**
  * Constants for subscription-related messages
@@ -18,6 +18,8 @@ export const SUBSCRIPTION_MESSAGES = {
   SUCCESS_ALREADY: 'Subscription already in the requested state',
   SUCCESS_ACTIVATED: 'Subscription activated for user',
   SUCCESS_DEACTIVATED: 'Subscription deactivated for user',
+  SUCCESS_GET_SUBSCRIBERS: 'Successfully retrieved DAO subscribers',
+  ERROR_GET_SUBSCRIBERS: 'Failed to retrieve DAO subscribers'
 };
 
 /**
@@ -78,5 +80,40 @@ export async function handleSubscription({
   } catch (error: any) {
     log.error(`Error in subscription service: ${error.message}`);
     throw error;
+  }
+}
+
+/**
+ * Retrieves all active subscribers for a specific DAO
+ * 
+ * This function queries the database for all users with active subscriptions
+ * to the specified DAO and formats the response data
+ * 
+ * @param {GetDaoSubscribersParams} params - The parameters for retrieving subscribers
+ * @returns {Promise<{subscribers: any[], message: string}>} The subscribers and success message
+ * @throws {Error} If the database query fails
+ */
+export async function getDaoSubscribers({
+  prefRepo,
+  daoId,
+  log
+}: GetDaoSubscribersParams) {
+  try {
+    const subscribers = await prefRepo.findActiveSubscribersByDao(daoId);
+    const formattedSubscribers = subscribers.map(subscriber => ({
+      id: subscriber.id,
+      user_id: subscriber.user_id,
+      channel: subscriber.channel,
+      channel_user_id: subscriber.channel_user_id,
+      is_active: subscriber.is_active
+    }));
+    return {
+      subscribers: formattedSubscribers,
+      message: SUBSCRIPTION_MESSAGES.SUCCESS_GET_SUBSCRIBERS
+    };
+  } catch (error: any) {
+    log.error(`Error retrieving DAO subscribers: ${error.message}`);
+    const enhancedError = new Error(`${SUBSCRIPTION_MESSAGES.ERROR_GET_SUBSCRIBERS}: ${error.message}`);
+    throw enhancedError;
   }
 } 

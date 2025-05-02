@@ -13,7 +13,7 @@ export interface Logger {
 }
 
 /**
- * Parameters required for handling a subscription request
+ * Interface for subscription-related parameters
  */
 export interface SubscriptionParams {
   userRepo: IUserRepository;
@@ -22,5 +22,14 @@ export interface SubscriptionParams {
   channel: string;
   channel_user_id: string;
   is_active: boolean;
+  log: Logger;
+}
+
+/**
+ * Interface for the parameters required to get DAO subscribers
+ */
+export interface GetDaoSubscribersParams {
+  prefRepo: IPreferenceRepository;
+  daoId: string;
   log: Logger;
 } 

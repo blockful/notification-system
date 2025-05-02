@@ -1,5 +1,5 @@
 import { describe, test, expect, jest, beforeEach } from '@jest/globals';
-import { handleSubscription, SUBSCRIPTION_MESSAGES } from './subscription.service';
+import { handleSubscription, getDaoSubscribers, SUBSCRIPTION_MESSAGES } from './subscription.service';
 import { User, UserPreference, IUserRepository, IPreferenceRepository, Logger } from '../interfaces';
 
 // ---- MOCKS ----
@@ -23,6 +23,29 @@ const mockLogger: Logger = {
   error: jest.fn()
 };
 
+const mockSubscribers = [
+  {
+    id: '456',
+    user_id: '123',
+    dao_id: 'dao123',
+    is_active: true,
+    created_at: new Date(),
+    updated_at: new Date(),
+    channel: 'telegram',
+    channel_user_id: 'user123'
+  },
+  {
+    id: '789',
+    user_id: '456',
+    dao_id: 'dao123',
+    is_active: true,
+    created_at: new Date(),
+    updated_at: new Date(),
+    channel: 'discord',
+    channel_user_id: 'discord_user_456'
+  }
+];
+
 // ---- REPOSITORY MOCKS ----
 const createMockUserRepo = (): jest.Mocked<IUserRepository> => ({
   findByChannelAndId: jest.fn(),
@@ -32,7 +55,8 @@ const createMockUserRepo = (): jest.Mocked<IUserRepository> => ({
 const createMockPrefRepo = (): jest.Mocked<IPreferenceRepository> => ({
   findByUserAndDao: jest.fn(),
   create: jest.fn(),
-  update: jest.fn()
+  update: jest.fn(),
+  findActiveSubscribersByDao: jest.fn()
 });
 
 // ---- TESTS ----
@@ -180,6 +204,54 @@ describe('Subscription Service', () => {
         is_active: false
       })).rejects.toThrow('DB Error');
 
+      expect(mockLogger.error).toHaveBeenCalled();
+    });
+  });
+  
+  describe('getDaoSubscribers', () => {
+    test('should retrieve and format subscribers for a DAO', async () => {
+      prefRepo.findActiveSubscribersByDao.mockResolvedValueOnce(mockSubscribers);
+      
+      const result = await getDaoSubscribers({
+        prefRepo,
+        daoId: 'dao123',
+        log: mockLogger
+      });
+      
+      expect(result.subscribers.length).toBe(2);
+      expect(result.message).toBe(SUBSCRIPTION_MESSAGES.SUCCESS_GET_SUBSCRIBERS);
+      
+      expect(result.subscribers[0]).toHaveProperty('id');
+      expect(result.subscribers[0]).toHaveProperty('user_id');
+      expect(result.subscribers[0]).toHaveProperty('channel');
+      expect(result.subscribers[0]).toHaveProperty('channel_user_id');
+      expect(result.subscribers[0]).toHaveProperty('is_active');
+      
+      expect(prefRepo.findActiveSubscribersByDao).toHaveBeenCalledWith('dao123');
+    });
+    
+    test('should return empty array when no subscribers exist', async () => {
+      prefRepo.findActiveSubscribersByDao.mockResolvedValueOnce([]);
+      
+      const result = await getDaoSubscribers({
+        prefRepo,
+        daoId: 'unknown-dao',
+        log: mockLogger
+      });
+      
+      expect(result.subscribers).toEqual([]);
+      expect(result.message).toBe(SUBSCRIPTION_MESSAGES.SUCCESS_GET_SUBSCRIBERS);
+    });
+    
+    test('should handle errors properly', async () => {
+      prefRepo.findActiveSubscribersByDao.mockRejectedValueOnce(new Error('DB Error'));
+      
+      await expect(getDaoSubscribers({
+        prefRepo,
+        daoId: 'dao123',
+        log: mockLogger
+      })).rejects.toThrow(SUBSCRIPTION_MESSAGES.ERROR_GET_SUBSCRIBERS);
+      
       expect(mockLogger.error).toHaveBeenCalled();
     });
   });

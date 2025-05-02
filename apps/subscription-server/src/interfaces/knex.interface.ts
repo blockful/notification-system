@@ -8,5 +8,7 @@ export interface KnexMock {
     insert: jest.Mock<any>;
     update: jest.Mock<any>;
     returning: jest.Mock<any>;
+    join: jest.Mock<any>;
+    select: jest.Mock<any>;
 }
   

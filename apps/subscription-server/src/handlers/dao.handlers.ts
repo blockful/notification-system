@@ -1,4 +1,4 @@
-import { handleSubscription } from '../services/subscription.service';
+import { handleSubscription, getDaoSubscribers } from '../services/subscription.service';
 import { KnexUserRepository, KnexPreferenceRepository } from '../repositories/knex.repository';
 import { knexInstance } from '../index';
 
@@ -53,18 +53,15 @@ export async function getDaoSubscribersHandler(request: any, reply: any) {
   try {
     const prefRepo = new KnexPreferenceRepository(knexInstance);
     const { dao } = request.params;
-    const subscribers = await prefRepo.findActiveSubscribersByDao(dao);
-    const formattedSubscribers = subscribers.map(subscriber => ({
-      id: subscriber.id,
-      user_id: subscriber.user_id,
-      channel: subscriber.channel,
-      channel_user_id: subscriber.channel_user_id,
-      is_active: subscriber.is_active
-    }));
+    const { subscribers, message } = await getDaoSubscribers({
+      prefRepo,
+      daoId: dao,
+      log: request.log
+    });
     return {
       success: true,
-      message: `Found ${formattedSubscribers.length} active subscribers for DAO: ${dao}`,
-      data: formattedSubscribers
+      message,
+      data: subscribers
     };
   } catch (error: any) {
     console.error('Error in get DAO subscribers handler:', error);
