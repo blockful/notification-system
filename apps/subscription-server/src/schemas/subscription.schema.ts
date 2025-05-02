@@ -1,15 +1,32 @@
+/**
+ * Subscription schemas module
+ * Defines Zod schemas for request/response validation in subscription endpoints
+ */
+
 import { z } from "zod";
 
+/**
+ * Schema for subscription URL parameters
+ * Validates the DAO identifier in the URL
+ */
 export const subscriptionParamsSchema = z.object({
   dao: z.string().describe('The DAO identifier')
 });
 
+/**
+ * Schema for subscription request body
+ * Validates the subscription request payload
+ */
 export const subscriptionBodySchema = z.object({
   channel: z.string().describe('The channel the user is coming from (e.g., "telegram", "discord")'),
   channel_user_id: z.string().describe('The user ID from the channel'),
   is_active: z.boolean().default(true).describe('Whether the subscription is active')
 });
 
+/**
+ * Schema for subscription response
+ * Defines the structure and validation for success and error responses
+ */
 export const subscriptionResponseSchema = {
   200: z.object({
     success: z.boolean(),

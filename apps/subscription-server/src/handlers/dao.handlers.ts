@@ -23,7 +23,6 @@ export async function daoSubscriptionHandler(request: any, reply: any) {
       is_active,
       log: request.log
     });
-
     return {
       success: true,
       message,

@@ -6,14 +6,11 @@ import fastifySwaggerUi from '@fastify/swagger-ui';
 import { initial_routes } from './controllers/initial_routes';
 import { daoHandlers } from './controllers/dao.controller';
 import Knex from 'knex';
-
 export const knexInstance = Knex({
   client: 'pg',
   connection: process.env.DATABASE_URL || 'postgresql://postgres:postgres@localhost:5432/'
 });
-
 const app = fastify();
-
 // Configure zod to be the input validator
 app.setValidatorCompiler(validatorCompiler);
 // Configure zod to be the output serializer

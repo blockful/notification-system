@@ -1,5 +1,13 @@
+/**
+ * Subscription service module
+ * Handles the business logic for managing user subscriptions to DAOs
+ */
+
 import { SubscriptionParams } from '../interfaces/subscription.interface';
 
+/**
+ * Constants for subscription-related messages
+ */
 export const SUBSCRIPTION_MESSAGES = {
   ERROR_QUERY_USER: 'Database query failed (users)',
   ERROR_CREATE_USER: 'Failed to create user',
@@ -12,6 +20,18 @@ export const SUBSCRIPTION_MESSAGES = {
   SUCCESS_DEACTIVATED: 'Subscription deactivated for user',
 };
 
+/**
+ * Handles subscription requests for users to DAOs
+ * 
+ * This function:
+ * 1. Finds or creates a user based on their channel and channel_user_id
+ * 2. Finds or creates a subscription preference for the user and DAO
+ * 3. Updates the subscription state if necessary
+ * 
+ * @param {SubscriptionParams} params - The subscription request parameters
+ * @returns {Promise<{user: User, result: UserPreference, message: string}>} The subscription result
+ * @throws {Error} If any database operation fails
+ */
 export async function handleSubscription({
   userRepo,
   prefRepo,
