@@ -5,7 +5,7 @@ import fastifyCors from '@fastify/cors';
 import { daoHandlers } from './dao.controller';
 import axios from 'axios';
 import { AddressInfo } from 'net';
-import { User, Preference, KnexMock } from '../interfaces/index';
+import { User, UserPreference, KnexMock } from '../interfaces';
 
 // ---- MOCKS ----
 const mockUser: User = {
@@ -15,7 +15,7 @@ const mockUser: User = {
   is_active: true
 };
 
-const mockPreference: Preference = {
+const mockPreference: UserPreference = {
   id: '456',
   user_id: '123',
   dao_id: 'ens',
@@ -29,7 +29,7 @@ const knexMock: KnexMock = {
   first: jest.fn<() => Promise<User>>().mockResolvedValue(mockUser),
   insert: jest.fn().mockReturnThis(),
   update: jest.fn().mockReturnThis(),
-  returning: jest.fn<() => Promise<Preference[]>>().mockResolvedValue([mockPreference]),
+  returning: jest.fn<() => Promise<UserPreference[]>>().mockResolvedValue([mockPreference]),
 };
 
 jest.mock('knex', () => {

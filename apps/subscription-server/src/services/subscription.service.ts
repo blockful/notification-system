@@ -3,7 +3,7 @@
  * Handles the business logic for managing user subscriptions to DAOs
  */
 
-import { SubscriptionParams } from '../interfaces/subscription.interface';
+import { SubscriptionParams } from '../interfaces';
 
 /**
  * Constants for subscription-related messages

@@ -1,3 +1,7 @@
+/**
+ * Mock interface for Knex in testing environments
+ * Provides jest mock functions for database operations
+ */
 export interface KnexMock {
     where: jest.Mock<any>;
     first: jest.Mock<any>;

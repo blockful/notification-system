@@ -1,8 +1,6 @@
 import { describe, test, expect, jest, beforeEach } from '@jest/globals';
 import { handleSubscription, SUBSCRIPTION_MESSAGES } from './subscription.service';
-import { User, UserPreference } from '../interfaces/repository.interface';
-import { IUserRepository, IPreferenceRepository } from '../interfaces/repository.interface';
-import { Logger } from '../interfaces/subscription.interface';
+import { User, UserPreference, IUserRepository, IPreferenceRepository, Logger } from '../interfaces';
 
 // ---- MOCKS ----
 const mockUser: User = {

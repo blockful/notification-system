@@ -4,7 +4,7 @@
  */
 
 import { Knex } from 'knex';
-import { IUserRepository, IPreferenceRepository, User, UserPreference } from '../interfaces/repository.interface';
+import { IUserRepository, IPreferenceRepository, User, UserPreference } from '../interfaces';
 
 /**
  * User repository implementation using Knex
