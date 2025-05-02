@@ -3,7 +3,7 @@
  * These interfaces define the contract for subscription-related operations.
  */
 
-import { IUserRepository, IPreferenceRepository } from './repository.interface';
+import { IUserRepository, IPreferenceRepository } from './user_subscription.interface';
 
 /**
  * Logger interface for error handling and logging
