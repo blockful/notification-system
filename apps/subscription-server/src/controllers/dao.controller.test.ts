@@ -24,7 +24,6 @@ const mockPreference: UserPreference = {
   updated_at: new Date()
 };
 
-// Mock array of users subscribed to a DAO
 const mockSubscribers = [
   {
     id: '456',
@@ -48,7 +47,6 @@ const mockSubscribers = [
   }
 ];
 
-// Define o tipo para corresponder ao resultado da junção UserPreference & User
 type SubscriberResult = UserPreference & User;
 
 const knexMock: KnexMock = {
