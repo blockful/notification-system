@@ -61,6 +61,7 @@ export abstract class Trigger<TData, TFilterOptions = void> {
                 await this.process(data, this.options);
             } catch (error) {
                 console.error(`Error in trigger execution (${this.id}):`, error);
+                await this.stop();
             }
         }, this.interval);
     }
@@ -68,7 +69,7 @@ export abstract class Trigger<TData, TFilterOptions = void> {
     /**
      * Stops the trigger and cleans up resources
      */
-    stop(): void {
+    async stop(): Promise<void> {
         if (this.timer) {
             clearInterval(this.timer);
             this.timer = null;
