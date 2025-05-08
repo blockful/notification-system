@@ -13,42 +13,17 @@ const validProposalStatuses = [
 
 // Define environment variables schema with validation
 const envSchema = z.object({
-  DATABASE_URL: z.string({
-    required_error: 'DATABASE_URL is required'
-  }),
-  API_URL: z.string({
-    required_error: 'API_URL is required'
-  }),
-  TRIGGER_INTERVAL: z.string()
-    .optional()
-    .transform((val: string | undefined) => val ? parseInt(val, 10) : 60000),
-  PROPOSAL_STATUS: z.enum(validProposalStatuses, {
-    required_error: 'PROPOSAL_STATUS is required',
-    invalid_type_error: `PROPOSAL_STATUS must be one of: ${validProposalStatuses.join(', ')}`
-  })
+  DATABASE_URL: z.string(),
+  API_URL: z.string(),
+  TRIGGER_INTERVAL: z.coerce.number().optional().default(60000),
+  PROPOSAL_STATUS: z.enum(validProposalStatuses)
 });
 
-// Parse and extract the environment variables schema type
-export type EnvConfig = z.infer<typeof envSchema>;
+const _env = envSchema.safeParse(process.env);
 
-/**
- * Loads and validates environment variables using Zod
- * @returns Object with validated environment variables
- */
-export function loadEnvConfig(): EnvConfig {
-  try {
-    // Validate environment variables against the schema
-    return envSchema.parse(process.env);
-  } catch (error: unknown) {
-    if (error instanceof z.ZodError) {
-      // Print all validation errors
-      console.error('Environment validation errors:');
-      error.errors.forEach((err: z.ZodIssue) => {
-        console.error(`- ${err.path.join('.')}: ${err.message}`);
-      });
-    } else {
-      console.error('Failed to load environment variables:', error);
-    }
-    process.exit(1);
-  }
-} 
+if (_env.success === false) {
+  console.error('Invalid environment variables:', _env.error.format());
+  throw new Error('Invalid environment variables');
+}
+
+export const env = _env.data; 
