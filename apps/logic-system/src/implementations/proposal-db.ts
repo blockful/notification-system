@@ -1,66 +1,40 @@
-import { Pool } from 'pg';
 import { ProposalDB, ProposalOnChain, ListProposalsOptions, ProposalStatus } from '../interfaces/proposal.interface';
+import { db } from '../config/database';
 
 export class PostgresProposalDB implements ProposalDB {
-  private pool: Pool;
-
-  constructor(connectionString: string) {
-    this.pool = new Pool({
-      connectionString,
-    });
-  }
-
   async getById(id: string): Promise<ProposalOnChain | null> {
-    const query = `
-      SELECT * FROM proposals 
-      WHERE id = $1
-    `;
+    const proposal = await db('proposals')
+      .where({ id })
+      .first();
     
-    const result = await this.pool.query(query, [id]);
-    
-    if (result.rows.length === 0) {
+    if (!proposal) {
       return null;
     }
     
-    return this.mapRowToProposal(result.rows[0]);
+    return this.mapRowToProposal(proposal);
   }
 
   async listAll(options?: ListProposalsOptions): Promise<ProposalOnChain[]> {
-    let query = `SELECT * FROM proposals`;
-    const params: any[] = [];
-    let paramIndex = 1;
-    
-    // Build WHERE clause based on options
-    const whereConditions: string[] = [];
+    let query = db('proposals').select('*');
     
     if (options?.status) {
-      whereConditions.push(`status = $${paramIndex++}`);
-      params.push(options.status);
+      query = query.where('status', options.status);
     }
     
     if (options?.daoId) {
-      whereConditions.push(`dao_id = $${paramIndex++}`);
-      params.push(options.daoId);
+      query = query.where('dao_id', options.daoId);
     }
     
-    if (whereConditions.length > 0) {
-      query += ` WHERE ${whereConditions.join(' AND ')}`;
-    }
-    
-    // Add pagination
     if (options?.limit) {
-      query += ` LIMIT $${paramIndex++}`;
-      params.push(options.limit);
+      query = query.limit(options.limit);
     }
     
     if (options?.offset) {
-      query += ` OFFSET $${paramIndex++}`;
-      params.push(options.offset);
+      query = query.offset(options.offset);
     }
     
-    const result = await this.pool.query(query, params);
-    
-    return result.rows.map(this.mapRowToProposal);
+    const proposals = await query;
+    return proposals.map(this.mapRowToProposal);
   }
 
   private mapRowToProposal(row: any): ProposalOnChain {
