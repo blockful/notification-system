@@ -1,42 +1,41 @@
-//@ts-ignore
-//This line is to avoid the error "Do not know how to serialize a BigInt"
-BigInt.prototype.toJSON = function () {
-  return this.toString();
-};
-
 import { NewProposalTrigger } from './triggers/new-proposal-trigger';
 import { PostgresProposalDB } from './implementations/proposal-db';
 import { HttpSubscriptionChecker } from './implementations/subscription-checker';
-import { loadEnvConfig } from './config/env';
-
-// Load and validate environment variables
-const config = loadEnvConfig();
+import { env } from './config/env';
 
 // Create database and subscription checker implementations
-const proposalDB = new PostgresProposalDB(config.DATABASE_URL);
-const subscriptionChecker = new HttpSubscriptionChecker(config.API_URL);
+const proposalDB = new PostgresProposalDB();
+const subscriptionChecker = new HttpSubscriptionChecker(env.API_URL);
 
 // Create and start the trigger
 const trigger = new NewProposalTrigger(
   subscriptionChecker,
   proposalDB,
-  config.TRIGGER_INTERVAL
+  env.TRIGGER_INTERVAL
 );
 
 // Start the trigger with the specified status
-trigger.start({ status: config.PROPOSAL_STATUS });
+trigger.start({ status: env.PROPOSAL_STATUS });
 
-// Set up graceful shutdown
-process.on('SIGINT', () => {
-  console.log('Received SIGINT. Shutting down...');
-  trigger.stop();
+async function shutdown() {
+  console.log('Shutting down...');
+  await trigger.stop();
   process.exit(0);
+}
+
+process.on('SIGINT', () => {
+  console.log('Received SIGINT');
+  shutdown();
 });
 
 process.on('SIGTERM', () => {
-  console.log('Received SIGTERM. Shutting down...');
-  trigger.stop();
-  process.exit(0);
+  console.log('Received SIGTERM');
+  shutdown();
 });
 
 console.log('Logic system is running. Press Ctrl+C to stop.');
+
+//@ts-ignore
+BigInt.prototype.toJSON = function () {
+  return this.toString();
+};
