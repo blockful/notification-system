@@ -50,7 +50,6 @@ export class NewProposalTrigger extends Trigger<ProposalOnChain, ListProposalsOp
       
       return MESSAGES.SUCCESS;
     } catch (error) {
-      console.error(`${MESSAGES.ERROR_CHECKING} ${error}`);
       throw error;
     }
   }
