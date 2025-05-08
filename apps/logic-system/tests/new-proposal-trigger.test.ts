@@ -7,7 +7,6 @@ describe('NewProposalTrigger', () => {
   let mockSubscriptionChecker: jest.Mocked<SubscriptionCheckerService>;
   let mockProposalDB: jest.Mocked<ProposalDB>;
   let trigger: NewProposalTrigger;
-  let originalConsoleError: any;
   
   const mockProposal: ProposalOnChain = {
     id: '1',
@@ -28,10 +27,6 @@ describe('NewProposalTrigger', () => {
   };
 
   beforeEach(() => {
-    // Save original console.error and replace it with a mock
-    originalConsoleError = console.error;
-    console.error = jest.fn();
-    
     mockSubscriptionChecker = {
       checkSubscribers: jest.fn()
     };
@@ -46,11 +41,6 @@ describe('NewProposalTrigger', () => {
       mockProposalDB,
       60000
     );
-  });
-  
-  afterEach(() => {
-    // Restore original console.error
-    console.error = originalConsoleError;
   });
 
   describe('process', () => {
@@ -89,7 +79,6 @@ describe('NewProposalTrigger', () => {
       } as SubscriptionCheckResult);
       
       await expect(trigger.process([mockProposal])).rejects.toThrow('Unknown error checking subscriptions');
-      expect(console.error).toHaveBeenCalled();
     });
   });
   
@@ -104,57 +93,32 @@ describe('NewProposalTrigger', () => {
       jest.useRealTimers();
     });
     
-    it('should throw error if status option is not provided', () => {
-      const consoleErrorSpy = jest.spyOn(console, 'error');
-      
-      // Mock the fetchData method to throw immediately when called
-      jest.spyOn(trigger as any, 'fetchData').mockImplementationOnce(() => {
-        throw new Error('Status is required in filter options');
-      });
-      
-      trigger.start({});
-      
-      // Advance timer by the interval time to trigger the first execution
-      jest.advanceTimersByTime(60000);
-      
-      expect(consoleErrorSpy).toHaveBeenCalledWith(
-        expect.stringContaining('Error in trigger execution (newProposalTrigger):'),
-        expect.objectContaining({
-          message: 'Status is required in filter options'
-        })
-      );
+    it('should throw error if status option is not provided', async () => {
+      const fetchDataMethod = trigger['fetchData'].bind(trigger);
+      await expect(fetchDataMethod({})).rejects.toThrow('Status is required in filter options');
     });
 
     it('should start the interval and fetch proposals with correct status', () => {
-      trigger.start({ status: 'active' as ProposalStatus });
-      
+      trigger.start({ status: 'active' });
       jest.advanceTimersByTime(60000);
-      
       expect(mockProposalDB.listAll).toHaveBeenCalledWith({ status: 'active' });
     });
     
     it('should stop and restart the interval if start is called twice', () => {
       const stopSpy = jest.spyOn(trigger, 'stop');
-      
-      trigger.start({ status: 'active' as ProposalStatus });
-      trigger.start({ status: 'pending' as ProposalStatus });
-      
+      trigger.start({ status: 'active' });
+      trigger.start({ status: 'pending' });
       expect(stopSpy).toHaveBeenCalledTimes(1);
-      
       jest.advanceTimersByTime(60000);
-      
       // The second start should use the new options
       expect(mockProposalDB.listAll).toHaveBeenCalledWith({ status: 'pending' });
     });
     
     it('should stop the interval when stop is called', () => {
-      trigger.start({ status: 'active' as ProposalStatus });
-      
+      trigger.start({ status: 'active' });
       jest.advanceTimersByTime(60000);
       expect(mockProposalDB.listAll).toHaveBeenCalledWith({ status: 'active' });
-      
       trigger.stop();
-      
       mockProposalDB.listAll.mockClear();
       jest.advanceTimersByTime(60000);
       expect(mockProposalDB.listAll).not.toHaveBeenCalled();

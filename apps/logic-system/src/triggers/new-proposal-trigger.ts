@@ -59,14 +59,9 @@ export class NewProposalTrigger extends Trigger<ProposalOnChain, ListProposalsOp
    * @returns Array of proposals
    */
   protected async fetchData(options?: ListProposalsOptions): Promise<ProposalOnChain[]> {
-    try {
-      if (!options?.status) {
-        throw new Error(MESSAGES.STATUS_REQUIRED);
-      }
-      return await this.proposalDB.listAll({ status: options.status });
-    } catch (error) {
-      console.error(`${MESSAGES.ERROR_FETCHING} ${error}`);
-      return [];
+    if (!options?.status) {
+      throw new Error(MESSAGES.STATUS_REQUIRED);
     }
+    return await this.proposalDB.listAll({ status: options.status });
   }
 } 

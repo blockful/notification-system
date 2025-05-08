@@ -47,6 +47,7 @@ export abstract class Trigger<TData, TFilterOptions = void> {
     /**
      * Starts the trigger to run at the specified interval
      * @param options Options for filtering data
+     * @throws {Error} If there's an error during trigger execution
      */
     start(options: TFilterOptions): void {
         if (this.timer) {
@@ -60,8 +61,8 @@ export abstract class Trigger<TData, TFilterOptions = void> {
                 const data = await this.fetchData(options);
                 await this.process(data, this.options);
             } catch (error) {
-                console.error(`Error in trigger execution (${this.id}):`, error);
                 await this.stop();
+                throw new Error(`Error in trigger execution (${this.id}): ${error instanceof Error ? error.message : 'Unknown error'}`);
             }
         }, this.interval);
     }
