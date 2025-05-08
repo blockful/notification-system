@@ -44,11 +44,14 @@ describe('NewProposalTrigger', () => {
   });
 
   describe('process', () => {
-    it('should return NO_PROPOSALS message when result is empty', async () => {
+    it('should process empty array', async () => {
+      mockSubscriptionChecker.checkSubscribers.mockResolvedValue({ success: true } as SubscriptionCheckResult);
+      
       const result = await trigger.process([]);
       
-      expect(result).toBe('There are no new proposals.');
-      expect(mockSubscriptionChecker.checkSubscribers).not.toHaveBeenCalled();
+      expect(result).toBe('New proposal notification processed.');
+      expect(mockSubscriptionChecker.checkSubscribers).toHaveBeenCalledTimes(1);
+      expect(JSON.parse(mockSubscriptionChecker.checkSubscribers.mock.calls[0][0].context)).toEqual([]);
     });
 
     it('should send proposals to subscription checker', async () => {

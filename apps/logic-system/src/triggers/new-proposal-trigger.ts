@@ -11,7 +11,6 @@ import { SubscriptionCheckerService, EventContextMessage } from '../interfaces/s
 const triggerId = 'newProposalTrigger';
 const MESSAGES = {
   SUCCESS: 'New proposal notification processed.',
-  NO_PROPOSALS: 'There are no new proposals.',
   ERROR_FETCHING: 'Error fetching proposals:',
   ERROR_CHECKING: 'Error checking subscriptions:',
   STATUS_REQUIRED: 'Status is required in filter options'
@@ -27,10 +26,6 @@ export class NewProposalTrigger extends Trigger<ProposalOnChain, ListProposalsOp
   }
 
   async process(data: ProposalOnChain[]): Promise<string> {
-    if (data.length === 0) {
-      return MESSAGES.NO_PROPOSALS;
-    }
-
     const message: EventContextMessage = {
       triggerId: this.id,
       context: JSON.stringify(data.map(proposal => ({
