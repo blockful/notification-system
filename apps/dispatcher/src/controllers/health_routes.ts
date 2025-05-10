@@ -1,5 +1,6 @@
 import type { FastifyTypedInstance } from "../interfaces/fastify_typed_instance";
 import { z } from "zod";
+import { config } from "../envConfig";
 
 export async function healthRoutes(server: FastifyTypedInstance) {
   server.get('/health', {
@@ -10,7 +11,6 @@ export async function healthRoutes(server: FastifyTypedInstance) {
         200: z.object({
           status: z.string(),
           timestamp: z.string(),
-          version: z.string(),
           environment: z.string().optional()
         })
       }
@@ -19,8 +19,7 @@ export async function healthRoutes(server: FastifyTypedInstance) {
     return {
       status: 'ok',
       timestamp: new Date().toISOString(),
-      version: '1.0.0',
-      environment: process.env.NODE_ENV
+      environment: config.environment
     }
   });
 } 
