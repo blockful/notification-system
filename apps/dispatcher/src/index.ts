@@ -33,14 +33,12 @@ server.register(fastifySwaggerUi, {
 // Register routes
 server.register(healthRoutes);
 
-// Start server
 const start = async () => {
   try {
-    const port = config.port;
-    await server.listen({ port, host: '0.0.0.0' });
-    console.log(`Server is running on port ${port}`);
+    await server.listen({ port: config.port, host: '0.0.0.0' });
+    console.log(`Server is running on port ${config.port}`);
   } catch (err) {
-    server.log.error(err);
+    console.error('Error starting server:', err);
     process.exit(1);
   }
 };
