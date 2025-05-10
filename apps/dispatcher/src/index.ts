@@ -3,11 +3,8 @@ import { validatorCompiler, serializerCompiler } from 'fastify-type-provider-zod
 import fastifyCors from '@fastify/cors';
 import fastifySwagger from '@fastify/swagger';
 import fastifySwaggerUi from '@fastify/swagger-ui';
-import { config } from 'dotenv';
 import { healthRoutes } from './controllers';
-
-// Load environment variables
-config();
+import { config } from './envConfig';
 
 const server = fastify();
 
@@ -39,7 +36,7 @@ server.register(healthRoutes);
 // Start server
 const start = async () => {
   try {
-    const port = process.env.PORT ? parseInt(process.env.PORT) : 3000;
+    const port = config.port;
     await server.listen({ port, host: '0.0.0.0' });
     console.log(`Server is running on port ${port}`);
   } catch (err) {
