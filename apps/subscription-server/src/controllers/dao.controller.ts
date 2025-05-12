@@ -24,7 +24,7 @@ export async function daoHandlers(app: FastifyTypedInstance) {
       body: subscriptionBodySchema,
       response: createUpdateSubscriptionResponseSchema
     },
-  }, (request, reply) => daoHandler.postDaoSubscription(request, reply));
+  }, (request) => daoHandler.postDaoSubscription(request));
 
   app.get('/subscriptions/:dao', {
     schema: {
@@ -33,5 +33,5 @@ export async function daoHandlers(app: FastifyTypedInstance) {
       params: subscriptionParamsSchema,
       response: getDaoSubscribersResponseSchema
     }
-  }, (request, reply) => daoHandler.getDaoSubscribers(request, reply));
+  }, (request) => daoHandler.getDaoSubscribers(request));
 } 
