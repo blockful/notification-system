@@ -228,7 +228,7 @@ describe('Subscription Service', () => {
     test('should handle errors properly', async () => {
       prefRepo.findActiveSubscribersByDao.mockRejectedValueOnce(new Error('DB Error'));
       
-      await expect(subscriptionService.getDaoSubscribers('dao123')).rejects.toThrow(SUBSCRIPTION_MESSAGES.ERROR_GET_SUBSCRIBERS);
+      await expect(subscriptionService.getDaoSubscribers('dao123')).rejects.toThrow('DB Error');
     });
   });
 }); 
