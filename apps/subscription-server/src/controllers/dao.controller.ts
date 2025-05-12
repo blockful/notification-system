@@ -5,13 +5,17 @@ import {
   createUpdateSubscriptionResponseSchema,
   getDaoSubscribersResponseSchema
 } from '../schemas/subscription.schema';
-import { postDaoSubscriptionHandler, getDaoSubscribersHandler } from '../handlers/dao.handlers';
+import { DaoHandler } from '../handlers/dao.handlers';
+import { userRepository, preferenceRepository } from '../index';
 
 /**
  * Registers DAO subscription routes in the Fastify app.
  * Acts as the controller layer, connecting HTTP routes to handlers.
  */
 export async function daoHandlers(app: FastifyTypedInstance) {
+  // Create a single instance of the handler
+  const daoHandler = new DaoHandler(userRepository, preferenceRepository);
+
   app.post('/subscription/:dao', {
     schema: {
       tags: ['dao'],
@@ -20,7 +24,7 @@ export async function daoHandlers(app: FastifyTypedInstance) {
       body: subscriptionBodySchema,
       response: createUpdateSubscriptionResponseSchema
     },
-  }, postDaoSubscriptionHandler);
+  }, (request, reply) => daoHandler.postDaoSubscription(request, reply));
 
   app.get('/subscriptions/:dao', {
     schema: {
@@ -29,5 +33,5 @@ export async function daoHandlers(app: FastifyTypedInstance) {
       params: subscriptionParamsSchema,
       response: getDaoSubscribersResponseSchema
     }
-  }, getDaoSubscribersHandler);
+  }, (request, reply) => daoHandler.getDaoSubscribers(request, reply));
 } 
