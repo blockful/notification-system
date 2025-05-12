@@ -96,24 +96,17 @@ export async function handleSubscription({
 export async function getDaoSubscribers({
   prefRepo,
   daoId,
-  log
 }: GetDaoSubscribersParams) {
-  try {
-    const subscribers = await prefRepo.findActiveSubscribersByDao(daoId);
-    const formattedSubscribers = subscribers.map(subscriber => ({
-      id: subscriber.id,
-      user_id: subscriber.user_id,
-      channel: subscriber.channel,
-      channel_user_id: subscriber.channel_user_id,
-      is_active: subscriber.is_active
-    }));
-    return {
-      subscribers: formattedSubscribers,
-      message: SUBSCRIPTION_MESSAGES.SUCCESS_GET_SUBSCRIBERS
-    };
-  } catch (error: any) {
-    log.error(`Error retrieving DAO subscribers: ${error.message}`);
-    const enhancedError = new Error(`${SUBSCRIPTION_MESSAGES.ERROR_GET_SUBSCRIBERS}: ${error.message}`);
-    throw enhancedError;
-  }
+  const subscribers = await prefRepo.findActiveSubscribersByDao(daoId);
+  const formattedSubscribers = subscribers.map(subscriber => ({
+    id: subscriber.id,
+    user_id: subscriber.user_id,
+    channel: subscriber.channel,
+    channel_user_id: subscriber.channel_user_id,
+    is_active: subscriber.is_active
+  }));
+  return {
+    subscribers: formattedSubscribers,
+    message: SUBSCRIPTION_MESSAGES.SUCCESS_GET_SUBSCRIBERS
+  };
 } 

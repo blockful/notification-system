@@ -31,5 +31,4 @@ export interface SubscriptionParams {
 export interface GetDaoSubscribersParams {
   prefRepo: IPreferenceRepository;
   daoId: string;
-  log: Logger;
 } 
