@@ -1,5 +1,4 @@
-// Carregar variáveis de ambiente do arquivo .env
-import * as dotenv from 'dotenv';
+// Import configuration
 import fastify from 'fastify';
 import { validatorCompiler, serializerCompiler, jsonSchemaTransform } from 'fastify-type-provider-zod';
 import fastifyCors from '@fastify/cors';
@@ -7,12 +6,13 @@ import fastifySwagger from '@fastify/swagger';
 import fastifySwaggerUi from '@fastify/swagger-ui';
 import { initial_routes } from './controllers/initial_routes';
 import { daoHandlers } from './controllers/dao.controller';
-import Knex from 'knex';
-dotenv.config();
-export const knexInstance = Knex({
-  client: 'pg',
-  connection: process.env.DATABASE_URL || 'postgresql://postgres:postgres@localhost:5432/'
-});
+import { KnexUserRepository, KnexPreferenceRepository } from './repositories/knex.repository';
+import { knexInstance, PORT } from './config';
+
+// Create repositories
+export const userRepository = new KnexUserRepository(knexInstance);
+export const preferenceRepository = new KnexPreferenceRepository(knexInstance);
+
 const app = fastify();
 // Configure zod to be the input validator
 app.setValidatorCompiler(validatorCompiler);
@@ -20,6 +20,15 @@ app.setValidatorCompiler(validatorCompiler);
 app.setSerializerCompiler(serializerCompiler);
 app.register(fastifyCors, {
   origin: '*',
+});
+// Global error handler middleware
+app.setErrorHandler((error, request, reply) => {
+  console.error(`Error occurred: ${error.message}`);
+  return reply.code(error.statusCode || 500).send({
+    success: false,
+    message: error.message || 'Internal server error',
+    error: error.stack
+  });
 });
 app.register(fastifySwagger, {
   openapi: {
@@ -36,6 +45,6 @@ app.register(fastifySwaggerUi, {
 });
 app.register(initial_routes);
 app.register(daoHandlers);
-app.listen({ port: 3000 }, () => {
-  console.log('HTTP server running!');
+app.listen({ port: PORT }, () => {
+  console.log(`HTTP server running on port ${PORT}!`);
 });
