@@ -5,14 +5,8 @@ import fastifySwagger from '@fastify/swagger';
 import fastifySwaggerUi from '@fastify/swagger-ui';
 import { initial_routes } from './controllers/initial_routes';
 import { daoHandlers } from './controllers/dao.controller';
-import Knex from 'knex';
+import { knexInstance, PORT } from './config';
 import { KnexUserRepository, KnexPreferenceRepository } from './repositories/knex.repository';
-
-// Database connection
-export const knexInstance = Knex({
-  client: 'pg',
-  connection: process.env.DATABASE_URL || 'postgresql://postgres:postgres@localhost:5432/'
-});
 
 // Create repository instances
 export const userRepository = new KnexUserRepository(knexInstance);
@@ -41,6 +35,6 @@ app.register(fastifySwaggerUi, {
 });
 app.register(initial_routes);
 app.register(daoHandlers);
-app.listen({ port: 3000 }, () => {
-  console.log('HTTP server running!');
+app.listen({ port: PORT }, () => {
+  console.log(`HTTP server running on port ${PORT}!`);
 });
