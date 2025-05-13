@@ -1,16 +1,11 @@
 import { SubscriptionService } from '../services/subscription.service';
-import { IUserRepository, IPreferenceRepository } from '../interfaces';
 
 /**
  * Handles DAO-related requests
  * Acts as the handler layer, processing HTTP requests and responses
  */
 export class DaoHandler {
-  private subscriptionService: SubscriptionService;
-  
-  constructor(userRepo: IUserRepository, prefRepo: IPreferenceRepository) {
-    this.subscriptionService = new SubscriptionService(userRepo, prefRepo);
-  }
+  constructor(private subscriptionService: SubscriptionService) {}
 
   /**
    * Handles the subscription logic for DAO users.
