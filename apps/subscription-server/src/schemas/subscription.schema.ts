@@ -20,7 +20,7 @@ export const subscriptionParamsSchema = z.object({
 export const subscriptionBodySchema = z.object({
   channel: z.string().describe('The channel the user is coming from (e.g., "telegram", "discord")'),
   channel_user_id: z.string().describe('The user ID from the channel'),
-  is_active: z.boolean().default(true).describe('Whether the subscription is active')
+  is_active: z.boolean().optional().default(true).describe('Whether the subscription is active')
 });
 
 /**
