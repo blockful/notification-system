@@ -3,7 +3,7 @@
  * Handles the business logic for managing user subscriptions to DAOs
  */
 
-import { IUserRepository, IPreferenceRepository, User, UserPreference } from '../interfaces';
+import { IUserRepository, IPreferenceRepository, User, UserPreference, SubscriptionBody } from '../interfaces';
 
 /**
  * Constants for subscription-related messages

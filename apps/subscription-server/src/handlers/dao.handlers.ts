@@ -10,12 +10,17 @@ export class DaoHandler {
   /**
    * Handles the subscription logic for DAO users.
    * 
-   * @param request - The HTTP request object
+   * @param dao - The DAO identifier
+   * @param channel - The channel the user is coming from (e.g., "telegram", "discord")
+   * @param channel_user_id - The user ID from the channel
+   * @param is_active - Whether the subscription is active
    */
-  async postDaoSubscription(request: any) {
-    const { dao } = request.params;
-    const { channel, channel_user_id, is_active = true } = request.body;
-    
+  async postDaoSubscription(
+    dao: string,
+    channel: string,
+    channel_user_id: string,
+    is_active: boolean = true
+  ) {
     const { user, result, message } = await this.subscriptionService.handleSubscription(
       dao,
       channel,
@@ -38,11 +43,10 @@ export class DaoHandler {
   /**
    * Handles retrieving all users subscribed to a specific DAO.
    * 
-   * @param request - The HTTP request object
+   * @param daoId - The ID of the DAO
    */
-  async getDaoSubscribers(request: any) {
-    const { dao } = request.params;
-    const { subscribers, message } = await this.subscriptionService.getDaoSubscribers(dao);
+  async getDaoSubscribers(daoId: string) {
+    const { subscribers, message } = await this.subscriptionService.getDaoSubscribers(daoId);
     
     return {
       message,

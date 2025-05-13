@@ -3,6 +3,9 @@
  * These interfaces define the contract for database operations.
  */
 
+import { z } from 'zod';
+import { subscriptionBodySchema } from '../schemas/subscription.schema';
+
 /**
  * User entity interface representing a user in the system
  */
@@ -26,6 +29,9 @@ export interface UserPreference {
   updated_at: Date;
 }
 
+// Derived types from Zod schemas to avoid redundancy
+export type SubscriptionBody = z.infer<typeof subscriptionBodySchema>;
+
 /**
  * User repository interface defining operations for user management
  */
@@ -33,6 +39,7 @@ export interface IUserRepository {
   findByChannelAndId(channel: string, channelUserId: string): Promise<User | undefined>;
   findById(id: string): Promise<User | undefined>;
   create(data: Omit<User, 'id'>): Promise<User>;
+  findActiveUsersByIds(ids: string[]): Promise<User[]>;
 }
 
 /**

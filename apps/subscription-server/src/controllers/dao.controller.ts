@@ -27,7 +27,16 @@ export class DaoController {
         body: subscriptionBodySchema,
         response: createUpdateSubscriptionResponseSchema
       },
-    }, (request) => this.daoHandler.postDaoSubscription(request));
+    }, (request) => {
+      const { dao } = request.params;
+      const { channel, channel_user_id, is_active } = request.body;
+      return this.daoHandler.postDaoSubscription(
+        dao,
+        channel,
+        channel_user_id,
+        is_active
+      );
+    });
   
     app.get('/subscriptions/:dao', {
       schema: {
@@ -36,6 +45,9 @@ export class DaoController {
         params: subscriptionParamsSchema,
         response: getDaoSubscribersResponseSchema
       }
-    }, (request) => this.daoHandler.getDaoSubscribers(request));
+    }, (request) => {
+      const { dao } = request.params;
+      return this.daoHandler.getDaoSubscribers(dao);
+    });
   }
 } 
