@@ -1,6 +1,6 @@
 import { describe, test, expect, jest, beforeEach } from '@jest/globals';
 import { SubscriptionService, SUBSCRIPTION_MESSAGES } from './subscription.service';
-import { User, UserPreference, IUserRepository, IPreferenceRepository, Logger } from '../interfaces';
+import { User, UserPreference, IUserRepository, IPreferenceRepository } from '../interfaces';
 
 // ---- MOCKS ----
 const mockUser: User = {
@@ -17,10 +17,6 @@ const mockPreference: UserPreference = {
   is_active: true,
   created_at: new Date(),
   updated_at: new Date()
-};
-
-const mockLogger: Logger = {
-  error: jest.fn()
 };
 
 // ---- REPOSITORY MOCKS ----
