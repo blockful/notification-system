@@ -29,9 +29,6 @@ export interface UserPreference {
   updated_at: Date;
 }
 
-// Derived types from Zod schemas to avoid redundancy
-export type SubscriptionBody = z.infer<typeof subscriptionBodySchema>;
-
 /**
  * User repository interface defining operations for user management
  */
