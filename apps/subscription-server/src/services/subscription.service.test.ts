@@ -129,8 +129,6 @@ describe('Subscription Service', () => {
         ...baseSubscriptionArgs,
         is_active: true
       })).rejects.toThrow('DB Error');
-
-      expect(mockLogger.error).toHaveBeenCalled();
     });
 
     test('should handle error when creating user', async () => {
@@ -141,8 +139,6 @@ describe('Subscription Service', () => {
         ...baseSubscriptionArgs,
         is_active: true
       })).rejects.toThrow('DB Error');
-
-      expect(mockLogger.error).toHaveBeenCalled();
     });
 
     test('should handle error when finding preference', async () => {
@@ -153,8 +149,6 @@ describe('Subscription Service', () => {
         ...baseSubscriptionArgs,
         is_active: true
       })).rejects.toThrow('DB Error');
-
-      expect(mockLogger.error).toHaveBeenCalled();
     });
 
     test('should handle error when creating preference', async () => {
@@ -166,8 +160,6 @@ describe('Subscription Service', () => {
         ...baseSubscriptionArgs,
         is_active: true
       })).rejects.toThrow('DB Error');
-
-      expect(mockLogger.error).toHaveBeenCalled();
     });
 
     test('should handle error when updating preference', async () => {
@@ -179,8 +171,6 @@ describe('Subscription Service', () => {
         ...baseSubscriptionArgs,
         is_active: false
       })).rejects.toThrow('DB Error');
-
-      expect(mockLogger.error).toHaveBeenCalled();
     });
   });
 }); 

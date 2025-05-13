@@ -41,42 +41,37 @@ export async function handleSubscription({
   is_active,
   log
 }: SubscriptionParams) {
-  try {
-    let user = await userRepo.findByChannelAndId(channel, channel_user_id);
-    
-    if (!user) {
-      user = await userRepo.create({
-        channel,
-        channel_user_id,
-        is_active: true
-      });
-    }
-    let existingPreference = await prefRepo.findByUserAndDao(user.id, dao);
-    let result;
-    let message;
-    if (existingPreference) {
-      if (existingPreference.is_active !== is_active) {
-        result = await prefRepo.update(existingPreference.id, { is_active });
-        message = is_active ? SUBSCRIPTION_MESSAGES.SUCCESS_ACTIVATED : SUBSCRIPTION_MESSAGES.SUCCESS_DEACTIVATED;
-      } else {
-        result = existingPreference;
-        message = SUBSCRIPTION_MESSAGES.SUCCESS_ALREADY;
-      }
-    } else {
-      result = await prefRepo.create({
-        user_id: user.id,
-        dao_id: dao,
-        is_active
-      });
-      message = SUBSCRIPTION_MESSAGES.SUCCESS_NEW_SUB;
-    }
-    return {
-      user,
-      result,
-      message
-    };
-  } catch (error: any) {
-    log.error(`Error in subscription service: ${error.message}`);
-    throw error;
+  let user = await userRepo.findByChannelAndId(channel, channel_user_id);
+  
+  if (!user) {
+    user = await userRepo.create({
+      channel,
+      channel_user_id,
+      is_active: true
+    });
   }
+  let existingPreference = await prefRepo.findByUserAndDao(user.id, dao);
+  let result;
+  let message;
+  if (existingPreference) {
+    if (existingPreference.is_active !== is_active) {
+      result = await prefRepo.update(existingPreference.id, { is_active });
+      message = is_active ? SUBSCRIPTION_MESSAGES.SUCCESS_ACTIVATED : SUBSCRIPTION_MESSAGES.SUCCESS_DEACTIVATED;
+    } else {
+      result = existingPreference;
+      message = SUBSCRIPTION_MESSAGES.SUCCESS_ALREADY;
+    }
+  } else {
+    result = await prefRepo.create({
+      user_id: user.id,
+      dao_id: dao,
+      is_active
+    });
+    message = SUBSCRIPTION_MESSAGES.SUCCESS_NEW_SUB;
+  }
+  return {
+    user,
+    result,
+    message
+  };
 } 
