@@ -31,6 +31,7 @@ export interface UserPreference {
  */
 export interface IUserRepository {
   findByChannelAndId(channel: string, channelUserId: string): Promise<User | undefined>;
+  findById(id: string): Promise<User | undefined>;
   create(data: Omit<User, 'id'>): Promise<User>;
 }
 
@@ -39,6 +40,7 @@ export interface IUserRepository {
  */
 export interface IPreferenceRepository {
   findByUserAndDao(userId: string, daoId: string): Promise<UserPreference | undefined>;
+  findByDao(daoId: string): Promise<UserPreference[]>;
   create(data: Omit<UserPreference, 'id' | 'created_at' | 'updated_at'>): Promise<UserPreference>;
   update(id: string, data: Partial<UserPreference>): Promise<UserPreference>;
 } 
