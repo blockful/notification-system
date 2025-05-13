@@ -21,7 +21,7 @@ export class DaoHandler {
     channel_user_id: string,
     is_active: boolean = true
   ) {
-    const { user, result, message } = await this.subscriptionService.handleSubscription(
+    const { user, result } = await this.subscriptionService.handleSubscription(
       dao,
       channel,
       channel_user_id,
@@ -29,14 +29,11 @@ export class DaoHandler {
     );
     
     return {
-      message,
-      data: {
-        user_id: user.id,
-        dao_id: dao,
-        is_active: result.is_active,
-        created_at: result.created_at ? new Date(result.created_at).toISOString() : undefined,
-        updated_at: result.updated_at ? new Date(result.updated_at).toISOString() : undefined
-      }
+      user_id: user.id,
+      dao_id: dao,
+      is_active: result.is_active,
+      created_at: result.created_at ? new Date(result.created_at).toISOString() : undefined,
+      updated_at: result.updated_at ? new Date(result.updated_at).toISOString() : undefined
     };
   }
 
@@ -46,11 +43,8 @@ export class DaoHandler {
    * @param daoId - The ID of the DAO
    */
   async getDaoSubscribers(daoId: string) {
-    const { subscribers, message } = await this.subscriptionService.getDaoSubscribers(daoId);
+    const { subscribers } = await this.subscriptionService.getDaoSubscribers(daoId);
     
-    return {
-      message,
-      data: subscribers
-    };
+    return subscribers;
   }
 } 

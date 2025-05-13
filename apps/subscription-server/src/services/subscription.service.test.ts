@@ -1,5 +1,5 @@
 import { describe, test, expect, jest, beforeEach } from '@jest/globals';
-import { SubscriptionService, SUBSCRIPTION_MESSAGES } from './subscription.service';
+import { SubscriptionService } from './subscription.service';
 import { User, UserPreference, IUserRepository, IPreferenceRepository } from '../interfaces';
 
 // ---- MOCKS ----
@@ -60,7 +60,6 @@ describe('Subscription Service', () => {
         true
       );
 
-      expect(result.message).toBe(SUBSCRIPTION_MESSAGES.SUCCESS_NEW_SUB);
       expect(result.user).toEqual(mockUser);
       expect(result.result).toEqual(mockPreference);
     });
@@ -79,11 +78,10 @@ describe('Subscription Service', () => {
         false
       );
 
-      expect(result.message).toBe(SUBSCRIPTION_MESSAGES.SUCCESS_DEACTIVATED);
       expect(result.result).toEqual(updatedPreference);
     });
 
-    test('should return already subscribed message if no change needed', async () => {
+    test('should return existing preference if no change needed', async () => {
       userRepo.findByChannelAndId.mockResolvedValueOnce(mockUser);
       prefRepo.findByUserAndDao.mockResolvedValueOnce(mockPreference);
 
@@ -94,7 +92,6 @@ describe('Subscription Service', () => {
         true
       );
 
-      expect(result.message).toBe(SUBSCRIPTION_MESSAGES.SUCCESS_ALREADY);
       expect(result.result).toEqual(mockPreference);
     });
 
@@ -110,7 +107,6 @@ describe('Subscription Service', () => {
         true
       );
 
-      expect(result.message).toBe(SUBSCRIPTION_MESSAGES.SUCCESS_NEW_SUB);
       expect(result.result).toEqual(mockPreference);
     });
 
