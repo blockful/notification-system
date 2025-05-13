@@ -34,6 +34,16 @@ export class KnexUserRepository implements IUserRepository {
       .returning('*');
     return user;
   }
+
+  /**
+   * Gets a user by their ID
+   * @param id - The user's ID
+   */
+  async findById(id: string): Promise<User | undefined> {
+    return this.knex<User>('users')
+      .where({ id })
+      .first();
+  }
 }
 
 /**
@@ -58,7 +68,7 @@ export class KnexPreferenceRepository implements IPreferenceRepository {
    * Creates a new preference record
    * @param data - The preference data to insert
    */
-  async create(data: Omit<UserPreference, 'id'>): Promise<UserPreference> {
+  async create(data: Omit<UserPreference, 'id' | 'created_at' | 'updated_at'>): Promise<UserPreference> {
     const now = new Date();
     const [preference] = await this.knex<UserPreference>('user_preferences')
       .insert({
@@ -84,5 +94,18 @@ export class KnexPreferenceRepository implements IPreferenceRepository {
       })
       .returning('*');
     return preference;
+  }
+
+  /**
+   * Finds all active preference records for a specific DAO
+   * @param daoId - The DAO's ID
+   */
+  async findByDao(daoId: string): Promise<UserPreference[]> {
+    return this.knex<UserPreference>('user_preferences')
+      .where({ 
+        dao_id: daoId,
+        is_active: true
+      })
+      .select('*');
   }
 } 
