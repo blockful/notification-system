@@ -25,9 +25,8 @@ app.register(fastifyCors, {
 app.setErrorHandler((error, request, reply) => {
   console.error(`Error occurred: ${error.message}`);
   return reply.code(error.statusCode || 500).send({
-    success: false,
     message: error.message || 'Internal server error',
-    error: error.stack
+    error: error.stack || 'Unknown error'
   });
 });
 app.register(fastifySwagger, {

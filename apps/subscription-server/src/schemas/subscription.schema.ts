@@ -30,7 +30,6 @@ export const subscriptionBodySchema = z.object({
  */
 export const createUpdateSubscriptionResponseSchema = {
   200: z.object({
-    success: z.boolean(),
     message: z.string(),
     data: z.object({
       user_id: z.string(),
@@ -41,7 +40,6 @@ export const createUpdateSubscriptionResponseSchema = {
     }).optional()
   }),
   500: z.object({
-    success: z.boolean(),
     message: z.string(),
     error: z.string().optional()
   })
@@ -54,7 +52,6 @@ export const createUpdateSubscriptionResponseSchema = {
  */
 export const getDaoSubscribersResponseSchema = {
   200: z.object({
-    success: z.boolean(),
     message: z.string(),
     data: z.array(z.object({
       id: z.string(),
@@ -65,7 +62,6 @@ export const getDaoSubscribersResponseSchema = {
     }))
   }),
   500: z.object({
-    success: z.boolean(),
     message: z.string(),
     error: z.string().optional()
   })

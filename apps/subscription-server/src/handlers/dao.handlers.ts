@@ -26,7 +26,6 @@ export class DaoHandler {
       is_active
     );
     return {
-      success: true,
       message,
       data: {
         user_id: user.id,
@@ -47,7 +46,6 @@ export class DaoHandler {
     const { dao } = request.params;
     const { subscribers, message } = await this.subscriptionService.getDaoSubscribers(dao);
     return {
-      success: true,
       message,
       data: subscribers
     };
