@@ -13,7 +13,6 @@ import { userRepository, preferenceRepository } from '../index';
  * Acts as the controller layer, connecting HTTP routes to handlers.
  */
 export async function daoHandlers(app: FastifyTypedInstance) {
-  // Create a single instance of the handler
   const daoHandler = new DaoHandler(userRepository, preferenceRepository);
 
   app.post('/subscription/:dao', {
