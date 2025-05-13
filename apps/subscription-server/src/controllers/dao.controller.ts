@@ -15,7 +15,7 @@ import { userRepository, preferenceRepository } from '../index';
 export async function daoHandlers(app: FastifyTypedInstance) {
   const daoHandler = new DaoHandler(userRepository, preferenceRepository);
 
-  app.post('/subscription/:dao', {
+  app.post('/subscriptions/:dao', {
     schema: {
       tags: ['dao'],
       description: 'Create or update dao subscription for user',
