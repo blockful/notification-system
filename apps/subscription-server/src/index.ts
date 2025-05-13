@@ -6,10 +6,18 @@ import fastifySwaggerUi from '@fastify/swagger-ui';
 import { initial_routes } from './controllers/initial_routes';
 import { daoHandlers } from './controllers/dao.controller';
 import Knex from 'knex';
+import { KnexUserRepository, KnexPreferenceRepository } from './repositories/knex.repository';
+
+// Database connection
 export const knexInstance = Knex({
   client: 'pg',
   connection: process.env.DATABASE_URL || 'postgresql://postgres:postgres@localhost:5432/'
 });
+
+// Create repository instances
+export const userRepository = new KnexUserRepository(knexInstance);
+export const preferenceRepository = new KnexPreferenceRepository(knexInstance);
+
 const app = fastify();
 // Configure zod to be the input validator
 app.setValidatorCompiler(validatorCompiler);
