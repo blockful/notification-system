@@ -1,9 +1,15 @@
 import { ProposalDB, ProposalOnChain, ListProposalsOptions, ProposalStatus } from '../interfaces/proposal.interface';
-import { db } from '../config/database';
+import { Knex } from 'knex';
 
 export class PostgresProposalDB implements ProposalDB {
+  private db: Knex;
+
+  constructor(db: Knex) {
+    this.db = db;
+  }
+
   async getById(id: string): Promise<ProposalOnChain | null> {
-    const proposal = await db('proposals')
+    const proposal = await this.db('proposals')
       .where({ id })
       .first();
     
@@ -15,7 +21,7 @@ export class PostgresProposalDB implements ProposalDB {
   }
 
   async listAll(options?: ListProposalsOptions): Promise<ProposalOnChain[]> {
-    let query = db('proposals').select('*');
+    let query = this.db('proposals').select('*');
     
     if (options?.status) {
       query = query.where('status', options.status);
