@@ -13,6 +13,7 @@ const validProposalStatuses = [
 // Define environment variables schema with validation
 const envSchema = z.object({
   DATABASE_URL: z.string(),
+  TEST_DATABASE_URL: z.string().optional().default('postgresql://postgres:postgres@localhost:5432/notification_system_test'),
   DISPATCHER_ENDPOINT: z.string(),
   TRIGGER_INTERVAL: z.coerce.number().optional().default(60000),
   PROPOSAL_STATUS: z.enum(validProposalStatuses)
