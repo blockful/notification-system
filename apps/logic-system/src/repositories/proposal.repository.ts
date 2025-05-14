@@ -2,7 +2,7 @@ import { ProposalDB, ProposalOnChain, ListProposalsOptions, ProposalStatus } fro
 import { ProposalMapper } from '../mappers/proposal.mapper';
 import { Knex } from 'knex';
 
-export class PostgresProposalDB implements ProposalDB {
+export class ProposalRepository implements ProposalDB {
   private db: Knex;
 
   constructor(db: Knex) {

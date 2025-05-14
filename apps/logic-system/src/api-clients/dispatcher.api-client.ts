@@ -2,10 +2,10 @@ import axios from 'axios';
 import { DispatcherService, DispatcherMessage } from '../interfaces/dispatcher.interface';
 
 /**
- * Implementation of the DispatcherService that uses HTTP/REST
- * to communicate with the external Dispatcher service
+ * Client for the Dispatcher API that handles sending notification messages
+ * via HTTP/REST requests
  */
-export class DispatcherServiceImpl implements DispatcherService {
+export class DispatcherApiClient implements DispatcherService {
   private readonly url: string;
 
   constructor(endpoint: string) {
@@ -13,7 +13,7 @@ export class DispatcherServiceImpl implements DispatcherService {
   }
 
   /**
-   * Sends a message to the Dispatcher service using HTTP POST
+   * Sends a message to the Dispatcher API using HTTP POST
    * @param message - Message to be dispatched
    */
   async sendMessage(message: DispatcherMessage) {

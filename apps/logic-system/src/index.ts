@@ -1,12 +1,12 @@
 import { NewProposalTrigger } from './triggers/new-proposal-trigger';
-import { PostgresProposalDB } from './implementations/proposal-db';
-import { DispatcherServiceImpl } from './implementations/dispatcher.service';
+import { ProposalRepository } from './repositories/proposal.repository';
+import { DispatcherApiClient } from './api-clients/dispatcher.api-client';
 import { env } from './config/env';
 import { db } from './config/database';
 
 // Create database and dispatcher service implementations
-const proposalDB = new PostgresProposalDB(db);
-const dispatcherService = new DispatcherServiceImpl(env.DISPATCHER_ENDPOINT);
+const proposalDB = new ProposalRepository(db);
+const dispatcherService = new DispatcherApiClient(env.DISPATCHER_ENDPOINT);
 
 // Create and start the trigger
 const trigger = new NewProposalTrigger(
