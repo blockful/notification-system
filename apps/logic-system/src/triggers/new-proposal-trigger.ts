@@ -1,52 +1,35 @@
 /**
  * @fileoverview Trigger logic for handling new proposals in the dB.
- * This module monitors for active proposals and sends them to a subscription checker
- * to determine who should be notified.
+ * This module monitors for active proposals and sends them to the Dispatcher.
  */
 
 import { Trigger } from './base-trigger';
 import { ProposalOnChain, ListProposalsOptions, ProposalDB } from '../interfaces/proposal.interface';
-import { SubscriptionCheckerService, EventContextMessage } from '../interfaces/subscription-checker.interface';
+import { DispatcherService, DispatcherMessage } from '../interfaces/dispatcher.interface';
 
 const triggerId = 'newProposalTrigger';
-const MESSAGES = {
-  SUCCESS: 'New proposal notification processed.',
-  ERROR_FETCHING: 'Error fetching proposals:',
-  ERROR_CHECKING: 'Error checking subscriptions:',
-  STATUS_REQUIRED: 'Status is required in filter options'
-} as const;
 
 export class NewProposalTrigger extends Trigger<ProposalOnChain, ListProposalsOptions> {
   constructor(
-    private readonly subscriptionChecker: SubscriptionCheckerService,
+    private readonly dispatcherService: DispatcherService,
     private readonly proposalDB: ProposalDB,
     interval: number
   ) {
     super(triggerId, interval);
   }
 
-  async process(data: ProposalOnChain[]): Promise<string> {
-    const message: EventContextMessage = {
+  async process(data: ProposalOnChain[]) {
+    const payload = data.map(proposal => ({
+      ...proposal,
+      forVotes: proposal.forVotes.toString(),
+      againstVotes: proposal.againstVotes.toString(),
+      abstainVotes: proposal.abstainVotes.toString()
+    }));
+    const message: DispatcherMessage = {
       triggerId: this.id,
-      context: JSON.stringify(data.map(proposal => ({
-        ...proposal,
-        forVotes: proposal.forVotes.toString(),
-        againstVotes: proposal.againstVotes.toString(),
-        abstainVotes: proposal.abstainVotes.toString()
-      })))
+      payload
     };
-
-    try {
-      const result = await this.subscriptionChecker.checkSubscribers(message);
-      
-      if (!result.success) {
-        throw new Error(result.error || 'Unknown error checking subscriptions');
-      }
-      
-      return MESSAGES.SUCCESS;
-    } catch (error) {
-      throw error;
-    }
+    await this.dispatcherService.sendMessage(message);
   }
 
   /**
@@ -55,7 +38,7 @@ export class NewProposalTrigger extends Trigger<ProposalOnChain, ListProposalsOp
    */
   protected async fetchData(options?: ListProposalsOptions): Promise<ProposalOnChain[]> {
     if (!options?.status) {
-      throw new Error(MESSAGES.STATUS_REQUIRED);
+      throw new Error('Status is required in filter options');
     }
     return await this.proposalDB.listAll({ status: options.status });
   }

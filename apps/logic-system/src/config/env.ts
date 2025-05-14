@@ -13,7 +13,7 @@ const validProposalStatuses = [
 // Define environment variables schema with validation
 const envSchema = z.object({
   DATABASE_URL: z.string(),
-  API_URL: z.string(),
+  DISPATCHER_ENDPOINT: z.string(),
   TRIGGER_INTERVAL: z.coerce.number().optional().default(60000),
   PROPOSAL_STATUS: z.enum(validProposalStatuses)
 });

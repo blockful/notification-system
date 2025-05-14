@@ -1,10 +1,10 @@
 import { describe, it, expect, jest, beforeEach, afterEach } from '@jest/globals';
 import { NewProposalTrigger } from '../src/triggers/new-proposal-trigger';
-import { SubscriptionCheckerService, SubscriptionCheckResult } from '../src/interfaces/subscription-checker.interface';
+import { DispatcherService } from '../src/interfaces/dispatcher.interface';
 import { ProposalOnChain, ProposalStatus, ProposalDB } from '../src/interfaces/proposal.interface';
 
 describe('NewProposalTrigger', () => {
-  let mockSubscriptionChecker: jest.Mocked<SubscriptionCheckerService>;
+  let mockDispatcherService: jest.Mocked<DispatcherService>;
   let mockProposalDB: jest.Mocked<ProposalDB>;
   let trigger: NewProposalTrigger;
   
@@ -27,8 +27,8 @@ describe('NewProposalTrigger', () => {
   };
 
   beforeEach(() => {
-    mockSubscriptionChecker = {
-      checkSubscribers: jest.fn()
+    mockDispatcherService = {
+      sendMessage: jest.fn()
     };
     
     mockProposalDB = {
@@ -37,7 +37,7 @@ describe('NewProposalTrigger', () => {
     };
     
     trigger = new NewProposalTrigger(
-      mockSubscriptionChecker,
+      mockDispatcherService,
       mockProposalDB,
       60000
     );
@@ -45,43 +45,44 @@ describe('NewProposalTrigger', () => {
 
   describe('process', () => {
     it('should process empty array', async () => {
-      mockSubscriptionChecker.checkSubscribers.mockResolvedValue({ success: true } as SubscriptionCheckResult);
+      await trigger.process([]);
       
-      const result = await trigger.process([]);
-      
-      expect(result).toBe('New proposal notification processed.');
-      expect(mockSubscriptionChecker.checkSubscribers).toHaveBeenCalledTimes(1);
-      expect(JSON.parse(mockSubscriptionChecker.checkSubscribers.mock.calls[0][0].context)).toEqual([]);
+      expect(mockDispatcherService.sendMessage).toHaveBeenCalledTimes(1);
+      expect(mockDispatcherService.sendMessage.mock.calls[0][0].payload).toEqual([]);
+      expect(mockDispatcherService.sendMessage.mock.calls[0][0].triggerId).toBe('newProposalTrigger');
     });
 
-    it('should send proposals to subscription checker', async () => {
-      mockSubscriptionChecker.checkSubscribers.mockResolvedValue({ success: true } as SubscriptionCheckResult);
-      
+    it('should send proposals to dispatcher service with correct data formatting', async () => {
       const proposals = [
         { ...mockProposal, status: 'active' },
         { ...mockProposal, id: '2', status: 'active' }
       ] as ProposalOnChain[];
       
-      const result = await trigger.process(proposals);
+      await trigger.process(proposals);
       
-      expect(result).toBe('New proposal notification processed.');
-      expect(mockSubscriptionChecker.checkSubscribers).toHaveBeenCalledTimes(1);
+      expect(mockDispatcherService.sendMessage).toHaveBeenCalledTimes(1);
       
-      const calledWith = mockSubscriptionChecker.checkSubscribers.mock.calls[0][0];
-      const sentData = JSON.parse(calledWith.context);
+      const calledWith = mockDispatcherService.sendMessage.mock.calls[0][0];
+      expect(calledWith.triggerId).toBe('newProposalTrigger');
+      
+      const sentData = calledWith.payload;
       expect(sentData).toHaveLength(2);
-      const ids = sentData.map((p: ProposalOnChain) => p.id);
+      
+      const ids = sentData.map((p: any) => p.id);
       expect(ids).toContain('1');
       expect(ids).toContain('2');
+      
+      expect(typeof sentData[0].forVotes).toBe('string');
+      expect(sentData[0].forVotes).toBe('100');
+      expect(sentData[0].againstVotes).toBe('50');
+      expect(sentData[0].abstainVotes).toBe('10');
     });
 
-    it('should throw error when subscription check fails without error message', async () => {
-      mockSubscriptionChecker.checkSubscribers.mockResolvedValue({ 
-        success: false,
-        error: undefined 
-      } as SubscriptionCheckResult);
+    it('should propagate errors from dispatcher service', async () => {
+      const errorMessage = 'Connection failed';
+      mockDispatcherService.sendMessage.mockRejectedValue(new Error(errorMessage));
       
-      await expect(trigger.process([mockProposal])).rejects.toThrow('Unknown error checking subscriptions');
+      await expect(trigger.process([mockProposal])).rejects.toThrow(errorMessage);
     });
   });
   
@@ -89,7 +90,6 @@ describe('NewProposalTrigger', () => {
     beforeEach(() => {
       jest.useFakeTimers();
       mockProposalDB.listAll.mockResolvedValue([mockProposal]);
-      mockSubscriptionChecker.checkSubscribers.mockResolvedValue({ success: true } as SubscriptionCheckResult);
     });
     
     afterEach(() => {
@@ -104,7 +104,11 @@ describe('NewProposalTrigger', () => {
     it('should start the interval and fetch proposals with correct status', () => {
       trigger.start({ status: 'active' });
       jest.advanceTimersByTime(60000);
+      
+      expect(mockProposalDB.listAll).toHaveBeenCalledTimes(1);
       expect(mockProposalDB.listAll).toHaveBeenCalledWith({ status: 'active' });
+      
+      expect(mockDispatcherService.sendMessage).toHaveBeenCalledTimes(1);
     });
     
     it('should stop and restart the interval if start is called twice', () => {
@@ -113,16 +117,20 @@ describe('NewProposalTrigger', () => {
       trigger.start({ status: 'pending' });
       expect(stopSpy).toHaveBeenCalledTimes(1);
       jest.advanceTimersByTime(60000);
-      // The second start should use the new options
+      
       expect(mockProposalDB.listAll).toHaveBeenCalledWith({ status: 'pending' });
     });
     
     it('should stop the interval when stop is called', () => {
       trigger.start({ status: 'active' });
       jest.advanceTimersByTime(60000);
+      
+      expect(mockProposalDB.listAll).toHaveBeenCalledTimes(1);
       expect(mockProposalDB.listAll).toHaveBeenCalledWith({ status: 'active' });
-      trigger.stop();
+      
       mockProposalDB.listAll.mockClear();
+      trigger.stop();
+      
       jest.advanceTimersByTime(60000);
       expect(mockProposalDB.listAll).not.toHaveBeenCalled();
     });
