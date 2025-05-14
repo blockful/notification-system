@@ -23,7 +23,8 @@ const mockPreference: UserPreference = {
 const createMockUserRepo = (): jest.Mocked<IUserRepository> => ({
   findByChannelAndId: jest.fn(),
   create: jest.fn(),
-  findById: jest.fn()
+  findById: jest.fn(),
+  findActiveUsersByIds: jest.fn()
 });
 
 const createMockPrefRepo = (): jest.Mocked<IPreferenceRepository> => ({

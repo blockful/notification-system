@@ -33,7 +33,6 @@ export interface IUserRepository {
   findByChannelAndId(channel: string, channelUserId: string): Promise<User | undefined>;
   findById(id: string): Promise<User | undefined>;
   create(data: Omit<User, 'id'>): Promise<User>;
-  findActiveUsersByIds(ids: string[]): Promise<User[]>;
 }
 
 /**
