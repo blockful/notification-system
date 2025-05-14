@@ -3,9 +3,6 @@
  * These interfaces define the contract for database operations.
  */
 
-import { z } from 'zod';
-import { subscriptionBodySchema } from '../schemas/subscription.schema';
-
 /**
  * User entity interface representing a user in the system
  */
