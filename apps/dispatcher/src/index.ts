@@ -36,5 +36,5 @@ server.register(async (instance) => {
   await messageController.messageRoutes(instance);
 });
 
-await server.listen({ port: config.port, host: '0.0.0.0' });
+server.listen({ port: config.port, host: '0.0.0.0' });
 console.log(`Server is running on port ${config.port}`);
