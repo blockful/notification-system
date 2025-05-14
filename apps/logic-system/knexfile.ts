@@ -3,9 +3,6 @@ import { Knex } from 'knex';
 import path from 'path';
 import { env } from './src/config/env';
 
-// Load environment variables
-dotenv.config();
-
 const config: Knex.Config = {
   client: 'pg',
   connection: env.DATABASE_URL,

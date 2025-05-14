@@ -17,8 +17,6 @@ export async function up(knex: Knex): Promise<void> {
     table.boolean('is_active').notNullable().defaultTo(true);
     table.timestamp('created_at').notNullable().defaultTo(knex.fn.now());
     table.timestamp('updated_at').notNullable().defaultTo(knex.fn.now());
-    
-    // Unique constraint to prevent duplicate subscriptions
     table.unique(['user_id', 'dao_id', 'notification_type']);
   });
 }
