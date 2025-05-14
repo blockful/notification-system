@@ -11,26 +11,10 @@ export class NewProposalTriggerHandler implements TriggerHandler {
    */
   async handleMessage(message: DispatcherMessage): Promise<MessageProcessingResult> {
     const { daoId, proposalId, proposalTitle } = message.payload;
-    if (!daoId) {
-      throw new Error("Missing daoId in payload");
-    }
     
     // TODO: Implement database call to find users following this DAO
-    // const followers = await daoRepository.getFollowers(daoId);
     
     // TODO: Send notifications to each follower
-    // for (const follower of followers) {
-    //   await notificationService.sendNotification({
-    //     userId: follower.id,
-    //     type: "NEW_PROPOSAL",
-    //     title: "New Proposal Created",
-    //     message: `A new proposal "${proposalTitle}" has been created in a DAO you follow`,
-    //     data: {
-    //       daoId,
-    //       proposalId
-    //     }
-    //   });
-    // }
     
     const messageId = crypto.randomUUID();
     return {

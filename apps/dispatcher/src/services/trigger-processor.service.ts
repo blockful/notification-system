@@ -1,6 +1,6 @@
 import { DispatcherMessage, MessageProcessingResult } from "../interfaces/dispatcher-message.interface";
-import { TriggerHandler } from "./triggers/trigger-handler";
-import { NewProposalTriggerHandler } from "./triggers/new-proposal-handler";
+import { TriggerHandler } from "../interfaces/base-trigger.interface";
+import { NewProposalTriggerHandler } from "./triggers/new-proposal-trigger.service";
 
 /**
  * Service responsible for processing messages for specific triggers
