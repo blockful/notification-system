@@ -3,7 +3,7 @@ import { validatorCompiler, serializerCompiler } from 'fastify-type-provider-zod
 import fastifyCors from '@fastify/cors';
 import fastifySwagger from '@fastify/swagger';
 import fastifySwaggerUi from '@fastify/swagger-ui';
-import { healthRoutes } from './controllers';
+import { healthRoutes, messageRoutes } from './controllers';
 import { config } from './envConfig';
 
 const server = fastify();
@@ -32,6 +32,7 @@ server.register(fastifySwaggerUi, {
 
 // Register routes
 server.register(healthRoutes);
+server.register(messageRoutes);
 
 const start = async () => {
   try {
