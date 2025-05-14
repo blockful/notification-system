@@ -1,2 +1,2 @@
-export * from './health-routes';
-export * from './message-routes'; 
+export * from './health.controller';
+export * from './message.controller'; 
