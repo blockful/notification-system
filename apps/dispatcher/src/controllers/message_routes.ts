@@ -1,11 +1,9 @@
 import type { FastifyTypedInstance } from "../interfaces/fastify_typed_instance";
 import { successResponseSchema, errorResponseSchema, dispatcherMessageSchema } from "../schemas/message_schemas";
-import { MessageProcessorService } from "../services/messageProcessor";
+import { TriggerProcessorService } from "../services/triggerProcessorService";
 
 export async function messageRoutes(server: FastifyTypedInstance) {
-  // Create the message processor service
-  const messageProcessor = new MessageProcessorService();
-
+  const triggerProcessorService = new TriggerProcessorService();
   server.post('/api/messages', {
     schema: {
       tags: ['messages'],
@@ -19,6 +17,6 @@ export async function messageRoutes(server: FastifyTypedInstance) {
     },
   }, async (request, reply) => {
     const validatedMessage = dispatcherMessageSchema.parse(request.body);
-    return await messageProcessor.processMessage(validatedMessage);
+    return await triggerProcessorService.processTrigger(validatedMessage);
   });
 } 
