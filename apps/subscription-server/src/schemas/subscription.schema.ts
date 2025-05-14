@@ -29,14 +29,11 @@ export const subscriptionBodySchema = z.object({
  */
 export const createUpdateSubscriptionResponseSchema = {
   200: z.object({
-    message: z.string(),
-    data: z.object({
-      user_id: z.string(),
-      dao_id: z.string(),
-      is_active: z.boolean(),
-      created_at: z.string().optional(),
-      updated_at: z.string().optional()
-    })
+    user_id: z.string(),
+    dao_id: z.string(),
+    is_active: z.boolean(),
+    created_at: z.string().optional(),
+    updated_at: z.string().optional()
   })
 };
 
@@ -45,14 +42,11 @@ export const createUpdateSubscriptionResponseSchema = {
  * Defines the structure and validation for the subscribers list response
  */
 export const getDaoSubscribersResponseSchema = {
-  200: z.object({
-    message: z.string(),
-    data: z.array(z.object({
-      id: z.string(),
-      channel: z.string(),
-      channel_user_id: z.string(),
-      is_active: z.boolean(),
-      created_at: z.string().optional()
-    }))
-  })
+  200: z.array(z.object({
+    id: z.string(),
+    channel: z.string(),
+    channel_user_id: z.string(),
+    is_active: z.boolean(),
+    created_at: z.string().optional()
+  }))
 };
