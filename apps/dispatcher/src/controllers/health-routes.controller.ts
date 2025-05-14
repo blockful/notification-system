@@ -1,4 +1,4 @@
-import type { FastifyTypedInstance } from "../interfaces/fastify_typed_instance";
+import type { FastifyTypedInstance } from "../interfaces/fastify-typed-instance";
 import { z } from "zod";
 import { config } from "../envConfig";
 

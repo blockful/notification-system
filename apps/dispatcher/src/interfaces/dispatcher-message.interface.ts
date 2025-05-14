@@ -14,4 +14,4 @@ export interface DispatcherMessage {
 export interface MessageProcessingResult {
   messageId: string;
   timestamp: string;
-}
+} 

@@ -1,5 +1,5 @@
-import { DispatcherMessage, MessageProcessingResult } from "../../interfaces/dispatcher_message";
-import { TriggerHandler } from "./triggerHandler";
+import { DispatcherMessage, MessageProcessingResult } from "../../interfaces/dispatcher-message";
+import { TriggerHandler } from "./trigger-handler";
 
 /**
  * Handler for processing "new-proposal" trigger messages

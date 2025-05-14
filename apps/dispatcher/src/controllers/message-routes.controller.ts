@@ -1,6 +1,6 @@
-import type { FastifyTypedInstance } from "../interfaces/fastify_typed_instance";
-import { successResponseSchema, errorResponseSchema, dispatcherMessageSchema } from "../schemas/message_schemas";
-import { TriggerProcessorService } from "../services/triggerProcessorService";
+import type { FastifyTypedInstance } from "../interfaces/fastify-typed-instance";
+import { successResponseSchema, errorResponseSchema, dispatcherMessageSchema } from "../schemas/message.schema";
+import { TriggerProcessorService } from "../services/trigger-processor.service";
 
 export async function messageRoutes(server: FastifyTypedInstance) {
   const triggerProcessorService = new TriggerProcessorService();

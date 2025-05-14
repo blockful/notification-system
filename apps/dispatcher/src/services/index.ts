@@ -1,1 +1,1 @@
-export * from './triggerProcessorService'; 
+export * from './trigger-processor.service'; 

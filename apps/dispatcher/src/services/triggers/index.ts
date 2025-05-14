@@ -1,3 +1,3 @@
-export * from './triggerHandler';
-export * from './defaultHandler';
-export * from './newProposalHandler'; 
+export * from './trigger-handler';
+export * from './default-handler';
+export * from './new-proposal-handler'; 

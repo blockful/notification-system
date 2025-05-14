@@ -1,1 +1,1 @@
-export * from './message_schemas'; 
+export * from './message.schema'; 

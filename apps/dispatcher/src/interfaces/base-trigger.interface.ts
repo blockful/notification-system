@@ -1,4 +1,4 @@
-import { DispatcherMessage, MessageProcessingResult } from "../../interfaces/dispatcher_message";
+import { DispatcherMessage, MessageProcessingResult } from "./dispatcher-message.interface";
 
 /**
  * Interface for trigger handlers
