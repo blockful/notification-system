@@ -53,10 +53,10 @@ describe('NewProposalTrigger', () => {
     });
 
     it('should send proposals to dispatcher service with correct data formatting', async () => {
-      const proposals = [
+      const proposals: ProposalOnChain[] = [
         { ...mockProposal, status: 'active' },
         { ...mockProposal, id: '2', status: 'active' }
-      ] as ProposalOnChain[];
+      ];
       
       await trigger.process(proposals);
       
