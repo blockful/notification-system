@@ -1,18 +1,15 @@
 {
   "compilerOptions": {
-    /* Language and Environment */
-    "target": "es2020",
-    "lib": ["es2020"],
-
-    /* Modules */
-    "module": "commonjs",
-    "moduleResolution": "node",
+    "target": "ES2020",
+    "module": "NodeNext",
+    "moduleResolution": "NodeNext",
     "esModuleInterop": true,
     "forceConsistentCasingInFileNames": true,
-
-    /* Type Checking */
     "strict": true,
-    "skipLibCheck": true
-  },
-  "exclude": ["node_modules", "dist"]
+    "skipLibCheck": true,
+    "isolatedModules": true,
+    "noImplicitAny": false,
+    "noFallthroughCasesInSwitch": true,
+    "outDir": "./dist"
+  }
 } 
