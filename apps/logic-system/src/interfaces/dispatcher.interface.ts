@@ -17,5 +17,5 @@ export interface DispatcherService {
    * Sends a message to the Dispatcher service
    * @param message - The message to be dispatched
    */
-  sendMessage(message: DispatcherMessage);
+  sendMessage(message: DispatcherMessage): Promise<void>;
 } 
