@@ -1,15 +1,19 @@
 import { DispatcherMessage, MessageProcessingResult } from "../interfaces/dispatcher-message.interface";
 import { TriggerHandler } from "../interfaces/base-trigger.interface";
 import { NewProposalTriggerHandler } from "./triggers/new-proposal-trigger.service";
+import { SubscriptionClient } from "./subscription-client.service";
+import { config } from "../envConfig";
 
 /**
  * Service responsible for processing messages for specific triggers
  */
 export class TriggerProcessorService {
   private triggerHandlers: Map<string, TriggerHandler>;
+  
   constructor() {
+    const subscriptionClient = new SubscriptionClient(config.subscriptionServerUrl);
     this.triggerHandlers = new Map();
-    this.triggerHandlers.set('new-proposal', new NewProposalTriggerHandler());
+    this.triggerHandlers.set('new-proposal', new NewProposalTriggerHandler(subscriptionClient));
   }
 
   /**
