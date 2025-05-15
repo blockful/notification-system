@@ -26,6 +26,7 @@ export const subscriptionBodySchema = z.object({
 /**
  * Schema for create/update subscription response
  * Defines the structure and validation for success and error responses
+ * when creating or updating a user subscription
  */
 export const createUpdateSubscriptionResponseSchema = {
   200: z.object({

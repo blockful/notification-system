@@ -19,6 +19,29 @@ const mockPreference: UserPreference = {
   updated_at: new Date()
 };
 
+const mockSubscribers = [
+  {
+    id: '456',
+    user_id: '123',
+    dao_id: 'dao123',
+    is_active: true,
+    created_at: new Date(),
+    updated_at: new Date(),
+    channel: 'telegram',
+    channel_user_id: 'user123'
+  },
+  {
+    id: '789',
+    user_id: '456',
+    dao_id: 'dao123',
+    is_active: true,
+    created_at: new Date(),
+    updated_at: new Date(),
+    channel: 'discord',
+    channel_user_id: 'discord_user_456'
+  }
+];
+
 // ---- REPOSITORY MOCKS ----
 const createMockUserRepo = (): jest.Mocked<IUserRepository> => ({
   findByChannelAndId: jest.fn(),
@@ -169,6 +192,50 @@ describe('Subscription Service', () => {
         'user123',
         false
       )).rejects.toThrow('DB Error');
+    });
+  });
+  
+  describe('getDaoSubscribers', () => {
+    test('should retrieve and format subscribers for a DAO', async () => {
+      // Mock preferences
+      const mockPreferences = [
+        { user_id: '123', is_active: true },
+        { user_id: '456', is_active: true }
+      ] as UserPreference[];
+
+      // Mock user find method
+      userRepo.findById.mockImplementation((id) => {
+        if (id === '123') return Promise.resolve(mockSubscribers[0]);
+        if (id === '456') return Promise.resolve(mockSubscribers[1]);
+        return Promise.resolve(undefined);
+      });
+
+      prefRepo.findByDao.mockResolvedValueOnce(mockPreferences);
+      
+      const result = await subscriptionService.getDaoSubscribers('dao123');
+      
+      expect(result.subscribers.length).toBe(2);
+      
+      expect(result.subscribers[0]).toHaveProperty('id');
+      expect(result.subscribers[0]).toHaveProperty('channel');
+      expect(result.subscribers[0]).toHaveProperty('channel_user_id');
+      expect(result.subscribers[0]).toHaveProperty('is_active');
+      
+      expect(prefRepo.findByDao).toHaveBeenCalledWith('dao123');
+    });
+    
+    test('should return empty array when no subscribers exist', async () => {
+      prefRepo.findByDao.mockResolvedValueOnce([]);
+      
+      const result = await subscriptionService.getDaoSubscribers('unknown-dao');
+      
+      expect(result.subscribers).toEqual([]);
+    });
+    
+    test('should handle errors properly', async () => {
+      prefRepo.findByDao.mockRejectedValueOnce(new Error('DB Error'));
+      
+      await expect(subscriptionService.getDaoSubscribers('dao123')).rejects.toThrow('DB Error');
     });
   });
 }); 

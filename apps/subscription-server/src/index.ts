@@ -1,3 +1,4 @@
+// Import configuration
 import fastify from 'fastify';
 import { validatorCompiler, serializerCompiler, jsonSchemaTransform } from 'fastify-type-provider-zod';
 import fastifyCors from '@fastify/cors';
@@ -19,6 +20,14 @@ app.setValidatorCompiler(validatorCompiler);
 app.setSerializerCompiler(serializerCompiler);
 app.register(fastifyCors, {
   origin: '*',
+});
+// Global error handler middleware
+app.setErrorHandler((error, request, reply) => {
+  console.error(`Error occurred: ${error.message}`);
+  return reply.code(error.statusCode || 500).send({
+    message: error.message || 'Internal server error',
+    error: error.stack || 'Unknown error'
+  });
 });
 app.register(fastifySwagger, {
   openapi: {
