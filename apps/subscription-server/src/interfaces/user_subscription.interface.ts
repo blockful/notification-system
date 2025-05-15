@@ -43,4 +43,28 @@ export interface IPreferenceRepository {
   findByDao(daoId: string): Promise<UserPreference[]>;
   create(data: Omit<UserPreference, 'id' | 'created_at' | 'updated_at'>): Promise<UserPreference>;
   update(id: string, data: Partial<UserPreference>): Promise<UserPreference>;
+}
+
+/**
+ * Response interface for user subscription data
+ * Provides a clear structure for subscription information in API responses
+ */
+export interface UserSubscriptionResponse {
+  user_id: string;
+  dao_id: string;
+  is_active: boolean;
+  created_at?: string;
+  updated_at?: string;
+}
+
+/**
+ * Response interface for user data
+ * Provides a clear structure for user information in API responses
+ */
+export interface UserResponse {
+  id: string;
+  channel: string;
+  channel_user_id: string;
+  is_active: boolean;
+  created_at?: string;
 } 

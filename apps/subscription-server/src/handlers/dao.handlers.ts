@@ -1,4 +1,5 @@
 import { SubscriptionService } from '../services/subscription.service';
+import { toSubscriptionResponse, toUserResponse } from '../mappers';
 
 /**
  * Handles DAO-related requests
@@ -28,13 +29,7 @@ export class DaoHandler {
       is_active
     );
     
-    return {
-      user_id: user.id,
-      dao_id: dao,
-      is_active: result.is_active,
-      created_at: result.created_at ? new Date(result.created_at).toISOString() : undefined,
-      updated_at: result.updated_at ? new Date(result.updated_at).toISOString() : undefined
-    };
+    return toSubscriptionResponse(result, dao);
   }
 
   /**
@@ -45,6 +40,6 @@ export class DaoHandler {
   async getDaoSubscribers(daoId: string) {
     const { subscribers } = await this.subscriptionService.getDaoSubscribers(daoId);
     
-    return subscribers;
+    return subscribers.map(toUserResponse);
   }
 } 

@@ -34,7 +34,7 @@ export const createUpdateSubscriptionResponseSchema = {
     is_active: z.boolean(),
     created_at: z.string().optional(),
     updated_at: z.string().optional()
-  })
+  }).describe('Subscription DTO')
 };
 
 /**
@@ -48,5 +48,5 @@ export const getDaoSubscribersResponseSchema = {
     channel_user_id: z.string(),
     is_active: z.boolean(),
     created_at: z.string().optional()
-  }))
+  }).describe('User DTO'))
 };
