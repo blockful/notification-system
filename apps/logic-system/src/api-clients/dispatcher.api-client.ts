@@ -1,4 +1,3 @@
-import axios from 'axios';
 import { DispatcherService, DispatcherMessage } from '../interfaces/dispatcher.interface';
 
 /**
@@ -17,10 +16,12 @@ export class DispatcherApiClient implements DispatcherService {
    * @param message - Message to be dispatched
    */
   async sendMessage(message: DispatcherMessage) {
-    await axios.post(this.url, message, {
+    await fetch(this.url, {
+      method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-      }
+      },
+      body: JSON.stringify(message)
     });
   }
 } 
