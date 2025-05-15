@@ -20,10 +20,7 @@ export class NewProposalTrigger extends Trigger<ProposalOnChain, ListProposalsOp
 
   async process(data: ProposalOnChain[]) {
     const payload = data.map(proposal => ({
-      ...proposal,
-      forVotes: proposal.forVotes.toString(),
-      againstVotes: proposal.againstVotes.toString(),
-      abstainVotes: proposal.abstainVotes.toString()
+      ...proposal
     }));
     const message: DispatcherMessage = {
       triggerId: this.id,
