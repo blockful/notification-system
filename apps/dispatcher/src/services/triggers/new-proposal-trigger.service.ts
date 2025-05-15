@@ -2,6 +2,7 @@ import { DispatcherMessage, MessageProcessingResult } from "../../interfaces/dis
 import { ISubscriptionClient } from "../../interfaces/subscription-client.interface";
 import { NotificationClientFactory } from "../notification/notification-factory.service";
 import { BaseTriggerHandler } from "./base-trigger.service";
+import crypto from 'crypto';
 
 /**
  * Handler for processing "new-proposal" trigger messages
