@@ -1,6 +1,7 @@
 import type { FastifyTypedInstance } from "../interfaces/fastify-typed-instance";
 import { successResponseSchema, errorResponseSchema, dispatcherMessageSchema } from "../schemas/message.schema";
 import { TriggerProcessorService } from "../services/trigger-processor.service";
+import { DispatcherMessage } from "../interfaces/dispatcher-message.interface";
 
 /**
  * Controller responsible for message-related routes
@@ -17,7 +18,7 @@ export class MessageController {
    * @param server The Fastify server instance
    */
   async messageRoutes(server: FastifyTypedInstance): Promise<void> {
-    server.post('/messages', {
+    server.post<{ Body: DispatcherMessage }>('/messages', {
       schema: {
         tags: ['messages'],
         description: 'Endpoint to receive messages from logic system',
@@ -29,8 +30,7 @@ export class MessageController {
         }
       },
     }, async (request, reply) => {
-      const validatedMessage = dispatcherMessageSchema.parse(request.body);
-      return await this.triggerProcessorService.processTrigger(validatedMessage);
+      return await this.triggerProcessorService.processTrigger(request.body);
     });
   }
 } 
