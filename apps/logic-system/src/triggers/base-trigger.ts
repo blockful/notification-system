@@ -35,7 +35,7 @@ export abstract class Trigger<TData, TFilterOptions = void> {
      * @param options Optional filter options
      * @returns Result of the processing
      */
-    abstract process(data: TData[], options?: TFilterOptions): Promise<string>;
+    abstract process(data: TData[], options?: TFilterOptions): Promise<void>;
 
     /**
      * Fetches data for processing
