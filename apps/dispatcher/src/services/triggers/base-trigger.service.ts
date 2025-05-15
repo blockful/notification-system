@@ -1,7 +1,7 @@
 import { DispatcherMessage, MessageProcessingResult } from "../../interfaces/dispatcher-message.interface";
 import { TriggerHandler } from "../../interfaces/base-trigger.interface";
-import { ISubscriptionClient, Subscriber } from "../../interfaces/subscription-client.interface";
-import { NotificationClientFactory } from "../notification";
+import { ISubscriptionClient, User } from "../../interfaces/subscription-client.interface";
+import { NotificationClientFactory } from "../notification/notification-factory.service";
 import { INotificationClient } from "../../interfaces/notification-client.interface";
 
 /**
@@ -30,7 +30,7 @@ export abstract class BaseTriggerHandler implements TriggerHandler {
    * @param daoId DAO identifier
    * @returns List of subscribers
    */
-  protected async getSubscribers(daoId: string): Promise<Subscriber[]> {
+  protected async getSubscribers(daoId: string): Promise<User[]> {
     return this.subscriptionClient.getDaoSubscribers(daoId);
   }
 
@@ -42,7 +42,7 @@ export abstract class BaseTriggerHandler implements TriggerHandler {
    * @returns Array of notification results
    */
   protected async sendNotificationsToSubscribers(
-    subscribers: Subscriber[],
+    subscribers: User[],
     message: string,
     metadata: Record<string, any> = {}
   ) {
