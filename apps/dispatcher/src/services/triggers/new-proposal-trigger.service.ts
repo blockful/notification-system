@@ -1,6 +1,6 @@
 import { DispatcherMessage, MessageProcessingResult } from "../../interfaces/dispatcher-message.interface";
 import { ISubscriptionClient } from "../../interfaces/subscription-client.interface";
-import { NotificationClientFactory } from "../notification";
+import { NotificationClientFactory } from "../notification/notification-factory.service";
 import { BaseTriggerHandler } from "./base-trigger.service";
 
 /**
