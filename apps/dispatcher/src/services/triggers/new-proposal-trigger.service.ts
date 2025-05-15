@@ -1,16 +1,23 @@
 import { DispatcherMessage, MessageProcessingResult } from "../../interfaces/dispatcher-message.interface";
-import { TriggerHandler } from "../../interfaces/base-trigger.interface";
 import { ISubscriptionClient } from "../../interfaces/subscription-client.interface";
+import { NotificationClientFactory } from "../notification";
+import { BaseTriggerHandler } from "./base-trigger.service";
 
 /**
  * Handler for processing "new-proposal" trigger messages
  */
-export class NewProposalTriggerHandler implements TriggerHandler {
+export class NewProposalTriggerHandler extends BaseTriggerHandler {
   /**
    * Creates a new instance of the NewProposalTriggerHandler
    * @param subscriptionClient Client for subscription server API
+   * @param notificationFactory Factory for creating notification clients
    */
-  constructor(private readonly subscriptionClient: ISubscriptionClient) {}
+  constructor(
+    subscriptionClient: ISubscriptionClient,
+    notificationFactory: NotificationClientFactory
+  ) {
+    super(subscriptionClient, notificationFactory);
+  }
 
   /**
    * Handle a new proposal message
@@ -18,10 +25,14 @@ export class NewProposalTriggerHandler implements TriggerHandler {
    */
   async handleMessage(message: DispatcherMessage): Promise<MessageProcessingResult> {
     const { daoId, proposalId, proposalTitle } = message.payload;
-    const subscribers = await this.subscriptionClient.getDaoSubscribers(daoId);
-    
-    // TODO: Send notifications to each follower
-    
+    const subscribers = await this.getSubscribers(daoId);
+    const notificationMessage = `New proposal in ${daoId}: ${proposalTitle}`;
+    const metadata = {
+      daoId,
+      proposalId,
+      proposalTitle
+    };
+    await this.sendNotificationsToSubscribers(subscribers, notificationMessage, metadata);
     const messageId = crypto.randomUUID();
     return {
       messageId,

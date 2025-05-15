@@ -2,6 +2,7 @@ import { DispatcherMessage, MessageProcessingResult } from "../interfaces/dispat
 import { TriggerHandler } from "../interfaces/base-trigger.interface";
 import { NewProposalTriggerHandler } from "./triggers/new-proposal-trigger.service";
 import { SubscriptionClient } from "./subscription-client.service";
+import { NotificationClientFactory } from "./notification";
 import { config } from "../envConfig";
 
 /**
@@ -12,8 +13,12 @@ export class TriggerProcessorService {
   
   constructor() {
     const subscriptionClient = new SubscriptionClient(config.subscriptionServerUrl);
+    const notificationFactory = new NotificationClientFactory(config.telegramConsumerUrl);
     this.triggerHandlers = new Map();
-    this.triggerHandlers.set('new-proposal', new NewProposalTriggerHandler(subscriptionClient));
+    this.triggerHandlers.set(
+      'new-proposal', 
+      new NewProposalTriggerHandler(subscriptionClient, notificationFactory)
+    );
   }
 
   /**
