@@ -1,5 +1,5 @@
 import { describe, test, expect, jest, beforeEach } from '@jest/globals';
-import { SubscriptionService, SUBSCRIPTION_MESSAGES } from './subscription.service';
+import { SubscriptionService } from './subscription.service';
 import { User, UserPreference, IUserRepository, IPreferenceRepository } from '../interfaces';
 
 // ---- MOCKS ----
@@ -45,14 +45,15 @@ const mockSubscribers = [
 // ---- REPOSITORY MOCKS ----
 const createMockUserRepo = (): jest.Mocked<IUserRepository> => ({
   findByChannelAndId: jest.fn(),
-  create: jest.fn()
+  create: jest.fn(),
+  findById: jest.fn()
 });
 
 const createMockPrefRepo = (): jest.Mocked<IPreferenceRepository> => ({
   findByUserAndDao: jest.fn(),
   create: jest.fn(),
   update: jest.fn(),
-  findActiveSubscribersByDao: jest.fn()
+  findByDao: jest.fn()
 });
 
 // ---- TESTS ----
@@ -82,7 +83,6 @@ describe('Subscription Service', () => {
         true
       );
 
-      expect(result.message).toBe(SUBSCRIPTION_MESSAGES.SUCCESS_NEW_SUB);
       expect(result.user).toEqual(mockUser);
       expect(result.result).toEqual(mockPreference);
     });
@@ -101,11 +101,10 @@ describe('Subscription Service', () => {
         false
       );
 
-      expect(result.message).toBe(SUBSCRIPTION_MESSAGES.SUCCESS_DEACTIVATED);
       expect(result.result).toEqual(updatedPreference);
     });
 
-    test('should return already subscribed message if no change needed', async () => {
+    test('should return existing preference if no change needed', async () => {
       userRepo.findByChannelAndId.mockResolvedValueOnce(mockUser);
       prefRepo.findByUserAndDao.mockResolvedValueOnce(mockPreference);
 
@@ -116,7 +115,6 @@ describe('Subscription Service', () => {
         true
       );
 
-      expect(result.message).toBe(SUBSCRIPTION_MESSAGES.SUCCESS_ALREADY);
       expect(result.result).toEqual(mockPreference);
     });
 
@@ -132,7 +130,6 @@ describe('Subscription Service', () => {
         true
       );
 
-      expect(result.message).toBe(SUBSCRIPTION_MESSAGES.SUCCESS_NEW_SUB);
       expect(result.result).toEqual(mockPreference);
     });
 
@@ -200,33 +197,43 @@ describe('Subscription Service', () => {
   
   describe('getDaoSubscribers', () => {
     test('should retrieve and format subscribers for a DAO', async () => {
-      prefRepo.findActiveSubscribersByDao.mockResolvedValueOnce(mockSubscribers);
+      // Mock preferences
+      const mockPreferences = [
+        { user_id: '123', is_active: true },
+        { user_id: '456', is_active: true }
+      ] as UserPreference[];
+
+      // Mock user find method
+      userRepo.findById.mockImplementation((id) => {
+        if (id === '123') return Promise.resolve(mockSubscribers[0]);
+        if (id === '456') return Promise.resolve(mockSubscribers[1]);
+        return Promise.resolve(undefined);
+      });
+
+      prefRepo.findByDao.mockResolvedValueOnce(mockPreferences);
       
       const result = await subscriptionService.getDaoSubscribers('dao123');
       
       expect(result.subscribers.length).toBe(2);
-      expect(result.message).toBe(SUBSCRIPTION_MESSAGES.SUCCESS_GET_SUBSCRIBERS);
       
       expect(result.subscribers[0]).toHaveProperty('id');
-      expect(result.subscribers[0]).toHaveProperty('user_id');
       expect(result.subscribers[0]).toHaveProperty('channel');
       expect(result.subscribers[0]).toHaveProperty('channel_user_id');
       expect(result.subscribers[0]).toHaveProperty('is_active');
       
-      expect(prefRepo.findActiveSubscribersByDao).toHaveBeenCalledWith('dao123');
+      expect(prefRepo.findByDao).toHaveBeenCalledWith('dao123');
     });
     
     test('should return empty array when no subscribers exist', async () => {
-      prefRepo.findActiveSubscribersByDao.mockResolvedValueOnce([]);
+      prefRepo.findByDao.mockResolvedValueOnce([]);
       
       const result = await subscriptionService.getDaoSubscribers('unknown-dao');
       
       expect(result.subscribers).toEqual([]);
-      expect(result.message).toBe(SUBSCRIPTION_MESSAGES.SUCCESS_GET_SUBSCRIBERS);
     });
     
     test('should handle errors properly', async () => {
-      prefRepo.findActiveSubscribersByDao.mockRejectedValueOnce(new Error('DB Error'));
+      prefRepo.findByDao.mockRejectedValueOnce(new Error('DB Error'));
       
       await expect(subscriptionService.getDaoSubscribers('dao123')).rejects.toThrow('DB Error');
     });

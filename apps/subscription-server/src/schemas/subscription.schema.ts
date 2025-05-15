@@ -20,7 +20,7 @@ export const subscriptionParamsSchema = z.object({
 export const subscriptionBodySchema = z.object({
   channel: z.string().describe('The channel the user is coming from (e.g., "telegram", "discord")'),
   channel_user_id: z.string().describe('The user ID from the channel'),
-  is_active: z.boolean().default(true).describe('Whether the subscription is active')
+  is_active: z.boolean().optional().default(true).describe('Whether the subscription is active')
 });
 
 /**
@@ -30,39 +30,24 @@ export const subscriptionBodySchema = z.object({
  */
 export const createUpdateSubscriptionResponseSchema = {
   200: z.object({
-    message: z.string(),
-    data: z.object({
-      user_id: z.string(),
-      dao_id: z.string(),
-      is_active: z.boolean(),
-      created_at: z.string().optional(),
-      updated_at: z.string().optional()
-    }).optional()
-  }),
-  500: z.object({
-    message: z.string(),
-    error: z.string().optional()
-  })
+    user_id: z.string(),
+    dao_id: z.string(),
+    is_active: z.boolean(),
+    created_at: z.string().optional(),
+    updated_at: z.string().optional()
+  }).describe('Subscription DTO')
 };
 
 /**
- * Schema for the get DAO subscribers response
- * Defines the structure for the response when retrieving all users 
- * subscribed to a specific DAO
+ * Schema for get DAO subscribers response
+ * Defines the structure and validation for the subscribers list response
  */
 export const getDaoSubscribersResponseSchema = {
-  200: z.object({
-    message: z.string(),
-    data: z.array(z.object({
-      id: z.string(),
-      user_id: z.string(),
-      channel: z.string(),
-      channel_user_id: z.string(),
-      is_active: z.boolean()
-    }))
-  }),
-  500: z.object({
-    message: z.string(),
-    error: z.string().optional()
-  })
+  200: z.array(z.object({
+    id: z.string(),
+    channel: z.string(),
+    channel_user_id: z.string(),
+    is_active: z.boolean(),
+    created_at: z.string().optional()
+  }).describe('User DTO'))
 };

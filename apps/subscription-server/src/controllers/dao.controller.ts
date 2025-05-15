@@ -6,31 +6,48 @@ import {
   getDaoSubscribersResponseSchema
 } from '../schemas/subscription.schema';
 import { DaoHandler } from '../handlers/dao.handlers';
-import { userRepository, preferenceRepository } from '../index';
 
 /**
- * Registers DAO subscription routes in the Fastify app.
- * Acts as the controller layer, connecting HTTP routes to handlers.
+ * Controller class for DAO-related endpoints
+ * Responsible for registering routes and connecting them to the appropriate handlers
  */
-export async function daoHandlers(app: FastifyTypedInstance) {
-  const daoHandler = new DaoHandler(userRepository, preferenceRepository);
-
-  app.post('/subscription/:dao', {
-    schema: {
-      tags: ['dao'],
-      description: 'Create or update dao subscription for user',
-      params: subscriptionParamsSchema,
-      body: subscriptionBodySchema,
-      response: createUpdateSubscriptionResponseSchema
-    },
-  }, (request) => daoHandler.postDaoSubscription(request));
-
-  app.get('/subscriptions/:dao', {
-    schema: {
-      tags: ['dao'],
-      description: 'Get all users subscribed to a specific DAO',
-      params: subscriptionParamsSchema,
-      response: getDaoSubscribersResponseSchema
-    }
-  }, (request) => daoHandler.getDaoSubscribers(request));
+export class DaoController {
+  constructor(private daoHandler: DaoHandler) {}
+  
+  /**
+   * Registers all DAO-related routes to the Fastify instance
+   * @param app - The Fastify instance
+   */
+  async register(app: FastifyTypedInstance) {
+    app.post('/subscriptions/:dao', {
+      schema: {
+        tags: ['dao'],
+        description: 'Create or update dao subscription for user',
+        params: subscriptionParamsSchema,
+        body: subscriptionBodySchema,
+        response: createUpdateSubscriptionResponseSchema
+      },
+    }, (request) => {
+      const { dao } = request.params;
+      const { channel, channel_user_id, is_active } = request.body;
+      return this.daoHandler.postDaoSubscription(
+        dao,
+        channel,
+        channel_user_id,
+        is_active
+      );
+    });
+  
+    app.get('/subscriptions/:dao', {
+      schema: {
+        tags: ['dao'],
+        description: 'Get all users subscribed to a specific DAO',
+        params: subscriptionParamsSchema,
+        response: getDaoSubscribersResponseSchema
+      }
+    }, (request) => {
+      const { dao } = request.params;
+      return this.daoHandler.getDaoSubscribers(dao);
+    });
+  }
 } 
