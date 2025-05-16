@@ -5,30 +5,27 @@
  * - Users database: Contains user preferences and addresses
  */
 
-import { Pool } from 'pg';
-
-interface DAORow {
-  id: string;
-}
+import knex, { Knex } from 'knex';
 
 export class DatabaseService {
-  private daosPool: Pool;
-  private usersPool: Pool;
+  private daosDb: Knex;
+  private usersDb: Knex;
 
   constructor(daosConnectionString: string, usersConnectionString: string) {
-    this.daosPool = new Pool({
-      connectionString: daosConnectionString
+    this.daosDb = knex({
+      client: 'pg',
+      connection: daosConnectionString
     });
-
-    this.usersPool = new Pool({
-      connectionString: usersConnectionString
+    this.usersDb = knex({
+      client: 'pg',
+      connection: usersConnectionString
     });
   }
 
   public async getDAOs(): Promise<string[]> {
     try {
-      const result = await this.daosPool.query<DAORow>('SELECT id FROM dao');
-      return result.rows.map(row => row.id);
+      const result = await this.daosDb<{ id: string }>('dao').select('id');
+      return result.map(row => row.id);
     } catch (error) {
       console.error('Error fetching DAOs:', error);
       return [];
@@ -36,24 +33,20 @@ export class DatabaseService {
   }
 
   public async saveUserPreferences(userId: number, daoIds: Set<string>): Promise<void> {
-    const client = await this.usersPool.connect();
+    const trx = await this.usersDb.transaction();
     try {
-      await client.query('BEGIN');
-      for (const daoId of daoIds) {
-        await client.query(
-          'INSERT INTO user_preferences (user_id, dao_id) VALUES ($1, $2) ON CONFLICT (user_id, dao_id) DO NOTHING',
-          [userId, daoId]
-        );
-      }
-      await client.query('COMMIT');
+      const queries = Array.from(daoIds).map(daoId => 
+        trx('user_preferences')
+          .insert({ user_id: userId, dao_id: daoId })
+          .onConflict(['user_id', 'dao_id'])
+          .merge()
+      );
+      await Promise.all(queries);
+      await trx.commit();
     } catch (error) {
-      await client.query('ROLLBACK');
+      await trx.rollback();
       console.error('Error saving user preferences:', error);
       throw error;
-    } finally {
-      client.release();
     }
   }
-
-  // Add any other database methods here
 } 
