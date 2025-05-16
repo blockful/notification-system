@@ -15,8 +15,7 @@ import { BotController } from './controllers/bot.controller';
 import { DAOService } from './services/dao.service';
 import { DatabaseService } from './repositories/db';
 import { NotificationService } from './services/notification.service';
-import { APIController } from './controllers/api.controller';
-import { startServer } from './server';
+import { startServer, startListening } from './server';
 import { config } from './config/env';
 
 const dbService = new DatabaseService(config.anticaptureDataBaseUrl, config.usersDatabaseUrl);
@@ -26,8 +25,8 @@ const botController = new BotController(config.telegramBotToken, daoService);
 const notificationService = new NotificationService(bot, dbService);
 
 (async () => {
-  const server = await startServer();
-  new APIController(server, notificationService);
+  const server = await startServer(notificationService);
+  await startListening(server);
   botController.launch();
   console.log('🤖 Telegram bot and API server are now running!');
 })();

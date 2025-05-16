@@ -10,8 +10,10 @@ import swagger from '@fastify/swagger';
 import swaggerUi from '@fastify/swagger-ui';
 import { config } from './config/env';
 import { FastifyTypedInstance } from './interfaces/fastify.interface';
+import { NotificationService } from './services/notification.service';
+import { APIController } from './controllers/api.controller';
 
-export async function startServer(): Promise<FastifyTypedInstance> {
+export async function startServer(notificationService: NotificationService): Promise<FastifyTypedInstance> {
   const server = Fastify({
     logger: true
   }) as FastifyTypedInstance;
@@ -42,10 +44,15 @@ export async function startServer(): Promise<FastifyTypedInstance> {
       message: error.message || 'An unexpected error occurred'
     });
   });
-  // Start the server
+  
+  // Setup API controllers
+  new APIController(server, notificationService);
+  
+  return server;
+}
+
+export async function startListening(server: FastifyTypedInstance): Promise<void> {
   await server.listen({ port: config.port });
   console.log(`🚀 API server running on http://localhost:${config.port}`);
   console.log(`📚 API documentation available at http://localhost:${config.port}/docs`);
-
-  return server;
 } 
