@@ -9,29 +9,23 @@ import { Context } from 'telegraf';
 import { CONFIRM_SELECTION_BUTTON, NO_DAO_SELECTED_MESSAGE, SELECTED_DAOS_MESSAGE, DAO_SELECTION_MESSAGE } from '../messages';
 import { DatabaseService } from '../repositories/db';
 
-// Store selected DAOs for each user
-export const userSelections = new Map<number, Set<string>>();
+export class DAOService {
+  // Store selected DAOs for each user temporarily
+  private userSelections = new Map<number, Set<string>>();
+  constructor(private dbService: DatabaseService) {}
 
-export const handleDAOSelection = {
-  initialize: async (ctx: Context, dbService: DatabaseService) => {
+  async initialize(ctx: Context): Promise<void> {
     const chatId = ctx.chat?.id;
-    
     if (!chatId) return;
-
-    if (!userSelections.has(chatId)) {
-      userSelections.set(chatId, new Set());
+    if (!this.userSelections.has(chatId)) {
+      this.userSelections.set(chatId, new Set());
     }
-
     try {
-      // Get DAOs from database
-      const daos = await dbService.getDAOs();
-      
+      const daos = await this.dbService.getDAOs();
       if (daos.length === 0) {
         await ctx.reply('No DAOs available at the moment. Please try again later.');
         return;
       }
-
-      // Create initial keyboard with DAOs from database
       const keyboard = {
         inline_keyboard: [
           daos.map(dao => ({
@@ -43,7 +37,6 @@ export const handleDAOSelection = {
           ]
         ]
       };
-
       await ctx.reply(DAO_SELECTION_MESSAGE, {
         reply_markup: keyboard
       });
@@ -51,33 +44,22 @@ export const handleDAOSelection = {
       console.error('Error loading DAOs:', error);
       await ctx.reply('Sorry, there was an error loading the DAOs. Please try again later.');
     }
-  },
+  }
 
-  toggle: async (ctx: Context, daoName: string, dbService: DatabaseService) => {
+  async toggle(ctx: Context, daoName: string): Promise<void> {
     const chatId = ctx.chat?.id;
     const messageId = ctx.callbackQuery?.message?.message_id;
-
     if (!chatId || !messageId) return;
-
-    // Get or create the user's selection set
-    const userSelectedDAOs = userSelections.get(chatId) || new Set();
-    
-    // Normalize DAO name to uppercase for consistency
+    const userSelectedDAOs = this.userSelections.get(chatId) || new Set();
     const normalizedDaoName = daoName.toUpperCase();
-    
-    // Toggle the selection
     if (userSelectedDAOs.has(normalizedDaoName)) {
       userSelectedDAOs.delete(normalizedDaoName);
     } else {
       userSelectedDAOs.add(normalizedDaoName);
     }
-
-    // Save the selection back to the map
-    userSelections.set(chatId, userSelectedDAOs);
-
+    this.userSelections.set(chatId, userSelectedDAOs);
     try {
-      // Get DAOs from database and create keyboard
-      const daos = await dbService.getDAOs();
+      const daos = await this.dbService.getDAOs();
       const keyboard = {
         inline_keyboard: [
           daos.map((dao: string) => {
@@ -92,28 +74,23 @@ export const handleDAOSelection = {
           ]
         ]
       };
-
-      // Only update if there are changes
       await ctx.editMessageReplyMarkup(keyboard);
     } catch (error) {
       console.error('Error updating keyboard:', error);
       await ctx.answerCbQuery('Failed to update selection. Please try again.');
     }
-  },
+  }
 
-  confirm: async (ctx: Context, dbService: DatabaseService) => {
+  async confirm(ctx: Context): Promise<void> {
     const chatId = ctx.chat?.id;
-
     if (!chatId) return;
-
-    const selectedDAOs = userSelections.get(chatId);
+    const selectedDAOs = this.userSelections.get(chatId);
     if (selectedDAOs && selectedDAOs.size > 0) {
       await ctx.reply(`${SELECTED_DAOS_MESSAGE} ${Array.from(selectedDAOs).join(', ')}`);
-      await dbService.saveUserPreferences(chatId, selectedDAOs);
-      // Clear the selections after saving
-      userSelections.delete(chatId);
+      await this.dbService.saveUserPreferences(chatId, selectedDAOs);
+      this.userSelections.delete(chatId);
     } else {
       await ctx.reply(NO_DAO_SELECTED_MESSAGE);
     }
   }
-}; 
+} 

@@ -8,14 +8,18 @@
  * to commands that allow users to customize their notification preferences.
  */
 
-import { Telegraf } from 'telegraf'
-import { setupCommands } from './controllers/bot-commands.controller';
+import { BotController } from './controllers/bot.controller';
+import { DAOService } from './services/dao.service';
 import { DatabaseService } from './repositories/db';
 import { config } from './config/env';
 
+// Initialize services and controllers
 const dbService = new DatabaseService(config.databaseUrl, config.usersDatabaseUrl);
-const bot = new Telegraf(config.telegramBotToken);
-setupCommands(bot, dbService);
-console.log('🤖 Bot is running...');
-process.once('SIGINT', () => bot.stop('SIGINT'));
-process.once('SIGTERM', () => bot.stop('SIGTERM'));
+const daoService = new DAOService(dbService);
+const botController = new BotController(config.telegramBotToken, daoService);
+
+// Start the bot
+botController.launch();
+
+process.once('SIGINT', () => botController.stop('SIGINT'));
+process.once('SIGTERM', () => botController.stop('SIGTERM'));
