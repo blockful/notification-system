@@ -23,7 +23,7 @@ export class NotificationService {
    * @throws Error if user not found or sending fails
    */
   public async sendNotification(payload: NotificationPayload): Promise<string> {
-    const chatId = Number(payload.channelUserId);
+    const chatId = payload.channelUserId;
     const userExists = await this.dbService.userExists(chatId);
     if (!userExists) {
       throw new Error(`User with chat ID ${chatId} not found`);

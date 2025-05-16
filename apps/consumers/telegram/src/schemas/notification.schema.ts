@@ -8,7 +8,7 @@ import { z } from 'zod';
 // Request schema for sending notifications
 export const NotificationRequestSchema = z.object({
   userId: z.string().optional(),
-  channelUserId: z.string().min(1, 'Channel user ID is required'),
+  channelUserId: z.number(),
   message: z.string().min(1, 'Message content is required'),
   metadata: z.record(z.any()).optional()
 });
