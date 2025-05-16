@@ -7,7 +7,7 @@
 
 import { Context } from 'telegraf';
 import { CONFIRM_SELECTION_BUTTON, NO_DAO_SELECTED_MESSAGE, SELECTED_DAOS_MESSAGE, DAO_SELECTION_MESSAGE } from '../messages';
-import { DatabaseService } from '../db';
+import { DatabaseService } from '../repositories/db';
 
 // Store selected DAOs for each user
 export const userSelections = new Map<number, Set<string>>();

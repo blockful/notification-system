@@ -1,32 +1,13 @@
 import { Telegraf } from 'telegraf'
-import { setupCommands } from './commands/commands';
-import { DatabaseService } from './db';
-import * as dotenv from 'dotenv';
-
-// Load environment variables
-dotenv.config();
-
-const config = {
-  botToken: process.env.TELEGRAM_BOT_TOKEN || '',
-  databaseUrl: process.env.DATABASE_URL || '',
-  usersDatabaseUrl: process.env.USERS_DATABASE_URL || ''
-};
-
-if (!config.botToken) {
-  console.error('Error: TELEGRAM_BOT_TOKEN is not defined in .env file');
-  process.exit(1);
-}
-
-if (!config.databaseUrl || !config.usersDatabaseUrl) {
-  console.error('Error: Database URLs are not defined in .env file');
-  process.exit(1);
-}
+import { setupCommands } from './controllers/bot-commands.controller';
+import { DatabaseService } from './repositories/db';
+import { config } from './config/env';
 
 // Initialize database service
 const dbService = new DatabaseService(config.databaseUrl, config.usersDatabaseUrl);
 
 // Initialize the bot
-const bot = new Telegraf(config.botToken);
+const bot = new Telegraf(config.telegramBotToken);
 
 // Set up commands
 setupCommands(bot, dbService);

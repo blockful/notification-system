@@ -3,7 +3,7 @@
  * Messages are organized by functionality and purpose.
  */
 
-import { knownCommands } from './knownCommands';
+import { knownCommands } from './config/knownCommands';
 
 const generateCommandList = () => {
   return knownCommands.map(({ command, description }) => `${command} - ${description}`).join('\n');

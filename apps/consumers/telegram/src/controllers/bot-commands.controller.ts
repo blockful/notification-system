@@ -6,12 +6,12 @@
  */
 
 import { Telegraf } from 'telegraf';
-import { DatabaseService } from '../db'
+import { DatabaseService } from '../repositories/db'
 import { 
   WELCOME_MESSAGE, 
   HELP_MESSAGE, 
 } from '../messages';
-import { handleDAOSelection } from '../handlers/daoHandlers';
+import { handleDAOSelection } from '../services/dao.services';
 
 export const setupCommands = (bot: Telegraf, dbService: DatabaseService) => {
   // Start command
