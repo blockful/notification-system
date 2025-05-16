@@ -43,9 +43,9 @@ export async function startServer(): Promise<FastifyTypedInstance> {
     });
   });
   // Start the server
-  await server.listen({ port: config.api.port });
-  console.log(`🚀 API server running on http://localhost:${config.api.port}`);
-  console.log(`📚 API documentation available at http://localhost:${config.api.port}/docs`);
+  await server.listen({ port: config.port });
+  console.log(`🚀 API server running on http://localhost:${config.port}`);
+  console.log(`📚 API documentation available at http://localhost:${config.port}/docs`);
 
   return server;
 } 

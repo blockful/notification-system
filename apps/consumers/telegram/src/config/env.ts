@@ -21,7 +21,5 @@ export const config = {
   telegramBotToken: env.TELEGRAM_BOT_TOKEN,
   anticaptureDataBaseUrl: env.ANTICAPTURE_DATABASE_URL,
   usersDatabaseUrl: env.USERS_DATABASE_URL,
-  api: {
-    port: env.API_PORT,
-  }
+  port: env.API_PORT,
 } as const; 
