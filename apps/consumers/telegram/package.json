@@ -1,0 +1,27 @@
+{
+  "name": "@notificationsystem/telegram-consumer",
+  "version": "1.0.0",
+  "main": "dist/index.js",
+  "scripts": {
+    "start": "node dist/index.js",
+    "dev": "nodemon --exec 'ts-node' src/index.ts",
+    "build": "tsc",
+    "check-types": "tsc --noEmit"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "description": "",
+  "devDependencies": {
+    "@types/node": "^20.17.46",
+    "@types/pg": "^8.11.11",
+    "nodemon": "^3.1.0",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.8.3"
+  },
+  "dependencies": {
+    "dotenv": "^16.4.7",
+    "pg": "^8.15.0",
+    "telegraf": "^4.16.3"
+  }
+}
