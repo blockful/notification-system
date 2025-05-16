@@ -1,8 +1,7 @@
 /**
- * Main command handler for the Telegram bot.
+ * Main command controller for the Telegram bot.
  * Sets up all available commands and their corresponding actions.
- * Routes callback queries to appropriate handlers based on their type.
- * Uses inline keyboards for interactive commands.
+ * Routes callback queries to appropriate services based on their type.
  */
 
 import { Telegraf } from 'telegraf';
