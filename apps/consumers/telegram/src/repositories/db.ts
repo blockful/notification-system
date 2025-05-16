@@ -11,14 +11,14 @@ export class DatabaseService {
   private daosDb: Knex;
   private usersDb: Knex;
 
-  constructor(daosConnectionString: string, usersConnectionString: string) {
+  constructor(daosDbConnectionString: string, usersDbConnectionString: string) {
     this.daosDb = knex({
       client: 'pg',
-      connection: daosConnectionString
+      connection: daosDbConnectionString
     });
     this.usersDb = knex({
       client: 'pg',
-      connection: usersConnectionString
+      connection: usersDbConnectionString
     });
   }
 

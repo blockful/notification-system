@@ -14,7 +14,7 @@ import { DatabaseService } from './repositories/db';
 import { config } from './config/env';
 
 // Initialize services and controllers
-const dbService = new DatabaseService(config.databaseUrl, config.usersDatabaseUrl);
+const dbService = new DatabaseService(config.anticaptureDataBaseUrl, config.usersDatabaseUrl);
 const daoService = new DAOService(dbService);
 const botController = new BotController(config.telegramBotToken, daoService);
 
