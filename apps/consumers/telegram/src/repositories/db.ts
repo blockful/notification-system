@@ -49,4 +49,16 @@ export class DatabaseService {
       throw error;
     }
   }
+
+  /**
+   * Check if a user exists in the database
+   * @param userId Telegram user/chat ID
+   * @returns Boolean indicating if user exists
+   */
+  public async userExists(userId: number): Promise<boolean> {
+    const result = await this.usersDb('user_preferences')
+      .where({ user_id: userId })
+      .first();
+    return !!result;
+  }
 } 
