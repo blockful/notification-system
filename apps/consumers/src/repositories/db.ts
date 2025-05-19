@@ -34,20 +34,14 @@ export class DatabaseService implements IDatabaseService {
   }
 
   public async saveUserPreferences(userId: number, daoIds: Set<string>): Promise<void> {
-    const trx = await this.usersDb.transaction();
-    try {
+    await this.usersDb.transaction(async trx => { 
       const queries = Array.from(daoIds).map(daoId => 
-        trx('user_preferences')
+        trx('user_preferences') 
           .insert({ user_id: userId, dao_id: daoId })
           .onConflict(['user_id', 'dao_id'])
           .merge()
       );
       await Promise.all(queries);
-      await trx.commit();
-    } catch (error) {
-      await trx.rollback();
-      console.error('Error saving user preferences:', error);
-      throw error;
-    }
+    });    
   }
 } 
