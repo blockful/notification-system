@@ -4,6 +4,7 @@ import fastifyCors from '@fastify/cors';
 import fastifySwagger from '@fastify/swagger';
 import fastifySwaggerUi from '@fastify/swagger-ui';
 import { HealthController, MessageController } from './controllers';
+import { TriggerProcessorService } from './services/trigger-processor.service';
 import { config } from './envConfig';
 
 const server = fastify();
@@ -27,8 +28,9 @@ server.register(fastifySwagger, {
 server.register(fastifySwaggerUi, {
   routePrefix: '/docs'
 });
+const triggerProcessorService = new TriggerProcessorService();
 const healthController = new HealthController();
-const messageController = new MessageController();
+const messageController = new MessageController(triggerProcessorService);
 server.register(async (instance) => {
   await healthController.healthRoutes(instance);
 });

@@ -7,11 +7,9 @@ import { DispatcherMessage } from "../interfaces/dispatcher-message.interface";
  * Controller responsible for message-related routes
  */
 export class MessageController {
-  private triggerProcessorService: TriggerProcessorService;
-
-  constructor() {
-    this.triggerProcessorService = new TriggerProcessorService();
-  }
+  constructor(
+    private readonly triggerProcessorService: TriggerProcessorService
+  ) {}
 
   /**
    * Register message routes on the server
