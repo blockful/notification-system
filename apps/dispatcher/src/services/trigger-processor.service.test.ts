@@ -2,6 +2,8 @@ import { describe, it, expect, jest, beforeEach } from '@jest/globals';
 import { TriggerProcessorService } from './trigger-processor.service';
 import { NewProposalTriggerHandler } from './triggers/new-proposal-trigger.service';
 import { DispatcherMessage, MessageProcessingResult } from '../interfaces/dispatcher-message.interface';
+import { SubscriptionClient } from './subscription-client.service';
+import { NotificationClientFactory } from './notification/notification-factory.service';
 
 jest.mock('./triggers/new-proposal-trigger.service');
 jest.mock('./subscription-client.service');
@@ -16,14 +18,20 @@ jest.mock('../envConfig', () => ({
 describe('TriggerProcessorService', () => {
   let service: TriggerProcessorService;
   let mockNewProposalHandler: jest.Mocked<NewProposalTriggerHandler>;
+  let mockSubscriptionClient: jest.Mocked<SubscriptionClient>;
+  let mockNotificationFactory: jest.Mocked<NotificationClientFactory>;
   
   beforeEach(() => {
     jest.clearAllMocks();
     mockNewProposalHandler = {
       handleMessage: jest.fn()
     } as any;
+    mockSubscriptionClient = new SubscriptionClient('') as jest.Mocked<SubscriptionClient>;
+    mockNotificationFactory = new NotificationClientFactory('') as jest.Mocked<NotificationClientFactory>;
+    
     (NewProposalTriggerHandler as jest.Mock).mockImplementation(() => mockNewProposalHandler);
-    service = new TriggerProcessorService();
+    
+    service = new TriggerProcessorService(mockSubscriptionClient, mockNotificationFactory);
   });
   
   describe('processTrigger', () => {

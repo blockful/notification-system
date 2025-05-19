@@ -6,7 +6,7 @@ export interface User {
     channel: string;
     channel_user_id: string;
     is_active: boolean;
-    created_at?: Date;
+    created_at: Date;
   }
 
 /**

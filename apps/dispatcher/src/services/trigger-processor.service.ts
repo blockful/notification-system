@@ -11,13 +11,14 @@ import { config } from "../envConfig";
 export class TriggerProcessorService {
   private triggerHandlers: Map<string, TriggerHandler>;
   
-  constructor() {
-    const subscriptionClient = new SubscriptionClient(config.subscriptionServerUrl);
-    const notificationFactory = new NotificationClientFactory(config.telegramConsumerUrl);
+  constructor(
+    private subscriptionClient: SubscriptionClient,
+    private notificationFactory: NotificationClientFactory
+  ) {
     this.triggerHandlers = new Map();
     this.triggerHandlers.set(
       'new-proposal', 
-      new NewProposalTriggerHandler(subscriptionClient, notificationFactory)
+      new NewProposalTriggerHandler(this.subscriptionClient, this.notificationFactory)
     );
   }
 
