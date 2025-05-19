@@ -7,10 +7,6 @@ import { DispatcherMessage } from "../interfaces/dispatcher-message.interface";
  * Controller responsible for message-related routes
  */
 export class MessageController {
-  /**
-   * Creates a new message controller
-   * @param triggerProcessorService The service responsible for processing trigger messages
-   */
   constructor(
     private readonly triggerProcessorService: TriggerProcessorService
   ) {}

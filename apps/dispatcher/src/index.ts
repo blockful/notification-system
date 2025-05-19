@@ -4,6 +4,7 @@ import fastifyCors from '@fastify/cors';
 import fastifySwagger from '@fastify/swagger';
 import fastifySwaggerUi from '@fastify/swagger-ui';
 import { HealthController, MessageController } from './controllers';
+import { TriggerProcessorService } from './services/trigger-processor.service';
 import { config } from './envConfig';
 import { SubscriptionClient } from './services/subscription-client.service';
 import { NotificationClientFactory } from './services/notification/notification-factory.service';
@@ -40,7 +41,6 @@ const triggerProcessorService = new TriggerProcessorService(subscriptionClient, 
 const healthController = new HealthController();
 const messageController = new MessageController(triggerProcessorService);
 
-// Register routes
 server.register(async (instance) => {
   await healthController.healthRoutes(instance);
 });
