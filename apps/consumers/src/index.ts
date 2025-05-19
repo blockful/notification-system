@@ -12,9 +12,9 @@ import { BotController } from './controllers/bot.controller';
 import { DAOService } from './services/dao.service';
 import { DatabaseService } from './repositories/db';
 import { config } from './config/env';
+import { daosDb, usersDb } from './config/db.config';
 
-// Initialize services and controllers
-const dbService = new DatabaseService(config.anticaptureDataBaseUrl, config.usersDatabaseUrl);
+const dbService = new DatabaseService(daosDb, usersDb);
 const daoService = new DAOService(dbService);
 const botController = new BotController(config.telegramBotToken, daoService);
 

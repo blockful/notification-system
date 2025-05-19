@@ -5,22 +5,16 @@
  * - Users database: Contains user preferences and addresses
  */
 
-import knex, { Knex } from 'knex';
+import { Knex } from 'knex';
 import { IDatabaseService } from '../interfaces/db.interface';
 
 export class DatabaseService implements IDatabaseService {
   private daosDb: Knex;
   private usersDb: Knex;
 
-  constructor(daosDbConnectionString: string, usersDbConnectionString: string) {
-    this.daosDb = knex({
-      client: 'pg',
-      connection: daosDbConnectionString
-    });
-    this.usersDb = knex({
-      client: 'pg',
-      connection: usersDbConnectionString
-    });
+  constructor(daosDb: Knex, usersDb: Knex) {
+    this.daosDb = daosDb;
+    this.usersDb = usersDb;
   }
 
   public async getDAOs(): Promise<string[]> {
