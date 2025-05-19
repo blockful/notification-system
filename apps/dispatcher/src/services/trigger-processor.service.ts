@@ -1,8 +1,5 @@
 import { DispatcherMessage, MessageProcessingResult } from "../interfaces/dispatcher-message.interface";
 import { TriggerHandler } from "../interfaces/base-trigger.interface";
-import { NewProposalTriggerHandler } from "./triggers/new-proposal-trigger.service";
-import { SubscriptionClient } from "./subscription-client.service";
-import { NotificationClientFactory } from "./notification/notification-factory.service";
 
 /**
  * Service responsible for processing messages for specific triggers
@@ -10,15 +7,17 @@ import { NotificationClientFactory } from "./notification/notification-factory.s
 export class TriggerProcessorService {
   private triggerHandlers: Map<string, TriggerHandler>;
   
-  constructor(
-    private subscriptionClient: SubscriptionClient,
-    private notificationFactory: NotificationClientFactory
-  ) {
+  constructor() {
     this.triggerHandlers = new Map();
-    this.triggerHandlers.set(
-      'new-proposal', 
-      new NewProposalTriggerHandler(this.subscriptionClient, this.notificationFactory)
-    );
+  }
+
+  /**
+   * Adds a trigger handler to the service
+   * @param triggerId Unique identifier for the trigger
+   * @param handler The trigger handler implementation
+   */
+  addHandler(triggerId: string, handler: TriggerHandler): void {
+    this.triggerHandlers.set(triggerId, handler);
   }
 
   /**

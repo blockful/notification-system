@@ -34,7 +34,8 @@ describe('TriggerProcessorService', () => {
     
     (NewProposalTriggerHandler as jest.Mock).mockImplementation(() => mockNewProposalHandler);
     
-    service = new TriggerProcessorService(mockSubscriptionClient, mockNotificationFactory);
+    service = new TriggerProcessorService();
+    service.addHandler('new-proposal', mockNewProposalHandler);
   });
   
   describe('processTrigger', () => {
@@ -61,6 +62,21 @@ describe('TriggerProcessorService', () => {
       await expect(service.processTrigger(mockMessage))
         .rejects
         .toThrow('No handler registered for trigger: unknown-trigger');
+    });
+  });
+
+  describe('addHandler', () => {
+    it('should register a handler for a trigger', async () => {
+      const newHandler = { handleMessage: jest.fn() } as any;
+      service.addHandler('test-trigger', newHandler);
+      
+      const mockMessage: DispatcherMessage = {
+        triggerId: 'test-trigger',
+        payload: { id: '123' }
+      };
+      
+      await service.processTrigger(mockMessage);
+      expect(newHandler.handleMessage).toHaveBeenCalledWith(mockMessage);
     });
   });
 }); 
