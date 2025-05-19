@@ -35,13 +35,14 @@ export class DatabaseService implements IDatabaseService {
 
   public async saveUserPreferences(userId: number, daoIds: Set<string>): Promise<void> {
     await this.usersDb.transaction(async trx => { 
-      const queries = Array.from(daoIds).map(daoId => 
-        trx('user_preferences') 
-          .insert({ user_id: userId, dao_id: daoId })
-          .onConflict(['user_id', 'dao_id'])
-          .merge()
-      );
-      await Promise.all(queries);
+      const valuesToInsert = Array.from(daoIds).map(daoId => ({
+        user_id: userId,
+        dao_id: daoId
+      }));
+      await trx('user_preferences')
+        .insert(valuesToInsert)
+        .onConflict(['user_id', 'dao_id'])
+        .merge();
     });    
   }
 } 
