@@ -14,5 +14,5 @@ connection: config.anticaptureDataBaseUrl
 
 export const usersDb = knex({
   client: 'pg',
-  connection: config.usersDatabaseUrl
+  connection: config.anticaptureDataBaseUrl
 });

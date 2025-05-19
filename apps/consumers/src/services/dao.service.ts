@@ -7,12 +7,17 @@
 
 import { Context } from 'telegraf';
 import { CONFIRM_SELECTION_BUTTON, NO_DAO_SELECTED_MESSAGE, SELECTED_DAOS_MESSAGE, DAO_SELECTION_MESSAGE } from '../messages';
+import { SubscriptionAPIService } from './subscription-api.service';
 import { IDatabaseService } from '../interfaces/db.interface';
 
 export class DAOService {
   // Store selected DAOs for each user temporarily
   private userSelections = new Map<number, Set<string>>();
-  constructor(private dbService: IDatabaseService) {}
+  
+  constructor(
+    private dbService: IDatabaseService,
+    private subscriptionApi: SubscriptionAPIService
+  ) {}
 
   async initialize(ctx: Context): Promise<void> {
     const chatId = ctx.chat?.id;
@@ -87,7 +92,11 @@ export class DAOService {
     const selectedDAOs = this.userSelections.get(chatId);
     if (selectedDAOs && selectedDAOs.size > 0) {
       await ctx.reply(`${SELECTED_DAOS_MESSAGE} ${Array.from(selectedDAOs).join(', ')}`);
-      await this.dbService.saveUserPreferences(chatId, selectedDAOs);
+      await Promise.all(
+        Array.from(selectedDAOs).map(daoId =>
+          this.subscriptionApi.saveUserPreference(daoId, chatId, true)
+        )
+      );
       this.userSelections.delete(chatId);
     } else {
       await ctx.reply(NO_DAO_SELECTED_MESSAGE);
