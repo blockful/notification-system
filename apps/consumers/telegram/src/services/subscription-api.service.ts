@@ -44,13 +44,11 @@ export class SubscriptionAPIService {
     // For each DAO, check if the user is subscribed
     for (const daoId of daoIds) {
       const subscribers = await this.getDaoSubscribers(daoId);
-      if (subscribers.some(sub => 
+      return subscribers.some(sub => 
           sub.channel === 'telegram' && 
           sub.channel_user_id === channelUserId.toString() &&
           sub.is_active
-      )) {
-          return true;
-      }
+      )
     }
     return false;
   }
