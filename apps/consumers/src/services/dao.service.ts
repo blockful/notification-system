@@ -7,12 +7,12 @@
 
 import { Context } from 'telegraf';
 import { CONFIRM_SELECTION_BUTTON, NO_DAO_SELECTED_MESSAGE, SELECTED_DAOS_MESSAGE, DAO_SELECTION_MESSAGE } from '../messages';
-import { DatabaseService } from '../repositories/db';
+import { IDatabaseService } from '../interfaces/db.interface';
 
 export class DAOService {
   // Store selected DAOs for each user temporarily
   private userSelections = new Map<number, Set<string>>();
-  constructor(private dbService: DatabaseService) {}
+  constructor(private dbService: IDatabaseService) {}
 
   async initialize(ctx: Context): Promise<void> {
     const chatId = ctx.chat?.id;

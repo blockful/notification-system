@@ -6,8 +6,9 @@
  */
 
 import knex, { Knex } from 'knex';
+import { IDatabaseService } from '../interfaces/db.interface';
 
-export class DatabaseService {
+export class DatabaseService implements IDatabaseService {
   private daosDb: Knex;
   private usersDb: Knex;
 
