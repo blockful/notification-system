@@ -1,15 +1,23 @@
 import { DispatcherMessage, MessageProcessingResult } from "../interfaces/dispatcher-message.interface";
 import { TriggerHandler } from "../interfaces/base-trigger.interface";
-import { NewProposalTriggerHandler } from "./triggers/new-proposal-trigger.service";
 
 /**
  * Service responsible for processing messages for specific triggers
  */
 export class TriggerProcessorService {
   private triggerHandlers: Map<string, TriggerHandler>;
+  
   constructor() {
     this.triggerHandlers = new Map();
-    this.triggerHandlers.set('new-proposal', new NewProposalTriggerHandler());
+  }
+
+  /**
+   * Adds a trigger handler to the service
+   * @param triggerId Unique identifier for the trigger
+   * @param handler The trigger handler implementation
+   */
+  addHandler(triggerId: string, handler: TriggerHandler): void {
+    this.triggerHandlers.set(triggerId, handler);
   }
 
   /**

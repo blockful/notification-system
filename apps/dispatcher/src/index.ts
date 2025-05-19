@@ -6,6 +6,10 @@ import fastifySwaggerUi from '@fastify/swagger-ui';
 import { HealthController, MessageController } from './controllers';
 import { TriggerProcessorService } from './services/trigger-processor.service';
 import { config } from './envConfig';
+import { SubscriptionClient } from './services/subscription-client.service';
+import { NotificationClientFactory } from './services/notification/notification-factory.service';
+import { TelegramNotificationClient } from './services/notification/telegram-notification.service';
+import { NewProposalTriggerHandler } from './services/triggers/new-proposal-trigger.service';
 
 const server = fastify();
 
@@ -28,9 +32,22 @@ server.register(fastifySwagger, {
 server.register(fastifySwaggerUi, {
   routePrefix: '/docs'
 });
+
+// Configure services
+const subscriptionClient = new SubscriptionClient(config.subscriptionServerUrl);
+const notificationFactory = new NotificationClientFactory();
+notificationFactory.addClient('telegram', new TelegramNotificationClient(config.telegramConsumerUrl));
 const triggerProcessorService = new TriggerProcessorService();
+
+// Register trigger handlers
+triggerProcessorService.addHandler(
+  'new-proposal',
+  new NewProposalTriggerHandler(subscriptionClient, notificationFactory)
+);
+
 const healthController = new HealthController();
 const messageController = new MessageController(triggerProcessorService);
+
 server.register(async (instance) => {
   await healthController.healthRoutes(instance);
 });
