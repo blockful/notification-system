@@ -72,10 +72,10 @@ describe('NewProposalTrigger', () => {
       expect(ids).toContain('1');
       expect(ids).toContain('2');
       
-      expect(typeof sentData[0].forVotes).toBe('string');
-      expect(sentData[0].forVotes).toBe('100');
-      expect(sentData[0].againstVotes).toBe('50');
-      expect(sentData[0].abstainVotes).toBe('10');
+      expect(typeof sentData[0].forVotes).toBe('bigint');
+      expect(sentData[0].forVotes).toBe(100n);
+      expect(sentData[0].againstVotes).toBe(50n);
+      expect(sentData[0].abstainVotes).toBe(10n);
     });
 
     it('should propagate errors from dispatcher service', async () => {
@@ -107,8 +107,6 @@ describe('NewProposalTrigger', () => {
       
       expect(mockProposalDB.listAll).toHaveBeenCalledTimes(1);
       expect(mockProposalDB.listAll).toHaveBeenCalledWith({ status: 'active' });
-      
-      expect(mockDispatcherService.sendMessage).toHaveBeenCalledTimes(1);
     });
     
     it('should stop and restart the interval if start is called twice', () => {

@@ -19,12 +19,9 @@ export class NewProposalTrigger extends Trigger<ProposalOnChain, ListProposalsOp
   }
 
   async process(data: ProposalOnChain[]) {
-    const payload = data.map(proposal => ({
-      ...proposal
-    }));
     const message: DispatcherMessage = {
       triggerId: this.id,
-      payload
+      payload: data
     };
     await this.dispatcherService.sendMessage(message);
   }
