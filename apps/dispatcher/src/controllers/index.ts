@@ -1,1 +1,2 @@
-export * from './health_routes'; 
+export * from './health.controller';
+export * from './message.controller'; 

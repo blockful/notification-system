@@ -7,15 +7,15 @@
 
 import { Context } from 'telegraf';
 import { CONFIRM_SELECTION_BUTTON, NO_DAO_SELECTED_MESSAGE, SELECTED_DAOS_MESSAGE, DAO_SELECTION_MESSAGE } from '../messages';
-import { DatabaseService } from '../repositories/db';
 import { SubscriptionAPIService } from './subscription-api.service';
+import { IDatabaseService } from '../interfaces/db.interface';
 
 export class DAOService {
   // Store selected DAOs for each user temporarily
   private userSelections = new Map<number, Set<string>>();
   
   constructor(
-    private dbService: DatabaseService,
+    private dbService: IDatabaseService,
     private subscriptionApi: SubscriptionAPIService
   ) {}
 

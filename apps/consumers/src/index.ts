@@ -18,12 +18,11 @@ import { SubscriptionAPIService } from './services/subscription-api.service';
 import { NotificationService } from './services/notification.service';
 import { startServer, startListening } from './server';
 import { config } from './config/env';
+import { daosDb, usersDb } from './config/db.config';
 
-// Initialize services
-const dbService = new DatabaseService(config.anticaptureDataBaseUrl);
 const subscriptionApi = new SubscriptionAPIService(config.subscriptionServerUrl);
+const dbService = new DatabaseService(daosDb, usersDb);
 const daoService = new DAOService(dbService, subscriptionApi);
-
 const bot = new Telegraf(config.telegramBotToken);
 const notificationService = new NotificationService(bot, subscriptionApi, dbService);
 const botController = new BotController(config.telegramBotToken, daoService);
