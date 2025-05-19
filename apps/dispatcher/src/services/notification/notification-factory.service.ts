@@ -1,5 +1,4 @@
 import { INotificationClient } from "../../interfaces/notification-client.interface";
-import { TelegramNotificationClient } from "./telegram-notification.service";
 
 /**
  * Factory for creating notification clients

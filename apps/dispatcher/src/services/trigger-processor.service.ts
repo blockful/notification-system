@@ -3,7 +3,6 @@ import { TriggerHandler } from "../interfaces/base-trigger.interface";
 import { NewProposalTriggerHandler } from "./triggers/new-proposal-trigger.service";
 import { SubscriptionClient } from "./subscription-client.service";
 import { NotificationClientFactory } from "./notification/notification-factory.service";
-import { config } from "../envConfig";
 
 /**
  * Service responsible for processing messages for specific triggers
