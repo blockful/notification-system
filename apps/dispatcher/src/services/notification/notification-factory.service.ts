@@ -11,13 +11,18 @@ export class NotificationClientFactory {
 
   /**
    * Creates a new notification client factory
-   * @param telegramBaseUrl Base URL for Telegram consumer API
    */
-  constructor(telegramBaseUrl: string) {
+  constructor() {
     this.clients = new Map<string, INotificationClient>();
-    
-    // Initialize available notification clients
-    this.clients.set('telegram', new TelegramNotificationClient(telegramBaseUrl));
+  }
+
+  /**
+   * Adds a notification client to the factory
+   * @param channel Channel type (e.g., 'telegram')
+   * @param client The notification client
+   */
+  addClient(channel: string, client: INotificationClient): void {
+    this.clients.set(channel, client);
   }
 
   /**

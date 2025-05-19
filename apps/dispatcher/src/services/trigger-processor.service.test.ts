@@ -27,7 +27,10 @@ describe('TriggerProcessorService', () => {
       handleMessage: jest.fn()
     } as any;
     mockSubscriptionClient = new SubscriptionClient('') as jest.Mocked<SubscriptionClient>;
-    mockNotificationFactory = new NotificationClientFactory('') as jest.Mocked<NotificationClientFactory>;
+    mockNotificationFactory = new NotificationClientFactory() as jest.Mocked<NotificationClientFactory>;
+    mockNotificationFactory.addClient = jest.fn();
+    mockNotificationFactory.getClient = jest.fn();
+    mockNotificationFactory.supportsChannel = jest.fn();
     
     (NewProposalTriggerHandler as jest.Mock).mockImplementation(() => mockNewProposalHandler);
     

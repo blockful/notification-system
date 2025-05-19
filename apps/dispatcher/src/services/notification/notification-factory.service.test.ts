@@ -9,17 +9,18 @@ jest.mock('./telegram-notification.service', () => ({
 describe('NotificationClientFactory', () => {
   let factory: NotificationClientFactory;
   const telegramBaseUrl = 'https://api.telegram.example.com';
+  let mockTelegramClient: any;
   
   beforeEach(() => {
     jest.clearAllMocks();
-    factory = new NotificationClientFactory(telegramBaseUrl);
+    mockTelegramClient = { sendNotification: jest.fn() };
+    (TelegramNotificationClient as jest.Mock).mockReturnValue(mockTelegramClient);
+    factory = new NotificationClientFactory();
   });
   
   describe('getClient', () => {
     it('should return the correct client for a supported channel', () => {
-      const mockTelegramClient = { sendNotification: jest.fn() };
-      (TelegramNotificationClient as jest.Mock).mockReturnValue(mockTelegramClient);
-      factory = new NotificationClientFactory(telegramBaseUrl);
+      factory.addClient('telegram', mockTelegramClient);
       const client = factory.getClient('telegram');
       expect(client).toBe(mockTelegramClient);
     });
@@ -30,8 +31,16 @@ describe('NotificationClientFactory', () => {
     });
   });
   
+  describe('addClient', () => {
+    it('should add a client to the factory', () => {
+      factory.addClient('telegram', mockTelegramClient);
+      expect(factory.supportsChannel('telegram')).toBe(true);
+    });
+  });
+  
   describe('supportsChannel', () => {
     it('should return true for supported channels', () => {
+      factory.addClient('telegram', mockTelegramClient);
       expect(factory.supportsChannel('telegram')).toBe(true);
     });
     
