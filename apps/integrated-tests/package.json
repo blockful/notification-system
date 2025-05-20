@@ -1,0 +1,30 @@
+{
+  "name": "integrated-tests",
+  "version": "1.0.0",
+  "description": "Integration tests for the notification system",
+  "main": "index.js",
+  "scripts": {
+    "test": "jest",
+    "test:watch": "jest --watch",
+    "start-services": "ts-node src/setup-services.ts",
+    "test:with-services": "ts-node src/setup-services.ts && jest && ts-node -e \"require('./src/setup-services').stopServices()\"",
+    "build": "tsc"
+  },
+  "dependencies": {
+    "@notification-system/logic-system": "workspace:*",
+    "@notification-system/dispatcher": "workspace:*",
+    "@notification-system/consumer": "workspace:*",
+    "@notification-system/subscription-server": "workspace:*",
+    "dotenv": "^16.5.0"
+  },
+  "devDependencies": {
+    "@jest/globals": "^29.7.0",
+    "@types/jest": "^29.5.14",
+    "@types/node": "^20.17.46",
+    "jest": "^29.7.0",
+    "ts-jest": "^29.3.2",
+    "typescript": "^5.8.3",
+    "tsx": "^4.19.4",
+    "ts-node": "^10.9.2"
+  }
+} 
