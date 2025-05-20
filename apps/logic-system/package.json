@@ -1,5 +1,5 @@
 {
-  "name": "logic-system",
+  "name": "@notification-system/logic-system",
   "version": "1.0.0",
   "description": "Business logic system for notification handling",
   "main": "dist/index.js",

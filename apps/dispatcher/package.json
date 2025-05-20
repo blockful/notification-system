@@ -1,5 +1,5 @@
 {
-  "name": "dispatcher",
+  "name": "@notification-system/dispatcher",
   "version": "1.0.0",
   "description": "Dispatcher service",
   "main": "dist/index.js",
