@@ -12,122 +12,75 @@ const runningProcesses: ChildProcess[] = [];
  * Start all system components
  */
 export async function startServices(): Promise<void> {
-  await startSubscriptionServer();
-  await startDispatcher();
-  await startLogicSystem();
+  startSubscriptionServer();
+  startDispatcher();
+  startLogicSystem();
   console.log('All services started successfully');
 }
 
 /**
  * Stop all running services
  */
-export async function stopServices(): Promise<void> {
-  for (const process of runningProcesses) {
-    if (process && !process.killed) {
-      process.kill();
-    }
-  }
+export function stopServices(): void {
+  runningProcesses.forEach(process => {
+    if (!process.killed) process.kill();
+  });
   console.log('All services stopped');
 }
 
 /**
  * Start the subscription server
  */
-async function startSubscriptionServer(): Promise<void> {
-  const serverProcess = startPackageWithPnpm('subscription-server', PACKAGES.SUBSCRIPTION_SERVER);
+function startSubscriptionServer(): void {
+  const serverProcess = startProcess(
+    'subscription-server',
+    ['run', '--filter', PACKAGES.SUBSCRIPTION_SERVER, 'dev']
+  );
   runningProcesses.push(serverProcess);
-  console.log('Subscription server started');
 }
 
 /**
  * Start the dispatcher
  */
-async function startDispatcher(): Promise<void> {
-  const dispatcherProcess = startPackageWithPnpm('dispatcher', PACKAGES.DISPATCHER);
+function startDispatcher(): void {
+  const dispatcherProcess = startProcess(
+    'dispatcher',
+    ['run', '--filter', PACKAGES.DISPATCHER, 'dev']
+  );
   runningProcesses.push(dispatcherProcess);
-  console.log('Dispatcher started');
 }
 
 /**
  * Start the logic system
  */
-async function startLogicSystem(): Promise<void> {
-  const logicProcess = startPackageWithPnpm('logic-system', PACKAGES.LOGIC_SYSTEM);
-  runningProcesses.push(logicProcess);
-  console.log('Logic system started');
-}
-
-/**
- * Helper function to start a package with pnpm
- */
-function startPackageWithPnpm(name: string, packageName: string): ChildProcess {
-  return startProcess(
-    name, 
-    process.cwd(),
-    'pnpm', 
-    ['run', '--filter', packageName, 'dev']
+function startLogicSystem(): void {
+  const logicProcess = startProcess(
+    'logic-system',
+    ['run', '--filter', PACKAGES.LOGIC_SYSTEM, 'dev']
   );
+  runningProcesses.push(logicProcess);
 }
 
 /**
  * Helper function to start a process
  */
-function startProcess(name: string, cwd: string, command: string, args: string[]): ChildProcess {
-  // Obter as variáveis de ambiente específicas para este serviço
+function startProcess(name: string, args: string[]): ChildProcess {
   const serviceEnv = getServiceEnv(name);
   
-  const childProcess = spawn(command, args, {
-    cwd,
+  const childProcess = spawn('pnpm', args, {
+    cwd: process.cwd(),
     env: serviceEnv,
     stdio: ['ignore', 'pipe', 'pipe']
   });
-
-  // Log output
-  if (childProcess.stdout) {
-    childProcess.stdout.on('data', (data) => {
-      console.log(`[${name}] ${data.toString().trim()}`);
-    });
-  }
-
-  if (childProcess.stderr) {
-    childProcess.stderr.on('data', (data) => {
-      console.error(`[${name}] ${data.toString().trim()}`);
-    });
-  }
-
+  childProcess.stdout?.on('data', (data) => {
+    console.log(`[${name}] ${data.toString().trim()}`);
+  });
+  childProcess.stderr?.on('data', (data) => {
+    console.error(`[${name}] ${data.toString().trim()}`);
+  });
   childProcess.on('error', (error) => {
     console.error(`Error starting ${name}:`, error);
   });
-
-  childProcess.on('exit', (code) => {
-    if (code !== 0 && code !== null) {
-      console.error(`${name} exited with code ${code}`);
-    }
-  });
-
+  console.log(`${name} started`);
   return childProcess;
-}
-
-if (require.main === module) {
-  startServices().catch(error => {
-    console.error('Failed to start services:', error);
-    process.exit(1);
-  });
-
-  // Esta parte só deve ser executada quando o script é chamado diretamente
-  // e não quando importado por outros arquivos
-  const shutdown = async () => {
-    console.log('Shutting down...');
-    await stopServices();
-    process.exit(0);
-  };
-
-  // Handlers para sinais de interrupção
-  process.on('SIGINT', shutdown);
-  process.on('SIGTERM', shutdown);
-
-  // Não bloquear o processo, permitir que o Jest execute e termine
-  if (process.env.JEST_WORKER_ID === undefined) {
-    console.log('Running in standalone mode. Press Ctrl+C to stop.');
-  }
 } 
