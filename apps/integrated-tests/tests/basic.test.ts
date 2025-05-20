@@ -1,5 +1,5 @@
 import { describe, test, expect, beforeAll, afterAll } from '@jest/globals';
-import { startServices, stopServices } from '../src/setup-services';
+import { startServices, stopServices } from '../src/services-setup';
 
 describe('Basic integration tests', () => {
   beforeAll(async () => {

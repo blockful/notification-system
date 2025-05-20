@@ -1,5 +1,5 @@
 import { spawn, ChildProcess } from 'child_process';
-import { getServiceEnv } from './configEnv';
+import { getServiceEnv } from './env-configuration';
 
 const PACKAGES = {
   SUBSCRIPTION_SERVER: '@notification-system/subscription-server',
