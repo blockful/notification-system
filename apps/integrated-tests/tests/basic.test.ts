@@ -11,7 +11,7 @@ describe('Basic integration tests', () => {
 
   afterAll(async () => {
     console.log('🧹 Shutting down all services...');
-    await stopServices();
+    stopServices();
     await new Promise(resolve => setTimeout(resolve, 1000));
     console.log('✅ All services were shut down successfully');
   });
