@@ -1,3 +1,5 @@
+#!/usr/bin/env node
+
 import fastify from 'fastify';
 import { validatorCompiler, serializerCompiler } from 'fastify-type-provider-zod';
 import fastifyCors from '@fastify/cors';

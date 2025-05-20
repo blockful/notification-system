@@ -3,6 +3,12 @@
   "version": "1.0.0",
   "description": "Dispatcher service",
   "main": "dist/index.js",
+  "bin": {
+    "@notification-system/dispatcher": "./dist/index.js"
+  },
+  "files": [
+    "dist"
+  ],
   "scripts": {
     "dev": "tsx watch src/index.ts",
     "build": "tsc",

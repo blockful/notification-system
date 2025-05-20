@@ -1,3 +1,5 @@
+#!/usr/bin/env node
+
 import { NewProposalTrigger } from './triggers/new-proposal-trigger';
 import { ProposalRepository } from './repositories/proposal.repository';
 import { DispatcherApiClient } from './api-clients/dispatcher.api-client';

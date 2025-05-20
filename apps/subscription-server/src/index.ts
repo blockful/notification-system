@@ -1,3 +1,5 @@
+#!/usr/bin/env node
+
 // Import configuration
 import fastify from 'fastify';
 import { validatorCompiler, serializerCompiler, jsonSchemaTransform } from 'fastify-type-provider-zod';

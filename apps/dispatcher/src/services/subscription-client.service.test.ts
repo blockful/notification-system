@@ -17,8 +17,8 @@ describe('SubscriptionClient', () => {
   describe('getDaoSubscribers', () => {
     it('should fetch subscribers for a DAO successfully', async () => {
       const mockUsers: User[] = [
-        { id: '1', channel: 'telegram', channel_user_id: '123', is_active: true },
-        { id: '2', channel: 'telegram', channel_user_id: '456', is_active: true }
+        { id: '1', channel: 'telegram', channel_user_id: '123', is_active: true, created_at: new Date() },
+        { id: '2', channel: 'telegram', channel_user_id: '456', is_active: true, created_at: new Date() }
       ];
       const mockResponse = {
         ok: true,
