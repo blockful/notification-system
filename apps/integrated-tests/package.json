@@ -8,7 +8,7 @@
     "test:watch": "jest --watch",
     "start-services": "ts-node src/setup-services.ts",
     "test:with-services": "ts-node src/setup-services.ts && jest && ts-node -e \"require('./src/setup-services').stopServices()\"",
-    "build": "tsc",
+    "build": "tsc && mkdir -p dist/envs && cp src/envs/* dist/envs/",
     "test-components": "ts-node src/test-components.ts"
   },
   "dependencies": {

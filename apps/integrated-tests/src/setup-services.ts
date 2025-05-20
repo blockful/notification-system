@@ -1,7 +1,5 @@
 import { spawn, ChildProcess } from 'child_process';
-import dotenv from 'dotenv';
-
-dotenv.config();
+import { getServiceEnv } from './configEnv';
 
 const PACKAGES = {
   SUBSCRIPTION_SERVER: '@notification-system/subscription-server',
@@ -75,9 +73,12 @@ function startPackageWithPnpm(name: string, packageName: string): ChildProcess {
  * Helper function to start a process
  */
 function startProcess(name: string, cwd: string, command: string, args: string[]): ChildProcess {
+  // Obter as variáveis de ambiente específicas para este serviço
+  const serviceEnv = getServiceEnv(name);
+  
   const childProcess = spawn(command, args, {
     cwd,
-    env: { ...process.env },
+    env: serviceEnv,
     stdio: ['ignore', 'pipe', 'pipe']
   });
 
@@ -112,11 +113,21 @@ if (require.main === module) {
     console.error('Failed to start services:', error);
     process.exit(1);
   });
+
+  // Esta parte só deve ser executada quando o script é chamado diretamente
+  // e não quando importado por outros arquivos
   const shutdown = async () => {
     console.log('Shutting down...');
     await stopServices();
     process.exit(0);
   };
+
+  // Handlers para sinais de interrupção
   process.on('SIGINT', shutdown);
   process.on('SIGTERM', shutdown);
+
+  // Não bloquear o processo, permitir que o Jest execute e termine
+  if (process.env.JEST_WORKER_ID === undefined) {
+    console.log('Running in standalone mode. Press Ctrl+C to stop.');
+  }
 } 
