@@ -16,7 +16,9 @@
     "@notification-system/dispatcher": "workspace:*",
     "@notification-system/consumer": "workspace:*",
     "@notification-system/subscription-server": "workspace:*",
-    "dotenv": "^16.5.0"
+    "dotenv": "^16.5.0",
+    "knex": "^3.1.0",
+    "sqlite3": "^5.1.7"
   },
   "devDependencies": {
     "@jest/globals": "^29.7.0",

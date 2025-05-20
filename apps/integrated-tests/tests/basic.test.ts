@@ -1,5 +1,6 @@
 import { describe, test, expect, beforeAll, afterAll } from '@jest/globals';
 import { startServices, stopServices } from '../src/services-setup';
+import { db } from '../src/sqlite-setup';
 
 describe('Basic integration tests', () => {
   beforeAll(async () => {
@@ -18,5 +19,14 @@ describe('Basic integration tests', () => {
 
   test('should start all services correctly', () => {
     expect(true).toBe(true);
+  });
+
+  test('should connect to SQLite database successfully', async () => {
+    const proposals = await db('proposals').select('*');
+    expect(proposals.length).toBeGreaterThan(0);
+    const users = await db('users').select('*');
+    expect(users.length).toBeGreaterThan(0);
+    const preferences = await db('user_preferences').select('*');
+    expect(preferences.length).toBeGreaterThan(0);
   });
 }); 

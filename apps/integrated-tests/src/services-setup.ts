@@ -1,5 +1,6 @@
 import { spawn, ChildProcess } from 'child_process';
 import { getServiceEnv } from './env-configuration';
+import { setupDatabase, closeDatabase } from './sqlite-setup';
 
 const PACKAGES = {
   SUBSCRIPTION_SERVER: '@notification-system/subscription-server',
@@ -12,6 +13,7 @@ const runningProcesses: ChildProcess[] = [];
  * Start all system components
  */
 export async function startServices(): Promise<void> {
+  await setupDatabase();
   startSubscriptionServer();
   startDispatcher();
   startLogicSystem();
@@ -25,6 +27,7 @@ export function stopServices(): void {
   runningProcesses.forEach(process => {
     if (!process.killed) process.kill();
   });
+  closeDatabase();
   console.log('All services stopped');
 }
 
