@@ -1,17 +1,13 @@
 import { spawn, ChildProcess } from 'child_process';
-import path from 'path';
 import dotenv from 'dotenv';
 
 dotenv.config();
 
-// Define packages como constantes para evitar erros de digitação
 const PACKAGES = {
   SUBSCRIPTION_SERVER: '@notification-system/subscription-server',
   DISPATCHER: '@notification-system/dispatcher',
   LOGIC_SYSTEM: '@notification-system/logic-system'
 };
-
-// Store all running processes
 const runningProcesses: ChildProcess[] = [];
 
 /**
@@ -111,7 +107,6 @@ function startProcess(name: string, cwd: string, command: string, args: string[]
   return childProcess;
 }
 
-// If this script is run directly
 if (require.main === module) {
   startServices().catch(error => {
     console.error('Failed to start services:', error);
