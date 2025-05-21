@@ -4,13 +4,14 @@ import { Knex } from 'knex';
 
 export class ProposalRepository implements ProposalDB {
   private db: Knex;
+  private readonly tableName = 'proposals_onchain';
 
   constructor(db: Knex) {
     this.db = db;
   }
 
   async getById(id: string): Promise<ProposalOnChain | null> {
-    const proposal = await this.db('proposals')
+    const proposal = await this.db(this.tableName)
       .where({ id })
       .first();
     
@@ -22,7 +23,7 @@ export class ProposalRepository implements ProposalDB {
   }
 
   async listAll(options?: ListProposalsOptions): Promise<ProposalOnChain[]> {
-    let query = this.db('proposals').select('*');
+    let query = this.db(this.tableName).select('*');
     
     if (options?.status) {
       query = query.where('status', options.status);
