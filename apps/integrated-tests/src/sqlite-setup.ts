@@ -22,13 +22,13 @@ export const db = knex({
 // Initialize database with tables
 export async function initializeDatabase(): Promise<void> {
   // Drop tables if they exist
-  await db.schema.dropTableIfExists('proposals');
+  await db.schema.dropTableIfExists('proposals_onchain');
   await db.schema.dropTableIfExists('subscriptions');
   await db.schema.dropTableIfExists('users');
   await db.schema.dropTableIfExists('user_preferences');
 
   // Create proposals table
-  await db.schema.createTable('proposals', (table) => {
+  await db.schema.createTable('proposals_onchain', (table) => {
     table.string('id').primary();
     table.string('dao_id').notNullable().index();
     table.string('proposer_account_id').notNullable();
@@ -73,7 +73,7 @@ export async function initializeDatabase(): Promise<void> {
 // Seed the database with test data
 export async function seedDatabase(): Promise<void> {
   // Seed proposals
-  await db('proposals').insert([
+  await db('proposals_onchain').insert([
     {
       id: '0x1234567890abcdef1234567890abcdef12345678',
       dao_id: '0xdao1234567890abcdef1234567890abcdef123',
