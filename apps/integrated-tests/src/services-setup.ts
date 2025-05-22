@@ -9,6 +9,9 @@ const PACKAGES = {
 };
 const runningProcesses: ChildProcess[] = [];
 
+// Log capturing for tests
+const capturedLogs: { service: string; type: 'stdout' | 'stderr'; message: string; timestamp: Date }[] = [];
+
 /**
  * Start all system components
  */
@@ -29,6 +32,31 @@ export function stopServices(): void {
   });
   closeDatabase();
   console.log('All services stopped');
+}
+
+/**
+ * Get captured logs for testing
+ */
+export function getCapturedLogs(): typeof capturedLogs {
+  return [...capturedLogs];
+}
+
+/**
+ * Check if a specific error message exists in captured logs
+ */
+export function hasErrorLog(errorMessage: string, service?: string): boolean {
+  return capturedLogs.some(log => 
+    log.type === 'stderr' && 
+    log.message.includes(errorMessage) &&
+    (service ? log.service === service : true)
+  );
+}
+
+/**
+ * Clear captured logs
+ */
+export function clearCapturedLogs(): void {
+  capturedLogs.length = 0;
 }
 
 /**
@@ -76,10 +104,24 @@ function startProcess(name: string, args: string[]): ChildProcess {
     stdio: ['ignore', 'pipe', 'pipe']
   });
   childProcess.stdout?.on('data', (data) => {
-    console.log(`[${name}] ${data.toString().trim()}`);
+    const message = data.toString().trim();
+    console.log(`[${name}] ${message}`);
+    capturedLogs.push({
+      service: name,
+      type: 'stdout',
+      message: message,
+      timestamp: new Date()
+    });
   });
   childProcess.stderr?.on('data', (data) => {
-    console.error(`[${name}] ${data.toString().trim()}`);
+    const message = data.toString().trim();
+    console.error(`[${name}] ${message}`);
+    capturedLogs.push({
+      service: name,
+      type: 'stderr',
+      message: message,
+      timestamp: new Date()
+    });
   });
   childProcess.on('error', (error) => {
     console.error(`Error starting ${name}:`, error);
