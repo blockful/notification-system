@@ -13,7 +13,9 @@ import { NotificationClientFactory } from './services/notification/notification-
 import { TelegramNotificationClient } from './services/notification/telegram-notification.service';
 import { NewProposalTriggerHandler } from './services/triggers/new-proposal-trigger.service';
 
-const server = fastify();
+const server = fastify({
+  logger: true
+});
 
 // Configure zod to be the input validator
 server.setValidatorCompiler(validatorCompiler);
@@ -33,6 +35,23 @@ server.register(fastifySwagger, {
 });
 server.register(fastifySwaggerUi, {
   routePrefix: '/docs'
+});
+
+// Add a detailed error handler
+server.setErrorHandler((error, request, reply) => {
+  console.error('Error occurred:', error);
+  
+  // Log full error details for debugging
+  if (error.stack) {
+    console.error('Stack trace:', error.stack);
+  }
+  
+  // Send appropriate error response
+  reply.status(error.statusCode || 500).send({
+    statusCode: error.statusCode || 500,
+    error: error.name || 'Internal Server Error',
+    message: error.message || 'An unexpected error occurred'
+  });
 });
 
 // Configure services
@@ -57,5 +76,16 @@ server.register(async (instance) => {
   await messageController.messageRoutes(instance);
 });
 
-server.listen({ port: config.port, host: '0.0.0.0' });
-console.log(`Server is running on port ${config.port}`);
+const start = async () => {
+  try {
+    await server.listen({ port: config.port, host: '0.0.0.0' });
+    console.log(`Server is running on port ${config.port}`);
+    console.log(`Subscription server URL: ${config.subscriptionServerUrl}`);
+    console.log(`Telegram consumer URL: ${config.telegramConsumerUrl}`);
+  } catch (err) {
+    server.log.error(err);
+    process.exit(1);
+  }
+};
+
+start();
