@@ -1,6 +1,6 @@
 import { spawn, ChildProcess } from 'child_process';
 import { getServiceEnv } from './env-configuration';
-import { setupDatabase, closeDatabase } from './sqlite-setup';
+import { setupDatabase, closeDatabase } from './pg-setup';
 
 const PACKAGES = {
   SUBSCRIPTION_SERVER: '@notification-system/subscription-server',

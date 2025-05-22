@@ -1,6 +1,6 @@
 import { describe, test, expect, beforeAll, afterAll } from '@jest/globals';
 import { startServices, stopServices } from '../src/services-setup';
-import { db } from '../src/sqlite-setup';
+import { db } from '../src/pg-setup';
 
 describe('Basic integration tests', () => {
   beforeAll(async () => {
@@ -21,7 +21,7 @@ describe('Basic integration tests', () => {
     expect(true).toBe(true);
   });
 
-  test('should connect to SQLite database successfully', async () => {
+  test('should connect to PostgreSQL database successfully', async () => {
     const proposals = await db('proposals_onchain').select('*');
     expect(proposals.length).toBeGreaterThan(0);
     const users = await db('users').select('*');
