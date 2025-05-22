@@ -4,6 +4,7 @@
  */
 
 import { Knex } from 'knex';
+import { v4 as uuidv4 } from 'uuid';
 import { IUserRepository, IPreferenceRepository, User, UserPreference } from '../interfaces';
 
 /**
@@ -30,7 +31,7 @@ export class KnexUserRepository implements IUserRepository {
    */
   async create(data: Omit<User, 'id'>): Promise<User> {
     const [user] = await this.knex<User>('users')
-      .insert({ ...data, created_at: new Date() })
+      .insert({ id: uuidv4(), ...data, created_at: new Date() })
       .returning('*');
     return user;
   }
