@@ -4,14 +4,10 @@
   "description": "Integration tests for the notification system",
   "main": "index.js",
   "scripts": {
-    "test": "pnpm run test:db:up && pnpm test && pnpm run test:db:down",
-    "start-services": "ts-node src/setup-services.ts",
-    "test:with-services": "ts-node src/setup-services.ts && jest && ts-node -e \"require('./src/setup-services').stopServices()\"",
+    "test": "pnpm run test:db:up && jest tests/notification-flow.test.ts && pnpm run test:db:down",
     "build": "tsc && mkdir -p dist/envs && cp src/envs/* dist/envs/",
-    "test-components": "ts-node src/test-components.ts",
     "test:db:up": "docker-compose -f ../../docker-compose.test.yml up -d",
-    "test:db:down": "docker-compose -f ../../docker-compose.test.yml down",
-    "test:flow": "pnpm run test:db:up && jest tests/notification-flow.test.ts && pnpm run test:db:down"
+    "test:db:down": "docker-compose -f ../../docker-compose.test.yml down"
   },
   "dependencies": {
     "@notification-system/consumer": "workspace:*",
