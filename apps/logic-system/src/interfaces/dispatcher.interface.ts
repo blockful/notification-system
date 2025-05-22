@@ -7,7 +7,11 @@ export interface DispatcherMessage {
   /** Identifier of the trigger that generated this message */
   triggerId: string;
   /** Data context to be sent to the Dispatcher */
-  payload: ProposalOnChain[];
+  payload: {
+    daoId: string;
+    proposalId: string;
+    proposalTitle: string;
+  };
 }
 
 /**
