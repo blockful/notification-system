@@ -22,7 +22,7 @@ describe('Basic integration tests', () => {
   });
 
   test('should connect to SQLite database successfully', async () => {
-    const proposals = await db('proposals').select('*');
+    const proposals = await db('proposals_onchain').select('*');
     expect(proposals.length).toBeGreaterThan(0);
     const users = await db('users').select('*');
     expect(users.length).toBeGreaterThan(0);
