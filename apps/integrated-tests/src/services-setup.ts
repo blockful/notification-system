@@ -5,27 +5,20 @@ import { setupDatabase, closeDatabase } from './pg-setup';
 const PACKAGES = {
   SUBSCRIPTION_SERVER: '@notification-system/subscription-server',
   DISPATCHER: '@notification-system/dispatcher',
-  LOGIC_SYSTEM: '@notification-system/logic-system'
+  LOGIC_SYSTEM: '@notification-system/logic-system',
+  CONSUMER: '@notification-system/consumer'
 };
 const runningProcesses: ChildProcess[] = [];
-
-// Log capturing for tests
 const capturedLogs: { service: string; type: 'stdout' | 'stderr'; message: string; timestamp: Date }[] = [];
-
-/**
- * Start all system components
- */
 export async function startServices(): Promise<void> {
   await setupDatabase();
   startSubscriptionServer();
   startDispatcher();
+  startConsumer();
   startLogicSystem();
   console.log('All services started successfully');
 }
 
-/**
- * Stop all running services
- */
 export function stopServices(): void {
   runningProcesses.forEach(process => {
     if (!process.killed) process.kill();
@@ -34,34 +27,17 @@ export function stopServices(): void {
   console.log('All services stopped');
 }
 
-/**
- * Get captured logs for testing
- */
-export function getCapturedLogs(): typeof capturedLogs {
-  return [...capturedLogs];
-}
-
-/**
- * Check if a specific error message exists in captured logs
- */
-export function hasErrorLog(errorMessage: string, service?: string): boolean {
+export function hasAnyLog(message: string, service?: string): boolean {
   return capturedLogs.some(log => 
-    log.type === 'stderr' && 
-    log.message.includes(errorMessage) &&
+    log.message.includes(message) &&
     (service ? log.service === service : true)
   );
 }
 
-/**
- * Clear captured logs
- */
 export function clearCapturedLogs(): void {
   capturedLogs.length = 0;
 }
 
-/**
- * Start the subscription server
- */
 function startSubscriptionServer(): void {
   const serverProcess = startProcess(
     'subscription-server',
@@ -70,9 +46,6 @@ function startSubscriptionServer(): void {
   runningProcesses.push(serverProcess);
 }
 
-/**
- * Start the dispatcher
- */
 function startDispatcher(): void {
   const dispatcherProcess = startProcess(
     'dispatcher',
@@ -81,9 +54,14 @@ function startDispatcher(): void {
   runningProcesses.push(dispatcherProcess);
 }
 
-/**
- * Start the logic system
- */
+function startConsumer(): void {
+  const consumerProcess = startProcess(
+    'consumer',
+    ['run', '--filter', PACKAGES.CONSUMER, 'dev']
+  );
+  runningProcesses.push(consumerProcess);
+}
+
 function startLogicSystem(): void {
   const logicProcess = startProcess(
     'logic-system',
@@ -91,10 +69,6 @@ function startLogicSystem(): void {
   );
   runningProcesses.push(logicProcess);
 }
-
-/**
- * Helper function to start a process
- */
 function startProcess(name: string, args: string[]): ChildProcess {
   const serviceEnv = getServiceEnv(name);
   
