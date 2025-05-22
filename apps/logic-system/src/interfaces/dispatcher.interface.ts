@@ -1,5 +1,3 @@
-import { ProposalOnChain } from './proposal.interface';
-
 /**
  * Message payload to be sent to the Dispatcher service
  */
