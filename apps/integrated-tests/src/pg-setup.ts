@@ -1,7 +1,5 @@
 import knex from 'knex';
-import path from 'path';
 
-// Create a knex instance configured to use PostgreSQL
 export const db = knex({
   client: 'pg',
   connection: {
@@ -13,15 +11,12 @@ export const db = knex({
   }
 });
 
-// Initialize database with tables
 export async function initializeDatabase(): Promise<void> {
-  // Drop tables if they exist
   await db.schema.dropTableIfExists('proposals_onchain');
   await db.schema.dropTableIfExists('subscriptions');
   await db.schema.dropTableIfExists('users');
   await db.schema.dropTableIfExists('user_preferences');
-
-  // Create proposals table
+  await db.schema.dropTableIfExists('dao');
   await db.schema.createTable('proposals_onchain', (table) => {
     table.string('id').primary();
     table.string('dao_id').notNullable().index();
@@ -42,7 +37,6 @@ export async function initializeDatabase(): Promise<void> {
     table.timestamp('updated_at').defaultTo(db.fn.now());
   });
 
-  // Create users table for subscription server
   await db.schema.createTable('users', (table) => {
     table.string('id').primary();
     table.string('channel').notNullable();
@@ -52,7 +46,6 @@ export async function initializeDatabase(): Promise<void> {
     table.unique(['channel', 'channel_user_id']);
   });
 
-  // Create user_preferences table for subscription server
   await db.schema.createTable('user_preferences', (table) => {
     table.string('id').primary();
     table.string('user_id').notNullable().index();
@@ -62,20 +55,26 @@ export async function initializeDatabase(): Promise<void> {
     table.timestamp('updated_at').defaultTo(db.fn.now());
     table.unique(['user_id', 'dao_id']);
   });
+
+  await db.schema.createTable('dao', (table) => {
+    table.string('id').primary();
+    table.string('name').notNullable();
+    table.string('description').nullable();
+    table.timestamp('created_at').defaultTo(db.fn.now());
+    table.timestamp('updated_at').defaultTo(db.fn.now());
+  });
 }
 
-// Seed the database with test data
 export async function seedDatabase(): Promise<void> {
-  // Seed proposals
   await db('proposals_onchain').insert([
     {
       id: '0x1234567890abcdef1234567890abcdef12345678',
       dao_id: '0xdao1234567890abcdef1234567890abcdef123',
       proposer_account_id: '0xuser567890abcdef1234567890abcdef12345678',
-      targets: JSON.stringify(['0xtarget1', '0xtarget2']),
-      values: JSON.stringify(['0', '100000000000000000']),
-      signatures: JSON.stringify(['transfer(address,uint256)', 'vote(uint256)']),
-      calldatas: JSON.stringify(['0xabcdef1234567890', '0x567890abcdef1234']),
+      targets: JSON.stringify(['0xtarget1']),
+      values: JSON.stringify(['0']),
+      signatures: JSON.stringify(['transfer(address,uint256)']),
+      calldatas: JSON.stringify(['0xabcdef1234567890']),
       start_block: 12345678,
       end_block: 12345978,
       description: 'Proposal to transfer funds to the treasury',
@@ -91,7 +90,7 @@ export async function seedDatabase(): Promise<void> {
       id: '0x2345678901abcdef2345678901abcdef23456789',
       dao_id: '0xdao1234567890abcdef1234567890abcdef123',
       proposer_account_id: '0xuser567890abcdef1234567890abcdef12345678',
-      targets: JSON.stringify(['0xtarget3']),
+      targets: JSON.stringify(['0xtarget2']),
       values: JSON.stringify(['0']),
       signatures: JSON.stringify(['changeQuorum(uint256)']),
       calldatas: JSON.stringify(['0x123456789abcdef0']),
@@ -108,12 +107,11 @@ export async function seedDatabase(): Promise<void> {
     }
   ]);
 
-  // Seed users
   await db('users').insert([
     {
       id: 'user123',
       channel: 'telegram',
-      channel_user_id: 'telegram_user_123',
+      channel_user_id: '123456789',
       is_active: true,
       created_at: new Date()
     },
@@ -126,7 +124,6 @@ export async function seedDatabase(): Promise<void> {
     }
   ]);
 
-  // Seed user preferences
   await db('user_preferences').insert([
     {
       id: 'pref123',
@@ -145,16 +142,24 @@ export async function seedDatabase(): Promise<void> {
       updated_at: new Date()
     }
   ]);
+
+  await db('dao').insert([
+    {
+      id: '0xdao1234567890abcdef1234567890abcdef123',
+      name: 'Test DAO',
+      description: 'A test DAO for integration testing',
+      created_at: new Date(),
+      updated_at: new Date()
+    }
+  ]);
 }
 
-// Initialize and seed the database
 export async function setupDatabase(): Promise<void> {
   await initializeDatabase();
   await seedDatabase();
   console.log('PostgreSQL database setup completed successfully');
 }
 
-// Close the database connection
 export function closeDatabase(): void {
   db.destroy();
 } 
