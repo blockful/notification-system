@@ -1,4 +1,5 @@
 import { DispatcherService, DispatcherMessage } from '../interfaces/dispatcher.interface';
+import axios from 'axios';
 
 /**
  * Client for the Dispatcher API that handles sending notification messages
@@ -16,12 +17,12 @@ export class DispatcherApiClient implements DispatcherService {
    * @param message - Message to be dispatched
    */
   async sendMessage(message: DispatcherMessage) {
-    await fetch(this.url, {
-      method: 'POST',
+    const response = await axios.post(this.url, message, {
       headers: {
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify(message)
+      timeout: 5000 // 5 second timeout
     });
+    return response.data;
   }
 } 
