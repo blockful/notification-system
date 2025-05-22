@@ -40,8 +40,7 @@ export class SubscriptionService {
     if (!user) {
       user = await this.userRepository.create({
         channel,
-        channel_user_id,
-        is_active: true
+        channel_user_id
       });
     }
     
@@ -81,7 +80,7 @@ export class SubscriptionService {
     // Fetch user details for each preference
     for (const pref of preferences) {
       const user = await this.userRepository.findById(pref.user_id);
-      if (user && user.is_active) {
+      if (user) {
         subscribers.push(user);
       }
     }

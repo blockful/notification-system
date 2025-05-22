@@ -14,6 +14,6 @@ export const toUserResponse = (user: User): UserResponse => ({
   id: user.id,
   channel: user.channel,
   channel_user_id: user.channel_user_id,
-  is_active: user.is_active,
+  is_active: true,
   created_at: user.created_at ? user.created_at.toISOString() : undefined
 });
