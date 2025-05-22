@@ -7,7 +7,7 @@ import { Trigger } from './base-trigger';
 import { ProposalOnChain, ListProposalsOptions, ProposalDB } from '../interfaces/proposal.interface';
 import { DispatcherService, DispatcherMessage } from '../interfaces/dispatcher.interface';
 
-const triggerId = 'newProposalTrigger';
+const triggerId = 'new-proposal';
 
 export class NewProposalTrigger extends Trigger<ProposalOnChain, ListProposalsOptions> {
   constructor(
@@ -19,11 +19,17 @@ export class NewProposalTrigger extends Trigger<ProposalOnChain, ListProposalsOp
   }
 
   async process(data: ProposalOnChain[]) {
-    const message: DispatcherMessage = {
-      triggerId: this.id,
-      payload: data
-    };
-    await this.dispatcherService.sendMessage(message);
+    for (const proposal of data) {
+      const message: DispatcherMessage = {
+        triggerId: this.id,
+        payload: {
+          daoId: proposal.daoId,
+          proposalId: proposal.id,
+          proposalTitle: proposal.description.split('\n')[0] || 'Unnamed Proposal'
+        }
+      };   
+      await this.dispatcherService.sendMessage(message);
+    }
   }
 
   /**
