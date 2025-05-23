@@ -71,16 +71,4 @@ server.register(async (instance) => {
   await messageController.messageRoutes(instance);
 });
 
-const start = async () => {
-  try {
-    await server.listen({ port: config.port, host: '0.0.0.0' });
-    console.log(`Server is running on port ${config.port}`);
-    console.log(`Subscription server URL: ${config.subscriptionServerUrl}`);
-    console.log(`Telegram consumer URL: ${config.telegramConsumerUrl}`);
-  } catch (err) {
-    server.log.error(err);
-    process.exit(1);
-  }
-};
-
-start();
+server.listen({ port: config.port, host: '0.0.0.0' });
