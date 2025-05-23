@@ -37,16 +37,11 @@ server.register(fastifySwaggerUi, {
   routePrefix: '/docs'
 });
 
-// Add a detailed error handler
 server.setErrorHandler((error, request, reply) => {
   console.error('Error occurred:', error);
-  
-  // Log full error details for debugging
   if (error.stack) {
     console.error('Stack trace:', error.stack);
   }
-  
-  // Send appropriate error response
   reply.status(error.statusCode || 500).send({
     statusCode: error.statusCode || 500,
     error: error.name || 'Internal Server Error',
