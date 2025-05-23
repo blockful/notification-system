@@ -1,5 +1,5 @@
 {
-  "name": "integrated-tests",
+  "name": "@notification-system/integrated-tests",
   "version": "1.0.0",
   "description": "Integration tests for the notification system",
   "main": "index.js",
