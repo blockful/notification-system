@@ -2,8 +2,7 @@
   "name": "notification-system",
   "private": true,
   "workspaces": [
-    "apps/*",
-    "packages/*"
+    "apps/*"
   ],
   "scripts": {
     "build": "turbo run build",
@@ -15,15 +14,13 @@
     "@types/pg": "^8.15.2",
     "pg": "^8.16.0",
     "ts-node": "^10.9.2",
+    "@types/uuid": "^10.0.0",
+    "uuid": "^11.1.0",
     "turbo": "^2.5.0",
     "typescript": "5.8.2"
   },
   "packageManager": "pnpm@9.0.0",
   "engines": {
     "node": ">=18"
-  },
-  "dependencies": {
-    "@types/uuid": "^10.0.0",
-    "uuid": "^11.1.0"
   }
 }

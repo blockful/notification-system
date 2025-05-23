@@ -9,16 +9,14 @@
     "test:db:up": "docker-compose -f ../../docker-compose.test.yml up -d",
     "test:db:down": "docker-compose -f ../../docker-compose.test.yml down"
   },
-  "dependencies": {
+  "devDependencies": {
     "@notification-system/consumer": "workspace:*",
     "@notification-system/dispatcher": "workspace:*",
     "@notification-system/logic-system": "workspace:*",
     "@notification-system/subscription-server": "workspace:*",
     "dotenv": "^16.5.0",
     "knex": "^3.1.0",
-    "zod": "^3.24.3"
-  },
-  "devDependencies": {
+    "zod": "^3.24.3",
     "@jest/globals": "^29.7.0",
     "@types/jest": "^29.5.14",
     "@types/node": "^20.17.46",
