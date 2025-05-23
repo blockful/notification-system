@@ -4,15 +4,11 @@
  * Centralizes database connection setup for the application
  */
 
-import knex from 'knex';
-import { config } from './env';
+import knex, { Knex } from 'knex';
 
-export const daosDb = knex({
-client: 'pg',
-connection: config.anticaptureDataBaseUrl
-});
-
-export const usersDb = knex({
-  client: 'pg',
-  connection: config.anticaptureDataBaseUrl
-});
+export function setupDatabaseConnection(client: string, connection: string | object): Knex {
+  return knex({
+    client,
+    connection,
+  });
+}

@@ -10,27 +10,22 @@
  * It also provides an API for receiving notifications from other services.
  */
 
-import { Telegraf } from 'telegraf';
-import { BotController } from './controllers/bot.controller';
-import { DAOService } from './services/dao.service';
-import { DatabaseService } from './repositories/db';
-import { SubscriptionAPIService } from './services/subscription-api.service';
-import { NotificationService } from './services/notification.service';
-import { startServer, startListening } from './server';
+import { App } from './app';
+import { setupDatabaseConnection } from './config/db.config';
 import { config } from './config/env';
-import { daosDb, usersDb } from './config/db.config';
 
-const subscriptionApi = new SubscriptionAPIService(config.subscriptionServerUrl);
-const dbService = new DatabaseService(daosDb, usersDb);
-const daoService = new DAOService(dbService, subscriptionApi);
-const bot = new Telegraf(config.telegramBotToken);
-const notificationService = new NotificationService(bot, subscriptionApi, dbService);
-const botController = new BotController(config.telegramBotToken, daoService);
+// Create database instances
+const daosDb = setupDatabaseConnection('pg', config.anticaptureDataBaseUrl);
+const usersDb = setupDatabaseConnection('pg', config.anticaptureDataBaseUrl);
 
-// Start the application
+// Create and start the application
+const app = new App(
+  daosDb,
+  usersDb,
+  config.telegramBotToken,
+  config.subscriptionServerUrl
+);
+
 (async () => {
-  const server = await startServer(notificationService);
-  await startListening(server);
-  botController.launch();
-  console.log('🤖 Telegram bot and API server are now running!');
+  await app.start();
 })();
