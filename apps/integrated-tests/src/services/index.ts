@@ -1,4 +1,3 @@
-import { setupDatabase } from '../database';
 import { closeDatabase } from '../config/database';
 import { processManager } from './process-manager';
 import { logManager } from './log-manager';
@@ -14,7 +13,7 @@ export type ServiceName = 'subscription-server' | 'dispatcher' | 'logic-system' 
 
 // Main service orchestration functions
 export async function startServices(): Promise<void> {
-  await setupDatabase();
+  // Database tables and data are now created in test files
   
   processManager.startProcess('subscription-server', SERVICE_PACKAGES.SUBSCRIPTION_SERVER);
   processManager.startProcess('dispatcher', SERVICE_PACKAGES.DISPATCHER);
