@@ -1,9 +1,15 @@
 import { describe, test, expect, beforeAll, afterAll } from '@jest/globals';
 import { startServices, stopServices, hasAnyLog, clearCapturedLogs } from '../src/services';
 import { db } from '../src/config/database';
+import { createTestTables, insertTestData } from '../src/database';
+import * as fs from 'fs';
 
 describe('Complete Notification Flow', () => {
   beforeAll(async () => {
+    // Setup database schema and test data
+    await createTestTables();
+    await insertTestData();
+    
     await startServices();
     await new Promise(resolve => setTimeout(resolve, 5000));
   });
@@ -11,6 +17,11 @@ describe('Complete Notification Flow', () => {
   afterAll(async () => {
     stopServices();
     await new Promise(resolve => setTimeout(resolve, 1000));
+    
+    if (fs.existsSync('/tmp/test_integration.db')) {
+      fs.unlinkSync('/tmp/test_integration.db');
+    }
+
   });
 
   test('should process proposal status change from pending to active (complete flow with consumer)', async () => {
