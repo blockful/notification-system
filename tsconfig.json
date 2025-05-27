@@ -10,6 +10,14 @@
     "isolatedModules": true,
     "noImplicitAny": false,
     "noFallthroughCasesInSwitch": true,
-    "outDir": "./dist"
+    "outDir": "./dist",
+    "baseUrl": ".",
+    "paths": {
+      "@consumers/*": ["apps/consumers/src/*"],
+      "@logic-system/*": ["apps/logic-system/src/*"],
+      "@dispatcher/*": ["apps/dispatcher/src/*"],
+      "@subscription-server/*": ["apps/subscription-server/src/*"],
+      "@integrated-tests/*": ["apps/integrated-tests/src/*"]
+    }
   }
 } 
