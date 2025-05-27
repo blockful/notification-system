@@ -5,31 +5,32 @@ export async function up(knex: Knex): Promise<void> {
     table.string('id').primary();
     table.string('dao_id').notNullable().index();
     table.string('proposer_account_id').notNullable();
-    table.json('targets').notNullable();
-    table.json('values').notNullable();
-    table.json('signatures').notNullable();
-    table.json('calldatas').notNullable();
+    
+    // Using text instead of json for SQLite compatibility
+    // Both SQLite and PostgreSQL can store JSON as text
+    table.text('targets').notNullable();
+    table.text('values').notNullable();
+    table.text('signatures').notNullable();
+    table.text('calldatas').notNullable();
+    
     table.integer('start_block').notNullable();
     table.integer('end_block').notNullable();
     table.text('description').notNullable();
-    table.timestamp('timestamp').notNullable();
-    table.enum('status', [
-      'pending',
-      'active',
-      'succeeded',
-      'defeated',
-      'executed',
-      'canceled',
-      'queued',
-      'expired'
-    ]).notNullable().index();
-    table.decimal('for_votes', 78, 0).notNullable().defaultTo(0);
-    table.decimal('against_votes', 78, 0).notNullable().defaultTo(0);
-    table.decimal('abstain_votes', 78, 0).notNullable().defaultTo(0);
+    
+    // Using datetime instead of timestamp for SQLite compatibility
+    table.datetime('timestamp').notNullable();
+    
+    // Using string enum instead of native enum for cross-database compatibility
+    table.string('status').notNullable().index();
+    
+    // Using string for large numbers to ensure cross-database compatibility
+    table.string('for_votes').notNullable().defaultTo('0');
+    table.string('against_votes').notNullable().defaultTo('0');
+    table.string('abstain_votes').notNullable().defaultTo('0');
     
     table.index(['status', 'dao_id']);
-    table.timestamp('created_at').defaultTo(knex.fn.now());
-    table.timestamp('updated_at').defaultTo(knex.fn.now());
+    table.datetime('created_at').defaultTo(knex.fn.now());
+    table.datetime('updated_at').defaultTo(knex.fn.now());
   });
 }
 
