@@ -29,36 +29,12 @@ describe('Complete Notification Flow - Full Integration Test', () => {
 
   beforeEach(async () => {
     jest.clearAllMocks();
-    
-    // Clean up any running apps from previous tests
-    if (logicSystemApp) {
-      await logicSystemApp.stop();
-      logicSystemApp = undefined as any;
-    }
-    if (consumerApp) {
-      await consumerApp.stop();
-      consumerApp = undefined as any;
-    }
-    if (dispatcherApp) {
-      await dispatcherApp.stop();
-      dispatcherApp = undefined as any;
-    }
-    if (subscriptionServerApp) {
-      await subscriptionServerApp.stop();
-      subscriptionServerApp = undefined as any;
-    }
-    if (logicDb) {
-      await logicDb.destroy();
-      logicDb = undefined;
-    }
   });
 
   afterAll(async () => {
     if (logicSystemApp) {
       await logicSystemApp.stop();
-      await new Promise(resolve => setTimeout(resolve, 1000));
     }
-    
     if (consumerApp) {
       await consumerApp.stop();
     }
