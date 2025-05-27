@@ -2,9 +2,6 @@
   "name": "@notification-system/subscription-server",
   "version": "1.0.0",
   "main": "dist/index.js",
-  "bin": {
-    "@notification-system/subscription-server": "./dist/index.js"
-  },
   "files": [
     "dist"
   ],
