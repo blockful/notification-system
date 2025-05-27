@@ -1,19 +1,18 @@
 import { describe, test, expect, beforeAll, afterAll, beforeEach, jest } from '@jest/globals';
 import * as fs from 'fs';
-
-import { setupTestEnvironment } from '../src/config/env';
-import { db, closeDatabase } from '../src/config/database';
-import { setupMocks } from '../src/config/mocks';
-import { createAllTables, insertTestData } from '../src/setup/database';
+import { setupTestEnvironment } from '@integrated-tests/config/env';
+import { db, closeDatabase } from '@integrated-tests/config/database';
+import { setupMocks } from '@integrated-tests/config/mocks';
+import { createAllTables, insertTestData } from '@integrated-tests/setup/database';
 
 setupTestEnvironment();
 const mockSendMessage = setupMocks();
 
-import { App as ConsumerApp } from '../../consumers/src/app';
-import { App as LogicSystemApp } from '../../logic-system/src/app';
-import { App as DispatcherApp } from '../../dispatcher/src/app';
-import { App as SubscriptionServerApp } from '../../subscription-server/src/app';
-import { setupDatabaseConnection } from '../../logic-system/src/config/database';
+import { App as ConsumerApp } from '@consumers/app';
+import { App as LogicSystemApp } from '@logic-system/app';
+import { App as DispatcherApp } from '@dispatcher/app';
+import { App as SubscriptionServerApp } from '@subscription-server/app';
+import { setupDatabaseConnection } from '@logic-system/config/database';
 
 describe('Complete Notification Flow - Full Integration Test', () => {
   let consumerApp: ConsumerApp;
