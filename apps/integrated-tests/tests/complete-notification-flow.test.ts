@@ -3,7 +3,7 @@ import * as fs from 'fs';
 import { setupTestEnvironment } from '@integrated-tests/config/env';
 import { db, closeDatabase } from '@integrated-tests/config/database';
 import { setupMocks } from '@integrated-tests/config/mocks';
-import { createAllTables, insertTestData } from '@integrated-tests/setup/database';
+import { setupDatabase, createTestData } from '@integrated-tests/setup/database';
 
 setupTestEnvironment();
 const mockSendMessage = setupMocks();
@@ -80,8 +80,8 @@ describe('Complete Notification Flow - Full Integration Test', () => {
   });
 
   test('should complete full notification flow: proposal added -> logic-system -> dispatcher -> subscription-api -> consumer -> telegraf', async () => {
-    await createAllTables();
-    const { initialProposal } = await insertTestData();
+    await setupDatabase();
+    const { testProposal } = await createTestData();
     
     logicDb = setupDatabaseConnection('sqlite3', '/tmp/test_integration.db');
     
@@ -120,14 +120,14 @@ describe('Complete Notification Flow - Full Integration Test', () => {
     const initialCallCount = mockSendMessage.mock.calls.length;
     
     await db('proposals_onchain')
-      .where({ id: initialProposal.id })
+      .where({ id: testProposal.id })
       .update({ 
         status: 'active',
         updated_at: new Date().toISOString()
       });
     
     const updatedProposal = await db('proposals_onchain')
-      .where({ id: initialProposal.id })
+      .where({ id: testProposal.id })
       .first();
     expect(updatedProposal.status).toBe('active');
     
