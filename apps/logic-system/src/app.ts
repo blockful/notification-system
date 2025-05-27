@@ -25,6 +25,10 @@ export class App {
     this.trigger.start({ status: this.proposalStatus });
     console.log('Logic system is running. Press Ctrl+C to stop.');
   }
+
+  async stop(): Promise<void> {
+    await this.trigger.stop();
+  }
 }
 
 //@ts-ignore

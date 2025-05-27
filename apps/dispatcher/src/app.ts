@@ -94,4 +94,8 @@ export class App {
     await this.server.listen({ port: this.port, host: '0.0.0.0' });
     console.log(`Dispatcher server running on port ${this.port}!`);
   }
+
+  async stop(): Promise<void> {
+    await this.server.close();
+  }
 } 
