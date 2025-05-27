@@ -1,5 +1,3 @@
-#!/usr/bin/env node
-
 import { App } from './app';
 import { config } from './envConfig';
 
