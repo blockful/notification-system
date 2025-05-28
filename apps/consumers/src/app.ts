@@ -1,11 +1,16 @@
 import { Telegraf } from 'telegraf';
 import { Knex } from 'knex';
+import Fastify from 'fastify';
+import { validatorCompiler, serializerCompiler } from 'fastify-type-provider-zod';
+import cors from '@fastify/cors';
+import swagger from '@fastify/swagger';
+import swaggerUi from '@fastify/swagger-ui';
 import { BotController } from './controllers/bot.controller';
 import { DAOService } from './services/dao.service';
 import { DatabaseService } from './repositories/db';
 import { SubscriptionAPIService } from './services/subscription-api.service';
 import { NotificationService } from './services/notification.service';
-import { startServer, startListening } from './server';
+import { APIController } from './controllers/api.controller';
 import { FastifyTypedInstance } from './interfaces/fastify.interface';
 
 export class App {
@@ -25,9 +30,55 @@ export class App {
     this.botController = new BotController(telegramBotToken, daoService);
   }
 
+  private async setupServer(): Promise<FastifyTypedInstance> {
+    const server = Fastify({
+      logger: true
+    }) as FastifyTypedInstance;
+
+    // Configure Zod as validator and serializer
+    server.setValidatorCompiler(validatorCompiler);
+    server.setSerializerCompiler(serializerCompiler);
+
+    await server.register(cors, {
+      origin: '*',
+      methods: ['GET', 'POST']
+    });
+
+    await server.register(swagger, {
+      openapi: {
+        info: {
+          title: 'Telegram Notification API',
+          description: 'API for sending notifications through Telegram',
+          version: '1.0.0'
+        }
+      }
+    });
+
+    await server.register(swaggerUi, {
+      routePrefix: '/docs'
+    });
+
+    server.setErrorHandler((error, request, reply) => {
+      server.log.error(error);
+      reply.status(error.statusCode || 500).send({
+        statusCode: error.statusCode || 500,
+        error: error.name || 'Internal Server Error',
+        message: error.message || 'An unexpected error occurred'
+      });
+    });
+    
+    // Setup API controllers
+    new APIController(server, this.notificationService);
+    
+    return server;
+  }
+
   async start(): Promise<void> {
-    this.server = await startServer(this.notificationService);
-    await startListening(this.server, this.port);
+    this.server = await this.setupServer();
+    await this.server.listen({ port: this.port });
+    console.log(`API server running on http://localhost:${this.port}`);
+    console.log(`API documentation available at http://localhost:${this.port}/docs`);
+    
     this.botController.launch();
     console.log('Telegram bot and API server are now running!');
   }
