@@ -10,9 +10,19 @@ const validProposalStatuses = [
   'executed', 'canceled', 'queued', 'expired'
 ] as const;
 
+// Custom Zod validator for DATABASE_URL read-only
+const readOnlyDatabaseUrl = z.string()
+  .url('DATABASE_URL must be a valid URL')
+  .refine((url) => {
+    const urlObj = new URL(url);
+    return urlObj.searchParams.get('readonly') === 'true';
+  }, {
+    message: "DATABASE_URL must include 'readonly=true' parameter for logic-system safety"
+  });
+
 // Define environment variables schema with validation
 const envSchema = z.object({
-  DATABASE_URL: z.string(),
+  DATABASE_URL: readOnlyDatabaseUrl,
   DISPATCHER_ENDPOINT: z.string(),
   TRIGGER_INTERVAL: z.coerce.number().optional().default(60000),
   PROPOSAL_STATUS: z.enum(validProposalStatuses)
