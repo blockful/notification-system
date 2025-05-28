@@ -7,7 +7,7 @@ import { Trigger } from './base-trigger';
 import { ProposalOnChain, ListProposalsOptions, ProposalDB } from '../interfaces/proposal.interface';
 import { DispatcherService, DispatcherMessage } from '../interfaces/dispatcher.interface';
 
-const triggerId = 'new-proposal';
+const triggerId = 'newProposalTrigger';
 
 export class NewProposalTrigger extends Trigger<ProposalOnChain, ListProposalsOptions> {
   constructor(

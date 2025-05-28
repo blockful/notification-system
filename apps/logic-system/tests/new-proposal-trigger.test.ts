@@ -46,36 +46,56 @@ describe('NewProposalTrigger', () => {
   describe('process', () => {
     it('should process empty array', async () => {
       await trigger.process([]);
-      
-      expect(mockDispatcherService.sendMessage).toHaveBeenCalledTimes(1);
-      expect(mockDispatcherService.sendMessage.mock.calls[0][0].payload).toEqual([]);
-      expect(mockDispatcherService.sendMessage.mock.calls[0][0].triggerId).toBe('newProposalTrigger');
+      expect(mockDispatcherService.sendMessage).toHaveBeenCalledTimes(0);
     });
 
     it('should send proposals to dispatcher service with correct data formatting', async () => {
       const proposals: ProposalOnChain[] = [
         { ...mockProposal, status: 'active' },
-        { ...mockProposal, id: '2', status: 'active' }
+        { ...mockProposal, id: '2', status: 'active', description: 'Second proposal\nWith details' }
       ];
       
       await trigger.process(proposals);
       
-      expect(mockDispatcherService.sendMessage).toHaveBeenCalledTimes(1);
+      expect(mockDispatcherService.sendMessage).toHaveBeenCalledTimes(2);
       
-      const calledWith = mockDispatcherService.sendMessage.mock.calls[0][0];
-      expect(calledWith.triggerId).toBe('newProposalTrigger');
+      // Verify first proposal message
+      expect(mockDispatcherService.sendMessage).toHaveBeenNthCalledWith(1, {
+        triggerId: 'newProposalTrigger',
+        payload: {
+          daoId: 'dao1',
+          proposalId: '1',
+          proposalTitle: 'Test proposal'
+        }
+      });
       
-      const sentData = calledWith.payload;
-      expect(sentData).toHaveLength(2);
+      // Verify second proposal message
+      expect(mockDispatcherService.sendMessage).toHaveBeenNthCalledWith(2, {
+        triggerId: 'newProposalTrigger',
+        payload: {
+          daoId: 'dao1',
+          proposalId: '2',
+          proposalTitle: 'Second proposal'
+        }
+      });
+    });
+
+    it('should handle proposals with empty descriptions', async () => {
+      const proposalWithEmptyDescription = {
+        ...mockProposal,
+        description: ''
+      };
       
-      const ids = sentData.map((p: any) => p.id);
-      expect(ids).toContain('1');
-      expect(ids).toContain('2');
+      await trigger.process([proposalWithEmptyDescription]);
       
-      expect(typeof sentData[0].forVotes).toBe('bigint');
-      expect(sentData[0].forVotes).toBe(100n);
-      expect(sentData[0].againstVotes).toBe(50n);
-      expect(sentData[0].abstainVotes).toBe(10n);
+      expect(mockDispatcherService.sendMessage).toHaveBeenCalledWith({
+        triggerId: 'newProposalTrigger',
+        payload: {
+          daoId: 'dao1',
+          proposalId: '1',
+          proposalTitle: 'Unnamed Proposal'
+        }
+      });
     });
 
     it('should propagate errors from dispatcher service', async () => {
