@@ -1,9 +1,9 @@
 import { describe, test, expect, beforeAll, afterAll, beforeEach, jest } from '@jest/globals';
 import * as fs from 'fs';
-import { setupTestEnvironment } from '@integrated-tests/config/env';
-import { db, closeDatabase } from '@integrated-tests/config/database';
-import { setupMocks } from '@integrated-tests/config/mocks';
-import { setupDatabase, createTestData } from '@integrated-tests/setup/database';
+import { setupTestEnvironment } from '../src/config/env';
+import { db, closeDatabase } from '../src/config/database';
+import { setupMocks } from '../src/config/mocks';
+import { setupDatabase, createTestData } from '../src/setup/database';
 
 setupTestEnvironment();
 const mockSendMessage = setupMocks();
@@ -19,44 +19,16 @@ describe('Complete Notification Flow - Full Integration Test', () => {
   let dispatcherApp: DispatcherApp;
   let subscriptionServerApp: SubscriptionServerApp;
   let logicDb: any;
+  let testProposal: any;
 
   beforeAll(async () => {
     if (fs.existsSync('/tmp/test_integration.db')) {
       fs.unlinkSync('/tmp/test_integration.db');
     }
-  });
 
-  beforeEach(async () => {
-    jest.clearAllMocks();
-  });
-
-  afterAll(async () => {
-    if (logicSystemApp) {
-      await logicSystemApp.stop();
-    }
-    if (consumerApp) {
-      await consumerApp.stop();
-    }
-    if (dispatcherApp) {
-      await dispatcherApp.stop();
-    }
-    if (subscriptionServerApp) {
-      await subscriptionServerApp.stop();
-    }
-    if (logicDb) {
-      await logicDb.destroy();
-    }
-    
-    closeDatabase();
-    
-    if (fs.existsSync('/tmp/test_integration.db')) {
-      fs.unlinkSync('/tmp/test_integration.db');
-    }
-  });
-
-  test('should complete full notification flow: proposal added -> logic-system -> dispatcher -> subscription-api -> consumer -> telegraf', async () => {
     await setupDatabase();
-    const { testProposal } = await createTestData();
+    const testData = await createTestData();
+    testProposal = testData.testProposal;
     
     logicDb = setupDatabaseConnection('sqlite3', '/tmp/test_integration.db');
     
@@ -87,7 +59,33 @@ describe('Complete Notification Flow - Full Integration Test', () => {
     logicSystemApp.start();
     
     await new Promise(resolve => setTimeout(resolve, 3000));
-    
+    return { testProposal };
+  });
+
+  beforeEach(async () => {
+    jest.clearAllMocks();
+  });
+
+  afterAll(async () => {
+    if (logicSystemApp) {
+      await logicSystemApp.stop();
+    }
+    if (consumerApp) {
+      await consumerApp.stop();
+    }
+    if (dispatcherApp) {
+      await dispatcherApp.stop();
+    }
+    if (subscriptionServerApp) {
+      await subscriptionServerApp.stop();
+    }
+    if (logicDb) {
+      await logicDb.destroy();
+    }
+    closeDatabase();
+  });
+
+  test('should complete full notification flow: proposal added -> logic-system -> dispatcher -> subscription-api -> consumer -> telegraf', async () => {
     const initialProposals = await db('proposals_onchain').select('*');
     expect(initialProposals.length).toBe(1);
     expect(initialProposals[0].status).toBe('pending');
