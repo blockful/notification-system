@@ -1,11 +1,9 @@
 import { describe, test, expect, beforeAll, afterAll, beforeEach, jest } from '@jest/globals';
 import * as fs from 'fs';
-import { setupTestEnvironment } from '../src/config/env';
 import { db, closeDatabase } from '../src/config/database';
 import { setupMocks } from '../src/config/mocks';
 import { setupDatabase, createTestData } from '../src/setup/database';
 
-setupTestEnvironment();
 const mockSendMessage = setupMocks();
 
 import { App as ConsumerApp } from '@notification-system/consumer';
@@ -32,29 +30,31 @@ describe('Complete Notification Flow - Full Integration Test', () => {
     
     logicDb = setupDatabaseConnection('sqlite3', '/tmp/test_integration.db');
     
-    subscriptionServerApp = new SubscriptionServerApp(db, parseInt(process.env.SUBSCRIPTION_PORT!));
+    subscriptionServerApp = new SubscriptionServerApp(db, 14001);
     await subscriptionServerApp.start();
     
     dispatcherApp = new DispatcherApp(
-      parseInt(process.env.PORT!),
-      process.env.SUBSCRIPTION_SERVER_URL!,
-      process.env.TELEGRAM_CONSUMER_URL!
+      13002,                                    // port
+      'http://localhost:14001',                 // subscriptionServerUrl
+      'http://localhost:14002'                  // telegramConsumerUrl
+      // environment defaults to 'development'
     );
     await dispatcherApp.start();
     
     consumerApp = new ConsumerApp(
-      db,
-      db,
-      process.env.TELEGRAM_BOT_TOKEN!,
-      process.env.SUBSCRIPTION_SERVER_URL!
+      db,                                       // daosDb
+      db,                                       // usersDb
+      '7117895712:AAH96CfnDvvfLNl2nJbRKbNYPay4V936mWY', // telegramBotToken
+      'http://localhost:14001',                 // subscriptionServerUrl
+      14002                                     // port
     );
     await consumerApp.start();
     
     logicSystemApp = new LogicSystemApp(
-      logicDb,
-      process.env.DISPATCHER_ENDPOINT!,
-      parseInt(process.env.TRIGGER_INTERVAL!),
-      'active'
+      logicDb,                                  // db
+      'http://127.0.0.1:13002/messages',       // dispatcherEndpoint
+      5000,                                     // triggerInterval
+      'active'                                  // proposalStatus
     );
     logicSystemApp.start();
     

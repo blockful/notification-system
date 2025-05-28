@@ -8,7 +8,6 @@ import { validatorCompiler, serializerCompiler } from 'fastify-type-provider-zod
 import cors from '@fastify/cors';
 import swagger from '@fastify/swagger';
 import swaggerUi from '@fastify/swagger-ui';
-import { config } from './config/env';
 import { FastifyTypedInstance } from './interfaces/fastify.interface';
 import { NotificationService } from './services/notification.service';
 import { APIController } from './controllers/api.controller';
@@ -51,8 +50,8 @@ export async function startServer(notificationService: NotificationService): Pro
   return server;
 }
 
-export async function startListening(server: FastifyTypedInstance): Promise<void> {
-  await server.listen({ port: config.port });
-  console.log(`🚀 API server running on http://localhost:${config.port}`);
-  console.log(`📚 API documentation available at http://localhost:${config.port}/docs`);
+export async function startListening(server: FastifyTypedInstance, port: number): Promise<void> {
+  await server.listen({ port });
+  console.log(`API server running on http://localhost:${port}`);
+  console.log(`API documentation available at http://localhost:${port}/docs`);
 } 

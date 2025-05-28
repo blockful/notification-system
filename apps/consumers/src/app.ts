@@ -12,8 +12,10 @@ export class App {
   private notificationService: NotificationService;
   private botController: BotController;
   private server?: FastifyTypedInstance;
+  private port: number;
 
-  constructor(daosDb: Knex, usersDb: Knex, telegramBotToken: string, subscriptionServerUrl: string) {
+  constructor(daosDb: Knex, usersDb: Knex, telegramBotToken: string, subscriptionServerUrl: string, port: number) {
+    this.port = port;
     const subscriptionApi = new SubscriptionAPIService(subscriptionServerUrl);
     const dbService = new DatabaseService(daosDb, usersDb);
     const daoService = new DAOService(dbService, subscriptionApi);
@@ -25,7 +27,7 @@ export class App {
 
   async start(): Promise<void> {
     this.server = await startServer(this.notificationService);
-    await startListening(this.server);
+    await startListening(this.server, this.port);
     this.botController.launch();
     console.log('Telegram bot and API server are now running!');
   }

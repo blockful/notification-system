@@ -1,7 +1,8 @@
 import { App } from './app';
-import { config } from './envConfig';
+import { loadConfig } from './envConfig';
 
-const app = new App(config.port, config.subscriptionServerUrl, config.telegramConsumerUrl);
+const config = loadConfig();
+const app = new App(config.port, config.subscriptionServerUrl, config.telegramConsumerUrl, config.environment);
 
 (async () => {
   await app.start();

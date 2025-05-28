@@ -12,7 +12,9 @@
 
 import { App } from './app';
 import { setupDatabaseConnection } from './config/db.config';
-import { config } from './config/env';
+import { loadConfig } from './config/env';
+
+const config = loadConfig();
 
 // Create database instances
 const daosDb = setupDatabaseConnection('pg', config.anticaptureDataBaseUrl);
@@ -23,7 +25,8 @@ const app = new App(
   daosDb,
   usersDb,
   config.telegramBotToken,
-  config.subscriptionServerUrl
+  config.subscriptionServerUrl,
+  config.port
 );
 
 (async () => {
