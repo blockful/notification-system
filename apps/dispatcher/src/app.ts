@@ -74,7 +74,7 @@ export class App {
       new NewProposalTriggerHandler(subscriptionClient, notificationFactory)
     );
 
-    const healthController = new HealthController(this.environment);
+    const healthController = new HealthController();
     const messageController = new MessageController(triggerProcessorService);
 
     this.setupRoutes(healthController, messageController);
