@@ -44,12 +44,17 @@ describe('NewProposalTrigger', () => {
   });
 
   describe('process', () => {
-    it('should process empty array', async () => {
+    it('should process empty array by sending empty payload', async () => {
       await trigger.process([]);
-      expect(mockDispatcherService.sendMessage).toHaveBeenCalledTimes(0);
+      
+      expect(mockDispatcherService.sendMessage).toHaveBeenCalledTimes(1);
+      expect(mockDispatcherService.sendMessage).toHaveBeenCalledWith({
+        triggerId: 'newProposalTrigger',
+        payload: []
+      });
     });
 
-    it('should send proposals to dispatcher service with correct data formatting', async () => {
+    it('should send proposals directly without transformation', async () => {
       const proposals: ProposalOnChain[] = [
         { ...mockProposal, status: 'active' },
         { ...mockProposal, id: '2', status: 'active', description: 'Second proposal\nWith details' }
@@ -57,44 +62,21 @@ describe('NewProposalTrigger', () => {
       
       await trigger.process(proposals);
       
-      expect(mockDispatcherService.sendMessage).toHaveBeenCalledTimes(2);
-      
-      // Verify first proposal message
-      expect(mockDispatcherService.sendMessage).toHaveBeenNthCalledWith(1, {
+      expect(mockDispatcherService.sendMessage).toHaveBeenCalledTimes(1);
+      expect(mockDispatcherService.sendMessage).toHaveBeenCalledWith({
         triggerId: 'newProposalTrigger',
-        payload: {
-          daoId: 'dao1',
-          proposalId: '1',
-          proposalTitle: 'Test proposal'
-        }
-      });
-      
-      // Verify second proposal message
-      expect(mockDispatcherService.sendMessage).toHaveBeenNthCalledWith(2, {
-        triggerId: 'newProposalTrigger',
-        payload: {
-          daoId: 'dao1',
-          proposalId: '2',
-          proposalTitle: 'Second proposal'
-        }
+        payload: proposals
       });
     });
 
-    it('should handle proposals with empty descriptions', async () => {
-      const proposalWithEmptyDescription = {
-        ...mockProposal,
-        description: ''
-      };
+    it('should send complete proposal objects including all fields', async () => {
+      const proposal = { ...mockProposal, description: 'Main Title\nDetailed description' };
       
-      await trigger.process([proposalWithEmptyDescription]);
+      await trigger.process([proposal]);
       
       expect(mockDispatcherService.sendMessage).toHaveBeenCalledWith({
         triggerId: 'newProposalTrigger',
-        payload: {
-          daoId: 'dao1',
-          proposalId: '1',
-          proposalTitle: 'Unnamed Proposal'
-        }
+        payload: [proposal]
       });
     });
 

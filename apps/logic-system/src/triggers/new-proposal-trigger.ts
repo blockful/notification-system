@@ -19,17 +19,11 @@ export class NewProposalTrigger extends Trigger<ProposalOnChain, ListProposalsOp
   }
 
   async process(data: ProposalOnChain[]) {
-    for (const proposal of data) {
-      const message: DispatcherMessage = {
-        triggerId: this.id,
-        payload: {
-          daoId: proposal.daoId,
-          proposalId: proposal.id,
-          proposalTitle: proposal.description.split('\n')[0] || 'Unnamed Proposal'
-        }
-      };   
-      await this.dispatcherService.sendMessage(message);
-    }
+    const message: DispatcherMessage = {
+      triggerId: this.id,
+      payload: data
+    };   
+    await this.dispatcherService.sendMessage(message);
   }
 
   /**

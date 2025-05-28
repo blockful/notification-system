@@ -25,18 +25,19 @@ export class NewProposalTriggerHandler extends BaseTriggerHandler {
    * @param message The message containing proposal data
    */
   async handleMessage(message: DispatcherMessage): Promise<MessageProcessingResult> {
-    const { daoId, proposalId, proposalTitle } = message.payload;
-    const subscribers = await this.getSubscribers(daoId);
-    const notificationMessage = `New proposal in ${daoId}: ${proposalTitle}`;
-    const metadata = {
-      daoId,
-      proposalId,
-      proposalTitle
-    };
-    await this.sendNotificationsToSubscribers(subscribers, notificationMessage, metadata);
-    const messageId = crypto.randomUUID();
+    const proposals = Array.isArray(message.payload) ? message.payload : [message.payload];
+    
+    for (const proposal of proposals) {
+      const { daoId, id: proposalId, description } = proposal;
+      const proposalTitle = description.split('\n')[0] || 'Unnamed Proposal';
+      const subscribers = await this.getSubscribers(daoId);
+      const notificationMessage = `New proposal in ${daoId}: ${proposalTitle}`;
+      const metadata = { daoId, proposalId, proposalTitle };
+      await this.sendNotificationsToSubscribers(subscribers, notificationMessage, metadata);
+    }
+    
     return {
-      messageId,
+      messageId: crypto.randomUUID(),
       timestamp: new Date().toISOString()
     };
   }
