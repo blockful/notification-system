@@ -11,6 +11,7 @@
     "noImplicitAny": false,
     "noFallthroughCasesInSwitch": true,
     "outDir": "./dist",
+    "declaration": true,
     "baseUrl": ".",
     "paths": {
       "@consumers/*": ["apps/consumers/src/*"],
