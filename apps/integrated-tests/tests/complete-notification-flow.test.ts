@@ -37,7 +37,6 @@ describe('Complete Notification Flow - Full Integration Test', () => {
       13002,                                    // port
       'http://localhost:14001',                 // subscriptionServerUrl
       'http://localhost:14002'                  // telegramConsumerUrl
-      // environment defaults to 'development'
     );
     await dispatcherApp.start();
     
@@ -52,7 +51,7 @@ describe('Complete Notification Flow - Full Integration Test', () => {
     
     logicSystemApp = new LogicSystemApp(
       logicDb,                                  // db
-      'http://127.0.0.1:13002/messages',       // dispatcherEndpoint
+      'http://127.0.0.1:13002/messages',        // dispatcherEndpoint
       5000,                                     // triggerInterval
       'active'                                  // proposalStatus
     );
