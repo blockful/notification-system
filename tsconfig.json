@@ -12,6 +12,6 @@
     "noFallthroughCasesInSwitch": true,
     "outDir": "./dist",
     "declaration": true,
-    "baseUrl": ".",
+    "baseUrl": "."
   }
 } 
