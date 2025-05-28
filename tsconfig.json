@@ -13,12 +13,5 @@
     "outDir": "./dist",
     "declaration": true,
     "baseUrl": ".",
-    "paths": {
-      "@consumers/*": ["apps/consumers/src/*"],
-      "@logic-system/*": ["apps/logic-system/src/*"],
-      "@dispatcher/*": ["apps/dispatcher/src/*"],
-      "@subscription-server/*": ["apps/subscription-server/src/*"],
-      "@integrated-tests/*": ["apps/integrated-tests/src/*"]
-    }
   }
 } 
