@@ -8,11 +8,10 @@ import { setupDatabase, createTestData } from '@integrated-tests/setup/database'
 setupTestEnvironment();
 const mockSendMessage = setupMocks();
 
-import { App as ConsumerApp } from '@consumers/app';
-import { App as LogicSystemApp } from '@logic-system/app';
-import { App as DispatcherApp } from '@dispatcher/app';
-import { App as SubscriptionServerApp } from '@subscription-server/app';
-import { setupDatabaseConnection } from '@logic-system/config/database';
+import { App as ConsumerApp } from '@notification-system/consumer';
+import { App as LogicSystemApp, setupDatabaseConnection } from '@notification-system/logic-system';
+import { App as DispatcherApp } from '@notification-system/dispatcher';
+import { App as SubscriptionServerApp } from '@notification-system/subscription-server';
 
 describe('Complete Notification Flow - Full Integration Test', () => {
   let consumerApp: ConsumerApp;
