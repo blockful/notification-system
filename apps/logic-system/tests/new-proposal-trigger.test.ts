@@ -44,38 +44,40 @@ describe('NewProposalTrigger', () => {
   });
 
   describe('process', () => {
-    it('should process empty array', async () => {
+    it('should process empty array by sending empty payload', async () => {
       await trigger.process([]);
       
       expect(mockDispatcherService.sendMessage).toHaveBeenCalledTimes(1);
-      expect(mockDispatcherService.sendMessage.mock.calls[0][0].payload).toEqual([]);
-      expect(mockDispatcherService.sendMessage.mock.calls[0][0].triggerId).toBe('newProposalTrigger');
+      expect(mockDispatcherService.sendMessage).toHaveBeenCalledWith({
+        triggerId: 'new-proposal',
+        payload: []
+      });
     });
 
-    it('should send proposals to dispatcher service with correct data formatting', async () => {
+    it('should send proposals directly without transformation', async () => {
       const proposals: ProposalOnChain[] = [
         { ...mockProposal, status: 'active' },
-        { ...mockProposal, id: '2', status: 'active' }
+        { ...mockProposal, id: '2', status: 'active', description: 'Second proposal\nWith details' }
       ];
       
       await trigger.process(proposals);
       
       expect(mockDispatcherService.sendMessage).toHaveBeenCalledTimes(1);
+      expect(mockDispatcherService.sendMessage).toHaveBeenCalledWith({
+        triggerId: 'new-proposal',
+        payload: proposals
+      });
+    });
+
+    it('should send complete proposal objects including all fields', async () => {
+      const proposal = { ...mockProposal, description: 'Main Title\nDetailed description' };
       
-      const calledWith = mockDispatcherService.sendMessage.mock.calls[0][0];
-      expect(calledWith.triggerId).toBe('newProposalTrigger');
+      await trigger.process([proposal]);
       
-      const sentData = calledWith.payload;
-      expect(sentData).toHaveLength(2);
-      
-      const ids = sentData.map((p: any) => p.id);
-      expect(ids).toContain('1');
-      expect(ids).toContain('2');
-      
-      expect(typeof sentData[0].forVotes).toBe('bigint');
-      expect(sentData[0].forVotes).toBe(100n);
-      expect(sentData[0].againstVotes).toBe(50n);
-      expect(sentData[0].abstainVotes).toBe(10n);
+      expect(mockDispatcherService.sendMessage).toHaveBeenCalledWith({
+        triggerId: 'new-proposal',
+        payload: [proposal]
+      });
     });
 
     it('should propagate errors from dispatcher service', async () => {

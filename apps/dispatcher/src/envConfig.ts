@@ -4,6 +4,7 @@
  * 
  */
 
+import dotenv from 'dotenv';
 import { z } from 'zod';
 
 const envSchema = z.object({
@@ -13,10 +14,14 @@ const envSchema = z.object({
   TELEGRAM_CONSUMER_URL: z.string().url(),
 });
 
-const env = envSchema.parse(process.env);
-export const config = {
-  environment: env.NODE_ENV,
-  port: env.PORT,
-  subscriptionServerUrl: env.SUBSCRIPTION_SERVER_URL,
-  telegramConsumerUrl: env.TELEGRAM_CONSUMER_URL,
-} as const; 
+export function loadConfig() {
+  dotenv.config();
+  const env = envSchema.parse(process.env);
+  
+  return {
+    environment: env.NODE_ENV,
+    port: env.PORT,
+    subscriptionServerUrl: env.SUBSCRIPTION_SERVER_URL,
+    telegramConsumerUrl: env.TELEGRAM_CONSUMER_URL,
+  } as const;
+} 

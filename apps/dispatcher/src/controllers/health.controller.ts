@@ -1,6 +1,5 @@
 import type { FastifyTypedInstance } from "../interfaces/fastify-typed-instance";
 import { z } from "zod";
-import { config } from "../envConfig";
 
 /**
  * Controller responsible for health-related routes
@@ -18,16 +17,14 @@ export class HealthController {
         response: {
           200: z.object({
             status: z.string(),
-            timestamp: z.string(),
-            environment: z.string().optional()
+            timestamp: z.string()
           })
         }
       },
     }, () => {
       return {
         status: 'ok',
-        timestamp: new Date().toISOString(),
-        environment: config.environment
+        timestamp: new Date().toISOString()
       }
     });
   }

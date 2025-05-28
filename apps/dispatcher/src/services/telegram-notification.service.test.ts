@@ -18,7 +18,7 @@ describe('TelegramNotificationClient', () => {
       const payload: NotificationPayload = {
         userId: 'user123',
         channel: 'telegram',
-        channelUserId: 'tg456',
+        channelUserId: '456',
         message: 'Test notification',
         metadata: { key: 'value' }
       };
@@ -43,7 +43,7 @@ describe('TelegramNotificationClient', () => {
           },
           body: JSON.stringify({
             userId: payload.userId,
-            channelUserId: payload.channelUserId,
+            channelUserId: 456,
             message: payload.message,
             metadata: payload.metadata,
           }),
@@ -55,7 +55,7 @@ describe('TelegramNotificationClient', () => {
       const payload: NotificationPayload = {
         userId: 'user123',
         channel: 'telegram',
-        channelUserId: 'tg456',
+        channelUserId: '456',
         message: 'Test notification'
       };
       const mockErrorResponse = {

@@ -6,8 +6,7 @@ import { User, UserPreference, IUserRepository, IPreferenceRepository } from '..
 const mockUser: User = {
   id: '123',
   channel: 'telegram',
-  channel_user_id: 'user123',
-  is_active: true
+  channel_user_id: 'user123'
 };
 
 const mockPreference: UserPreference = {

@@ -1,4 +1,5 @@
 import { Knex } from "knex";
+import { v4 as uuidv4 } from 'uuid';
 
 export async function seed(knex: Knex): Promise<void> {
     // Deletes ALL existing entries
@@ -7,6 +8,7 @@ export async function seed(knex: Knex): Promise<void> {
     // Inserts seed entries
     await knex("subscriptions").insert([
         {
+            id: uuidv4(),
             user_id: '0xuser567890abcdef1234567890abcdef12345678',
             dao_id: '0xdao1234567890abcdef1234567890abcdef123',
             notification_type: 'proposal_created',
@@ -16,6 +18,7 @@ export async function seed(knex: Knex): Promise<void> {
             updated_at: new Date()
         },
         {
+            id: uuidv4(),
             user_id: '0xuser567890abcdef1234567890abcdef12345678',
             dao_id: '0xdao1234567890abcdef1234567890abcdef123',
             notification_type: 'proposal_executed',
@@ -25,6 +28,7 @@ export async function seed(knex: Knex): Promise<void> {
             updated_at: new Date()
         },
         {
+            id: uuidv4(),
             user_id: '0xuser999890abcdef1234567890abcdef12345678',
             dao_id: '0xdao1234567890abcdef1234567890abcdef123',
             notification_type: 'proposal_created',

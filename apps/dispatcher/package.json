@@ -1,8 +1,12 @@
 {
-  "name": "dispatcher",
+  "name": "@notification-system/dispatcher",
   "version": "1.0.0",
   "description": "Dispatcher service",
-  "main": "dist/index.js",
+  "main": "dist/app.js",
+  "types": "dist/app.d.ts",
+  "files": [
+    "dist"
+  ],
   "scripts": {
     "dev": "tsx watch src/index.ts",
     "build": "tsc",

@@ -21,6 +21,10 @@ export class TelegramNotificationClient implements INotificationClient {
    * @returns The notification response
    */
   async sendNotification(payload: NotificationPayload): Promise<NotificationResponse> {
+    const channelUserIdAsNumber = Number(payload.channelUserId);
+    if (isNaN(channelUserIdAsNumber)) {
+      throw new Error(`Invalid channelUserId: ${payload.channelUserId} is not a valid number`);
+    }
     const response = await fetch(`${this.baseUrl}/notifications`, {
       method: 'POST',
       headers: {
@@ -28,7 +32,7 @@ export class TelegramNotificationClient implements INotificationClient {
     },
     body: JSON.stringify({
         userId: payload.userId,
-        channelUserId: payload.channelUserId,
+        channelUserId: channelUserIdAsNumber,
         message: payload.message,
         metadata: payload.metadata,
     }),

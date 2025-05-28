@@ -1,21 +1,17 @@
-import { NewProposalTrigger } from './triggers/new-proposal-trigger';
-import { ProposalRepository } from './repositories/proposal.repository';
-import { DispatcherApiClient } from './api-clients/dispatcher.api-client';
+import { App } from './app';
+import { setupDatabaseConnection } from './config/database';
 import { env } from './config/env';
-import { db } from './config/database';
 
-// Create database and dispatcher service implementations
-const proposalDB = new ProposalRepository(db);
-const dispatcherService = new DispatcherApiClient(env.DISPATCHER_ENDPOINT);
+const db = setupDatabaseConnection('pg', env.DATABASE_URL);
 
-// Create and start the trigger
-const trigger = new NewProposalTrigger(
-  dispatcherService,
-  proposalDB,
-  env.TRIGGER_INTERVAL
+const app = new App(
+  db,
+  env.DISPATCHER_ENDPOINT,
+  env.TRIGGER_INTERVAL,
+  env.PROPOSAL_STATUS,
 );
-trigger.start({ status: env.PROPOSAL_STATUS });
-console.log('Logic system is running. Press Ctrl+C to stop.');
+
+app.start();
 
 //@ts-ignore
 BigInt.prototype.toJSON = function () {
