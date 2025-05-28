@@ -2,8 +2,8 @@
   "name": "@notification-system/logic-system",
   "version": "1.0.0",
   "description": "Business logic system for notification handling",
-  "main": "dist/index.js",
-  "types": "dist/index.d.ts",
+  "main": "dist/app.js",
+  "types": "dist/app.d.ts",
   "files": [
     "dist"
   ],
