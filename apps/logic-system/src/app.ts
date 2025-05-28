@@ -34,4 +34,7 @@ export class App {
 //@ts-ignore
 BigInt.prototype.toJSON = function () {
   return this.toString();
-}; 
+};
+
+// Library exports for external consumption
+export { setupDatabaseConnection } from './config/database'; 

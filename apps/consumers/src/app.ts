@@ -38,4 +38,7 @@ export class App {
     await this.server.close();
     this.botController.stop('SIGINT');
   }
-} 
+}
+
+// Library exports for external consumption
+export { setupDatabaseConnection } from './config/db.config'; 
