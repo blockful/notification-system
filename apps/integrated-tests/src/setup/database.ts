@@ -24,11 +24,7 @@ export async function createTestData() {
 
 async function createTestDao(timestamp: string) {
   const dao = {
-    id: uuidv4(),
-    name: 'Test DAO',
-    description: 'A test DAO for integration testing',
-    created_at: timestamp,
-    updated_at: timestamp
+    id: uuidv4()
   };
   await db('dao').insert(dao);
   return dao;
