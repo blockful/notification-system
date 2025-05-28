@@ -49,7 +49,7 @@ describe('NewProposalTrigger', () => {
       
       expect(mockDispatcherService.sendMessage).toHaveBeenCalledTimes(1);
       expect(mockDispatcherService.sendMessage).toHaveBeenCalledWith({
-        triggerId: 'newProposalTrigger',
+        triggerId: 'new-proposal',
         payload: []
       });
     });
@@ -64,7 +64,7 @@ describe('NewProposalTrigger', () => {
       
       expect(mockDispatcherService.sendMessage).toHaveBeenCalledTimes(1);
       expect(mockDispatcherService.sendMessage).toHaveBeenCalledWith({
-        triggerId: 'newProposalTrigger',
+        triggerId: 'new-proposal',
         payload: proposals
       });
     });
@@ -75,7 +75,7 @@ describe('NewProposalTrigger', () => {
       await trigger.process([proposal]);
       
       expect(mockDispatcherService.sendMessage).toHaveBeenCalledWith({
-        triggerId: 'newProposalTrigger',
+        triggerId: 'new-proposal',
         payload: [proposal]
       });
     });
