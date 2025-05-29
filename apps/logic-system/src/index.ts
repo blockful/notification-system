@@ -2,7 +2,7 @@ import { App } from './app';
 import { setupDatabaseConnection } from './config/database';
 import { env } from './config/env';
 
-const db = setupDatabaseConnection('pg', env.DATABASE_URL);
+const db = setupDatabaseConnection('pg', env.DATABASE_URL, env.IS_PRODUCTION);
 
 const app = new App(
   db,

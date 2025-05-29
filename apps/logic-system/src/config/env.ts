@@ -25,7 +25,8 @@ const envSchema = z.object({
   DATABASE_URL: readOnlyDatabaseUrl,
   DISPATCHER_ENDPOINT: z.string(),
   TRIGGER_INTERVAL: z.coerce.number().optional().default(60000),
-  PROPOSAL_STATUS: z.enum(validProposalStatuses)
+  PROPOSAL_STATUS: z.enum(validProposalStatuses),
+  IS_PRODUCTION: z.coerce.boolean().default(false),
 });
 
 const _env = envSchema.safeParse(process.env);

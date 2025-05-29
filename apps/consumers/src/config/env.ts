@@ -21,6 +21,7 @@ const envSchema = z.object({
   ANTICAPTURE_DATABASE_URL: readOnlyAnticaptureDatabaseUrl,
   SUBSCRIPTION_SERVER_URL: z.string().min(1, "Subscription server URL is required"),
   API_PORT: z.coerce.number().default(3004),
+  IS_PRODUCTION: z.coerce.boolean().default(false),
 });
 
 export function loadConfig() {
@@ -32,5 +33,6 @@ export function loadConfig() {
     anticaptureDataBaseUrl: env.ANTICAPTURE_DATABASE_URL,
     subscriptionServerUrl: env.SUBSCRIPTION_SERVER_URL,
     port: env.API_PORT,
+    isProduction: env.IS_PRODUCTION,
   } as const;
 } 
