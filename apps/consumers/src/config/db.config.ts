@@ -15,9 +15,8 @@ export function setupDatabaseConnection(client: string, connection: string | obj
   /**
    * Disable potentially dangerous database operations by overriding their getters
    * to throw errors. This prevents accidental execution of destructive operations
-   * like running migrations, seeds, or schema changes.
-   * 
-   * These operations are always blocked for safety.
+   * like running migrations, seeds, or schema changes in production environments
+   * where the database connection should be read-only.
    */
   const BLOCKED_OPERATIONS = ['migrate', 'seed', 'schema'] as const;
   
