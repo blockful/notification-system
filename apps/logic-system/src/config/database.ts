@@ -1,7 +1,7 @@
 import knex, { Knex } from 'knex';
 import path from 'path';
 
-export function setupDatabaseConnection(client: string, connection: string | object, isProduction: boolean): Knex {
+export function setupDatabaseConnection(client: string, connection: string | object): Knex {
   const db = knex({
     client,
     connection,
@@ -17,22 +17,19 @@ export function setupDatabaseConnection(client: string, connection: string | obj
   /**
    * Disable potentially dangerous database operations by overriding their getters
    * to throw errors. This prevents accidental execution of destructive operations
-   * like running migrations, seeds, or schema changes in production environments
-   * where the database connection should be read-only.
+   * like running migrations, seeds, or schema changes.
    * 
-   * Only applies this protection in production environments.
+   * These operations are always blocked for safety.
    */
-  if (isProduction) {
-    const BLOCKED_OPERATIONS = ['migrate', 'seed', 'schema'] as const;
-    
-    BLOCKED_OPERATIONS.forEach(method => {
-      Object.defineProperty(db, method, {
-        get() {
-          throw new Error(`${method} operations are disabled in read-only mode`);
-        }
-      });
+  const BLOCKED_OPERATIONS = ['migrate', 'seed', 'schema'] as const;
+  
+  BLOCKED_OPERATIONS.forEach(method => {
+    Object.defineProperty(db, method, {
+      get() {
+        throw new Error(`${method} operations are disabled in read-only mode`);
+      }
     });
-  }
+  });
   
   return db;
 } 

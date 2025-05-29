@@ -8,7 +8,6 @@ import dotenv from 'dotenv';
 import { z } from 'zod';
 
 const envSchema = z.object({
-  IS_PRODUCTION: z.coerce.boolean().default(false),
   PORT: z.coerce.number().default(3000),
   SUBSCRIPTION_SERVER_URL: z.string().url(),
   TELEGRAM_CONSUMER_URL: z.string().url(),
@@ -19,7 +18,6 @@ export function loadConfig() {
   const env = envSchema.parse(process.env);
   
   return {
-    isProduction: env.IS_PRODUCTION,
     port: env.PORT,
     subscriptionServerUrl: env.SUBSCRIPTION_SERVER_URL,
     telegramConsumerUrl: env.TELEGRAM_CONSUMER_URL,

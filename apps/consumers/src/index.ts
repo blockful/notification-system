@@ -17,8 +17,8 @@ import { loadConfig } from './config/env';
 const config = loadConfig();
 
 // Create database instances
-const daosDb = setupDatabaseConnection('pg', config.anticaptureDataBaseUrl, config.isProduction);
-const usersDb = setupDatabaseConnection('pg', config.anticaptureDataBaseUrl, config.isProduction);
+const daosDb = setupDatabaseConnection('pg', config.anticaptureDataBaseUrl);
+const usersDb = setupDatabaseConnection('pg', config.anticaptureDataBaseUrl);
 
 // Create and start the application
 const app = new App(

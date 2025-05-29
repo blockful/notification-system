@@ -10,7 +10,6 @@ services:
     environment:
       DATABASE_URL: ${SUBSCRIPTION_DATABASE_URL}
       PORT: ${SUBSCRIPTION_SERVER_INTERNAL_PORT:-3003}
-      IS_PRODUCTION: true
     networks:
       - notification-network
     restart: unless-stopped
@@ -24,7 +23,6 @@ services:
     ports:
       - "${CONSUMERS_EXTERNAL_PORT:-3000}:${CONSUMERS_INTERNAL_PORT:-3000}"
     environment:
-      IS_PRODUCTION: true
       TELEGRAM_BOT_TOKEN: ${TELEGRAM_BOT_TOKEN}
       ANTICAPTURE_DATABASE_URL: ${ANTICAPTURE_DATABASE_URL}
       SUBSCRIPTION_SERVER_URL: http://subscription-server:${SUBSCRIPTION_SERVER_INTERNAL_PORT:-3003}
@@ -44,7 +42,6 @@ services:
     ports:
       - "${DISPATCHER_EXTERNAL_PORT:-3002}:${DISPATCHER_INTERNAL_PORT:-3002}"
     environment:
-      IS_PRODUCTION: true
       PORT: ${DISPATCHER_INTERNAL_PORT:-3002}
       SUBSCRIPTION_SERVER_URL: http://subscription-server:${SUBSCRIPTION_SERVER_INTERNAL_PORT:-3003}
       TELEGRAM_CONSUMER_URL: http://consumers:${CONSUMERS_INTERNAL_PORT:-3000}
@@ -62,7 +59,6 @@ services:
       dockerfile: apps/logic-system/Dockerfile
     container_name: logic-system
     environment:
-      IS_PRODUCTION: true
       DATABASE_URL: ${LOGIC_SYSTEM_DATABASE_URL}
       DISPATCHER_ENDPOINT: http://dispatcher:${DISPATCHER_INTERNAL_PORT:-3002}/messages
       TRIGGER_INTERVAL: ${TRIGGER_INTERVAL:-60000}

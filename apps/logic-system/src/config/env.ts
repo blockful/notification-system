@@ -26,7 +26,6 @@ const envSchema = z.object({
   DISPATCHER_ENDPOINT: z.string(),
   TRIGGER_INTERVAL: z.coerce.number().optional().default(60000),
   PROPOSAL_STATUS: z.enum(validProposalStatuses),
-  IS_PRODUCTION: z.coerce.boolean().default(false),
 });
 
 const _env = envSchema.safeParse(process.env);
