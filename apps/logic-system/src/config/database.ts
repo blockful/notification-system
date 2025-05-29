@@ -29,6 +29,5 @@ export function setupDatabaseConnection(client: string, connection: string | obj
       }
     });
   });
-  
   return db;
 } 
