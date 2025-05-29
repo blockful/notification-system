@@ -6,9 +6,19 @@
 import { z } from 'zod';
 import * as dotenv from 'dotenv';
 
+// Custom Zod validator for ANTICAPTURE_DATABASE_URL read-only
+const readOnlyAnticaptureDatabaseUrl = z.string()
+  .url('ANTICAPTURE_DATABASE_URL must be a valid URL')
+  .refine((url) => {
+    const urlObj = new URL(url);
+    return urlObj.searchParams.get('readonly') === 'true';
+  }, {
+    message: "ANTICAPTURE_DATABASE_URL must include 'readonly=true' parameter for consumer safety"
+  });
+
 const envSchema = z.object({
   TELEGRAM_BOT_TOKEN: z.string().min(1, "Telegram bot token is required"),
-  ANTICAPTURE_DATABASE_URL: z.string().min(1, "Database URL is required"),
+  ANTICAPTURE_DATABASE_URL: readOnlyAnticaptureDatabaseUrl,
   SUBSCRIPTION_SERVER_URL: z.string().min(1, "Subscription server URL is required"),
   API_PORT: z.coerce.number().default(3004),
 });
