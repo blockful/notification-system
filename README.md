@@ -53,6 +53,51 @@ pnpm install
 pnpm dev
 ```
 
+## 🐳 Running with Docker Compose
+
+For production-like environment or to run all services together:
+
+### Prerequisites
+1. Copy the environment template:
+```bash
+cp env.example .env
+```
+
+2. Configure your environment variables in `.env`:
+```bash
+# Required: Telegram Bot Token
+TELEGRAM_BOT_TOKEN=your_telegram_bot_token_here
+
+# Required: Database URLs
+SUBSCRIPTION_DATABASE_URL=postgresql://user:pass@host:port/db
+ANTICAPTURE_DATABASE_URL=postgresql://user:pass@host:port/db
+LOGIC_SYSTEM_DATABASE_URL=postgresql://user:pass@host:port/db
+
+# Optional: Custom ports (defaults provided)
+SUBSCRIPTION_SERVER_EXTERNAL_PORT=3001
+CONSUMERS_EXTERNAL_PORT=3000
+DISPATCHER_EXTERNAL_PORT=3002
+
+# Optional: Logic System settings
+TRIGGER_INTERVAL=60000
+PROPOSAL_STATUS=active
+```
+
+### Running the Application
+```bash
+# Start all services
+pnpm docker:up
+
+# Stop all services
+pnpm docker:down
+```
+
+### Service URLs
+- **Consumers API**: http://localhost:3000
+- **Subscription Server**: http://localhost:3001  
+- **Dispatcher**: http://localhost:3002
+- **Logic System**: (worker service, no exposed port)
+
 ## 🔄 Processing Pipeline
 
 1. Trigger System pulls data from Anticapture DB
