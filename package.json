@@ -8,7 +8,8 @@
     "build": "turbo run build",
     "dev": "turbo run dev",
     "format": "prettier --write \"**/*.{ts,tsx,md}\"",
-    "check-types": "turbo run check-types"
+    "docker:down": "docker-compose down",
+    "docker:up": "docker-compose up -d --build"
   },
   "devDependencies": {
     "@types/pg": "^8.15.2",
