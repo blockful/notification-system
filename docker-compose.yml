@@ -2,8 +2,8 @@ services:
   # Subscription Server (base service, others depend on it)
   subscription-server:
     build:
-      context: .
-      dockerfile: apps/subscription-server/Dockerfile
+      context: ./apps/subscription-server
+      dockerfile: Dockerfile
     container_name: subscription-server
     ports:
       - "${SUBSCRIPTION_SERVER_EXTERNAL_PORT:-3001}:${SUBSCRIPTION_SERVER_INTERNAL_PORT:-3003}"
@@ -17,8 +17,8 @@ services:
   # Consumers (Telegram Bot + API)
   consumers:
     build:
-      context: .
-      dockerfile: apps/consumers/Dockerfile
+      context: ./apps/consumers
+      dockerfile: Dockerfile
     container_name: consumers
     ports:
       - "${CONSUMERS_EXTERNAL_PORT:-3000}:${CONSUMERS_INTERNAL_PORT:-3000}"
@@ -36,8 +36,8 @@ services:
   # Dispatcher
   dispatcher:
     build:
-      context: .
-      dockerfile: apps/dispatcher/Dockerfile
+      context: ./apps/dispatcher
+      dockerfile: Dockerfile
     container_name: dispatcher
     ports:
       - "${DISPATCHER_EXTERNAL_PORT:-3002}:${DISPATCHER_INTERNAL_PORT:-3002}"
@@ -55,8 +55,8 @@ services:
   # Logic System (worker, no ports exposed)
   logic-system:
     build:
-      context: .
-      dockerfile: apps/logic-system/Dockerfile
+      context: ./apps/logic-system
+      dockerfile: Dockerfile
     container_name: logic-system
     environment:
       DATABASE_URL: ${LOGIC_SYSTEM_DATABASE_URL}
