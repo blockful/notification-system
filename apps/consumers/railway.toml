@@ -3,5 +3,4 @@ builder = "DOCKERFILE"
 dockerfilePath = "apps/consumers/Dockerfile"
 
 [deploy]
-startCommand = "node dist/index.js"
 restartPolicyType = "ALWAYS"
