@@ -1,11 +1,11 @@
 FROM node:20-slim
 
+RUN npm install -g pnpm
 WORKDIR /app
 
-RUN npm install -g pnpm
-
-COPY tsconfig.json ../tsconfig.json
-COPY apps/dispatcher ./
+COPY package.json ./
+COPY tsconfig.json ./
+COPY src ./src
 
 RUN pnpm install
 RUN pnpm build
