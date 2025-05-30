@@ -1,7 +1,7 @@
 [build]
 builder = "DOCKERFILE"
-dockerfilePath = "./Dockerfile.consumers"
+dockerfilePath = "apps/consumers/Dockerfile"
 
 [deploy]
-startCommand = "pnpm start"
+startCommand = "node dist/index.js"
 restartPolicyType = "ALWAYS"

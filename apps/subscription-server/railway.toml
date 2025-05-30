@@ -1,6 +1,6 @@
 [build]
 builder = "DOCKERFILE"
-dockerfilePath = "./Dockerfile.subscription-server"
+dockerfilePath = "apps/subscription-server/Dockerfile"
 
 [deploy]
 startCommand = "node dist/index.js"
