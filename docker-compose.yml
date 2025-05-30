@@ -6,10 +6,10 @@ services:
       dockerfile: Dockerfile
     container_name: subscription-server
     ports:
-      - "${SUBSCRIPTION_SERVER_EXTERNAL_PORT:-3001}:${SUBSCRIPTION_SERVER_INTERNAL_PORT:-3003}"
+      - "3001:3003"
     environment:
       DATABASE_URL: ${SUBSCRIPTION_DATABASE_URL}
-      PORT: ${SUBSCRIPTION_SERVER_INTERNAL_PORT:-3003}
+      PORT: 3003
     networks:
       - notification-network
     restart: unless-stopped
@@ -21,12 +21,12 @@ services:
       dockerfile: Dockerfile
     container_name: consumers
     ports:
-      - "${CONSUMERS_EXTERNAL_PORT:-3000}:${CONSUMERS_INTERNAL_PORT:-3000}"
+      - "3000:3000"
     environment:
       TELEGRAM_BOT_TOKEN: ${TELEGRAM_BOT_TOKEN}
       ANTICAPTURE_DATABASE_URL: ${ANTICAPTURE_DATABASE_URL}
-      SUBSCRIPTION_SERVER_URL: http://subscription-server:${SUBSCRIPTION_SERVER_INTERNAL_PORT:-3003}
-      API_PORT: ${CONSUMERS_INTERNAL_PORT:-3000}
+      SUBSCRIPTION_SERVER_URL: http://subscription-server:3003
+      API_PORT: 3000
     depends_on:
       - subscription-server
     networks:
@@ -40,11 +40,11 @@ services:
       dockerfile: Dockerfile
     container_name: dispatcher
     ports:
-      - "${DISPATCHER_EXTERNAL_PORT:-3002}:${DISPATCHER_INTERNAL_PORT:-3002}"
+      - "3002:3002"
     environment:
-      PORT: ${DISPATCHER_INTERNAL_PORT:-3002}
-      SUBSCRIPTION_SERVER_URL: http://subscription-server:${SUBSCRIPTION_SERVER_INTERNAL_PORT:-3003}
-      TELEGRAM_CONSUMER_URL: http://consumers:${CONSUMERS_INTERNAL_PORT:-3000}
+      PORT: 3002
+      SUBSCRIPTION_SERVER_URL: http://subscription-server:3003
+      TELEGRAM_CONSUMER_URL: http://consumers:3000
     depends_on:
       - subscription-server
       - consumers
@@ -60,9 +60,9 @@ services:
     container_name: logic-system
     environment:
       DATABASE_URL: ${LOGIC_SYSTEM_DATABASE_URL}
-      DISPATCHER_ENDPOINT: http://dispatcher:${DISPATCHER_INTERNAL_PORT:-3002}/messages
-      TRIGGER_INTERVAL: ${TRIGGER_INTERVAL:-60000}
-      PROPOSAL_STATUS: ${PROPOSAL_STATUS:-active}
+      DISPATCHER_ENDPOINT: http://dispatcher:3002/messages
+      TRIGGER_INTERVAL: 60000
+      PROPOSAL_STATUS: active
     depends_on:
       - dispatcher
     networks:
