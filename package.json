@@ -6,10 +6,8 @@
   ],
   "scripts": {
     "build": "turbo run build",
-    "dev": "turbo run dev",
     "format": "prettier --write \"**/*.{ts,tsx,md}\"",
-    "docker:down": "docker-compose down",
-    "docker:up": "docker-compose up -d --build"
+    "dev": "docker-compose up --build"
   },
   "devDependencies": {
     "@types/pg": "^8.15.2",
