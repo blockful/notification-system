@@ -8,6 +8,6 @@
 
 export const knownCommands = [
     { command: '/start', description: 'Start the bot' },
-    { command: '/help', description: 'See all available commands' },
-    { command: '/daostotrack', description: 'See DAOs that we support' }
+    { command: '/help', description: 'Get help and learn more about Anticapture' },
+    { command: '/daos', description: 'Manage your DAO notifications' }
   ];
