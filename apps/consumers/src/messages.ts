@@ -10,27 +10,38 @@ const generateCommandList = () => {
 };
 
 export const WELCOME_MESSAGE = `
-👋 Welcome to Anticapture Bot!
+🔔 Welcome to the Anticapture notification system!
 
-Available commands:
-${generateCommandList()}
+Spotting the "oh no" before it hits your treasury.
 
-We're here to help! Use /help to see more information.`;
+To start using the system, you'll need to go through the following steps:
+
+📊 Add the DAOs you want to receive notifications from by clicking on "DAOs"`;
 
 export const HELP_MESSAGE = `
-🤖 *Command List*
+🤖 What is Anticapture?
 
-${generateCommandList()}
+Anticapture is a governance monitoring and notification system and dashboard that tracks social dynamics, governance concentration, and other indicators of governing power and preventing malicious capture.
 
-*How to use:*
-1. Use /start to begin
-2. Follow the instructions to register
+What is this bot for?
+Get notified about risks, changes and proposals that you care about the DAOs you're tracking.
 
-If you need additional help, please contact support.`;
+Commands that might be useful:
+/start
+/help
+/daos`;
 
 export const UNKNOWN_COMMAND_MESSAGE = '❌ Unknown command. Use /help to see available commands.';
 
-export const DAO_SELECTION_MESSAGE = 'Select the DAOs you want to track (you can select multiple):';
+export const DAO_SELECTION_MESSAGE = `
+📊 Add the DAOs you want to receive notifications from by clicking on "DAOs"
+
+Select the DAOs you want to track (you can select multiple):`;
+
 export const NO_DAO_SELECTED_MESSAGE = 'Please select at least one DAO before confirming.';
 export const CONFIRM_SELECTION_BUTTON = '✅ Confirm Selection';
-export const SELECTED_DAOS_MESSAGE = 'You have selected the following DAOs:'; 
+export const SELECTED_DAOS_MESSAGE = 'You have selected the following DAOs:';
+
+// Static buttons messages
+export const DAOS_BUTTON_TEXT = '🌐 DAOs';
+export const LEARN_MORE_BUTTON_TEXT = '💡 Learn More'; 
