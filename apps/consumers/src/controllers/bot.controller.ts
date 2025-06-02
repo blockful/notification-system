@@ -37,7 +37,10 @@ export class BotController {
 
     // Help command
     this.bot.command(/^help$/i, async (ctx) => {
-      await ctx.reply(HELP_MESSAGE, this.createPersistentKeyboard());
+      await ctx.reply(HELP_MESSAGE, { 
+        parse_mode: 'Markdown',
+        ...this.createPersistentKeyboard() 
+      });
     });
 
     // DAO tracking command
@@ -51,7 +54,10 @@ export class BotController {
     });
 
     this.bot.hears(LEARN_MORE_BUTTON_TEXT, async (ctx) => {
-      await ctx.reply(HELP_MESSAGE, this.createPersistentKeyboard());
+      await ctx.reply(HELP_MESSAGE, { 
+        parse_mode: 'Markdown',
+        ...this.createPersistentKeyboard() 
+      });
     });
 
     // DAO toggle actions
