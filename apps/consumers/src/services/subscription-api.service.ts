@@ -61,9 +61,38 @@ export class SubscriptionAPIService {
   private async getDaoSubscribers(daoId: string): Promise<UserResponse[]> {
     const response = await fetch(`${this.baseUrl}/subscriptions/${daoId}`);
     if (!response.ok) {
-    throw new Error(`Server responded with ${response.status}: ${response.statusText}`);
+      throw new Error(`Server responded with ${response.status}: ${response.statusText}`);
     }
     const data = await response.json();
     return data as UserResponse[];
+  }
+
+  /**
+   * Gets all active DAOs that a user is subscribed to
+   * @param channelUserId Telegram user/chat ID
+   * @param availableDAOs List of all available DAOs to check
+   * @returns Array of DAO IDs that the user is subscribed to
+   */
+  public async getUserPreferences(channelUserId: number, availableDAOs: string[]): Promise<string[]> {
+    const userDAOs: string[] = [];
+    
+    for (const daoId of availableDAOs) {
+      try {
+        const subscribers = await this.getDaoSubscribers(daoId);
+        const isSubscribed = subscribers.some(sub => 
+          sub.channel === 'telegram' && 
+          sub.channel_user_id === channelUserId.toString() &&
+          sub.is_active
+        );
+        
+        if (isSubscribed) {
+          userDAOs.push(daoId.toUpperCase());
+        }
+      } catch (error) {
+        console.error(`Error checking subscription for DAO ${daoId}:`, error);
+      }
+    }
+    
+    return userDAOs;
   }
 } 

@@ -35,6 +35,9 @@ importers:
       '@fastify/swagger-ui':
         specifier: ^5.2.2
         version: 5.2.2
+      '@types/uuid':
+        specifier: ^9.0.0
+        version: 9.0.8
       dotenv:
         specifier: ^16.4.7
         version: 16.5.0
@@ -53,6 +56,9 @@ importers:
       telegraf:
         specifier: ^4.16.3
         version: 4.16.3(encoding@0.1.13)
+      uuid:
+        specifier: ^9.0.0
+        version: 9.0.1
       zod:
         specifier: ^3.24.3
         version: 3.24.3
@@ -270,6 +276,12 @@ importers:
       '@types/jest':
         specifier: ^29.5.14
         version: 29.5.14
+      '@types/knex':
+        specifier: ^0.16.1
+        version: 0.16.1(pg@8.16.0)
+      '@types/pg':
+        specifier: ^8.11.10
+        version: 8.15.2
       jest:
         specifier: ^29.7.0
         version: 29.7.0(@types/node@20.17.46)(ts-node@10.9.2(@swc/core@1.11.24)(@types/node@20.17.46)(typescript@5.8.3))
@@ -282,6 +294,9 @@ importers:
       tsx:
         specifier: ^4.19.4
         version: 4.19.4
+      typescript:
+        specifier: ^5.8.3
+        version: 5.8.3
 
 packages:
 
@@ -939,6 +954,10 @@ packages:
 
   '@types/json-schema@7.0.15':
     resolution: {integrity: sha512-5+fP8P8MFNC+AyZCDxrB2pkZFPGzqQWUzpSeuuVLvm8VMcorNYavBqoFcxK8bQz4Qsbn4oUEEem4wDLfcysGHA==}
+
+  '@types/knex@0.16.1':
+    resolution: {integrity: sha512-54gWD1HWwdVx5iLHaJ1qxH3I6KyBsj5fFqzRpXFn7REWiEB2jwspeVCombNsocSrqPd7IRPqKrsIME7/cD+TFQ==}
+    deprecated: This is a stub types definition. knex provides its own type definitions, so you do not need this installed.
 
   '@types/node@18.19.101':
     resolution: {integrity: sha512-Ykg7fcE3+cOQlLUv2Ds3zil6DVjriGQaSN/kEpl5HQ3DIGM6W0F2n9+GkWV4bRt7KjLymgzNdTnSKCbFUUJ7Kw==}
@@ -3985,6 +4004,19 @@ snapshots:
       pretty-format: 29.7.0
 
   '@types/json-schema@7.0.15': {}
+
+  '@types/knex@0.16.1(pg@8.16.0)':
+    dependencies:
+      knex: 3.1.0(pg@8.16.0)(sqlite3@5.1.7)
+    transitivePeerDependencies:
+      - better-sqlite3
+      - mysql
+      - mysql2
+      - pg
+      - pg-native
+      - sqlite3
+      - supports-color
+      - tedious
 
   '@types/node@18.19.101':
     dependencies:
