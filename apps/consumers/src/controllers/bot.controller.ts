@@ -4,8 +4,8 @@
  * Routes callback queries to appropriate services based on their type.
  */
 
-import { Telegraf } from 'telegraf';
-import { WELCOME_MESSAGE, HELP_MESSAGE } from '../messages';
+import { Telegraf, Markup } from 'telegraf';
+import { WELCOME_MESSAGE, HELP_MESSAGE, DAOS_BUTTON_TEXT, LEARN_MORE_BUTTON_TEXT } from '../messages';
 import { DAOService } from '../services/dao.service';
 
 export class BotController {
@@ -18,20 +18,40 @@ export class BotController {
     this.setupCommands();
   }
 
+  /**
+   * Creates the persistent keyboard with static buttons
+   */
+  private createPersistentKeyboard() {
+    return Markup.keyboard([
+      [DAOS_BUTTON_TEXT, LEARN_MORE_BUTTON_TEXT]
+    ])
+    .resize()
+    .persistent();
+  }
+
   private setupCommands(): void {
-    // Start command
+    // Start command - shows welcome message with persistent buttons
     this.bot.command(/^start$/i, async (ctx) => {
-      await ctx.reply(WELCOME_MESSAGE);
+      await ctx.reply(WELCOME_MESSAGE, this.createPersistentKeyboard());
     });
 
     // Help command
     this.bot.command(/^help$/i, async (ctx) => {
-      await ctx.reply(HELP_MESSAGE);
+      await ctx.reply(HELP_MESSAGE, this.createPersistentKeyboard());
     });
 
     // DAO tracking command
-    this.bot.command(/^daostotrack$/i, async (ctx) => {
+    this.bot.command(/^daos$/i, async (ctx) => {
       await this.daoService.initialize(ctx);
+    });
+
+    // Handle text messages for persistent buttons
+    this.bot.hears(DAOS_BUTTON_TEXT, async (ctx) => {
+      await this.daoService.initialize(ctx);
+    });
+
+    this.bot.hears(LEARN_MORE_BUTTON_TEXT, async (ctx) => {
+      await ctx.reply(HELP_MESSAGE, this.createPersistentKeyboard());
     });
 
     // DAO toggle actions
@@ -45,6 +65,16 @@ export class BotController {
     this.bot.action(/^dao_confirm$/, async (ctx) => {
       await this.daoService.confirm(ctx);
       await ctx.answerCbQuery();
+    });
+
+    // Handle any other message - show persistent keyboard
+    this.bot.on('message', async (ctx, next) => {
+      if ('text' in ctx.message && !ctx.message.text.startsWith('/')) {
+        // If it's not a command and not handled by hears, show help
+        await ctx.reply('Please use the buttons below or type /help for more information.', 
+          this.createPersistentKeyboard());
+      }
+      return next();
     });
   }
 
