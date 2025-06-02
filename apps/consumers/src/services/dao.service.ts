@@ -6,7 +6,7 @@
  */
 
 import { Context } from 'telegraf';
-import { CONFIRM_SELECTION_BUTTON, NO_DAO_SELECTED_MESSAGE, SELECTED_DAOS_MESSAGE, DAO_SELECTION_MESSAGE } from '../messages';
+import { CONFIRM_SELECTION_BUTTON, NO_DAO_SELECTED_MESSAGE, SELECTED_DAOS_MESSAGE, DAO_SELECTION_MESSAGE, EDIT_DAOS_MESSAGE } from '../messages';
 import { SubscriptionAPIService } from './subscription-api.service';
 import { IDatabaseService } from '../interfaces/db.interface';
 
@@ -14,10 +14,30 @@ export class DAOService {
   // Store selected DAOs for each user temporarily
   private userSelections = new Map<number, Set<string>>();
   
+  // DAO emojis mapping
+  private daoEmojis = new Map<string, string>([
+    ['UNISWAP', '🦄'],
+    ['ENS', '🔷'],
+    ['AAVE', '👻'],
+    ['COMPOUND', '🏦'],
+    ['MAKER', '💎'],
+    ['CURVE', '🌊'],
+    ['YEARN', '🔵'],
+    ['SYNTHETIX', '⚡'],
+    ['SUSHI', '🍣'],
+    ['BALANCER', '⚖️']
+  ]);
+  
   constructor(
     private dbService: IDatabaseService,
     private subscriptionApi: SubscriptionAPIService
   ) {}
+
+  private getDaoWithEmoji(dao: string): string {
+    const normalizedDao = dao.toUpperCase();
+    const emoji = this.daoEmojis.get(normalizedDao) || '🏛️';
+    return `${emoji} ${dao}`;
+  }
 
   async initialize(ctx: Context): Promise<void> {
     const chatId = ctx.chat?.id;
@@ -34,7 +54,7 @@ export class DAOService {
       const keyboard = {
         inline_keyboard: [
           daos.map(dao => ({
-            text: dao,
+            text: this.getDaoWithEmoji(dao),
             callback_data: `dao_toggle_${dao.toUpperCase()}`
           })),
           [
@@ -69,8 +89,9 @@ export class DAOService {
         inline_keyboard: [
           daos.map((dao: string) => {
             const normalizedDao = dao.toUpperCase();
+            const daoWithEmoji = this.getDaoWithEmoji(dao);
             return {
-              text: userSelectedDAOs.has(normalizedDao) ? `✅ ${dao}` : dao,
+              text: userSelectedDAOs.has(normalizedDao) ? `✅ ${daoWithEmoji}` : daoWithEmoji,
               callback_data: `dao_toggle_${normalizedDao}`
             };
           }),
@@ -91,7 +112,16 @@ export class DAOService {
     if (!chatId) return;
     const selectedDAOs = this.userSelections.get(chatId);
     if (selectedDAOs && selectedDAOs.size > 0) {
-      await ctx.reply(`${SELECTED_DAOS_MESSAGE} ${Array.from(selectedDAOs).join(', ')}`);
+      const daoList = Array.from(selectedDAOs)
+        .map(dao => this.getDaoWithEmoji(dao))
+        .join('\n');
+      
+      const successMessage = `${SELECTED_DAOS_MESSAGE}
+${daoList}
+
+${EDIT_DAOS_MESSAGE}`;
+      
+      await ctx.reply(successMessage);
       await Promise.all(
         Array.from(selectedDAOs).map(daoId =>
           this.subscriptionApi.saveUserPreference(daoId, chatId, true)

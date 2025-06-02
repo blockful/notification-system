@@ -32,14 +32,14 @@ Get notified about risks, changes and proposals that you care about the DAOs you
 
 export const UNKNOWN_COMMAND_MESSAGE = '❌ Unknown command. Use /help to see available commands.';
 
-export const DAO_SELECTION_MESSAGE = `
-📊 Add the DAOs you want to receive notifications from by clicking on "DAOs"
-
-Select the DAOs you want to track (you can select multiple):`;
+export const DAO_SELECTION_MESSAGE = 'Select the DAOs you want to track (you can select multiple):';
 
 export const NO_DAO_SELECTED_MESSAGE = 'Please select at least one DAO before confirming.';
-export const CONFIRM_SELECTION_BUTTON = '✅ Confirm Selection';
-export const SELECTED_DAOS_MESSAGE = 'You have selected the following DAOs:';
+export const CONFIRM_SELECTION_BUTTON = '✅ Confirm selection';
+export const SELECTED_DAOS_MESSAGE = `Success! Your DAOs are now under surveillance (the good kind).
+You'll be notified when things get spicy:`;
+
+export const EDIT_DAOS_MESSAGE = 'You can edit this list by clicking on 🌐 DAOs';
 
 // Static buttons messages
 export const DAOS_BUTTON_TEXT = '🌐 DAOs';
