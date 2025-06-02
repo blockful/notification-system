@@ -30,12 +30,10 @@ export class BotController {
   }
 
   private setupCommands(): void {
-    // Start command - shows welcome message with persistent buttons
     this.bot.command(/^start$/i, async (ctx) => {
       await ctx.reply(WELCOME_MESSAGE, this.createPersistentKeyboard());
     });
 
-    // Help command
     this.bot.command(/^help$/i, async (ctx) => {
       await ctx.reply(HELP_MESSAGE, { 
         parse_mode: 'Markdown',
@@ -43,12 +41,10 @@ export class BotController {
       });
     });
 
-    // DAO tracking command
     this.bot.command(/^daos$/i, async (ctx) => {
       await this.daoService.initialize(ctx);
     });
 
-    // Handle text messages for persistent buttons
     this.bot.hears(DAOS_BUTTON_TEXT, async (ctx) => {
       await this.daoService.initialize(ctx);
     });
@@ -60,23 +56,19 @@ export class BotController {
       });
     });
 
-    // DAO toggle actions
     this.bot.action(/^dao_toggle_(\w+)$/, async (ctx) => {
       const daoName = ctx.match[1];
       await this.daoService.toggle(ctx, daoName);
       await ctx.answerCbQuery();
     });
 
-    // DAO confirm action
     this.bot.action(/^dao_confirm$/, async (ctx) => {
       await this.daoService.confirm(ctx);
       await ctx.answerCbQuery();
     });
 
-    // Handle any other message - show persistent keyboard
     this.bot.on('message', async (ctx, next) => {
       if ('text' in ctx.message && !ctx.message.text.startsWith('/')) {
-        // If it's not a command and not handled by hears, show help
         await ctx.reply('Please use the buttons below or type /help for more information.', 
           this.createPersistentKeyboard());
       }
