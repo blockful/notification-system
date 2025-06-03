@@ -34,13 +34,6 @@ export class BotController {
       await ctx.reply(WELCOME_MESSAGE, this.createPersistentKeyboard());
     });
 
-    this.bot.command(/^help$/i, async (ctx) => {
-      await ctx.reply(HELP_MESSAGE, { 
-        parse_mode: 'Markdown',
-        ...this.createPersistentKeyboard() 
-      });
-    });
-
     this.bot.command(/^learn_more$/i, async (ctx) => {
       await ctx.reply(HELP_MESSAGE, { 
         parse_mode: 'Markdown',
@@ -76,7 +69,7 @@ export class BotController {
 
     this.bot.on('message', async (ctx, next) => {
       if ('text' in ctx.message && !ctx.message.text.startsWith('/')) {
-        await ctx.reply('Please use the buttons below or type /help for more information.', 
+        await ctx.reply('Please use the buttons below or type /learn_more for more information.', 
           this.createPersistentKeyboard());
       }
       return next();

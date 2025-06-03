@@ -27,10 +27,10 @@ Get notified about risks, changes and proposals that you care about the DAOs you
 
 *Commands that might be useful*
 /start
-/help
+/learn_more
 /daos`;
 
-export const UNKNOWN_COMMAND_MESSAGE = '❌ Unknown command. Use /help to see available commands.';
+export const UNKNOWN_COMMAND_MESSAGE = '❌ Unknown command. Use /learn_more to see available commands.';
 
 export const DAO_SELECTION_MESSAGE = 'Select the DAOs you want to track (you can select multiple):';
 
