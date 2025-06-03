@@ -35,9 +35,6 @@ importers:
       '@fastify/swagger-ui':
         specifier: ^5.2.2
         version: 5.2.2
-      '@types/uuid':
-        specifier: ^9.0.0
-        version: 9.0.8
       dotenv:
         specifier: ^16.4.7
         version: 16.5.0
