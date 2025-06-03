@@ -19,13 +19,13 @@ To start using the system, you'll need to go through the following steps:
 📊 Add the DAOs you want to receive notifications from by clicking on "DAOs"`;
 
 export const HELP_MESSAGE = `
-*What is Anticapture?*
+<b>What is Anticapture?</b>
 A governance security research, notification system and dashboard that tracks social dynamics, governance models, and contracts, ensuring security and preventing malicious capture.
 
-*What is this bot for?*
+<b>What is this bot for?</b>
 Get notified about risks, changes and proposals that you care about the DAOs you're in.
 
-*Commands that might be useful*
+<b>Commands that might be useful</b>
 /start
 /learn_more
 /daos`;

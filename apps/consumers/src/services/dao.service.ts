@@ -153,9 +153,9 @@ ${daoList}
 
 ${EDIT_DAOS_MESSAGE}`;
       
-      await ctx.reply(successMessage);
+      await ctx.reply(successMessage, { parse_mode: 'HTML' });
     } else {
-      await ctx.reply('You have unsubscribed from all DAOs. You can subscribe again anytime by clicking on DAOs');
+      await ctx.reply('You have unsubscribed from all DAOs. You can subscribe again anytime by clicking on DAOs', { parse_mode: 'HTML' });
     }
   }
 } 

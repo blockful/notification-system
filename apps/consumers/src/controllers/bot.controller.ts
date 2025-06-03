@@ -36,7 +36,7 @@ export class BotController {
 
     this.bot.command(/^learn_more$/i, async (ctx) => {
       await ctx.reply(HELP_MESSAGE, { 
-        parse_mode: 'Markdown',
+        parse_mode: 'HTML',
         ...this.createPersistentKeyboard() 
       });
     });
@@ -51,7 +51,7 @@ export class BotController {
 
     this.bot.hears(LEARN_MORE_BUTTON_TEXT, async (ctx) => {
       await ctx.reply(HELP_MESSAGE, { 
-        parse_mode: 'Markdown',
+        parse_mode: 'HTML',
         ...this.createPersistentKeyboard() 
       });
     });
