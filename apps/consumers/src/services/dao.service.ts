@@ -117,40 +117,50 @@ export class DAOService {
     }
 
     try {
-      // Get current user preferences to compare changes
-      const daos = await this.dbService.getDAOs();
-      const currentPreferences = await this.subscriptionApi.getUserPreferences(chatId, daos);
-      const currentPreferencesSet = new Set(currentPreferences);
-      
-      const toSubscribe = Array.from(selectedDAOs).filter(dao => !currentPreferencesSet.has(dao));
-      const toUnsubscribe = currentPreferences.filter(dao => !selectedDAOs.has(dao));
-      const promises = [
-        ...toSubscribe.map(daoId => this.subscriptionApi.saveUserPreference(daoId, chatId, true)),
-        ...toUnsubscribe.map(daoId => this.subscriptionApi.saveUserPreference(daoId, chatId, false))
-      ];
-
-      await Promise.all(promises);
-
-      // Show success message with final selected DAOs
-      if (selectedDAOs.size > 0) {
-        const daoList = Array.from(selectedDAOs)
-          .map(dao => this.getDaoWithEmoji(dao))
-          .join('\n');
-        
-        const successMessage = `${SELECTED_DAOS_MESSAGE}
-${daoList}
-
-${EDIT_DAOS_MESSAGE}`;
-        
-        await ctx.reply(successMessage);
-      } else {
-        await ctx.reply('You have unsubscribed from all DAOs. You can subscribe again anytime by clicking on 🌐 DAOs');
-      }
-      
+      const changes = await this.getSubscriptionChanges(chatId, selectedDAOs);
+      await this.updateUserSubscriptions(changes, chatId);
+      await this.showConfirmationMessage(ctx, selectedDAOs);
       this.userSelections.delete(chatId);
     } catch (error) {
       console.error('Error updating subscriptions:', error);
       await ctx.reply('Sorry, there was an error updating your subscriptions. Please try again later.');
+    }
+  }
+
+  private async getSubscriptionChanges(chatId: number, selectedDAOs: Set<string>) {
+    const daos = await this.dbService.getDAOs();
+    const currentPreferences = await this.subscriptionApi.getUserPreferences(chatId, daos);
+    const currentPreferencesSet = new Set(currentPreferences);
+    
+    return {
+      toSubscribe: Array.from(selectedDAOs).filter(dao => !currentPreferencesSet.has(dao)),
+      toUnsubscribe: currentPreferences.filter(dao => !selectedDAOs.has(dao))
+    };
+  }
+
+  private async updateUserSubscriptions(changes: { toSubscribe: string[], toUnsubscribe: string[] }, chatId: number) {
+    const promises = [
+      ...changes.toSubscribe.map(daoId => this.subscriptionApi.saveUserPreference(daoId, chatId, true)),
+      ...changes.toUnsubscribe.map(daoId => this.subscriptionApi.saveUserPreference(daoId, chatId, false))
+    ];
+
+    await Promise.all(promises);
+  }
+
+  private async showConfirmationMessage(ctx: Context, selectedDAOs: Set<string>) {
+    if (selectedDAOs.size > 0) {
+      const daoList = Array.from(selectedDAOs)
+        .map(dao => this.getDaoWithEmoji(dao))
+        .join('\n');
+      
+      const successMessage = `${SELECTED_DAOS_MESSAGE}
+${daoList}
+
+${EDIT_DAOS_MESSAGE}`;
+      
+      await ctx.reply(successMessage);
+    } else {
+      await ctx.reply('You have unsubscribed from all DAOs. You can subscribe again anytime by clicking on �� DAOs');
     }
   }
 } 
