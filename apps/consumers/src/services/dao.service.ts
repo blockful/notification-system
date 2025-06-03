@@ -17,15 +17,7 @@ export class DAOService {
   // DAO emojis mapping
   private daoEmojis = new Map<string, string>([
     ['UNISWAP', '🦄'],
-    ['ENS', '🔷'],
-    ['AAVE', '👻'],
-    ['COMPOUND', '🏦'],
-    ['MAKER', '💎'],
-    ['CURVE', '🌊'],
-    ['YEARN', '🔵'],
-    ['SYNTHETIX', '⚡'],
-    ['SUSHI', '🍣'],
-    ['BALANCER', '⚖️']
+    ['ENS', '🔷']
   ]);
   
   constructor(
