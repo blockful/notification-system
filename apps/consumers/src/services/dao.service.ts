@@ -42,10 +42,7 @@ export class DAOService {
         return;
       }
 
-      // Load user's current preferences from the subscription API
       const userPreferences = await this.subscriptionApi.getUserPreferences(chatId, daos);
-      
-      // Initialize user selections with current preferences
       const currentSelections = new Set<string>(userPreferences);
       this.userSelections.set(chatId, currentSelections);
 
@@ -125,13 +122,8 @@ export class DAOService {
       const currentPreferences = await this.subscriptionApi.getUserPreferences(chatId, daos);
       const currentPreferencesSet = new Set(currentPreferences);
       
-      // Find DAOs to subscribe to (selected but not currently subscribed)
       const toSubscribe = Array.from(selectedDAOs).filter(dao => !currentPreferencesSet.has(dao));
-      
-      // Find DAOs to unsubscribe from (currently subscribed but not selected)
       const toUnsubscribe = currentPreferences.filter(dao => !selectedDAOs.has(dao));
-
-      // Process subscriptions and unsubscriptions
       const promises = [
         ...toSubscribe.map(daoId => this.subscriptionApi.saveUserPreference(daoId, chatId, true)),
         ...toUnsubscribe.map(daoId => this.subscriptionApi.saveUserPreference(daoId, chatId, false))
