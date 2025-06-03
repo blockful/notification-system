@@ -117,8 +117,7 @@ export class DAOService {
     }
 
     try {
-      const changes = await this.getSubscriptionChanges(chatId, selectedDAOs);
-      await this.updateUserSubscriptions(changes, chatId);
+      await this.updateSubscriptions(chatId, selectedDAOs);
       await this.showConfirmationMessage(ctx, selectedDAOs);
       this.userSelections.delete(chatId);
     } catch (error) {
@@ -127,21 +126,17 @@ export class DAOService {
     }
   }
 
-  private async getSubscriptionChanges(chatId: number, selectedDAOs: Set<string>) {
+  private async updateSubscriptions(chatId: number, selectedDAOs: Set<string>) {
     const daos = await this.dbService.getDAOs();
     const currentPreferences = await this.subscriptionApi.getUserPreferences(chatId, daos);
     const currentPreferencesSet = new Set(currentPreferences);
     
-    return {
-      toSubscribe: Array.from(selectedDAOs).filter(dao => !currentPreferencesSet.has(dao)),
-      toUnsubscribe: currentPreferences.filter(dao => !selectedDAOs.has(dao))
-    };
-  }
-
-  private async updateUserSubscriptions(changes: { toSubscribe: string[], toUnsubscribe: string[] }, chatId: number) {
+    const toSubscribe = Array.from(selectedDAOs).filter(dao => !currentPreferencesSet.has(dao));
+    const toUnsubscribe = currentPreferences.filter(dao => !selectedDAOs.has(dao));
+    
     const promises = [
-      ...changes.toSubscribe.map(daoId => this.subscriptionApi.saveUserPreference(daoId, chatId, true)),
-      ...changes.toUnsubscribe.map(daoId => this.subscriptionApi.saveUserPreference(daoId, chatId, false))
+      ...toSubscribe.map(daoId => this.subscriptionApi.saveUserPreference(daoId, chatId, true)),
+      ...toUnsubscribe.map(daoId => this.subscriptionApi.saveUserPreference(daoId, chatId, false))
     ];
 
     await Promise.all(promises);
@@ -160,7 +155,7 @@ ${EDIT_DAOS_MESSAGE}`;
       
       await ctx.reply(successMessage);
     } else {
-      await ctx.reply('You have unsubscribed from all DAOs. You can subscribe again anytime by clicking on �� DAOs');
+      await ctx.reply('You have unsubscribed from all DAOs. You can subscribe again anytime by clicking on DAOs');
     }
   }
 } 
