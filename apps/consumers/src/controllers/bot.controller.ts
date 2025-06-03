@@ -41,6 +41,13 @@ export class BotController {
       });
     });
 
+    this.bot.command(/^learn_more$/i, async (ctx) => {
+      await ctx.reply(HELP_MESSAGE, { 
+        parse_mode: 'Markdown',
+        ...this.createPersistentKeyboard() 
+      });
+    });
+
     this.bot.command(/^daos$/i, async (ctx) => {
       await this.daoService.initialize(ctx);
     });
