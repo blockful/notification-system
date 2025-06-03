@@ -1,0 +1,74 @@
+services:
+  # Subscription Server (base service, others depend on it)
+  subscription-server:
+    build:
+      context: ./apps/subscription-server
+      dockerfile: Dockerfile
+    container_name: subscription-server
+    ports:
+      - "3001:3003"
+    environment:
+      DATABASE_URL: ${SUBSCRIPTION_DATABASE_URL}
+      PORT: 3003
+    networks:
+      - notification-network
+    restart: unless-stopped
+
+  # Consumers (Telegram Bot + API)
+  consumers:
+    build:
+      context: ./apps/consumers
+      dockerfile: Dockerfile
+    container_name: consumers
+    ports:
+      - "3000:3000"
+    environment:
+      TELEGRAM_BOT_TOKEN: ${TELEGRAM_BOT_TOKEN}
+      ANTICAPTURE_DATABASE_URL: ${ANTICAPTURE_DATABASE_URL}
+      SUBSCRIPTION_SERVER_URL: http://subscription-server:3003
+      API_PORT: 3000
+    depends_on:
+      - subscription-server
+    networks:
+      - notification-network
+    restart: unless-stopped
+
+  # Dispatcher
+  dispatcher:
+    build:
+      context: ./apps/dispatcher
+      dockerfile: Dockerfile
+    container_name: dispatcher
+    ports:
+      - "3002:3002"
+    environment:
+      PORT: 3002
+      SUBSCRIPTION_SERVER_URL: http://subscription-server:3003
+      TELEGRAM_CONSUMER_URL: http://consumers:3000
+    depends_on:
+      - subscription-server
+      - consumers
+    networks:
+      - notification-network
+    restart: unless-stopped
+
+  # Logic System (worker, no ports exposed)
+  logic-system:
+    build:
+      context: ./apps/logic-system
+      dockerfile: Dockerfile
+    container_name: logic-system
+    environment:
+      DATABASE_URL: ${LOGIC_SYSTEM_DATABASE_URL}
+      DISPATCHER_ENDPOINT: http://dispatcher:3002/messages
+      TRIGGER_INTERVAL: 60000
+      PROPOSAL_STATUS: active
+    depends_on:
+      - dispatcher
+    networks:
+      - notification-network
+    restart: unless-stopped
+
+networks:
+  notification-network:
+    driver: bridge 

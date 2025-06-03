@@ -1,7 +1,0 @@
-[build]
-builder = "DOCKERFILE"
-dockerfilePath = "./Dockerfile.dispatcher"
-
-[deploy]
-startCommand = "pnpm start"
-restartPolicyType = "ALWAYS"

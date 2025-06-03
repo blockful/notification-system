@@ -66,7 +66,7 @@ export class App {
   }
 
   async start(): Promise<void> {
-    await this.server.listen({ port: this.port });
+    await this.server.listen({ port: this.port, host: '0.0.0.0' });
     console.log(`HTTP server running on port ${this.port}!`);
   }
 

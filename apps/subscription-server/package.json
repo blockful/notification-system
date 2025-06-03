@@ -1,8 +1,8 @@
 {
   "name": "@notification-system/subscription-server",
   "version": "1.0.0",
-  "main": "dist/src/app.js",
-  "types": "dist/src/app.d.ts",
+  "main": "dist/app.js",
+  "types": "dist/app.d.ts",
   "files": [
     "dist"
   ],
@@ -33,9 +33,12 @@
   },
   "devDependencies": {
     "@types/jest": "^29.5.14",
+    "@types/knex": "^0.16.1",
+    "@types/pg": "^8.11.10",
     "jest": "^29.7.0",
     "ts-jest": "^29.3.2",
     "ts-node": "^10.9.2",
-    "tsx": "^4.19.4"
+    "tsx": "^4.19.4",
+    "typescript": "^5.8.3"
   }
 }

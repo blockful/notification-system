@@ -1,0 +1,6 @@
+[build]
+builder = "DOCKERFILE"
+dockerfilePath = "apps/subscription-server/Dockerfile"
+
+[deploy]
+restartPolicyType = "ALWAYS"

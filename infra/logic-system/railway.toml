@@ -1,7 +1,0 @@
-[build]
-builder = "DOCKERFILE"
-dockerfilePath = "./Dockerfile.logic-system"
-
-[deploy]
-startCommand = "pnpm start"
-restartPolicyType = "ALWAYS"

@@ -31,7 +31,7 @@ export class NewProposalTriggerHandler extends BaseTriggerHandler {
       const { daoId, id: proposalId, description } = proposal;
       const proposalTitle = description.split('\n')[0] || 'Unnamed Proposal';
       const subscribers = await this.getSubscribers(daoId);
-      const notificationMessage = `New proposal in ${daoId}: ${proposalTitle}`;
+      const notificationMessage = `🗳️ New governance proposal in ${daoId}: "${proposalTitle}"`;
       const metadata = { daoId, proposalId, proposalTitle };
       await this.sendNotificationsToSubscribers(subscribers, notificationMessage, metadata);
     }

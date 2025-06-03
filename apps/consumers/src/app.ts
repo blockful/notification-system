@@ -75,7 +75,7 @@ export class App {
 
   async start(): Promise<void> {
     this.server = await this.setupServer();
-    await this.server.listen({ port: this.port });
+    await this.server.listen({ port: this.port, host: '0.0.0.0' });
     console.log(`API server running on http://localhost:${this.port}`);
     console.log(`API documentation available at http://localhost:${this.port}/docs`);
     

@@ -53,6 +53,33 @@ pnpm install
 pnpm dev
 ```
 
+## 🐳 Running with Docker Compose
+
+For production-like environment or to run all services together:
+
+### Prerequisites
+1. Copy the environment template:
+```bash
+cp env.example .env
+```
+
+2. Configure your environment variables in `.env`:
+
+### Running the Application
+```bash
+# Start all services
+pnpm docker:up
+
+# Stop all services
+pnpm docker:down
+```
+
+### Service URLs
+- **Consumers API**: http://localhost:3000
+- **Subscription Server**: http://localhost:3001  
+- **Dispatcher**: http://localhost:3002
+- **Logic System**: (worker service, no exposed port)
+
 ## 🔄 Processing Pipeline
 
 1. Trigger System pulls data from Anticapture DB
