@@ -20,7 +20,6 @@ describe('TelegramNotificationClient', () => {
         channel: 'telegram',
         channelUserId: '456',
         message: 'Test notification',
-        metadata: { key: 'value' }
       };
       const expectedResponse: NotificationResponse = {
         id: 'notification-id',
@@ -44,8 +43,7 @@ describe('TelegramNotificationClient', () => {
           body: JSON.stringify({
             userId: payload.userId,
             channelUserId: 456,
-            message: payload.message,
-            metadata: payload.metadata,
+            message: payload.message
           }),
         }
       );
