@@ -20,8 +20,7 @@ export class DispatcherApiClient implements DispatcherService {
     const response = await axios.post(this.url, message, {
       headers: {
         'Content-Type': 'application/json',
-      },
-      timeout: 5000 // 5 second timeout
+      }
     });
     return response.data;
   }
