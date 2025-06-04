@@ -3,16 +3,7 @@
  * Handles the business logic for managing notification deduplication
  */
 
-import { INotificationRepository } from '../interfaces';
-
-/**
- * Schema for notification check item
- */
-export interface NotificationCheckItem {
-  userId: string;
-  proposalId: string;
-  daoId: string;
-}
+import { INotificationRepository, NotificationCheckItem } from '../interfaces';
 
 /**
  * Service class for handling notification deduplication operations
