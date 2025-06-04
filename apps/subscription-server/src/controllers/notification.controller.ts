@@ -1,7 +1,6 @@
 import type { FastifyTypedInstance } from "../interfaces";
 import {
-  shouldSendBodySchema,
-  markSentBodySchema,
+  notificationBodySchema,
   shouldSendResponseSchema,
   markSentResponseSchema
 } from '../schemas/notification.schema';
@@ -23,7 +22,7 @@ export class NotificationController {
       schema: {
         tags: ['notification'],
         description: 'Filter subscribers to return only those who should receive notifications',
-        body: shouldSendBodySchema,
+        body: notificationBodySchema,
         response: shouldSendResponseSchema
       },
     }, async (request) => {
@@ -35,7 +34,7 @@ export class NotificationController {
       schema: {
         tags: ['notification'],
         description: 'Mark notifications as sent by creating records in the notifications table',
-        body: markSentBodySchema,
+        body: notificationBodySchema,
         response: markSentResponseSchema
       }
     }, async (request) => {
