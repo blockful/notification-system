@@ -3,7 +3,7 @@
  * Handles the business logic for managing notification deduplication
  */
 
-import { INotificationRepository, NotificationCheckItem } from '../interfaces';
+import { INotificationRepository, Notification } from '../interfaces';
 
 /**
  * Service class for handling notification deduplication operations
@@ -16,11 +16,11 @@ export class NotificationService {
   /**
    * Filters subscribers to return only those who haven't received notification for the given proposal
    * 
-   * @param notifications - Array of notification check items
+   * @param notifications - Array of notifications
    * @returns Array of subscribers that should receive notifications
    */
-  async getShouldSendNotifications(notifications: NotificationCheckItem[]): Promise<NotificationCheckItem[]> {
-    const shouldSend: NotificationCheckItem[] = [];
+  async getShouldSendNotifications(notifications: Notification[]): Promise<Notification[]> {
+    const shouldSend: Notification[] = [];
     
     for (const notification of notifications) {
       const exists = await this.notificationRepository.exists(notification);
@@ -39,7 +39,7 @@ export class NotificationService {
    * @param notifications - Array of notifications to mark as sent
    * @returns Number of marked notifications
    */
-  async markNotificationsAsSent(notifications: NotificationCheckItem[]): Promise<number> {
+  async markNotificationsAsSent(notifications: Notification[]): Promise<number> {
     return await this.notificationRepository.createMany(notifications);
   }
 } 

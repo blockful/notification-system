@@ -5,7 +5,7 @@
 
 import { Knex } from 'knex';
 import { v4 as uuidv4 } from 'uuid';
-import { IUserRepository, IPreferenceRepository, INotificationRepository, User, UserPreference, NotificationCheckItem } from '../interfaces';
+import { IUserRepository, IPreferenceRepository, INotificationRepository, User, UserPreference, Notification } from '../interfaces';
 
 /**
  * User repository implementation using Knex
@@ -122,7 +122,7 @@ export class KnexNotificationRepository implements INotificationRepository {
    * Checks if a notification record exists for a specific user/dao/proposal combination
    * @param notification - The notification to check
    */
-  async exists(notification: NotificationCheckItem): Promise<boolean> {
+  async exists(notification: Notification): Promise<boolean> {
     const result = await this.knex('notifications')
       .where(notification)
       .first();
@@ -135,7 +135,7 @@ export class KnexNotificationRepository implements INotificationRepository {
    * @param notifications - Array of notification data to insert
    * @returns Number of records inserted
    */
-  async createMany(notifications: NotificationCheckItem[]): Promise<number> {
+  async createMany(notifications: Notification[]): Promise<number> {
     if (notifications.length === 0) {
       return 0;
     }
