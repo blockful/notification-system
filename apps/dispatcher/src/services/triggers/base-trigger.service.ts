@@ -56,7 +56,7 @@ export abstract class BaseTriggerHandler implements TriggerHandler {
       this.notificationFactory.supportsChannel(subscriber.channel)
     );
 
-    await Promise.all(
+    const results = await Promise.allSettled(
       supportedSubscribers.map(subscriber => {
         const notificationClient = this.notificationFactory.getClient(subscriber.channel);
         return notificationClient.sendNotification({
@@ -68,7 +68,11 @@ export abstract class BaseTriggerHandler implements TriggerHandler {
       })
     );
 
-    const notifications = supportedSubscribers.map(subscriber => ({
+    const successfulSubscribers = supportedSubscribers.filter((_, index) => 
+      results[index].status === 'fulfilled'
+    );
+
+    const notifications = successfulSubscribers.map(subscriber => ({
       user_id: subscriber.id,
       proposal_id: proposalId,
       dao_id: daoId
