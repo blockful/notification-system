@@ -45,14 +45,12 @@ export abstract class BaseTriggerHandler implements TriggerHandler {
    * @param message Notification message
    * @param proposalId Proposal identifier
    * @param daoId DAO identifier
-   * @param metadata Additional metadata
    */
   protected async sendNotificationsToSubscribers(
     subscribers: User[],
     message: string,
     proposalId: string,
-    daoId: string,
-    metadata: Record<string, any> = {}
+    daoId: string
   ): Promise<void> {
     const supportedSubscribers = subscribers.filter(subscriber => 
       this.notificationFactory.supportsChannel(subscriber.channel)
@@ -65,8 +63,7 @@ export abstract class BaseTriggerHandler implements TriggerHandler {
           userId: subscriber.id,
           channel: subscriber.channel,
           channelUserId: subscriber.channel_user_id,
-          message,
-          metadata
+          message
         });
       })
     );
