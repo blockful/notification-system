@@ -23,11 +23,7 @@ export class NotificationService {
     const shouldSend: NotificationCheckItem[] = [];
     
     for (const notification of notifications) {
-      const exists = await this.notificationRepository.exists(
-        notification.userId,
-        notification.daoId,
-        notification.proposalId
-      );
+      const exists = await this.notificationRepository.exists(notification);
       
       if (!exists) {
         shouldSend.push(notification);
@@ -41,19 +37,9 @@ export class NotificationService {
    * Marks notifications as sent by creating records in the notifications table
    * 
    * @param notifications - Array of notifications to mark as sent
-   * @returns Response object with count of marked notifications
+   * @returns Number of marked notifications
    */
-  async markNotificationsAsSent(notifications: NotificationCheckItem[]): Promise<{ markedCount: number }> {
-    const markedCount = await this.notificationRepository.createMany(
-      notifications.map(notification => ({
-        user_id: notification.userId,
-        dao_id: notification.daoId,
-        proposal_id: notification.proposalId
-      }))
-    );
-    
-    return {
-      markedCount
-    };
+  async markNotificationsAsSent(notifications: NotificationCheckItem[]): Promise<number> {
+    return await this.notificationRepository.createMany(notifications);
   }
 } 

@@ -5,7 +5,7 @@
 
 import { Knex } from 'knex';
 import { v4 as uuidv4 } from 'uuid';
-import { IUserRepository, IPreferenceRepository, INotificationRepository, User, UserPreference, Notification } from '../interfaces';
+import { IUserRepository, IPreferenceRepository, INotificationRepository, User, UserPreference, NotificationCheckItem } from '../interfaces';
 
 /**
  * User repository implementation using Knex
@@ -120,17 +120,11 @@ export class KnexNotificationRepository implements INotificationRepository {
 
   /**
    * Checks if a notification record exists for a specific user/dao/proposal combination
-   * @param userId - The user's ID
-   * @param daoId - The DAO's ID
-   * @param proposalId - The proposal's ID
+   * @param notification - The notification to check
    */
-  async exists(userId: string, daoId: string, proposalId: string): Promise<boolean> {
-    const result = await this.knex<Notification>('notifications')
-      .where({ 
-        user_id: userId, 
-        dao_id: daoId, 
-        proposal_id: proposalId 
-      })
+  async exists(notification: NotificationCheckItem): Promise<boolean> {
+    const result = await this.knex('notifications')
+      .where(notification)
       .first();
     
     return !!result;
@@ -141,7 +135,7 @@ export class KnexNotificationRepository implements INotificationRepository {
    * @param notifications - Array of notification data to insert
    * @returns Number of records inserted
    */
-  async createMany(notifications: Omit<Notification, 'created_at'>[]): Promise<number> {
+  async createMany(notifications: NotificationCheckItem[]): Promise<number> {
     if (notifications.length === 0) {
       return 0;
     }
@@ -152,13 +146,11 @@ export class KnexNotificationRepository implements INotificationRepository {
       created_at: now
     }));
 
-    const insertedRecords = await this.knex<Notification>('notifications')
+    const insertedRecords = await this.knex('notifications')
       .insert(notificationRecords)
       .onConflict(['user_id', 'dao_id', 'proposal_id'])
       .ignore();
 
-    // Return the number of inserted records consistently, whether Knex returns an array of inserted IDs
-    // (Postgres) or a single number (MySQL, SQLite).
     return Array.isArray(insertedRecords) ? insertedRecords.length : insertedRecords;
   }
 } 
