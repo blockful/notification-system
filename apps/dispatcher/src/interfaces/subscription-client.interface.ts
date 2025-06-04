@@ -42,7 +42,6 @@ export interface ISubscriptionClient {
   /**
    * Marks notifications as sent for successful deliveries
    * @param notifications List of notifications to mark as sent
-   * @returns Number of notifications marked as sent
    */
-  markAsSent(notifications: Notification[]): Promise<number>;
+  markAsSent(notifications: Notification[]): Promise<void>;
 } 

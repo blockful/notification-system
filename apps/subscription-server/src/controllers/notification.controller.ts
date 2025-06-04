@@ -1,8 +1,7 @@
 import type { FastifyTypedInstance } from "../interfaces";
 import {
   notificationBodySchema,
-  shouldSendResponseSchema,
-  markSentResponseSchema
+  shouldSendResponseSchema
 } from '../schemas/notification.schema';
 import { NotificationService } from '../services/notification.service';
 
@@ -34,12 +33,11 @@ export class NotificationController {
       schema: {
         tags: ['notification'],
         description: 'Mark notifications as sent by creating records in the notifications table',
-        body: notificationBodySchema,
-        response: markSentResponseSchema
+        body: notificationBodySchema
       }
     }, async (request) => {
       const { notifications } = request.body;
-      return this.notificationService.markNotificationsAsSent(notifications);
+      await this.notificationService.markNotificationsAsSent(notifications);
     });
   }
 } 

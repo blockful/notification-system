@@ -37,10 +37,8 @@ export class NotificationService {
    * Marks notifications as sent by creating records in the notifications table
    * 
    * @param notifications - Array of notifications to mark as sent
-   * @returns Response object with count of marked notifications
    */
-  async markNotificationsAsSent(notifications: Notification[]): Promise<{ markedCount: number }> {
-    const markedCount = await this.notificationRepository.createMany(notifications);
-    return { markedCount };
+  async markNotificationsAsSent(notifications: Notification[]): Promise<void> {
+    await this.notificationRepository.createMany(notifications);
   }
 } 

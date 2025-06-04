@@ -29,14 +29,4 @@ export const notificationBodySchema = z.object({
  */
 export const shouldSendResponseSchema = {
   200: z.array(notificationSchema).describe('Filtered list of subscribers that should receive notifications')
-};
-
-/**
- * Schema for mark-sent response
- * Defines the structure for mark-sent success response
- */
-export const markSentResponseSchema = {
-  200: z.object({
-    markedCount: z.number().describe('Number of notifications marked as sent')
-  })
 }; 

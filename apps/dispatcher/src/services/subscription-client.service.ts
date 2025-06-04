@@ -55,13 +55,10 @@ export class SubscriptionClient implements ISubscriptionClient {
   /**
    * Marks notifications as sent for successful deliveries
    * @param notifications List of notifications to mark as sent
-   * @returns Number of notifications marked as sent
    */
-  async markAsSent(notifications: Notification[]): Promise<number> {
-    const response = await this.client.post('/notifications/mark-sent', {
+  async markAsSent(notifications: Notification[]): Promise<void> {
+    await this.client.post('/notifications/mark-sent', {
       notifications
     });
-
-    return response.data.markedCount;
   }
 } 

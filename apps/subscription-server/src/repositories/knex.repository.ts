@@ -133,11 +133,10 @@ export class KnexNotificationRepository implements INotificationRepository {
   /**
    * Creates multiple notification records in batch
    * @param notifications - Array of notification data to insert
-   * @returns Number of records inserted
    */
-  async createMany(notifications: Notification[]): Promise<number> {
+  async createMany(notifications: Notification[]): Promise<void> {
     if (notifications.length === 0) {
-      return 0;
+      return;
     }
 
     const now = new Date();
@@ -146,11 +145,9 @@ export class KnexNotificationRepository implements INotificationRepository {
       created_at: now
     }));
 
-    const insertedRecords = await this.knex('notifications')
+    await this.knex('notifications')
       .insert(notificationRecords)
       .onConflict(['user_id', 'dao_id', 'proposal_id'])
       .ignore();
-
-    return Array.isArray(insertedRecords) ? insertedRecords.length : insertedRecords;
   }
 } 

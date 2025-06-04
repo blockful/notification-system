@@ -58,7 +58,7 @@ export interface IPreferenceRepository {
  */
 export interface INotificationRepository {
   exists(notification: Notification): Promise<boolean>;
-  createMany(notifications: Notification[]): Promise<number>;
+  createMany(notifications: Notification[]): Promise<void>;
 }
 
 /**
