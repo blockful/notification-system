@@ -8,7 +8,7 @@ import { initial_routes } from './controllers/initial_routes';
 import { DaoController, NotificationController } from './controllers';
 import { KnexUserRepository, KnexPreferenceRepository, KnexNotificationRepository } from './repositories/knex.repository';
 import { SubscriptionService, NotificationService } from './services';
-import { DaoHandler, NotificationHandler } from './handlers';
+import { DaoHandler } from './handlers/dao.handlers';
 
 export class App {
   private server: FastifyInstance;
@@ -29,11 +29,10 @@ export class App {
     
     // Handler instances
     const daoHandler = new DaoHandler(subscriptionService);
-    const notificationHandler = new NotificationHandler(notificationService);
     
     // Controller instances
     const daoController = new DaoController(daoHandler);
-    const notificationController = new NotificationController(notificationHandler);
+    const notificationController = new NotificationController(notificationService);
 
     this.setupFastify();
     this.setupRoutes(daoController, notificationController);

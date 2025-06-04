@@ -5,14 +5,14 @@ import {
   shouldSendResponseSchema,
   markSentResponseSchema
 } from '../schemas/notification.schema';
-import { NotificationHandler } from '../handlers/notification.handlers';
+import { NotificationService } from '../services/notification.service';
 
 /**
  * Controller class for notification-related endpoints
- * Responsible for registering routes and connecting them to the appropriate handlers
+ * Responsible for registering routes and connecting them to the appropriate services
  */
 export class NotificationController {
-  constructor(private notificationHandler: NotificationHandler) {}
+  constructor(private notificationService: NotificationService) {}
   
   /**
    * Registers all notification-related routes to the Fastify instance
@@ -26,9 +26,9 @@ export class NotificationController {
         body: shouldSendBodySchema,
         response: shouldSendResponseSchema
       },
-    }, (request) => {
+    }, async (request) => {
       const { notifications } = request.body;
-      return this.notificationHandler.shouldSendNotifications(notifications);
+      return this.notificationService.getShouldSendNotifications(notifications);
     });
   
     app.post('/notifications/mark-sent', {
@@ -38,9 +38,9 @@ export class NotificationController {
         body: markSentBodySchema,
         response: markSentResponseSchema
       }
-    }, (request) => {
+    }, async (request) => {
       const { notifications } = request.body;
-      return this.notificationHandler.markNotificationsAsSent(notifications);
+      return this.notificationService.markNotificationsAsSent(notifications);
     });
   }
 } 
