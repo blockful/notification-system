@@ -35,8 +35,8 @@ describe('Complete Notification Flow - Full Integration Test', () => {
     
     dispatcherApp = new DispatcherApp(
       13002,                                    // port
-      'http://localhost:14001',                 // subscriptionServerUrl
-      'http://localhost:14002'                  // telegramConsumerUrl
+      'http://127.0.0.1:14001',                 // subscriptionServerUrl
+      'http://127.0.0.1:14002'                  // telegramConsumerUrl
     );
     await dispatcherApp.start();
     
@@ -44,7 +44,7 @@ describe('Complete Notification Flow - Full Integration Test', () => {
       db,                                       // daosDb
       db,                                       // usersDb
       '7117895712:AAH96CfnDvvfLNl2nJbRKbNYPay4V936mWY', // telegramBotToken
-      'http://localhost:14001',                 // subscriptionServerUrl
+      'http://127.0.0.1:14001',                 // subscriptionServerUrl
       14002                                     // port
     );
     await consumerApp.start();
