@@ -61,7 +61,7 @@ services:
     environment:
       DATABASE_URL: ${LOGIC_SYSTEM_DATABASE_URL}
       DISPATCHER_ENDPOINT: http://dispatcher:3002/messages
-      TRIGGER_INTERVAL: 60000
+      TRIGGER_INTERVAL: 10000
       PROPOSAL_STATUS: active
     depends_on:
       - dispatcher
