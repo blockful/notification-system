@@ -8,14 +8,14 @@
 import { Context } from 'telegraf';
 import { CONFIRM_SELECTION_BUTTON, NO_DAO_SELECTED_MESSAGE, SELECTED_DAOS_MESSAGE, DAO_SELECTION_MESSAGE } from '../messages';
 import { SubscriptionAPIService } from './subscription-api.service';
-import { IDatabaseService } from '../interfaces/db.interface';
+import { AnticaptureClient } from '../clients/anticapture-client';
 
 export class DAOService {
   // Store selected DAOs for each user temporarily
   private userSelections = new Map<number, Set<string>>();
   
   constructor(
-    private dbService: IDatabaseService,
+    private anticaptureClient: AnticaptureClient,
     private subscriptionApi: SubscriptionAPIService
   ) {}
 
@@ -26,7 +26,7 @@ export class DAOService {
       this.userSelections.set(chatId, new Set());
     }
     try {
-      const daos = await this.dbService.getDAOs();
+      const daos = await this.anticaptureClient.getDAOs();
       if (daos.length === 0) {
         await ctx.reply('No DAOs available at the moment. Please try again later.');
         return;
@@ -64,7 +64,7 @@ export class DAOService {
     }
     this.userSelections.set(chatId, userSelectedDAOs);
     try {
-      const daos = await this.dbService.getDAOs();
+      const daos = await this.anticaptureClient.getDAOs();
       const keyboard = {
         inline_keyboard: [
           daos.map((dao: string) => {

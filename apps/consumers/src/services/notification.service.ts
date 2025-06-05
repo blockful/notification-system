@@ -6,17 +6,17 @@
 import { Telegraf } from 'telegraf';
 import { NotificationPayload } from '../interfaces/notification.interface';
 import { SubscriptionAPIService } from './subscription-api.service';
-import { DatabaseService } from '../repositories/db';
+import { AnticaptureClient } from '../clients/anticapture-client';
 
 export class NotificationService {
   private bot: Telegraf;
   private subscriptionApi: SubscriptionAPIService;
-  private dbService: DatabaseService;
+  private anticaptureClient: AnticaptureClient;
 
-  constructor(bot: Telegraf, subscriptionApi: SubscriptionAPIService, dbService: DatabaseService) {
+  constructor(bot: Telegraf, subscriptionApi: SubscriptionAPIService, anticaptureClient: AnticaptureClient) {
     this.bot = bot;
     this.subscriptionApi = subscriptionApi;
-    this.dbService = dbService;
+    this.anticaptureClient = anticaptureClient;
   }
 
   /**
@@ -29,7 +29,7 @@ export class NotificationService {
     const chatId = payload.channelUserId;
     
     // Get all DAOs and check if the user is subscribed to any of them
-    const daos = await this.dbService.getDAOs();
+    const daos = await this.anticaptureClient.getDAOs();
     const userExists = await this.subscriptionApi.userExists(chatId, daos);
     
     if (!userExists) {
