@@ -6,7 +6,7 @@ import swagger from '@fastify/swagger';
 import swaggerUi from '@fastify/swagger-ui';
 import { BotController } from './controllers/bot.controller';
 import { DAOService } from './services/dao.service';
-import { DatabaseService } from './repositories/db';
+import { AnticaptureClient } from './clients/anticapture-client';
 import { SubscriptionAPIService } from './services/subscription-api.service';
 import { NotificationService } from './services/notification.service';
 import { APIController } from './controllers/api.controller';
@@ -21,11 +21,11 @@ export class App {
   constructor(anticaptureApiUrl: string, telegramBotToken: string, subscriptionServerUrl: string, port: number) {
     this.port = port;
     const subscriptionApi = new SubscriptionAPIService(subscriptionServerUrl);
-    const dbService = new DatabaseService(anticaptureApiUrl);
-    const daoService = new DAOService(dbService, subscriptionApi);
+    const anticaptureClient = new AnticaptureClient(anticaptureApiUrl);
+    const daoService = new DAOService(anticaptureClient, subscriptionApi);
     const bot = new Telegraf(telegramBotToken);
     
-    this.notificationService = new NotificationService(bot, subscriptionApi, dbService);
+    this.notificationService = new NotificationService(bot, subscriptionApi, anticaptureClient);
     this.botController = new BotController(telegramBotToken, daoService);
   }
 
