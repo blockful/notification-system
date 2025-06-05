@@ -1,11 +1,8 @@
 import { App } from './app';
-import { setupDatabaseConnection } from './config/database';
 import { env } from './config/env';
 
-const db = setupDatabaseConnection('pg', env.DATABASE_URL);
-
 const app = new App(
-  db,
+  env.ANTICAPTURE_GRAPHQL_ENDPOINT,
   env.DISPATCHER_ENDPOINT,
   env.TRIGGER_INTERVAL,
   env.PROPOSAL_STATUS,
