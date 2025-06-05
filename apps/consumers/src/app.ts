@@ -1,5 +1,4 @@
 import { Telegraf } from 'telegraf';
-import { Knex } from 'knex';
 import Fastify from 'fastify';
 import { validatorCompiler, serializerCompiler } from 'fastify-type-provider-zod';
 import cors from '@fastify/cors';
@@ -19,10 +18,10 @@ export class App {
   private server?: FastifyTypedInstance;
   private port: number;
 
-  constructor(daosDb: Knex, telegramBotToken: string, subscriptionServerUrl: string, port: number) {
+  constructor(anticaptureApiUrl: string, telegramBotToken: string, subscriptionServerUrl: string, port: number) {
     this.port = port;
     const subscriptionApi = new SubscriptionAPIService(subscriptionServerUrl);
-    const dbService = new DatabaseService(daosDb);
+    const dbService = new DatabaseService(anticaptureApiUrl);
     const daoService = new DAOService(dbService, subscriptionApi);
     const bot = new Telegraf(telegramBotToken);
     
@@ -91,7 +90,4 @@ export class App {
     await this.server.close();
     this.botController.stop('SIGINT');
   }
-}
-
-// Library exports for external consumption
-export { setupDatabaseConnection } from './config/db.config'; 
+} 
