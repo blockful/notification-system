@@ -16,14 +16,12 @@ import { loadConfig } from './config/env';
 
 const config = loadConfig();
 
-// Create database instances
+// Create database instance for DAOs
 const daosDb = setupDatabaseConnection('pg', config.anticaptureDataBaseUrl);
-const usersDb = setupDatabaseConnection('pg', config.anticaptureDataBaseUrl);
 
 // Create and start the application
 const app = new App(
   daosDb,
-  usersDb,
   config.telegramBotToken,
   config.subscriptionServerUrl,
   config.port

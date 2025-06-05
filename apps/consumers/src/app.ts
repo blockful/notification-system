@@ -19,10 +19,10 @@ export class App {
   private server?: FastifyTypedInstance;
   private port: number;
 
-  constructor(daosDb: Knex, usersDb: Knex, telegramBotToken: string, subscriptionServerUrl: string, port: number) {
+  constructor(daosDb: Knex, telegramBotToken: string, subscriptionServerUrl: string, port: number) {
     this.port = port;
     const subscriptionApi = new SubscriptionAPIService(subscriptionServerUrl);
-    const dbService = new DatabaseService(daosDb, usersDb);
+    const dbService = new DatabaseService(daosDb);
     const daoService = new DAOService(dbService, subscriptionApi);
     const bot = new Telegraf(telegramBotToken);
     
