@@ -15,17 +15,18 @@ import { FastifyTypedInstance } from './interfaces/fastify.interface';
 export class App {
   private notificationService: NotificationService;
   private botController: BotController;
+  private anticaptureClient: AnticaptureClient;
   private server?: FastifyTypedInstance;
   private port: number;
 
   constructor(anticaptureApiUrl: string, telegramBotToken: string, subscriptionServerUrl: string, port: number) {
     this.port = port;
     const subscriptionApi = new SubscriptionAPIService(subscriptionServerUrl);
-    const anticaptureClient = new AnticaptureClient(anticaptureApiUrl);
-    const daoService = new DAOService(anticaptureClient, subscriptionApi);
+    this.anticaptureClient = new AnticaptureClient(anticaptureApiUrl);
+    const daoService = new DAOService(this.anticaptureClient, subscriptionApi);
     const bot = new Telegraf(telegramBotToken);
     
-    this.notificationService = new NotificationService(bot, subscriptionApi, anticaptureClient);
+    this.notificationService = new NotificationService(bot, subscriptionApi, this.anticaptureClient);
     this.botController = new BotController(telegramBotToken, daoService);
   }
 
@@ -89,5 +90,6 @@ export class App {
     }
     await this.server.close();
     this.botController.stop('SIGINT');
+    this.anticaptureClient.stop();
   }
 } 
