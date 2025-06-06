@@ -24,9 +24,9 @@ export const notificationBodySchema = z.object({
 });
 
 /**
- * Schema for should-send response
+ * Schema for exclude-sent response
  * Defines the structure for filtered subscribers response
  */
-export const shouldSendResponseSchema = {
+export const excludeSentResponseSchema = {
   200: z.array(notificationSchema).describe('Filtered list of subscribers that should receive notifications')
 }; 

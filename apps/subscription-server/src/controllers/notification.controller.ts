@@ -1,7 +1,7 @@
 import type { FastifyTypedInstance } from "../interfaces";
 import {
   notificationBodySchema,
-  shouldSendResponseSchema
+  excludeSentResponseSchema
 } from '../schemas/notification.schema';
 import { NotificationService } from '../services/notification.service';
 
@@ -17,12 +17,12 @@ export class NotificationController {
    * @param app - The Fastify instance
    */
   async register(app: FastifyTypedInstance) {
-    app.post('/notifications/should-send', {
+    app.post('/notifications/exclude-sent', {
       schema: {
         tags: ['notification'],
         description: 'Filter subscribers to return only those who should receive notifications',
         body: notificationBodySchema,
-        response: shouldSendResponseSchema
+        response: excludeSentResponseSchema
       },
     }, async (request) => {
       const { notifications } = request.body;

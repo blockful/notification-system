@@ -45,7 +45,7 @@ export class SubscriptionClient implements ISubscriptionClient {
       dao_id: daoId
     }));
 
-    const response = await this.client.post('/notifications/should-send', {
+    const response = await this.client.post('/notifications/exclude-sent', {
       notifications
     });
 

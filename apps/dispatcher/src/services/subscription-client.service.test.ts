@@ -58,7 +58,7 @@ describe('SubscriptionClient', () => {
       ];
       mockAxiosInstance.post.mockResolvedValue({ data: mockNotifications });
       const result = await client.shouldSend(mockUsers, 'prop123', 'dao123');
-      expect(mockAxiosInstance.post).toHaveBeenCalledWith('/notifications/should-send', {
+      expect(mockAxiosInstance.post).toHaveBeenCalledWith('/notifications/exclude-sent', {
         notifications: [{ user_id: '1', event_id: 'prop123', dao_id: 'dao123' }]
       });
       expect(result).toEqual(mockNotifications);
