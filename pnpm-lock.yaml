@@ -46,7 +46,7 @@ importers:
         version: 4.0.2(fastify@5.3.2)(zod@3.24.3)
       knex:
         specifier: ^3.1.0
-        version: 3.1.0(pg@8.16.0)(sqlite3@5.1.7)
+        version: 3.1.0(pg@8.16.0)
       pg:
         specifier: ^8.15.0
         version: 8.16.0
@@ -270,6 +270,12 @@ importers:
       '@types/jest':
         specifier: ^29.5.14
         version: 29.5.14
+      '@types/knex':
+        specifier: ^0.16.1
+        version: 0.16.1(pg@8.16.0)
+      '@types/pg':
+        specifier: ^8.11.10
+        version: 8.15.2
       jest:
         specifier: ^29.7.0
         version: 29.7.0(@types/node@20.17.46)(ts-node@10.9.2(@swc/core@1.11.24)(@types/node@20.17.46)(typescript@5.8.3))
@@ -282,6 +288,9 @@ importers:
       tsx:
         specifier: ^4.19.4
         version: 4.19.4
+      typescript:
+        specifier: ^5.8.3
+        version: 5.8.3
 
 packages:
 
@@ -939,6 +948,10 @@ packages:
 
   '@types/json-schema@7.0.15':
     resolution: {integrity: sha512-5+fP8P8MFNC+AyZCDxrB2pkZFPGzqQWUzpSeuuVLvm8VMcorNYavBqoFcxK8bQz4Qsbn4oUEEem4wDLfcysGHA==}
+
+  '@types/knex@0.16.1':
+    resolution: {integrity: sha512-54gWD1HWwdVx5iLHaJ1qxH3I6KyBsj5fFqzRpXFn7REWiEB2jwspeVCombNsocSrqPd7IRPqKrsIME7/cD+TFQ==}
+    deprecated: This is a stub types definition. knex provides its own type definitions, so you do not need this installed.
 
   '@types/node@18.19.101':
     resolution: {integrity: sha512-Ykg7fcE3+cOQlLUv2Ds3zil6DVjriGQaSN/kEpl5HQ3DIGM6W0F2n9+GkWV4bRt7KjLymgzNdTnSKCbFUUJ7Kw==}
@@ -3986,6 +3999,19 @@ snapshots:
 
   '@types/json-schema@7.0.15': {}
 
+  '@types/knex@0.16.1(pg@8.16.0)':
+    dependencies:
+      knex: 3.1.0(pg@8.16.0)(sqlite3@5.1.7)
+    transitivePeerDependencies:
+      - better-sqlite3
+      - mysql
+      - mysql2
+      - pg
+      - pg-native
+      - sqlite3
+      - supports-color
+      - tedious
+
   '@types/node@18.19.101':
     dependencies:
       undici-types: 5.26.5
@@ -5653,6 +5679,27 @@ snapshots:
       json-buffer: 3.0.1
 
   kleur@3.0.3: {}
+
+  knex@3.1.0(pg@8.16.0):
+    dependencies:
+      colorette: 2.0.19
+      commander: 10.0.1
+      debug: 4.3.4
+      escalade: 3.2.0
+      esm: 3.2.25
+      get-package-type: 0.1.0
+      getopts: 2.3.0
+      interpret: 2.2.0
+      lodash: 4.17.21
+      pg-connection-string: 2.6.2
+      rechoir: 0.8.0
+      resolve-from: 5.0.0
+      tarn: 3.0.2
+      tildify: 2.0.0
+    optionalDependencies:
+      pg: 8.16.0
+    transitivePeerDependencies:
+      - supports-color
 
   knex@3.1.0(pg@8.16.0)(sqlite3@5.1.7):
     dependencies:
