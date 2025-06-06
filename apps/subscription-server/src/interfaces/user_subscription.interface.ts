@@ -30,7 +30,7 @@ export interface UserPreference {
  */
 export interface Notification {
   user_id: string;
-  proposal_id: string;
+  event_id: string;
   dao_id: string;
 }
 

@@ -22,8 +22,8 @@ describe('NewProposalTriggerHandler', () => {
     ];
     
     mockNotifications = [
-      { user_id: '1', proposal_id: 'prop456', dao_id: 'dao123' },
-      { user_id: '2', proposal_id: 'prop456', dao_id: 'dao123' }
+      { user_id: '1', event_id: 'prop456', dao_id: 'dao123' },
+      { user_id: '2', event_id: 'prop456', dao_id: 'dao123' }
     ];
     
     mockResponse = {
@@ -105,8 +105,8 @@ describe('NewProposalTriggerHandler', () => {
         { id: '1', channel: 'telegram', channel_user_id: '123', is_active: true, created_at: new Date() }
       ];
       const mockNotificationsForMultiple: Notification[] = [
-        { user_id: '1', proposal_id: 'prop1', dao_id: 'dao123' },
-        { user_id: '1', proposal_id: 'prop2', dao_id: 'dao456' }
+        { user_id: '1', event_id: 'prop1', dao_id: 'dao123' },
+        { user_id: '1', event_id: 'prop2', dao_id: 'dao456' }
       ];
       const mockMessage: DispatcherMessage = {
         triggerId: 'new-proposal',
@@ -144,7 +144,7 @@ describe('NewProposalTriggerHandler', () => {
         { id: '1', channel: 'telegram', channel_user_id: '123', is_active: true, created_at: new Date() }
       ];
       const mockNotificationsForMultiline: Notification[] = [
-        { user_id: '1', proposal_id: 'prop456', dao_id: 'dao123' }
+        { user_id: '1', event_id: 'prop456', dao_id: 'dao123' }
       ];
       const proposalWithMultilineDesc = {
         ...mockProposal,

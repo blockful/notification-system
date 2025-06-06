@@ -11,7 +11,7 @@ import { z } from "zod";
  */
 export const notificationSchema = z.object({
   user_id: z.string().describe('The user ID'),
-  proposal_id: z.string().describe('The proposal ID'),
+  event_id: z.string().describe('The event ID'),
   dao_id: z.string().describe('The DAO identifier')
 });
 

@@ -54,12 +54,12 @@ describe('SubscriptionClient', () => {
         { id: '1', channel: 'telegram', channel_user_id: '123', is_active: true, created_at: new Date() }
       ];
       const mockNotifications: Notification[] = [
-        { user_id: '1', proposal_id: 'prop123', dao_id: 'dao123' }
+        { user_id: '1', event_id: 'prop123', dao_id: 'dao123' }
       ];
       mockAxiosInstance.post.mockResolvedValue({ data: mockNotifications });
       const result = await client.shouldSend(mockUsers, 'prop123', 'dao123');
       expect(mockAxiosInstance.post).toHaveBeenCalledWith('/notifications/should-send', {
-        notifications: [{ user_id: '1', proposal_id: 'prop123', dao_id: 'dao123' }]
+        notifications: [{ user_id: '1', event_id: 'prop123', dao_id: 'dao123' }]
       });
       expect(result).toEqual(mockNotifications);
     });
@@ -68,7 +68,7 @@ describe('SubscriptionClient', () => {
   describe('markAsSent', () => {
     it('should mark notifications as sent successfully', async () => {
       const mockNotifications: Notification[] = [
-        { user_id: '1', proposal_id: 'prop123', dao_id: 'dao123' }
+        { user_id: '1', event_id: 'prop123', dao_id: 'dao123' }
       ];
       mockAxiosInstance.post.mockResolvedValue({ data: { success: true } });
       await client.markAsSent(mockNotifications);

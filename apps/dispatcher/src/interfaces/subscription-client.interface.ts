@@ -14,7 +14,7 @@ export interface User {
  */
 export interface Notification {
   user_id: string;
-  proposal_id: string;
+  event_id: string;
   dao_id: string;
 }
 
@@ -33,11 +33,11 @@ export interface ISubscriptionClient {
   /**
    * Filters subscribers to return only those who should receive notifications
    * @param subscribers List of subscribers to check
-   * @param proposalId The proposal ID
+   * @param eventId The event ID
    * @param daoId The DAO ID
    * @returns Filtered list of subscribers that should receive notifications
    */
-  shouldSend(subscribers: User[], proposalId: string, daoId: string): Promise<Notification[]>;
+  shouldSend(subscribers: User[], eventId: string, daoId: string): Promise<Notification[]>;
 
   /**
    * Marks notifications as sent for successful deliveries

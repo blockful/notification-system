@@ -34,14 +34,14 @@ export class SubscriptionClient implements ISubscriptionClient {
   /**
    * Filters subscribers to return only those who should receive notifications
    * @param subscribers List of subscribers to check
-   * @param proposalId The proposal ID
+   * @param eventId The event ID
    * @param daoId The DAO ID
    * @returns Filtered list of subscribers that should receive notifications
    */
-  async shouldSend(subscribers: User[], proposalId: string, daoId: string): Promise<Notification[]> {
+  async shouldSend(subscribers: User[], eventId: string, daoId: string): Promise<Notification[]> {
     const notifications = subscribers.map(subscriber => ({
       user_id: subscriber.id,
-      proposal_id: proposalId,
+      event_id: eventId,
       dao_id: daoId
     }));
 

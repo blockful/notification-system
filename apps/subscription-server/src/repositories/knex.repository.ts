@@ -128,12 +128,12 @@ export class KnexNotificationRepository implements INotificationRepository {
       return [];
     }
 
-    // Create array of [user_id, dao_id, proposal_id] tuples
-    const notificationTuples = notifications.map(n => [n.user_id, n.dao_id, n.proposal_id]);
+    // Create array of [user_id, dao_id, event_id] tuples
+    const notificationTuples = notifications.map(n => [n.user_id, n.dao_id, n.event_id]);
 
     return await this.knex('notifications')
-      .select('user_id', 'dao_id', 'proposal_id')
-      .whereIn(['user_id', 'dao_id', 'proposal_id'], notificationTuples);
+      .select('user_id', 'dao_id', 'event_id')
+      .whereIn(['user_id', 'dao_id', 'event_id'], notificationTuples);
   }
 
   /**
@@ -147,7 +147,7 @@ export class KnexNotificationRepository implements INotificationRepository {
 
     await this.knex('notifications')
       .insert(notifications)
-      .onConflict(['user_id', 'dao_id', 'proposal_id'])
+      .onConflict(['user_id', 'dao_id', 'event_id'])
       .ignore();
   }
 } 

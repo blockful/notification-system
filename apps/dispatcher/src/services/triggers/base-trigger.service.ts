@@ -26,14 +26,14 @@ export abstract class BaseTriggerHandler implements TriggerHandler {
   abstract handleMessage(message: DispatcherMessage): Promise<MessageProcessingResult>;
 
   /**
-   * Gets subscribers for a specific DAO and proposal (already filtered)
+   * Gets subscribers for a specific DAO and event (already filtered)
    * @param daoId DAO identifier
-   * @param proposalId Proposal identifier
+   * @param eventId Event identifier
    * @returns List of subscribers that should receive notifications
    */
-  protected async getSubscribers(daoId: string, proposalId: string): Promise<User[]> {
+  protected async getSubscribers(daoId: string, eventId: string): Promise<User[]> {
     const allSubscribers = await this.subscriptionClient.getDaoSubscribers(daoId);
-    const filteredNotifications = await this.subscriptionClient.shouldSend(allSubscribers, proposalId, daoId);
+    const filteredNotifications = await this.subscriptionClient.shouldSend(allSubscribers, eventId, daoId);
     return allSubscribers.filter(subscriber => 
       filteredNotifications.some(notification => notification.user_id === subscriber.id)
     );
@@ -43,13 +43,13 @@ export abstract class BaseTriggerHandler implements TriggerHandler {
    * Sends notifications to subscribers and marks them as sent upon success
    * @param subscribers List of subscribers (already filtered)
    * @param message Notification message
-   * @param proposalId Proposal identifier
+   * @param eventId Event identifier
    * @param daoId DAO identifier
    */
   protected async sendNotificationsToSubscribers(
     subscribers: User[],
     message: string,
-    proposalId: string,
+    eventId: string,
     daoId: string
   ): Promise<void> {
     const supportedSubscribers = subscribers.filter(subscriber => 
@@ -74,7 +74,7 @@ export abstract class BaseTriggerHandler implements TriggerHandler {
 
     const notifications = successfulSubscribers.map(subscriber => ({
       user_id: subscriber.id,
-      proposal_id: proposalId,
+      event_id: eventId,
       dao_id: daoId
     }));
 

@@ -26,13 +26,13 @@ export class NotificationService {
     const existingNotifications = await this.notificationRepository.exists(notifications);
     const existingSet = new Set(
       existingNotifications.map(notification => 
-        `${notification.user_id}-${notification.dao_id}-${notification.proposal_id}`
+        `${notification.user_id}-${notification.dao_id}-${notification.event_id}`
       )
     );
     
     // Filter out notifications that already exist
     return notifications.filter(notification => {
-      const key = `${notification.user_id}-${notification.dao_id}-${notification.proposal_id}`;
+      const key = `${notification.user_id}-${notification.dao_id}-${notification.event_id}`;
       return !existingSet.has(key);
     });
   }
