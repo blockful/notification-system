@@ -30,7 +30,7 @@ export class NotificationService {
       )
     );
     
-    // Filter out notifications that already exis
+    // Filter out notifications that already exist
     return notifications.filter(notification => {
       const key = `${notification.user_id}-${notification.dao_id}-${notification.proposal_id}`;
       return !existingSet.has(key);
