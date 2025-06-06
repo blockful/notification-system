@@ -57,7 +57,7 @@ export interface IPreferenceRepository {
  * Notification repository interface defining operations for notification deduplication
  */
 export interface INotificationRepository {
-  exists(notification: Notification): Promise<boolean>;
+  exists(notifications: Notification[]): Promise<Notification[]>;
   createMany(notifications: Notification[]): Promise<void>;
 }
 

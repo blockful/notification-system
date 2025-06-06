@@ -119,15 +119,21 @@ export class KnexNotificationRepository implements INotificationRepository {
   constructor(private readonly knex: Knex) {}
 
   /**
-   * Checks if a notification record exists for a specific user/dao/proposal combination
-   * @param notification - The notification to check
+   * Checks which notifications already exist in the database
+   * @param notifications - Array of notifications to check
+   * @returns Array of notifications that already exist in the database
    */
-  async exists(notification: Notification): Promise<boolean> {
-    const result = await this.knex('notifications')
-      .where(notification)
-      .first();
-    
-    return !!result;
+  async exists(notifications: Notification[]): Promise<Notification[]> {
+    if (notifications.length === 0) {
+      return [];
+    }
+
+    // Create array of [user_id, dao_id, proposal_id] tuples
+    const notificationTuples = notifications.map(n => [n.user_id, n.dao_id, n.proposal_id]);
+
+    return await this.knex('notifications')
+      .select('user_id', 'dao_id', 'proposal_id')
+      .whereIn(['user_id', 'dao_id', 'proposal_id'], notificationTuples);
   }
 
   /**

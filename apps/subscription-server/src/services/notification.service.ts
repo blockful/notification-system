@@ -20,17 +20,21 @@ export class NotificationService {
    * @returns Array of subscribers that should receive notifications
    */
   async getShouldSendNotifications(notifications: Notification[]): Promise<Notification[]> {
-    const shouldSend: Notification[] = [];
-    
-    for (const notification of notifications) {
-      const exists = await this.notificationRepository.exists(notification);
-      
-      if (!exists) {
-        shouldSend.push(notification);
-      }
+    if (notifications.length === 0) {
+      return [];
     }
+    const existingNotifications = await this.notificationRepository.exists(notifications);
+    const existingSet = new Set(
+      existingNotifications.map(notification => 
+        `${notification.user_id}-${notification.dao_id}-${notification.proposal_id}`
+      )
+    );
     
-    return shouldSend;
+    // Filter out notifications that already exis
+    return notifications.filter(notification => {
+      const key = `${notification.user_id}-${notification.dao_id}-${notification.proposal_id}`;
+      return !existingSet.has(key);
+    });
   }
 
   /**
