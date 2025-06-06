@@ -145,14 +145,8 @@ export class KnexNotificationRepository implements INotificationRepository {
       return;
     }
 
-    const now = new Date();
-    const notificationRecords = notifications.map(notification => ({
-      ...notification,
-      created_at: now
-    }));
-
     await this.knex('notifications')
-      .insert(notificationRecords)
+      .insert(notifications)
       .onConflict(['user_id', 'dao_id', 'proposal_id'])
       .ignore();
   }
