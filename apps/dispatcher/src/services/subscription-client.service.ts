@@ -10,15 +10,10 @@ export class SubscriptionClient implements ISubscriptionClient {
 
   /**
    * Creates a new instance of the SubscriptionClient
-   * @param baseUrl Base URL of the Subscription Server API
+   * @param client Configured axios instance for API communication
    */
-  constructor(baseUrl: string) {
-    this.client = axios.create({
-      baseURL: baseUrl,
-      headers: {
-        'Content-Type': 'application/json',
-      },
-    });
+  constructor(client: AxiosInstance) {
+    this.client = client;
   }
 
   /**

@@ -3,6 +3,7 @@ import { validatorCompiler, serializerCompiler } from 'fastify-type-provider-zod
 import fastifyCors from '@fastify/cors';
 import fastifySwagger from '@fastify/swagger';
 import fastifySwaggerUi from '@fastify/swagger-ui';
+import axios from 'axios';
 import { HealthController, MessageController } from './controllers';
 import { TriggerProcessorService } from './services/trigger-processor.service';
 import { SubscriptionClient } from './services/subscription-client.service';
@@ -63,7 +64,13 @@ export class App {
 
   private setupServices(subscriptionServerUrl: string, telegramConsumerUrl: string): void {
     // Configure services
-    const subscriptionClient = new SubscriptionClient(subscriptionServerUrl);
+    const subscriptionAxiosClient = axios.create({
+      baseURL: subscriptionServerUrl,
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    });
+    const subscriptionClient = new SubscriptionClient(subscriptionAxiosClient);
     const notificationFactory = new NotificationClientFactory();
     notificationFactory.addClient('telegram', new TelegramNotificationClient(telegramConsumerUrl));
     const triggerProcessorService = new TriggerProcessorService();

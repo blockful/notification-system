@@ -13,11 +13,9 @@ const mockAxiosInstance = {
 
 describe('SubscriptionClient', () => {
   let client: SubscriptionClient;
-  const baseUrl = 'https://api.example.com';
   
   beforeEach(() => {
-    mockedAxios.create.mockReturnValue(mockAxiosInstance);
-    client = new SubscriptionClient(baseUrl);
+    client = new SubscriptionClient(mockAxiosInstance);
     jest.clearAllMocks();
   });
   
