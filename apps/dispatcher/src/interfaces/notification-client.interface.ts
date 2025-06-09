@@ -6,7 +6,6 @@ export interface NotificationPayload {
   channel: string;
   channelUserId: string;
   message: string;
-  metadata?: Record<string, any>;
 }
 
 /**

@@ -34,7 +34,6 @@ export class TelegramNotificationClient implements INotificationClient {
         userId: payload.userId,
         channelUserId: channelUserIdAsNumber,
         message: payload.message,
-        metadata: payload.metadata,
     }),
     });
 
