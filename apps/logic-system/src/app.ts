@@ -1,6 +1,7 @@
 import { NewProposalTrigger } from './triggers/new-proposal-trigger';
 import { ProposalRepository } from './repositories/proposal.repository';
 import { DispatcherApiClient } from './api-clients/dispatcher.api-client';
+import { AnticaptureClient } from './api-clients/anticapture-client';
 import { ProposalStatus } from './interfaces/proposal.interface';
 
 export class App {
@@ -9,8 +10,11 @@ export class App {
 
   constructor(anticaptureEndpoint: string, dispatcherEndpoint: string, triggerInterval: number, proposalStatus: ProposalStatus) {
     this.proposalStatus = proposalStatus;
-    
-    const proposalDB = new ProposalRepository(anticaptureEndpoint);
+    const anticaptureClient = new AnticaptureClient({
+      endpoint: anticaptureEndpoint,
+      timeout: 10000
+    });
+    const proposalDB = new ProposalRepository(anticaptureClient);
     const dispatcherService = new DispatcherApiClient(dispatcherEndpoint);
 
     this.trigger = new NewProposalTrigger(
