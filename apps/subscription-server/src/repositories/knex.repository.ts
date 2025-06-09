@@ -5,7 +5,7 @@
 
 import { Knex } from 'knex';
 import { v4 as uuidv4 } from 'uuid';
-import { IUserRepository, IPreferenceRepository, User, UserPreference } from '../interfaces';
+import { IUserRepository, IPreferenceRepository, INotificationRepository, User, UserPreference, Notification } from '../interfaces';
 
 /**
  * User repository implementation using Knex
@@ -108,5 +108,46 @@ export class KnexPreferenceRepository implements IPreferenceRepository {
         is_active: true
       })
       .select('*');
+  }
+}
+
+/**
+ * Notification repository implementation using Knex
+ * Handles all notification deduplication-related database operations
+ */
+export class KnexNotificationRepository implements INotificationRepository {
+  constructor(private readonly knex: Knex) {}
+
+  /**
+   * Checks which notifications already exist in the database
+   * @param notifications - Array of notifications to check
+   * @returns Array of notifications that already exist in the database
+   */
+  async exists(notifications: Notification[]): Promise<Notification[]> {
+    if (notifications.length === 0) {
+      return [];
+    }
+
+    // Create array of [user_id, dao_id, event_id] tuples
+    const notificationTuples = notifications.map(n => [n.user_id, n.dao_id, n.event_id]);
+
+    return await this.knex('notifications')
+      .select('user_id', 'dao_id', 'event_id')
+      .whereIn(['user_id', 'dao_id', 'event_id'], notificationTuples);
+  }
+
+  /**
+   * Creates multiple notification records in batch
+   * @param notifications - Array of notification data to insert
+   */
+  async createMany(notifications: Notification[]): Promise<void> {
+    if (notifications.length === 0) {
+      return;
+    }
+
+    await this.knex('notifications')
+      .insert(notifications)
+      .onConflict(['user_id', 'dao_id', 'event_id'])
+      .ignore();
   }
 } 

@@ -26,6 +26,15 @@ export interface UserPreference {
 }
 
 /**
+ * Notification interface for deduplication operations
+ */
+export interface Notification {
+  user_id: string;
+  event_id: string;
+  dao_id: string;
+}
+
+/**
  * User repository interface defining operations for user management
  */
 export interface IUserRepository {
@@ -42,6 +51,14 @@ export interface IPreferenceRepository {
   findByDao(daoId: string): Promise<UserPreference[]>;
   create(data: Omit<UserPreference, 'id' | 'created_at' | 'updated_at'>): Promise<UserPreference>;
   update(id: string, data: Partial<UserPreference>): Promise<UserPreference>;
+}
+
+/**
+ * Notification repository interface defining operations for notification deduplication
+ */
+export interface INotificationRepository {
+  exists(notifications: Notification[]): Promise<Notification[]>;
+  createMany(notifications: Notification[]): Promise<void>;
 }
 
 /**

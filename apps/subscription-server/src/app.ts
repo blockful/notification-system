@@ -5,9 +5,9 @@ import fastifySwagger from '@fastify/swagger';
 import fastifySwaggerUi from '@fastify/swagger-ui';
 import { Knex } from 'knex';
 import { initial_routes } from './controllers/initial_routes';
-import { DaoController } from './controllers/dao.controller';
-import { KnexUserRepository, KnexPreferenceRepository } from './repositories/knex.repository';
-import { SubscriptionService } from './services/subscription.service';
+import { DaoController, NotificationController } from './controllers';
+import { KnexUserRepository, KnexPreferenceRepository, KnexNotificationRepository } from './repositories/knex.repository';
+import { SubscriptionService, NotificationService } from './services';
 import { DaoHandler } from './handlers/dao.handlers';
 
 export class App {
@@ -18,14 +18,24 @@ export class App {
     this.port = port;
     this.server = fastify();
     
+    // Repository instances
     const userRepository = new KnexUserRepository(db);
     const preferenceRepository = new KnexPreferenceRepository(db);
+    const notificationRepository = new KnexNotificationRepository(db);
+    
+    // Service instances
     const subscriptionService = new SubscriptionService(userRepository, preferenceRepository);
+    const notificationService = new NotificationService(notificationRepository);
+    
+    // Handler instances
     const daoHandler = new DaoHandler(subscriptionService);
+    
+    // Controller instances
     const daoController = new DaoController(daoHandler);
+    const notificationController = new NotificationController(notificationService);
 
     this.setupFastify();
-    this.setupRoutes(daoController);
+    this.setupRoutes(daoController, notificationController);
   }
 
   private setupFastify(): void {
@@ -60,9 +70,10 @@ export class App {
     });
   }
 
-  private setupRoutes(daoController: DaoController): void {
+  private setupRoutes(daoController: DaoController, notificationController: NotificationController): void {
     this.server.register(initial_routes);
     this.server.register((app) => daoController.register(app));
+    this.server.register((app) => notificationController.register(app));
   }
 
   async start(): Promise<void> {

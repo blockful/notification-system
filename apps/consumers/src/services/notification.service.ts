@@ -38,8 +38,7 @@ export class NotificationService {
     
     const sentMessage = await this.bot.telegram.sendMessage(
       chatId, 
-      payload.message, 
-      { parse_mode: 'HTML' }
+      payload.message
     );
     return `${sentMessage.message_id}`;
   }
