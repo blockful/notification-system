@@ -127,7 +127,7 @@ export class DAOService {
   }
 
   private async updateSubscriptions(chatId: number, selectedDAOs: Set<string>) {
-    const daos = await this.dbService.getDAOs();
+    const daos = await this.anticaptureClient.getDAOs();
     const currentPreferences = await this.subscriptionApi.getUserPreferences(chatId, daos);
     const currentPreferencesSet = new Set(currentPreferences);
     
