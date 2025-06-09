@@ -20,11 +20,8 @@ const GET_DAOS = gql`
 export class AnticaptureClient {
   private client: ApolloClient<NormalizedCacheObject>;
 
-  constructor(apiUrl: string) {
-    this.client = new ApolloClient({
-      uri: apiUrl,
-      cache: new InMemoryCache(),
-    });
+  constructor(apolloClient: ApolloClient<NormalizedCacheObject>) {
+    this.client = apolloClient;
   }
 
   /**
