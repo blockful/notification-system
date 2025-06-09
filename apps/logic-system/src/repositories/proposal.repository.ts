@@ -1,47 +1,54 @@
 import { ProposalDB, ProposalOnChain, ListProposalsOptions, ProposalStatus } from '../interfaces/proposal.interface';
-import { ProposalMapper } from '../mappers/proposal.mapper';
-import { Knex } from 'knex';
+import { AnticaptureClient } from '../api-clients/anticapture-client';
+import { ProposalOnchainGraphQL } from '../interfaces/anticapture.interface';
 
 export class ProposalRepository implements ProposalDB {
-  private db: Knex;
-  private readonly tableName = 'proposals_onchain';
+  private anticaptureClient: AnticaptureClient;
 
-  constructor(db: Knex) {
-    this.db = db;
+  constructor(anticaptureClient: AnticaptureClient) {
+    this.anticaptureClient = anticaptureClient;
   }
 
   async getById(id: string): Promise<ProposalOnChain | null> {
-    const proposal = await this.db(this.tableName)
-      .where({ id })
-      .first();
+    const proposalGraphQL = await this.anticaptureClient.getProposalById(id);
     
-    if (!proposal) {
+    if (!proposalGraphQL) {
       return null;
     }
     
-    return ProposalMapper.fromDatabaseToEntity(proposal);
+    return this.transformProposal(proposalGraphQL);
   }
 
   async listAll(options?: ListProposalsOptions): Promise<ProposalOnChain[]> {
-    let query = this.db(this.tableName).select('*');
+    const variables: any = {};
     
-    if (options?.status) {
-      query = query.where('status', options.status);
+    if (options?.status || options?.daoId) {
+      variables.where = {};  
+      if (options.status) {
+        variables.where.status = { eq: options.status };
+      }
+      if (options.daoId) {
+        variables.where.daoId = { eq: options.daoId };
+      }
     }
-    
-    if (options?.daoId) {
-      query = query.where('dao_id', options.daoId);
-    }
-    
     if (options?.limit) {
-      query = query.limit(options.limit);
+      variables.limit = options.limit;
     }
-    
     if (options?.offset) {
-      query = query.offset(options.offset);
+      variables.offset = options.offset;
     }
     
-    const proposals = await query;
-    return proposals.map(ProposalMapper.fromDatabaseToEntity);
+    const proposalsGraphQL = await this.anticaptureClient.listProposals(variables);
+    return proposalsGraphQL.map(proposal => this.transformProposal(proposal));
+  }
+
+  private transformProposal(graphQLProposal: ProposalOnchainGraphQL): ProposalOnChain {
+    return {
+      ...graphQLProposal,
+      status: graphQLProposal.status as ProposalStatus,
+      forVotes: BigInt(graphQLProposal.forVotes),
+      againstVotes: BigInt(graphQLProposal.againstVotes),
+      abstainVotes: BigInt(graphQLProposal.abstainVotes)
+    };
   }
 } 
