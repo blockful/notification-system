@@ -4,7 +4,7 @@ import { validatorCompiler, serializerCompiler } from 'fastify-type-provider-zod
 import cors from '@fastify/cors';
 import swagger from '@fastify/swagger';
 import swaggerUi from '@fastify/swagger-ui';
-import { ApolloClient, InMemoryCache, NormalizedCacheObject } from '@apollo/client/core';
+import axios from 'axios';
 import { BotController } from './controllers/bot.controller';
 import { DAOService } from './services/dao.service';
 import { AnticaptureClient } from './clients/anticapture-client';
@@ -23,11 +23,7 @@ export class App {
   constructor(anticaptureApiUrl: string, telegramBotToken: string, subscriptionServerUrl: string, port: number) {
     this.port = port;
     const subscriptionApi = new SubscriptionAPIService(subscriptionServerUrl);
-    const apolloClient = new ApolloClient({
-      uri: anticaptureApiUrl,
-      cache: new InMemoryCache(),
-    });    
-    this.anticaptureClient = new AnticaptureClient(apolloClient);
+    this.anticaptureClient = new AnticaptureClient(anticaptureApiUrl, axios.create());
     const daoService = new DAOService(this.anticaptureClient, subscriptionApi);
     const bot = new Telegraf(telegramBotToken);
     
@@ -95,6 +91,5 @@ export class App {
     }
     await this.server.close();
     this.botController.stop('SIGINT');
-    this.anticaptureClient.stop();
   }
 } 
