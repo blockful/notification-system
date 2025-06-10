@@ -7,7 +7,7 @@ import { setupDatabase, createTestData } from '../src/setup/database';
 const mockSendMessage = setupMocks();
 
 import { App as ConsumerApp } from '@notification-system/consumer';
-import { App as LogicSystemApp, setupDatabaseConnection } from '@notification-system/logic-system';
+import { App as LogicSystemApp } from '@notification-system/logic-system';
 import { App as DispatcherApp } from '@notification-system/dispatcher';
 import { App as SubscriptionServerApp } from '@notification-system/subscription-server';
 
@@ -16,7 +16,6 @@ describe('Complete Notification Flow - Full Integration Test', () => {
   let logicSystemApp: LogicSystemApp;
   let dispatcherApp: DispatcherApp;
   let subscriptionServerApp: SubscriptionServerApp;
-  let logicDb: any;
   let testProposal: any;
 
   beforeAll(async () => {
@@ -27,8 +26,6 @@ describe('Complete Notification Flow - Full Integration Test', () => {
     await setupDatabase();
     const testData = await createTestData();
     testProposal = testData.testProposal;
-    
-    logicDb = setupDatabaseConnection('sqlite3', '/tmp/test_integration.db');
     
     subscriptionServerApp = new SubscriptionServerApp(db, 14001);
     await subscriptionServerApp.start();
@@ -41,8 +38,7 @@ describe('Complete Notification Flow - Full Integration Test', () => {
     await dispatcherApp.start();
     
     consumerApp = new ConsumerApp(
-      db,                                       // daosDb
-      db,                                       // usersDb
+      'https://anticapture.up.railway.app/graphql', // anticaptureGraphqlEndpoint
       '7117895712:AAH96CfnDvvfLNl2nJbRKbNYPay4V936mWY', // telegramBotToken
       'http://127.0.0.1:14001',                 // subscriptionServerUrl
       14002                                     // port
@@ -50,7 +46,7 @@ describe('Complete Notification Flow - Full Integration Test', () => {
     await consumerApp.start();
     
     logicSystemApp = new LogicSystemApp(
-      logicDb,                                  // db
+      'https://anticapture.up.railway.app/graphql', // anticaptureEndpoint
       'http://127.0.0.1:13002/messages',        // dispatcherEndpoint
       5000,                                     // triggerInterval
       'active'                                  // proposalStatus
@@ -78,9 +74,7 @@ describe('Complete Notification Flow - Full Integration Test', () => {
     if (subscriptionServerApp) {
       await subscriptionServerApp.stop();
     }
-    if (logicDb) {
-      await logicDb.destroy();
-    }
+
     closeDatabase();
   });
 
