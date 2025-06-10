@@ -20,10 +20,10 @@ export class App {
   private server?: FastifyTypedInstance;
   private port: number;
 
-  constructor(anticaptureApiUrl: string, telegramBotToken: string, subscriptionServerUrl: string, port: number) {
+  constructor(anticaptureGraphqlEndpoint: string, telegramBotToken: string, subscriptionServerUrl: string, port: number) {
     this.port = port;
     const subscriptionApi = new SubscriptionAPIService(subscriptionServerUrl);
-    this.anticaptureClient = new AnticaptureClient(anticaptureApiUrl, axios.create());
+    this.anticaptureClient = new AnticaptureClient(anticaptureGraphqlEndpoint, axios.create());
     const daoService = new DAOService(this.anticaptureClient, subscriptionApi);
     const bot = new Telegraf(telegramBotToken);
     

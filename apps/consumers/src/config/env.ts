@@ -19,7 +19,7 @@ export function loadConfig() {
 
   return {
     telegramBotToken: env.TELEGRAM_BOT_TOKEN,
-    anticaptureApiUrl: env.ANTICAPTURE_GRAPHQL_ENDPOINT,
+    anticaptureGraphqlEndpoint: env.ANTICAPTURE_GRAPHQL_ENDPOINT,
     subscriptionServerUrl: env.SUBSCRIPTION_SERVER_URL,
     port: env.API_PORT,
   } as const;
