@@ -29,10 +29,11 @@ const mockTelegraf = jest.fn().mockImplementation(() => ({
   action: jest.fn().mockImplementation(() => undefined),
   on: jest.fn().mockImplementation(() => undefined),
   use: jest.fn().mockImplementation(() => undefined),
-  catch: jest.fn().mockImplementation(() => undefined)
+  catch: jest.fn().mockImplementation(() => undefined),
+  hears: jest.fn().mockImplementation(() => undefined)
 }));
 
-export function setupMocks(): any {
+export function setupTelegramMock(): any {
   jest.mock('telegraf', () => ({
     Telegraf: mockTelegraf
   }));
