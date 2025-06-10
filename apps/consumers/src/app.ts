@@ -4,7 +4,7 @@ import { validatorCompiler, serializerCompiler } from 'fastify-type-provider-zod
 import cors from '@fastify/cors';
 import swagger from '@fastify/swagger';
 import swaggerUi from '@fastify/swagger-ui';
-import axios from 'axios';
+import axios, { AxiosInstance } from 'axios';
 import { BotController } from './controllers/bot.controller';
 import { DAOService } from './services/dao.service';
 import { AnticaptureClient } from './clients/anticapture-client';
@@ -20,10 +20,17 @@ export class App {
   private server?: FastifyTypedInstance;
   private port: number;
 
-  constructor(anticaptureGraphqlEndpoint: string, telegramBotToken: string, subscriptionServerUrl: string, port: number) {
+  constructor(
+    anticaptureGraphqlEndpoint: string, 
+    telegramBotToken: string, 
+    subscriptionServerUrl: string, 
+    port: number,
+    httpClient?: AxiosInstance
+  ) {
     this.port = port;
     const subscriptionApi = new SubscriptionAPIService(subscriptionServerUrl);
-    this.anticaptureClient = new AnticaptureClient(anticaptureGraphqlEndpoint, axios.create());
+    const client = httpClient || axios.create();
+    this.anticaptureClient = new AnticaptureClient(anticaptureGraphqlEndpoint, client);
     const daoService = new DAOService(this.anticaptureClient, subscriptionApi);
     const bot = new Telegraf(telegramBotToken);
     
