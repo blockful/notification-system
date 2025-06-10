@@ -34,7 +34,7 @@ export class App {
     const daoService = new DAOService(this.anticaptureClient, subscriptionApi);
     const bot = new Telegraf(telegramBotToken);
     
-    this.notificationService = new NotificationService(bot, subscriptionApi, this.anticaptureClient);
+    this.notificationService = new NotificationService(bot);
     this.botController = new BotController(telegramBotToken, daoService);
   }
 

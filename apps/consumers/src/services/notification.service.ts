@@ -5,39 +5,23 @@
 
 import { Telegraf } from 'telegraf';
 import { NotificationPayload } from '../interfaces/notification.interface';
-import { SubscriptionAPIService } from './subscription-api.service';
-import { AnticaptureClient } from '../clients/anticapture-client';
 
 export class NotificationService {
   private bot: Telegraf;
-  private subscriptionApi: SubscriptionAPIService;
-  private anticaptureClient: AnticaptureClient;
 
-  constructor(bot: Telegraf, subscriptionApi: SubscriptionAPIService, anticaptureClient: AnticaptureClient) {
+  constructor(bot: Telegraf) {
     this.bot = bot;
-    this.subscriptionApi = subscriptionApi;
-    this.anticaptureClient = anticaptureClient;
   }
 
   /**
    * Send a notification to a specific Telegram user
    * @param payload Notification payload containing user information and message
    * @returns Message ID of the sent notification
-   * @throws Error if user not found or sending fails
+   * @throws Error if sending fails
    */
   public async sendNotification(payload: NotificationPayload): Promise<string> {
-    const chatId = payload.channelUserId;
-    
-    // Get all DAOs and check if the user is subscribed to any of them
-    const daos = await this.anticaptureClient.getDAOs();
-    const userExists = await this.subscriptionApi.userExists(chatId, daos);
-    
-    if (!userExists) {
-      throw new Error(`User with chat ID ${chatId} not found`);
-    }
-    
     const sentMessage = await this.bot.telegram.sendMessage(
-      chatId, 
+      payload.channelUserId, 
       payload.message
     );
     return `${sentMessage.message_id}`;
