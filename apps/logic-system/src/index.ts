@@ -1,3 +1,4 @@
+import axios from 'axios';
 import { App } from './app';
 import { env } from './config/env';
 
@@ -6,6 +7,8 @@ const app = new App(
   env.DISPATCHER_ENDPOINT,
   env.TRIGGER_INTERVAL,
   env.PROPOSAL_STATUS,
+  axios.create(),
+  axios.create()
 );
 
 app.start();

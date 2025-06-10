@@ -14,14 +14,14 @@ export class App {
     dispatcherEndpoint: string, 
     triggerInterval: number, 
     proposalStatus: ProposalStatus,
-    anticaptureHttpClient?: AxiosInstance,
-    dispatcherHttpClient?: AxiosInstance
+    anticaptureHttpClient: AxiosInstance,
+    dispatcherHttpClient: AxiosInstance
   ) {
     this.proposalStatus = proposalStatus;
     
-    const anticaptureClient = new AnticaptureClient(anticaptureEndpoint, anticaptureHttpClient || axios.create());
+    const anticaptureClient = new AnticaptureClient(anticaptureEndpoint, anticaptureHttpClient);
     const proposalDB = new ProposalRepository(anticaptureClient);
-    const dispatcherService = new DispatcherApiClient(dispatcherEndpoint, dispatcherHttpClient || axios.create());
+    const dispatcherService = new DispatcherApiClient(dispatcherEndpoint, dispatcherHttpClient);
 
     this.trigger = new NewProposalTrigger(
       dispatcherService,
