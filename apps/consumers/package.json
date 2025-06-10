@@ -7,29 +7,33 @@
     "start": "node dist/index.js",
     "dev": "nodemon --exec 'ts-node' src/index.ts",
     "build": "tsc",
-    "check-types": "tsc --noEmit"
+    "check-types": "tsc --noEmit",
+    "codegen": "graphql-codegen"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "description": "",
   "devDependencies": {
+    "@graphql-codegen/cli": "^5.0.7",
+    "@graphql-codegen/client-preset": "^4.8.2",
+    "@graphql-codegen/typescript": "^4.1.6",
+    "@graphql-codegen/typescript-operations": "^4.6.1",
     "@types/node": "^20.17.46",
-    "@types/pg": "^8.11.11",
     "nodemon": "^3.1.0",
     "ts-node": "^10.9.2",
     "typescript": "^5.8.3"
   },
   "dependencies": {
-    "@apollo/client": "^3.13.8",
     "@fastify/cors": "^11.0.1",
     "@fastify/swagger": "^9.5.0",
     "@fastify/swagger-ui": "^5.2.2",
+    "@graphql-typed-document-node/core": "^3.2.0",
+    "axios": "^1.7.2",
     "dotenv": "^16.4.7",
     "fastify": "^5.3.2",
     "fastify-type-provider-zod": "^4.0.2",
-    "knex": "^3.1.0",
-    "pg": "^8.15.0",
+    "graphql": "^16.11.0",
     "telegraf": "^4.16.3",
     "zod": "^3.24.3"
   }
