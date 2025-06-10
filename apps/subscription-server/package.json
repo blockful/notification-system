@@ -10,7 +10,7 @@
     "dev": "tsx watch src/index.ts",
     "build": "tsc",
     "start": "node dist/index.js",
-    "test": "jest --watch --coverage"
+    "test": "jest --coverage"
   },
   "keywords": [],
   "author": "",

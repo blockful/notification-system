@@ -5,9 +5,11 @@
     "apps/*"
   ],
   "scripts": {
-    "build": "turbo run build",
+    "build": "turbo run codegen && turbo run build",
     "format": "prettier --write \"**/*.{ts,tsx,md}\"",
-    "dev": "docker-compose up --build"
+    "dev": "docker-compose up --build",
+    "codegen": "turbo run codegen --filter='@notification-system/consumer' --filter='@notification-system/logic-system'",
+    "test": "turbo run test"
   },
   "devDependencies": {
     "@types/pg": "^8.15.2",
