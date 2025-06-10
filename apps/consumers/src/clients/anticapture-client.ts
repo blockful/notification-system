@@ -1,13 +1,10 @@
-/**
- * Anticapture GraphQL API Client
- * Handles communication with the anticapture GraphQL endpoint using Axios
- * Focused on DAO-related queries for the Consumer service
- */
-
 import { AxiosInstance } from 'axios';
 import type { TypedDocumentNode } from '@graphql-typed-document-node/core';
 import { GetDaOsDocument } from '../gql/graphql';
 
+/**
+ * GraphQL client for anticapture API that handles DAO queries
+ */
 export class AnticaptureClient {
   private readonly httpClient: AxiosInstance;
   private readonly endpoint: string;
