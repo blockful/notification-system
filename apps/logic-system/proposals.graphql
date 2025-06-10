@@ -1,39 +1,43 @@
 query GetProposalById($where: proposalsOnchainFilter) {
   proposalsOnchains(where: $where) {
-    id
-    daoId
-    proposerAccountId
-    targets
-    values
-    signatures
-    calldatas
-    startBlock
-    endBlock
-    description
-    timestamp
-    status
-    forVotes
-    againstVotes
-    abstainVotes
+    items {
+      id
+      daoId
+      proposerAccountId
+      targets
+      values
+      signatures
+      calldatas
+      startBlock
+      endBlock
+      description
+      timestamp
+      status
+      forVotes
+      againstVotes
+      abstainVotes
+    }
   }
 }
 
 query ListProposals($where: proposalsOnchainFilter, $limit: Int) {
   proposalsOnchains(where: $where, limit: $limit) {
-    id
-    daoId
-    proposerAccountId
-    targets
-    values
-    signatures
-    calldatas
-    startBlock
-    endBlock
-    description
-    timestamp
-    status
-    forVotes
-    againstVotes
-    abstainVotes
+    items {
+      id
+      daoId
+      proposerAccountId
+      targets
+      values
+      signatures
+      calldatas
+      startBlock
+      endBlock
+      description
+      timestamp
+      status
+      forVotes
+      againstVotes
+      abstainVotes
+    }
   }
 }
