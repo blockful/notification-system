@@ -10,6 +10,7 @@
  * It also provides an API for receiving notifications from other services.
  */
 
+import axios from 'axios';
 import { App } from './app';
 import { loadConfig } from './config/env';
 
@@ -20,7 +21,8 @@ const app = new App(
   config.anticaptureGraphqlEndpoint,
   config.telegramBotToken,
   config.subscriptionServerUrl,
-  config.port
+  config.port,
+  axios.create()
 );
 
 (async () => {

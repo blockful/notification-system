@@ -16,7 +16,6 @@ import { FastifyTypedInstance } from './interfaces/fastify.interface';
 export class App {
   private notificationService: NotificationService;
   private botController: BotController;
-  private anticaptureClient: AnticaptureClient;
   private server?: FastifyTypedInstance;
   private port: number;
 
@@ -25,13 +24,12 @@ export class App {
     telegramBotToken: string, 
     subscriptionServerUrl: string, 
     port: number,
-    httpClient?: AxiosInstance
+    httpClient: AxiosInstance
   ) {
     this.port = port;
     const subscriptionApi = new SubscriptionAPIService(subscriptionServerUrl);
-    const client = httpClient || axios.create();
-    this.anticaptureClient = new AnticaptureClient(anticaptureGraphqlEndpoint, client);
-    const daoService = new DAOService(this.anticaptureClient, subscriptionApi);
+    const anticaptureClient = new AnticaptureClient(anticaptureGraphqlEndpoint, httpClient);
+    const daoService = new DAOService(anticaptureClient, subscriptionApi);
     const bot = new Telegraf(telegramBotToken);
     
     this.notificationService = new NotificationService(bot);
