@@ -175,12 +175,18 @@ importers:
 
   apps/logic-system:
     dependencies:
+      '@graphql-typed-document-node/core':
+        specifier: ^3.2.0
+        version: 3.2.0(graphql@16.11.0)
       axios:
         specifier: ^1.6.7
         version: 1.9.0
       dotenv:
         specifier: ^16.3.1
         version: 16.5.0
+      graphql:
+        specifier: ^16.11.0
+        version: 16.11.0
       zod:
         specifier: ^3.22.4
         version: 3.24.3
