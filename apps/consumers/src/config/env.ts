@@ -8,7 +8,7 @@ import * as dotenv from 'dotenv';
 
 const envSchema = z.object({
   TELEGRAM_BOT_TOKEN: z.string().min(1, "Telegram bot token is required"),
-  ANTICAPTURE_API_URL: z.string().url("ANTICAPTURE_API_URL must be a valid URL"),
+  ANTICAPTURE_GRAPHQL_ENDPOINT: z.string().url("ANTICAPTURE_GRAPHQL_ENDPOINT must be a valid URL"),
   SUBSCRIPTION_SERVER_URL: z.string().min(1, "Subscription server URL is required"),
   API_PORT: z.coerce.number().default(3004),
 });
@@ -19,7 +19,7 @@ export function loadConfig() {
 
   return {
     telegramBotToken: env.TELEGRAM_BOT_TOKEN,
-    anticaptureApiUrl: env.ANTICAPTURE_API_URL,
+    anticaptureApiUrl: env.ANTICAPTURE_GRAPHQL_ENDPOINT,
     subscriptionServerUrl: env.SUBSCRIPTION_SERVER_URL,
     port: env.API_PORT,
   } as const;
