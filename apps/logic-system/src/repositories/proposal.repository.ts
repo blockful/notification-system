@@ -1,6 +1,6 @@
-import { ProposalDB, ProposalOnChain, ListProposalsOptions, ProposalStatus } from '../interfaces/proposal.interface';
+import { ProposalDB, ProposalOnChain, ProposalOrNull, ListProposalsOptions } from '../interfaces/proposal.interface';
 import { AnticaptureClient } from '../api-clients/anticapture-client';
-import { ProposalOnchainGraphQL } from '../interfaces/anticapture.interface';
+import type { ListProposalsQueryVariables } from '../gql/graphql';
 
 export class ProposalRepository implements ProposalDB {
   private anticaptureClient: AnticaptureClient;
@@ -9,46 +9,27 @@ export class ProposalRepository implements ProposalDB {
     this.anticaptureClient = anticaptureClient;
   }
 
-  async getById(id: string): Promise<ProposalOnChain | null> {
-    const proposalGraphQL = await this.anticaptureClient.getProposalById(id);
-    
-    if (!proposalGraphQL) {
-      return null;
-    }
-    
-    return this.transformProposal(proposalGraphQL);
+  async getById(id: string): Promise<ProposalOrNull> {
+    return await this.anticaptureClient.getProposalById(id);
   }
 
   async listAll(options?: ListProposalsOptions): Promise<ProposalOnChain[]> {
-    const variables: any = {};
+    const variables: ListProposalsQueryVariables = {};
     
     if (options?.status || options?.daoId) {
       variables.where = {};  
       if (options.status) {
-        variables.where.status = { eq: options.status };
+        variables.where.status = options.status;
       }
       if (options.daoId) {
-        variables.where.daoId = { eq: options.daoId };
+        variables.where.daoId = options.daoId;
       }
     }
     if (options?.limit) {
       variables.limit = options.limit;
     }
-    if (options?.offset) {
-      variables.offset = options.offset;
-    }
     
-    const proposalsGraphQL = await this.anticaptureClient.listProposals(variables);
-    return proposalsGraphQL.map(proposal => this.transformProposal(proposal));
+    return await this.anticaptureClient.listProposals(variables);
   }
 
-  private transformProposal(graphQLProposal: ProposalOnchainGraphQL): ProposalOnChain {
-    return {
-      ...graphQLProposal,
-      status: graphQLProposal.status as ProposalStatus,
-      forVotes: BigInt(graphQLProposal.forVotes),
-      againstVotes: BigInt(graphQLProposal.againstVotes),
-      abstainVotes: BigInt(graphQLProposal.abstainVotes)
-    };
-  }
 } 

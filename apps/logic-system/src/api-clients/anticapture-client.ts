@@ -62,6 +62,6 @@ export class AnticaptureClient {
    */
   async listProposals(variables?: ListProposalsQueryVariables): Promise<ListProposalsQuery['proposalsOnchains']['items']> {
     const response = await this.query(ListProposalsDocument, variables);
-    return response.proposalsOnchains.items;
+    return response.proposalsOnchains.items.filter(item => item !== null);
   }
 } 

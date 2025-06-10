@@ -1,38 +1,7 @@
-/**
- * Represents a proposal in the dB
- */
-export interface ProposalOnChain {
-    /** Unique identifier of the proposal */
-    id: string;
-    /** DAO identifier this proposal belongs to */
-    daoId: string;
-    /** Account that created the proposal */
-    proposerAccountId: string;
-    /** List of contract addresses to call */
-    targets: string[];
-    /** List of values (in wei) to send with each call */
-    values: string[];
-    /** List of function signatures to call */
-    signatures: string[];
-    /** Encoded parameters for each function call */
-    calldatas: string[];
-    /** Block number when voting starts */
-    startBlock: number;
-    /** Block number when voting ends */
-    endBlock: number;
-    /** Human readable description of the proposal */
-    description: string;
-    /** ISO timestamp of proposal creation */
-    timestamp: string;
-    /** Current status of the proposal */
-    status: ProposalStatus;
-    /** Number of votes in favor (in wei) */
-    forVotes: bigint;
-    /** Number of votes against (in wei) */
-    againstVotes: bigint;
-    /** Number of abstain votes (in wei) */
-    abstainVotes: bigint;
-}
+// ProposalOnChain now uses GraphQL types directly  
+import type { GetProposalByIdQuery } from '../gql/graphql';
+export type ProposalOnChain = GetProposalByIdQuery['proposalsOnchains']['items'][0];
+export type ProposalOrNull = ProposalOnChain | null;
 
 /**
  * Valid status values for a proposal
@@ -55,8 +24,8 @@ export interface ListProposalsOptions {
     offset?: number;
     /** Maximum number of proposals to return */
     limit?: number;
-    /** Filter by status */
-    status?: ProposalStatus;
+    /** Filter by status (using GraphQL string type) */
+    status?: string;
     /** Filter by DAO */
     daoId?: string;
 }
@@ -68,9 +37,9 @@ export interface ProposalDB {
     /**
      * Retrieves a proposal by its ID
      * @param id - The proposal ID
-     * @returns The proposal if found, null otherwise
+     * @returns The proposal if found, null/undefined otherwise
      */
-    getById(id: string): Promise<ProposalOnChain | null>;
+    getById(id: string): Promise<ProposalOrNull>;
 
     /**
      * Lists proposals with pagination and filtering
