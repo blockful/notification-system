@@ -1,4 +1,5 @@
 import { AxiosInstance } from 'axios';
+import { print } from 'graphql';
 import type { TypedDocumentNode } from '@graphql-typed-document-node/core';
 import { GetDaOsDocument } from '../gql/graphql';
 
@@ -22,7 +23,7 @@ export class AnticaptureClient {
     variables?: TVariables
   ): Promise<TResult> {
     const response = await this.httpClient.post(this.endpoint, {
-      query: (document as any).loc?.source.body || document.toString(),
+      query: print(document),
       variables,
     });
 

@@ -1,4 +1,5 @@
 import axios, { AxiosInstance } from 'axios';
+import { print } from 'graphql';
 import type {
   GetProposalByIdQuery,
   GetProposalByIdQueryVariables,
@@ -28,7 +29,7 @@ export class AnticaptureClient {
     variables?: TVariables
   ): Promise<TResult> {
     const response = await this.httpClient.post(this.endpoint, {
-      query: (document as any).loc?.source.body || document.toString(),
+      query: print(document),
       variables,
     });
 
