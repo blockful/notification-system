@@ -17,7 +17,7 @@ const config = loadConfig();
 
 // Create and start the application
 const app = new App(
-  config.anticaptureApiUrl,
+  config.anticaptureGraphqlEndpoint,
   config.telegramBotToken,
   config.subscriptionServerUrl,
   config.port
