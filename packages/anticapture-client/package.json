@@ -1,0 +1,27 @@
+{
+  "name": "@notification-system/anticapture-client",
+  "version": "1.0.0",
+  "description": "Shared AnticaptureClient for GraphQL communication",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsc --watch",
+    "clean": "rm -rf dist"
+  },
+  "keywords": ["graphql", "anticapture", "client"],
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "@types/node": "^20.17.46",
+    "typescript": "^5.8.3"
+  },
+  "dependencies": {
+    "@graphql-typed-document-node/core": "^3.2.0",
+    "axios": "^1.7.2",
+    "graphql": "^16.11.0"
+  }
+}
