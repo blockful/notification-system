@@ -8,14 +8,19 @@
     "dist"
   ],
   "scripts": {
-    "build": "tsc",
+    "build": "npm run codegen && tsc",
     "dev": "tsc --watch",
-    "clean": "rm -rf dist"
+    "clean": "rm -rf dist",
+    "codegen": "graphql-codegen"
   },
   "keywords": ["graphql", "anticapture", "client"],
   "author": "",
   "license": "ISC",
   "devDependencies": {
+    "@graphql-codegen/cli": "^5.0.7",
+    "@graphql-codegen/client-preset": "^4.8.2",
+    "@graphql-codegen/typescript": "^4.1.6",
+    "@graphql-codegen/typescript-operations": "^4.6.1",
     "@types/node": "^20.17.46",
     "typescript": "^5.8.3"
   },
