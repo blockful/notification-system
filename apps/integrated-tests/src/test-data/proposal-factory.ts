@@ -48,17 +48,7 @@ export class ProposalFactory {
     baseId: string = 'proposal'
   ): ProposalData[] {
     return Array.from({ length: count }, (_, index) => 
-      this.createProposal(daoId, `${baseId}-${index + 1}`, {
-        startBlock: 12345678 + index * 2,
-        endBlock: 12345978 + index * 2,
-        description: `Test ${daoId} proposal ${index + 1}`,
-        values: [(100 * (index + 1)).toString()],
-        targets: [`0xtarget${index + 1}`],
-        calldatas: [`0xabcdef123456789${index}`],
-        forVotes: `${1000 + index * 500}000000000000000000`,
-        againstVotes: `${500 + index * 100}000000000000000000`,
-        abstainVotes: `${200 + index * 50}000000000000000000`
-      })
+      this.createProposal(daoId, `${baseId}-${index + 1}`)
     );
   }
 
