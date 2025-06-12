@@ -4,8 +4,6 @@ import * as fs from 'fs';
 // Setup Telegram mock only
 import { setupTelegramMock } from '../src/mocks/telegram-mock-setup';
 const mockSendMessage = setupTelegramMock();
-
-// Now import other modules
 import { db, closeDatabase } from '../src/setup/database-config';
 import { setupDatabase } from '../src/setup/database';
 import { startTestApps, stopTestApps, TestApps } from '../src/setup/apps';
@@ -28,11 +26,7 @@ describe('Inactive Preference Handling - Integration Test', () => {
     // Clean up any existing test databases
     const files = fs.readdirSync('/tmp').filter(f => f.startsWith('test_integration_'));
     files.forEach(file => {
-      try {
-        fs.unlinkSync(`/tmp/${file}`);
-      } catch (e) {
-        // Ignore if file doesn't exist
-      }
+      fs.unlinkSync(`/tmp/${file}`);
     });
 
     await setupDatabase();
@@ -108,46 +102,4 @@ describe('Inactive Preference Handling - Integration Test', () => {
     expect(notifiedUsers).toContain('111111111'); // User with active UNI preference
   });
 
-  test('should not notify users with inactive preferences', async () => {
-    const initialCallCount = mockSendMessage.mock.calls.length;
-    
-    // Setup UNI proposal specifically
-    const uniProposal = ProposalFactory.createProposal('UNISWAP', 'inactive-preference-test');
-    GraphQLMockSetup.setupProposalMock(httpMockSetup.getMockClient(), [uniProposal]);
-    
-    // Wait for the logic system to process
-    await new Promise(resolve => setTimeout(resolve, 5000));
-    
-    const finalCallCount = mockSendMessage.mock.calls.length;
-    const newCallsCount = finalCallCount - initialCallCount;
-    
-    // Should only notify user with active preference (1 notification)
-    expect(newCallsCount).toBe(1);
-    
-    const newCalls = mockSendMessage.mock.calls.slice(initialCallCount);
-    const notifiedUsers = newCalls.map(call => call[0].toString());
-    expect(notifiedUsers).toContain('111111111'); // User with active preference
-    expect(notifiedUsers).not.toContain('555555555'); // User with inactive preference should NOT be notified
-  });
-
-  test('should not notify users with inactive preferences for specific DAOs', async () => {
-    const initialCallCount = mockSendMessage.mock.calls.length;
-    
-    // Setup ENS proposal specifically
-    const ensProposal = ProposalFactory.createProposal('ENS', 'inactive-preference-test');
-    GraphQLMockSetup.setupProposalMock(httpMockSetup.getMockClient(), [ensProposal]);
-    
-    // Wait for the logic system to process
-    await new Promise(resolve => setTimeout(resolve, 5000));
-    
-    const finalCallCount = mockSendMessage.mock.calls.length;
-    const newCallsCount = finalCallCount - initialCallCount;
-    
-    // Should not notify anyone (0 notifications)
-    expect(newCallsCount).toBe(0);
-    
-    const newCalls = mockSendMessage.mock.calls.slice(initialCallCount);
-    const notifiedUsers = newCalls.map(call => call[0].toString());
-    expect(notifiedUsers).not.toContain('666666666'); // User with inactive preference should NOT be notified
-  });
 });

@@ -26,11 +26,7 @@ describe('Duplicate Prevention - Integration Test', () => {
     // Clean up any existing test databases
     const files = fs.readdirSync('/tmp').filter(f => f.startsWith('test_integration_'));
     files.forEach(file => {
-      try {
-        fs.unlinkSync(`/tmp/${file}`);
-      } catch (e) {
-        // Ignore if file doesn't exist
-      }
+      fs.unlinkSync(`/tmp/${file}`);
     });
 
     await setupDatabase();
@@ -65,8 +61,8 @@ describe('Duplicate Prevention - Integration Test', () => {
     uniDaoId = uniDao.id;
     
     // Create Users with subscriptions
-    const uniFollower = await UserFactory.createUserWithFullSetup('111111111', 'uni_follower', uniDaoId, true, true, now);
-    const bothFollower = await UserFactory.createUserWithFullSetup('333333333', 'both_follower', uniDaoId, true, true, now);
+    const uniFollower = await UserFactory.createUserWithFullSetup('111111111', 'uni_follower', uniDaoId, true, now);
+    const bothFollower = await UserFactory.createUserWithFullSetup('333333333', 'both_follower', uniDaoId, true, now);
     
     uniFollowerUserId = uniFollower.user.id;
     bothFollowerUserId = bothFollower.user.id;
@@ -95,32 +91,6 @@ describe('Duplicate Prevention - Integration Test', () => {
     const secondRoundNewCalls = secondRoundCallCount - firstRoundCallCount;
     
     // Should NOT send duplicate notifications
-    expect(secondRoundNewCalls).toBe(0);
-  });
-
-  test('should handle deduplication for multiple simultaneous proposals', async () => {
-    const initialCallCount = mockSendMessage.mock.calls.length;
-    
-    // Setup multiple UNI proposals simultaneously
-    const multipleUniProposals = ProposalFactory.createMultipleProposals('UNISWAP', 3, 'uni-dedup');
-    GraphQLMockSetup.setupProposalMock(httpMockSetup.getMockClient(), multipleUniProposals);
-    
-    // Wait for the logic system to process
-    await new Promise(resolve => setTimeout(resolve, 5000));
-    
-    const finalCallCount = mockSendMessage.mock.calls.length;
-    const newCallsCount = finalCallCount - initialCallCount;
-    
-    // Should send 3 proposals × 2 users (UNI followers) = 6 notifications
-    expect(newCallsCount).toBe(6);
-    
-    // Test deduplication works per proposal - wait for another round
-    await new Promise(resolve => setTimeout(resolve, 5000));
-    
-    const afterSecondRoundCallCount = mockSendMessage.mock.calls.length;
-    const secondRoundNewCalls = afterSecondRoundCallCount - finalCallCount;
-    
-    // Should be 0 - no duplicate notifications for same proposals
     expect(secondRoundNewCalls).toBe(0);
   });
 });

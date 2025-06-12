@@ -28,11 +28,7 @@ describe('Multi-DAO Notification Flow - Integration Test', () => {
     // Clean up any existing test databases
     const files = fs.readdirSync('/tmp').filter(f => f.startsWith('test_integration_'));
     files.forEach(file => {
-      try {
-        fs.unlinkSync(`/tmp/${file}`);
-      } catch (e) {
-        // Ignore if file doesn't exist
-      }
+      fs.unlinkSync(`/tmp/${file}`);
     });
 
     await setupDatabase();
@@ -69,9 +65,9 @@ describe('Multi-DAO Notification Flow - Integration Test', () => {
     ensDaoId = ensDao.id;
     
     // Create Users with subscriptions
-    const uniFollower = await UserFactory.createUserWithFullSetup('111111111', 'uni_follower', uniDaoId, true, true, now);
-    const ensFollower = await UserFactory.createUserWithFullSetup('222222222', 'ens_follower', ensDaoId, true, true, now);
-    const bothFollower = await UserFactory.createUserWithFullSetup('333333333', 'both_follower', uniDaoId, true, true, now);
+    const uniFollower = await UserFactory.createUserWithFullSetup('111111111', 'uni_follower', uniDaoId, true, now);
+    const ensFollower = await UserFactory.createUserWithFullSetup('222222222', 'ens_follower', ensDaoId, true, now);
+    const bothFollower = await UserFactory.createUserWithFullSetup('333333333', 'both_follower', uniDaoId, true, now);
     
     uniFollowerUserId = uniFollower.user.id;
     ensFollowerUserId = ensFollower.user.id;
@@ -153,7 +149,7 @@ describe('Multi-DAO Notification Flow - Integration Test', () => {
     
     // Add a new user that subscribes to UNISWAP
     const now = new Date().toISOString();
-    await UserFactory.createUserWithFullSetup('444444444', 'new_uni_follower', 'UNISWAP', true, true, now);
+    await UserFactory.createUserWithFullSetup('444444444', 'new_uni_follower', 'UNISWAP', true, now);
     
     // Wait for logic system to trigger again
     await new Promise(resolve => setTimeout(resolve, 5000));
