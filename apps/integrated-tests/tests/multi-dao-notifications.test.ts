@@ -1,11 +1,7 @@
 import { describe, test, expect, beforeAll, afterAll, beforeEach, jest } from '@jest/globals';
 import * as fs from 'fs';
-
-// Setup Telegram mock only
 import { setupTelegramMock } from '../src/mocks/telegram-mock-setup';
 const mockSendMessage = setupTelegramMock();
-
-// Now import other modules
 import { db, closeDatabase } from '../src/setup/database-config';
 import { setupDatabase } from '../src/setup/database';
 import { startTestApps, stopTestApps, TestApps } from '../src/setup/apps';
