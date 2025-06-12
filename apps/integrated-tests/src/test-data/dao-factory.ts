@@ -7,7 +7,7 @@ export interface DaoData {
 export class DaoFactory {
   static async createDao(daoName: string): Promise<DaoData> {
     const dao = {
-      id: daoName // Using DAO name as ID to match GraphQL queries
+      id: daoName 
     };
     await db('dao').insert(dao);
     return dao;
