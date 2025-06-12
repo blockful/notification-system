@@ -1,16 +1,8 @@
-// DEPRECATED: This test file has been refactored into smaller, focused test files:
-// - single-dao-notifications.test.ts
-// - multi-dao-notifications.test.ts  
-// - duplicate-prevention.test.ts
-// - inactive-user-handling.test.ts
-//
-// This file is kept for reference but should not be actively maintained.
-
 import { describe, test, expect, beforeAll, afterAll, beforeEach, jest } from '@jest/globals';
 import * as fs from 'fs';
 
 // Setup Telegram mock only
-import { setupTelegramMock, getTelegramCallCount, getNotifiedUsers, getTelegramCallsForUser } from '../src/mocks/telegram-mock-setup';
+import { setupTelegramMock, getTelegramCallCount } from '../src/mocks/telegram-mock-setup';
 const mockSendMessage = setupTelegramMock();
 
 // Now import other modules
@@ -23,13 +15,11 @@ import { DaoFactory } from '../src/test-data/dao-factory';
 import { UserFactory } from '../src/test-data/user-factory';
 import { ProposalFactory } from '../src/test-data/proposal-factory';
 
-describe('Multi-DAO Notification Flow - Integration Test (DEPRECATED - Use specific test files)', () => {
+describe('Duplicate Prevention - Integration Test', () => {
   let apps: TestApps;
   let httpMockSetup: HttpClientMockSetup;
   let uniDaoId: string;
-  let ensDaoId: string;
   let uniFollowerUserId: string;
-  let ensFollowerUserId: string;
   let bothFollowerUserId: string;
 
   beforeAll(async () => {
@@ -44,7 +34,7 @@ describe('Multi-DAO Notification Flow - Integration Test (DEPRECATED - Use speci
     });
 
     await setupDatabase();
-    await createMultiDaoTestData();
+    await createTestData();
     
     // Setup mocks
     httpMockSetup = new HttpClientMockSetup();
@@ -67,58 +57,70 @@ describe('Multi-DAO Notification Flow - Integration Test (DEPRECATED - Use speci
     await new Promise(resolve => setTimeout(resolve, 1000));
   }, 40000);
 
-  async function createMultiDaoTestData() {
+  async function createTestData() {
     const now = new Date().toISOString();
     
-    // Create DAOs
+    // Create DAO
     const uniDao = await DaoFactory.createDao('UNISWAP');
-    const ensDao = await DaoFactory.createDao('ENS');
     uniDaoId = uniDao.id;
-    ensDaoId = ensDao.id;
     
     // Create Users with subscriptions
     const uniFollower = await UserFactory.createUserWithFullSetup('111111111', 'uni_follower', uniDaoId, true, true, now);
-    const ensFollower = await UserFactory.createUserWithFullSetup('222222222', 'ens_follower', ensDaoId, true, true, now);
     const bothFollower = await UserFactory.createUserWithFullSetup('333333333', 'both_follower', uniDaoId, true, true, now);
     
     uniFollowerUserId = uniFollower.user.id;
-    ensFollowerUserId = ensFollower.user.id;
     bothFollowerUserId = bothFollower.user.id;
-    
-    // Create second subscription for bothFollower
-    await UserFactory.createUserPreference(bothFollowerUserId, ensDaoId, true, now);
-    await UserFactory.createSubscription(bothFollowerUserId, ensDaoId, now);
   }
 
-  // NOTE: This test file is DEPRECATED. 
-  // Use the specific test files instead:
-  // - single-dao-notifications.test.ts
-  // - multi-dao-notifications.test.ts
-  // - duplicate-prevention.test.ts
-  // - inactive-user-handling.test.ts
-
-  test('DEPRECATED - Use single-dao-notifications.test.ts instead', async () => {
+  test('should not send duplicate notifications on repeated logic system triggers', async () => {
     const initialCallCount = getTelegramCallCount(mockSendMessage);
     
-    // Setup mock to return active UNI proposal
-    const uniProposal = ProposalFactory.createProposal('UNISWAP', 'uni-proposal-1');
-    GraphQLMockSetup.setupProposalMock(httpMockSetup.getMockClient(), [uniProposal]);
+    // Setup mock to return the same UNI proposal consistently
+    const persistentProposal = ProposalFactory.createProposal('UNISWAP', 'persistent-uni-proposal');
+    GraphQLMockSetup.setupProposalMock(httpMockSetup.getMockClient(), [persistentProposal]);
+    
+    // Wait for first round of notifications
+    await new Promise(resolve => setTimeout(resolve, 5000));
+    
+    const firstRoundCallCount = getTelegramCallCount(mockSendMessage);
+    const firstRoundNewCalls = firstRoundCallCount - initialCallCount;
+    
+    // Should have sent notifications in first round
+    expect(firstRoundNewCalls).toBe(2); // UNI follower + both follower
+    
+    // Wait for second round (logic system triggers again with same proposal)
+    await new Promise(resolve => setTimeout(resolve, 5000));
+    
+    const secondRoundCallCount = getTelegramCallCount(mockSendMessage);
+    const secondRoundNewCalls = secondRoundCallCount - firstRoundCallCount;
+    
+    // Should NOT send duplicate notifications
+    expect(secondRoundNewCalls).toBe(0);
+  });
+
+  test('should handle deduplication for multiple simultaneous proposals', async () => {
+    const initialCallCount = getTelegramCallCount(mockSendMessage);
+    
+    // Setup multiple UNI proposals simultaneously
+    const multipleUniProposals = ProposalFactory.createMultipleProposals('UNISWAP', 3, 'uni-dedup');
+    GraphQLMockSetup.setupProposalMock(httpMockSetup.getMockClient(), multipleUniProposals);
     
     // Wait for the logic system to process
-    await new Promise(resolve => setTimeout(resolve, 6000));
+    await new Promise(resolve => setTimeout(resolve, 5000));
     
     const finalCallCount = getTelegramCallCount(mockSendMessage);
     const newCallsCount = finalCallCount - initialCallCount;
     
-    // Should have exactly 2 new calls (UNI follower + both follower)
-    expect(newCallsCount).toBe(2);
+    // Should send 3 proposals × 2 users (UNI followers) = 6 notifications
+    expect(newCallsCount).toBe(6);
     
-    // Verify both users received the notification
-    const notifiedUsers = getNotifiedUsers(mockSendMessage, initialCallCount);
-    expect(notifiedUsers).toContain('111111111'); // UNI follower
-    expect(notifiedUsers).toContain('333333333'); // Both follower
+    // Test deduplication works per proposal - wait for another round
+    await new Promise(resolve => setTimeout(resolve, 5000));
+    
+    const afterSecondRoundCallCount = getTelegramCallCount(mockSendMessage);
+    const secondRoundNewCalls = afterSecondRoundCallCount - finalCallCount;
+    
+    // Should be 0 - no duplicate notifications for same proposals
+    expect(secondRoundNewCalls).toBe(0);
   });
-
-  // All other tests have been moved to specific test files
-  // This is just a minimal example to show the refactored structure
 });

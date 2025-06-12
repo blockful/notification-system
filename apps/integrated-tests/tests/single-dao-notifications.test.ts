@@ -1,16 +1,8 @@
-// DEPRECATED: This test file has been refactored into smaller, focused test files:
-// - single-dao-notifications.test.ts
-// - multi-dao-notifications.test.ts  
-// - duplicate-prevention.test.ts
-// - inactive-user-handling.test.ts
-//
-// This file is kept for reference but should not be actively maintained.
-
 import { describe, test, expect, beforeAll, afterAll, beforeEach, jest } from '@jest/globals';
 import * as fs from 'fs';
 
 // Setup Telegram mock only
-import { setupTelegramMock, getTelegramCallCount, getNotifiedUsers, getTelegramCallsForUser } from '../src/mocks/telegram-mock-setup';
+import { setupTelegramMock, getTelegramCallCount, getNotifiedUsers } from '../src/mocks/telegram-mock-setup';
 const mockSendMessage = setupTelegramMock();
 
 // Now import other modules
@@ -23,7 +15,7 @@ import { DaoFactory } from '../src/test-data/dao-factory';
 import { UserFactory } from '../src/test-data/user-factory';
 import { ProposalFactory } from '../src/test-data/proposal-factory';
 
-describe('Multi-DAO Notification Flow - Integration Test (DEPRECATED - Use specific test files)', () => {
+describe('Single DAO Notification Flow - Integration Test', () => {
   let apps: TestApps;
   let httpMockSetup: HttpClientMockSetup;
   let uniDaoId: string;
@@ -44,7 +36,7 @@ describe('Multi-DAO Notification Flow - Integration Test (DEPRECATED - Use speci
     });
 
     await setupDatabase();
-    await createMultiDaoTestData();
+    await createTestData();
     
     // Setup mocks
     httpMockSetup = new HttpClientMockSetup();
@@ -67,7 +59,7 @@ describe('Multi-DAO Notification Flow - Integration Test (DEPRECATED - Use speci
     await new Promise(resolve => setTimeout(resolve, 1000));
   }, 40000);
 
-  async function createMultiDaoTestData() {
+  async function createTestData() {
     const now = new Date().toISOString();
     
     // Create DAOs
@@ -90,14 +82,7 @@ describe('Multi-DAO Notification Flow - Integration Test (DEPRECATED - Use speci
     await UserFactory.createSubscription(bothFollowerUserId, ensDaoId, now);
   }
 
-  // NOTE: This test file is DEPRECATED. 
-  // Use the specific test files instead:
-  // - single-dao-notifications.test.ts
-  // - multi-dao-notifications.test.ts
-  // - duplicate-prevention.test.ts
-  // - inactive-user-handling.test.ts
-
-  test('DEPRECATED - Use single-dao-notifications.test.ts instead', async () => {
+  test('UNI proposal should notify only UNI followers', async () => {
     const initialCallCount = getTelegramCallCount(mockSendMessage);
     
     // Setup mock to return active UNI proposal
@@ -105,7 +90,7 @@ describe('Multi-DAO Notification Flow - Integration Test (DEPRECATED - Use speci
     GraphQLMockSetup.setupProposalMock(httpMockSetup.getMockClient(), [uniProposal]);
     
     // Wait for the logic system to process
-    await new Promise(resolve => setTimeout(resolve, 6000));
+    await new Promise(resolve => setTimeout(resolve, 5000));
     
     const finalCallCount = getTelegramCallCount(mockSendMessage);
     const newCallsCount = finalCallCount - initialCallCount;
@@ -117,8 +102,29 @@ describe('Multi-DAO Notification Flow - Integration Test (DEPRECATED - Use speci
     const notifiedUsers = getNotifiedUsers(mockSendMessage, initialCallCount);
     expect(notifiedUsers).toContain('111111111'); // UNI follower
     expect(notifiedUsers).toContain('333333333'); // Both follower
+    expect(notifiedUsers).not.toContain('222222222'); // ENS follower should NOT be notified
   });
 
-  // All other tests have been moved to specific test files
-  // This is just a minimal example to show the refactored structure
+  test('ENS proposal should notify only ENS followers', async () => {
+    const initialCallCount = getTelegramCallCount(mockSendMessage);
+    
+    // Setup mock to return active ENS proposal
+    const ensProposal = ProposalFactory.createProposal('ENS', 'ens-proposal-1');
+    GraphQLMockSetup.setupProposalMock(httpMockSetup.getMockClient(), [ensProposal]);
+    
+    // Wait for the logic system to process
+    await new Promise(resolve => setTimeout(resolve, 5000));
+    
+    const finalCallCount = getTelegramCallCount(mockSendMessage);
+    const newCallsCount = finalCallCount - initialCallCount;
+    
+    // Should have exactly 2 new calls (ENS follower + both follower)
+    expect(newCallsCount).toBe(2);
+    
+    // Verify both users received the notification
+    const notifiedUsers = getNotifiedUsers(mockSendMessage, initialCallCount);
+    expect(notifiedUsers).toContain('222222222'); // ENS follower
+    expect(notifiedUsers).toContain('333333333'); // Both follower
+    expect(notifiedUsers).not.toContain('111111111'); // UNI follower should NOT be notified
+  });
 });
