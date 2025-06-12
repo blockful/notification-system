@@ -69,15 +69,15 @@ describe('Inactive Preference Handling - Integration Test', () => {
     ensDaoId = ensDao.id;
     
     // Create user that follows UNI with active preference
-    const activeUser = await UserFactory.createUserWithFullSetup('111111111', 'active_user', uniDaoId, true, true, now);
+    const activeUser = await UserFactory.createUserWithFullSetup('111111111', 'active_user', uniDaoId, true, now);
     activeUserId = activeUser.user.id;
     
     // Create user that follows UNI but with INACTIVE preference
-    const userWithInactiveUniPreference = await UserFactory.createUserWithFullSetup('555555555', 'inactive_pref_user', uniDaoId, true, false, now);
+    const userWithInactiveUniPreference = await UserFactory.createUserWithFullSetup('555555555', 'inactive_pref_user', uniDaoId, false, now);
     inactiveUserId = userWithInactiveUniPreference.user.id;
     
     // Create user with inactive preference for ENS
-    const userWithInactivePreference = await UserFactory.createUserWithFullSetup('666666666', 'user_inactive_pref', ensDaoId, true, false, now);
+    const userWithInactivePreference = await UserFactory.createUserWithFullSetup('666666666', 'user_inactive_pref', ensDaoId, false, now);
     userWithInactivePreferenceId = userWithInactivePreference.user.id;
   }
 

@@ -5,7 +5,6 @@ export interface UserData {
   id: string;
   channel_user_id: string;
   channel: string;
-  is_active: boolean;
 }
 
 export interface UserPreferenceData {
@@ -21,7 +20,6 @@ export interface SubscriptionData {
   dao_id: string;
   notification_type: string;
   notification_channels: string;
-  is_active: boolean;
 }
 
 export class UserFactory {
@@ -30,7 +28,6 @@ export class UserFactory {
       id: uuidv4(),
       channel: 'telegram',
       channel_user_id: channelUserId,
-      is_active: true, // Users are always active, only preferences can be inactive
       created_at: new Date().toISOString()
     };
     await db('users').insert(user);
@@ -66,7 +63,6 @@ export class UserFactory {
       dao_id: daoId,
       notification_type: 'proposal_created',
       notification_channels: JSON.stringify(['telegram']),
-      is_active: true,
       created_at: timestamp || new Date().toISOString(),
       updated_at: timestamp || new Date().toISOString()
     };
@@ -78,7 +74,6 @@ export class UserFactory {
     channelUserId: string, 
     name: string, 
     daoId: string,
-    userActive: boolean = true, // Ignored - kept for backward compatibility
     preferenceActive: boolean = true,
     timestamp?: string
   ): Promise<{ user: UserData; preference: UserPreferenceData; subscription: SubscriptionData }> {

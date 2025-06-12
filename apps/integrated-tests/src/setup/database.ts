@@ -35,7 +35,6 @@ async function createTestUser(timestamp: string) {
     id: uuidv4(),
     channel: 'telegram',
     channel_user_id: '123456789',
-    is_active: true,
     created_at: timestamp
   };
   await db('users').insert(user);
