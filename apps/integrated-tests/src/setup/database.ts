@@ -1,4 +1,4 @@
-import { db } from '../config/database';
+import { db } from './database-config';
 import { v4 as uuidv4 } from 'uuid';
 
 export async function setupDatabase(): Promise<void> {

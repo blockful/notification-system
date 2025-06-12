@@ -11,10 +11,13 @@
 import { knex } from 'knex';
 import path from 'path';
 
+// Create unique database for each test run to avoid conflicts
+const dbPath = `/tmp/test_integration_${Date.now()}_${Math.random().toString(36).substr(2, 9)}.db`;
+
 export const db = knex({
   client: 'sqlite3',
   connection: {
-    filename: '/tmp/test_integration.db'
+    filename: dbPath
   },
   useNullAsDefault: true,
   migrations: {
@@ -28,4 +31,4 @@ export const db = knex({
 
 export function closeDatabase(): void {
   db.destroy();
-} 
+}
