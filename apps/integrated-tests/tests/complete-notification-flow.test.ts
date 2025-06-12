@@ -2,13 +2,14 @@ import { describe, test, expect, beforeAll, afterAll, beforeEach, jest } from '@
 import * as fs from 'fs';
 
 // Setup Telegram mock only
-import { setupTelegramMock } from '../src/config/mocks';
+import { setupTelegramMock } from '../src/mocks/telegram-mock-setup';
 const mockSendMessage = setupTelegramMock();
 
 // Now import other modules
-import { db, closeDatabase } from '../src/config/database';
+import { db, closeDatabase } from '../src/setup/database-config';
 import { setupDatabase, createTestData } from '../src/setup/database';
-import { createMockHttpClient, setupGraphQLMock } from '../src/config/http-client-mock';
+import { createMockHttpClient } from '../src/mocks/http-client-mock';
+import { setupGraphQLMock } from '../src/mocks/graphql-mock-setup';
 import { startTestApps, stopTestApps, TestApps } from '../src/setup/apps';
 
 describe('Complete Notification Flow - Full Integration Test', () => {
@@ -52,7 +53,7 @@ describe('Complete Notification Flow - Full Integration Test', () => {
     mockProposalStatus = 'ACTIVE';
     setupGraphQLMock(mockHttpClient, testDaoId, mockProposalStatus);
     
-    await new Promise(resolve => setTimeout(resolve, 6000));
+    await new Promise(resolve => setTimeout(resolve, 5000));
     
     const finalCallCount = mockSendMessage.mock.calls.length;
     const newCallsCount = finalCallCount - initialCallCount;

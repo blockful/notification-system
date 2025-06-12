@@ -50,7 +50,7 @@ export const startTestApps = async (db: Knex, mockHttpClient: any): Promise<Test
   logicSystemApp.start();
   
   // Wait for apps to be ready
-  await new Promise(resolve => setTimeout(resolve, 3000));
+  await new Promise(resolve => setTimeout(resolve, 2000));
   
   return {
     consumerApp,
