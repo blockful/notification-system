@@ -38,6 +38,9 @@ importers:
       '@graphql-typed-document-node/core':
         specifier: ^3.2.0
         version: 3.2.0(graphql@16.11.0)
+      '@notification-system/anticapture-client':
+        specifier: workspace:*
+        version: link:../../packages/anticapture-client
       axios:
         specifier: ^1.7.2
         version: 1.9.0
@@ -193,6 +196,9 @@ importers:
       '@graphql-typed-document-node/core':
         specifier: ^3.2.0
         version: 3.2.0(graphql@16.11.0)
+      '@notification-system/anticapture-client':
+        specifier: workspace:*
+        version: link:../../packages/anticapture-client
       axios:
         specifier: ^1.6.7
         version: 1.9.0
@@ -324,6 +330,25 @@ importers:
       tsx:
         specifier: ^4.19.4
         version: 4.19.4
+      typescript:
+        specifier: ^5.8.3
+        version: 5.8.3
+
+  packages/anticapture-client:
+    dependencies:
+      '@graphql-typed-document-node/core':
+        specifier: ^3.2.0
+        version: 3.2.0(graphql@16.11.0)
+      axios:
+        specifier: ^1.7.2
+        version: 1.9.0
+      graphql:
+        specifier: ^16.11.0
+        version: 16.11.0
+    devDependencies:
+      '@types/node':
+        specifier: ^20.17.46
+        version: 20.17.46
       typescript:
         specifier: ^5.8.3
         version: 5.8.3

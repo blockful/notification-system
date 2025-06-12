@@ -39,6 +39,7 @@
   },
   "dependencies": {
     "@graphql-typed-document-node/core": "^3.2.0",
+    "@notification-system/anticapture-client": "workspace:*",
     "axios": "^1.6.7",
     "dotenv": "^16.3.1",
     "graphql": "^16.11.0",
