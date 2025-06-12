@@ -1,6 +1,5 @@
 import { ProposalDB, ProposalOnChain, ProposalOrNull, ListProposalsOptions } from '../interfaces/proposal.interface';
-import { AnticaptureClient } from '../api-clients/anticapture-client';
-import type { ListProposalsQueryVariables } from '../gql/graphql';
+import { AnticaptureClient, ListProposalsQueryVariables } from '@notification-system/anticapture-client';
 
 export class ProposalRepository implements ProposalDB {
   private anticaptureClient: AnticaptureClient;

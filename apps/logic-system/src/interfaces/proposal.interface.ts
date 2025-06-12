@@ -1,5 +1,7 @@
-// ProposalOnChain now uses GraphQL types directly  
-import type { GetProposalByIdQuery } from '../gql/graphql';
+// Import GraphQL types from centralized package
+import type { GetProposalByIdQuery } from '@notification-system/anticapture-client';
+
+// Use GraphQL types directly for strong typing
 export type ProposalOnChain = GetProposalByIdQuery['proposalsOnchains']['items'][0];
 export type ProposalOrNull = ProposalOnChain | null;
 
