@@ -35,23 +35,3 @@ export function setupTelegramMock(): any {
 
   return mockSendMessage;
 }
-
-export function clearTelegramMock(mockSendMessage: any): void {
-  jest.clearAllMocks();
-  mockSendMessage.mockReset();
-}
-
-export function getTelegramCallCount(mockSendMessage: any): number {
-  return mockSendMessage.mock.calls.length;
-}
-
-export function getTelegramCallsForUser(mockSendMessage: any, channelUserId: string): any[] {
-  return mockSendMessage.mock.calls.filter(
-    call => call[0].toString() === channelUserId
-  );
-}
-
-export function getNotifiedUsers(mockSendMessage: any, initialCallCount: number = 0): string[] {
-  const newCalls = mockSendMessage.mock.calls.slice(initialCallCount);
-  return newCalls.map(call => call[0].toString());
-}

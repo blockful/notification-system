@@ -2,7 +2,7 @@ import { describe, test, expect, beforeAll, afterAll, beforeEach, jest } from '@
 import * as fs from 'fs';
 
 // Setup Telegram mock only
-import { setupTelegramMock, getTelegramCallCount, getNotifiedUsers } from '../src/mocks/telegram-mock-setup';
+import { setupTelegramMock } from '../src/mocks/telegram-mock-setup';
 const mockSendMessage = setupTelegramMock();
 
 // Now import other modules
@@ -82,7 +82,7 @@ describe('Inactive Preference Handling - Integration Test', () => {
   }
 
   test('should respect inactive preference states', async () => {
-    const initialCallCount = getTelegramCallCount(mockSendMessage);
+    const initialCallCount = mockSendMessage.mock.calls.length;
     
     // Setup proposals for both DAOs
     const proposals = ProposalFactory.createProposalsForMultipleDaos(['UNISWAP', 'ENS'], 'inactive-test');
@@ -91,7 +91,7 @@ describe('Inactive Preference Handling - Integration Test', () => {
     // Wait for the logic system to process
     await new Promise(resolve => setTimeout(resolve, 5000));
     
-    const finalCallCount = getTelegramCallCount(mockSendMessage);
+    const finalCallCount = mockSendMessage.mock.calls.length;
     const newCallsCount = finalCallCount - initialCallCount;
     
     // Should only notify users with active preferences
@@ -99,7 +99,8 @@ describe('Inactive Preference Handling - Integration Test', () => {
     expect(newCallsCount).toBe(1);
     
     // Verify users with inactive preferences were NOT notified
-    const notifiedUsers = getNotifiedUsers(mockSendMessage, initialCallCount);
+    const newCalls = mockSendMessage.mock.calls.slice(initialCallCount);
+    const notifiedUsers = newCalls.map(call => call[0].toString());
     expect(notifiedUsers).not.toContain('555555555'); // User with inactive UNI preference
     expect(notifiedUsers).not.toContain('666666666'); // User with inactive ENS preference
     
@@ -108,7 +109,7 @@ describe('Inactive Preference Handling - Integration Test', () => {
   });
 
   test('should not notify users with inactive preferences', async () => {
-    const initialCallCount = getTelegramCallCount(mockSendMessage);
+    const initialCallCount = mockSendMessage.mock.calls.length;
     
     // Setup UNI proposal specifically
     const uniProposal = ProposalFactory.createProposal('UNISWAP', 'inactive-preference-test');
@@ -117,19 +118,20 @@ describe('Inactive Preference Handling - Integration Test', () => {
     // Wait for the logic system to process
     await new Promise(resolve => setTimeout(resolve, 5000));
     
-    const finalCallCount = getTelegramCallCount(mockSendMessage);
+    const finalCallCount = mockSendMessage.mock.calls.length;
     const newCallsCount = finalCallCount - initialCallCount;
     
     // Should only notify user with active preference (1 notification)
     expect(newCallsCount).toBe(1);
     
-    const notifiedUsers = getNotifiedUsers(mockSendMessage, initialCallCount);
+    const newCalls = mockSendMessage.mock.calls.slice(initialCallCount);
+    const notifiedUsers = newCalls.map(call => call[0].toString());
     expect(notifiedUsers).toContain('111111111'); // User with active preference
     expect(notifiedUsers).not.toContain('555555555'); // User with inactive preference should NOT be notified
   });
 
   test('should not notify users with inactive preferences for specific DAOs', async () => {
-    const initialCallCount = getTelegramCallCount(mockSendMessage);
+    const initialCallCount = mockSendMessage.mock.calls.length;
     
     // Setup ENS proposal specifically
     const ensProposal = ProposalFactory.createProposal('ENS', 'inactive-preference-test');
@@ -138,13 +140,14 @@ describe('Inactive Preference Handling - Integration Test', () => {
     // Wait for the logic system to process
     await new Promise(resolve => setTimeout(resolve, 5000));
     
-    const finalCallCount = getTelegramCallCount(mockSendMessage);
+    const finalCallCount = mockSendMessage.mock.calls.length;
     const newCallsCount = finalCallCount - initialCallCount;
     
     // Should not notify anyone (0 notifications)
     expect(newCallsCount).toBe(0);
     
-    const notifiedUsers = getNotifiedUsers(mockSendMessage, initialCallCount);
+    const newCalls = mockSendMessage.mock.calls.slice(initialCallCount);
+    const notifiedUsers = newCalls.map(call => call[0].toString());
     expect(notifiedUsers).not.toContain('666666666'); // User with inactive preference should NOT be notified
   });
 });

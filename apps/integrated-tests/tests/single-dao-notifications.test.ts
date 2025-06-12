@@ -2,7 +2,7 @@ import { describe, test, expect, beforeAll, afterAll, beforeEach, jest } from '@
 import * as fs from 'fs';
 
 // Setup Telegram mock only
-import { setupTelegramMock, getTelegramCallCount, getNotifiedUsers } from '../src/mocks/telegram-mock-setup';
+import { setupTelegramMock } from '../src/mocks/telegram-mock-setup';
 const mockSendMessage = setupTelegramMock();
 
 // Now import other modules
@@ -83,7 +83,7 @@ describe('Single DAO Notification Flow - Integration Test', () => {
   }
 
   test('UNI proposal should notify only UNI followers', async () => {
-    const initialCallCount = getTelegramCallCount(mockSendMessage);
+    const initialCallCount = mockSendMessage.mock.calls.length;
     
     // Setup mock to return active UNI proposal
     const uniProposal = ProposalFactory.createProposal('UNISWAP', 'uni-proposal-1');
@@ -92,21 +92,22 @@ describe('Single DAO Notification Flow - Integration Test', () => {
     // Wait for the logic system to process
     await new Promise(resolve => setTimeout(resolve, 5000));
     
-    const finalCallCount = getTelegramCallCount(mockSendMessage);
+    const finalCallCount = mockSendMessage.mock.calls.length;
     const newCallsCount = finalCallCount - initialCallCount;
     
     // Should have exactly 2 new calls (UNI follower + both follower)
     expect(newCallsCount).toBe(2);
     
     // Verify both users received the notification
-    const notifiedUsers = getNotifiedUsers(mockSendMessage, initialCallCount);
+    const newCalls = mockSendMessage.mock.calls.slice(initialCallCount);
+    const notifiedUsers = newCalls.map(call => call[0].toString());
     expect(notifiedUsers).toContain('111111111'); // UNI follower
     expect(notifiedUsers).toContain('333333333'); // Both follower
     expect(notifiedUsers).not.toContain('222222222'); // ENS follower should NOT be notified
   });
 
   test('ENS proposal should notify only ENS followers', async () => {
-    const initialCallCount = getTelegramCallCount(mockSendMessage);
+    const initialCallCount = mockSendMessage.mock.calls.length;
     
     // Setup mock to return active ENS proposal
     const ensProposal = ProposalFactory.createProposal('ENS', 'ens-proposal-1');
@@ -115,14 +116,15 @@ describe('Single DAO Notification Flow - Integration Test', () => {
     // Wait for the logic system to process
     await new Promise(resolve => setTimeout(resolve, 5000));
     
-    const finalCallCount = getTelegramCallCount(mockSendMessage);
+    const finalCallCount = mockSendMessage.mock.calls.length;
     const newCallsCount = finalCallCount - initialCallCount;
     
     // Should have exactly 2 new calls (ENS follower + both follower)
     expect(newCallsCount).toBe(2);
     
     // Verify both users received the notification
-    const notifiedUsers = getNotifiedUsers(mockSendMessage, initialCallCount);
+    const newCalls = mockSendMessage.mock.calls.slice(initialCallCount);
+    const notifiedUsers = newCalls.map(call => call[0].toString());
     expect(notifiedUsers).toContain('222222222'); // ENS follower
     expect(notifiedUsers).toContain('333333333'); // Both follower
     expect(notifiedUsers).not.toContain('111111111'); // UNI follower should NOT be notified

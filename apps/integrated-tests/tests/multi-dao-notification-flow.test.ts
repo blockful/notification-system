@@ -10,7 +10,7 @@ import { describe, test, expect, beforeAll, afterAll, beforeEach, jest } from '@
 import * as fs from 'fs';
 
 // Setup Telegram mock only
-import { setupTelegramMock, getTelegramCallCount, getNotifiedUsers, getTelegramCallsForUser } from '../src/mocks/telegram-mock-setup';
+import { setupTelegramMock } from '../src/mocks/telegram-mock-setup';
 const mockSendMessage = setupTelegramMock();
 
 // Now import other modules
@@ -98,7 +98,7 @@ describe('Multi-DAO Notification Flow - Integration Test (DEPRECATED - Use speci
   // - inactive-user-handling.test.ts
 
   test('DEPRECATED - Use single-dao-notifications.test.ts instead', async () => {
-    const initialCallCount = getTelegramCallCount(mockSendMessage);
+    const initialCallCount = mockSendMessage.mock.calls.length;
     
     // Setup mock to return active UNI proposal
     const uniProposal = ProposalFactory.createProposal('UNISWAP', 'uni-proposal-1');
@@ -107,14 +107,15 @@ describe('Multi-DAO Notification Flow - Integration Test (DEPRECATED - Use speci
     // Wait for the logic system to process
     await new Promise(resolve => setTimeout(resolve, 6000));
     
-    const finalCallCount = getTelegramCallCount(mockSendMessage);
+    const finalCallCount = mockSendMessage.mock.calls.length;
     const newCallsCount = finalCallCount - initialCallCount;
     
     // Should have exactly 2 new calls (UNI follower + both follower)
     expect(newCallsCount).toBe(2);
     
     // Verify both users received the notification
-    const notifiedUsers = getNotifiedUsers(mockSendMessage, initialCallCount);
+    const newCalls = mockSendMessage.mock.calls.slice(initialCallCount);
+    const notifiedUsers = newCalls.map(call => call[0].toString());
     expect(notifiedUsers).toContain('111111111'); // UNI follower
     expect(notifiedUsers).toContain('333333333'); // Both follower
   });

@@ -2,7 +2,7 @@ import { describe, test, expect, beforeAll, afterAll, beforeEach, jest } from '@
 import * as fs from 'fs';
 
 // Setup Telegram mock only
-import { setupTelegramMock, getTelegramCallCount, getNotifiedUsers, getTelegramCallsForUser } from '../src/mocks/telegram-mock-setup';
+import { setupTelegramMock } from '../src/mocks/telegram-mock-setup';
 const mockSendMessage = setupTelegramMock();
 
 // Now import other modules
@@ -83,7 +83,7 @@ describe('Multi-DAO Notification Flow - Integration Test', () => {
   }
 
   test('Both DAOs proposals should notify user following both DAOs twice', async () => {
-    const initialCallCount = getTelegramCallCount(mockSendMessage);
+    const initialCallCount = mockSendMessage.mock.calls.length;
     
     // Setup mock to return active proposals from both DAOs
     const proposals = ProposalFactory.createProposalsForMultipleDaos(['UNISWAP', 'ENS'], 'multi-proposal');
@@ -92,7 +92,7 @@ describe('Multi-DAO Notification Flow - Integration Test', () => {
     // Wait for the logic system to process
     await new Promise(resolve => setTimeout(resolve, 5000));
     
-    const finalCallCount = getTelegramCallCount(mockSendMessage);
+    const finalCallCount = mockSendMessage.mock.calls.length;
     const newCallsCount = finalCallCount - initialCallCount;
     
     // Should have 4 calls total:
@@ -102,12 +102,14 @@ describe('Multi-DAO Notification Flow - Integration Test', () => {
     expect(newCallsCount).toBe(4);
     
     // Verify both follower received 2 messages
-    const bothFollowerCalls = getTelegramCallsForUser(mockSendMessage, '333333333');
+    const bothFollowerCalls = mockSendMessage.mock.calls.filter(
+      call => call[0].toString() === '333333333'
+    );
     expect(bothFollowerCalls.length).toBeGreaterThanOrEqual(2);
   });
 
   test('should handle multiple simultaneous proposals from same DAO', async () => {
-    const initialCallCount = getTelegramCallCount(mockSendMessage);
+    const initialCallCount = mockSendMessage.mock.calls.length;
     
     // Setup multiple UNI proposals simultaneously
     const multipleUniProposals = ProposalFactory.createMultipleProposals('UNISWAP', 3, 'uni-multi');
@@ -116,7 +118,7 @@ describe('Multi-DAO Notification Flow - Integration Test', () => {
     // Wait for the logic system to process
     await new Promise(resolve => setTimeout(resolve, 5000));
     
-    const finalCallCount = getTelegramCallCount(mockSendMessage);
+    const finalCallCount = mockSendMessage.mock.calls.length;
     const newCallsCount = finalCallCount - initialCallCount;
     
     // Should send 3 proposals × 2 users (UNI followers) = 6 notifications
@@ -124,14 +126,20 @@ describe('Multi-DAO Notification Flow - Integration Test', () => {
     expect(newCallsCount).toBe(6);
     
     // Verify both UNI followers received notifications for all 3 proposals
-    const uniFollowerCalls = getTelegramCallsForUser(mockSendMessage, '111111111');
-    const bothFollowerCalls = getTelegramCallsForUser(mockSendMessage, '333333333');
+    const uniFollowerCalls = mockSendMessage.mock.calls.filter(
+      call => call[0].toString() === '111111111'
+    );
+    const bothFollowerCalls = mockSendMessage.mock.calls.filter(
+      call => call[0].toString() === '333333333'
+    );
     
     expect(uniFollowerCalls.length).toBe(3); // 3 proposals
     expect(bothFollowerCalls.length).toBe(3); // 3 proposals
     
     // Verify ENS follower did NOT receive UNI notifications
-    const ensFollowerCalls = getTelegramCallsForUser(mockSendMessage, '222222222');
+    const ensFollowerCalls = mockSendMessage.mock.calls.filter(
+      call => call[0].toString() === '222222222'
+    );
     expect(ensFollowerCalls.length).toBe(0);
   });
 
@@ -141,7 +149,7 @@ describe('Multi-DAO Notification Flow - Integration Test', () => {
     GraphQLMockSetup.setupProposalMock(httpMockSetup.getMockClient(), [uniProposal]);
     await new Promise(resolve => setTimeout(resolve, 5000));
     
-    const beforeNewUserCallCount = getTelegramCallCount(mockSendMessage);
+    const beforeNewUserCallCount = mockSendMessage.mock.calls.length;
     
     // Add a new user that subscribes to UNISWAP
     const now = new Date().toISOString();
@@ -150,14 +158,16 @@ describe('Multi-DAO Notification Flow - Integration Test', () => {
     // Wait for logic system to trigger again
     await new Promise(resolve => setTimeout(resolve, 5000));
     
-    const afterNewUserCallCount = getTelegramCallCount(mockSendMessage);
+    const afterNewUserCallCount = mockSendMessage.mock.calls.length;
     const newCallsForNewUser = afterNewUserCallCount - beforeNewUserCallCount;
     
     // Should have exactly 1 new call (only for the new user)
     expect(newCallsForNewUser).toBe(1);
     
     // Verify it was sent to the new user
-    const newUserCalls = getTelegramCallsForUser(mockSendMessage, '444444444');
+    const newUserCalls = mockSendMessage.mock.calls.filter(
+      call => call[0].toString() === '444444444'
+    );
     expect(newUserCalls.length).toBe(1);
   });
 });

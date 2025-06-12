@@ -2,7 +2,7 @@ import { describe, test, expect, beforeAll, afterAll, beforeEach, jest } from '@
 import * as fs from 'fs';
 
 // Setup Telegram mock only
-import { setupTelegramMock, getTelegramCallCount } from '../src/mocks/telegram-mock-setup';
+import { setupTelegramMock } from '../src/mocks/telegram-mock-setup';
 const mockSendMessage = setupTelegramMock();
 
 // Now import other modules
@@ -73,7 +73,7 @@ describe('Duplicate Prevention - Integration Test', () => {
   }
 
   test('should not send duplicate notifications on repeated logic system triggers', async () => {
-    const initialCallCount = getTelegramCallCount(mockSendMessage);
+    const initialCallCount = mockSendMessage.mock.calls.length;
     
     // Setup mock to return the same UNI proposal consistently
     const persistentProposal = ProposalFactory.createProposal('UNISWAP', 'persistent-uni-proposal');
@@ -82,7 +82,7 @@ describe('Duplicate Prevention - Integration Test', () => {
     // Wait for first round of notifications
     await new Promise(resolve => setTimeout(resolve, 5000));
     
-    const firstRoundCallCount = getTelegramCallCount(mockSendMessage);
+    const firstRoundCallCount = mockSendMessage.mock.calls.length;
     const firstRoundNewCalls = firstRoundCallCount - initialCallCount;
     
     // Should have sent notifications in first round
@@ -91,7 +91,7 @@ describe('Duplicate Prevention - Integration Test', () => {
     // Wait for second round (logic system triggers again with same proposal)
     await new Promise(resolve => setTimeout(resolve, 5000));
     
-    const secondRoundCallCount = getTelegramCallCount(mockSendMessage);
+    const secondRoundCallCount = mockSendMessage.mock.calls.length;
     const secondRoundNewCalls = secondRoundCallCount - firstRoundCallCount;
     
     // Should NOT send duplicate notifications
@@ -99,7 +99,7 @@ describe('Duplicate Prevention - Integration Test', () => {
   });
 
   test('should handle deduplication for multiple simultaneous proposals', async () => {
-    const initialCallCount = getTelegramCallCount(mockSendMessage);
+    const initialCallCount = mockSendMessage.mock.calls.length;
     
     // Setup multiple UNI proposals simultaneously
     const multipleUniProposals = ProposalFactory.createMultipleProposals('UNISWAP', 3, 'uni-dedup');
@@ -108,7 +108,7 @@ describe('Duplicate Prevention - Integration Test', () => {
     // Wait for the logic system to process
     await new Promise(resolve => setTimeout(resolve, 5000));
     
-    const finalCallCount = getTelegramCallCount(mockSendMessage);
+    const finalCallCount = mockSendMessage.mock.calls.length;
     const newCallsCount = finalCallCount - initialCallCount;
     
     // Should send 3 proposals × 2 users (UNI followers) = 6 notifications
@@ -117,7 +117,7 @@ describe('Duplicate Prevention - Integration Test', () => {
     // Test deduplication works per proposal - wait for another round
     await new Promise(resolve => setTimeout(resolve, 5000));
     
-    const afterSecondRoundCallCount = getTelegramCallCount(mockSendMessage);
+    const afterSecondRoundCallCount = mockSendMessage.mock.calls.length;
     const secondRoundNewCalls = afterSecondRoundCallCount - finalCallCount;
     
     // Should be 0 - no duplicate notifications for same proposals
