@@ -1,4 +1,4 @@
-schema: 'https://api-gateway-production-0879.up.railway.app/graphql'
+schema: '${ANTICAPTURE_GRAPHQL_ENDPOINT}'
 documents: 'queries/*.graphql'
 generates:
   src/gql/:
