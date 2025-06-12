@@ -1,7 +1,7 @@
 import { NewProposalTrigger } from './triggers/new-proposal-trigger';
 import { ProposalRepository } from './repositories/proposal.repository';
 import { DispatcherApiClient } from './api-clients/dispatcher.api-client';
-import { AnticaptureClient } from './api-clients/anticapture-client';
+import { AnticaptureClient } from '@notification-system/anticapture-client';
 import { ProposalStatus } from './interfaces/proposal.interface';
 import axios, { AxiosInstance } from 'axios';
 
