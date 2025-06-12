@@ -26,6 +26,12 @@ export class AnticaptureClient {
     const response = await this.httpClient.post(this.endpoint, {
       query: print(document),
       variables,
+    }, {
+      headers: {
+        'Content-Type': 'application/json',
+        'Accept': 'application/json',
+        "anticapture-dao-id": "ENS"
+      }
     });
 
     if (response.data.errors) {
@@ -56,7 +62,7 @@ export class AnticaptureClient {
 
     const response = await this.query(GetProposalByIdDocument, variables);
     const proposals = response.proposalsOnchains.items;
-    
+
     return proposals.length > 0 ? proposals[0] : null;
   }
 
