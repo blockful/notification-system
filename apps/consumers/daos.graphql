@@ -1,7 +1,0 @@
-query GetDAOs {
-  daos {
-    items {
-      id
-    }
-  }
-}

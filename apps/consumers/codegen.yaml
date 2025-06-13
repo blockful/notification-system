@@ -1,5 +1,0 @@
-schema: '${ANTICAPTURE_GRAPHQL_ENDPOINT}'
-documents: '*.graphql'
-generates:
-  src/gql/:
-    preset: 'client-preset'
