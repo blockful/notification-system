@@ -11,6 +11,7 @@
     "test": "turbo run test",
     "consumer": "pnpm --filter @notification-system/consumer",
     "logic-system": "pnpm --filter @notification-system/logic-system",
+    "subscription-server": "pnpm --filter @notification-system/subscription-server",
     "client": "pnpm --filter @notification-system/anticapture-client"
   },
   "devDependencies": {

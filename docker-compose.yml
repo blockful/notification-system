@@ -13,8 +13,8 @@ services:
   # Subscription Server (base service, others depend on it)
   subscription-server:
     build:
-      context: ./apps/subscription-server
-      dockerfile: Dockerfile
+      context: .
+      dockerfile: apps/subscription-server/Dockerfile
     container_name: subscription-server
     ports:
       - "3001:3003"
