@@ -32,7 +32,7 @@ const TEST_CONFIG = {
   },
   logicSystem: {
     interval: 5000,
-    proposalState: 'pending',
+    proposalState: 'active',
   },
   timeouts: {
     appStartup: 2000,
