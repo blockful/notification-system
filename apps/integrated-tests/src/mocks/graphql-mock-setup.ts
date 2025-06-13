@@ -5,8 +5,10 @@ export class GraphQLMockSetup {
   static setupProposalMock(mockHttpClient: any, proposals: ProposalData[]): void {
     mockHttpClient.post.mockImplementation((url: string, data: any) => {
       if (data.query && data.query.includes('ListProposals')) {
-        const hasPendingFilter = data.variables?.where?.status === 'pending';
-        const proposalsToReturn = hasPendingFilter ? proposals : [];
+        const requestedStatus = data.variables?.where?.status?.toLowerCase();
+        const proposalsToReturn = requestedStatus 
+          ? proposals.filter(p => p.status.toLowerCase() === requestedStatus)
+          : proposals;
         return Promise.resolve({
           data: {
             data: {
@@ -75,7 +77,7 @@ export const createListProposalsResponse = (daoId: string, status: string) => ({
   data: {
     data: {
       proposalsOnchains: {
-        items: status === 'PENDING' ? [createMockProposal(daoId, status)] : []
+        items: status?.toLowerCase() === 'pending' ? [createMockProposal(daoId, status)] : []
       }
     }
   }
@@ -108,7 +110,7 @@ export const setupGraphQLMock = (
     }
 
     if (body.query.includes('ListProposals')) {
-      const hasPendingFilter = body.variables?.where?.status === 'pending';
+      const hasPendingFilter = body.variables?.where?.status?.toLowerCase() === 'pending';
       const effectiveStatus = hasPendingFilter ? mockProposalStatus : 'PENDING';
       return Promise.resolve(createListProposalsResponse(testDaoId, effectiveStatus));
     }

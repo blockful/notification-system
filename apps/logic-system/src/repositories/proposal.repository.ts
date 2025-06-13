@@ -18,7 +18,7 @@ export class ProposalRepository implements ProposalDB {
     if (options?.status || options?.daoId) {
       variables.where = {};  
       if (options.status) {
-        variables.where.status = options.status;
+        variables.where.status = options.status.toLowerCase();
       }
       if (options.daoId) {
         variables.where.daoId = options.daoId;
