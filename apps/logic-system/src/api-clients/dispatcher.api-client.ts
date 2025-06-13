@@ -7,10 +7,8 @@ import { AxiosInstance } from 'axios';
  */
 export class DispatcherApiClient implements DispatcherService {
   private readonly httpClient: AxiosInstance;
-  private readonly url: string;
 
-  constructor(endpoint: string, httpClient: AxiosInstance) {
-    this.url = endpoint;
+  constructor(httpClient: AxiosInstance) {
     this.httpClient = httpClient;
   }
 
@@ -19,7 +17,7 @@ export class DispatcherApiClient implements DispatcherService {
    * @param message - Message to be dispatched
    */
   async sendMessage(message: DispatcherMessage) {
-    const response = await this.httpClient.post(this.url, message);
+    const response = await this.httpClient.post('', message);
     return response.data;
   }
 } 

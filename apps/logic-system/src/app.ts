@@ -10,7 +10,6 @@ export class App {
   private proposalStatus: ProposalStatus;
 
   constructor(
-    dispatcherEndpoint: string, 
     triggerInterval: number, 
     proposalStatus: ProposalStatus,
     anticaptureHttpClient: AxiosInstance,
@@ -20,7 +19,7 @@ export class App {
     
     const anticaptureClient = new AnticaptureClient(anticaptureHttpClient);
     const proposalDB = new ProposalRepository(anticaptureClient);
-    const dispatcherService = new DispatcherApiClient(dispatcherEndpoint, dispatcherHttpClient);
+    const dispatcherService = new DispatcherApiClient(dispatcherHttpClient);
 
     this.trigger = new NewProposalTrigger(
       dispatcherService,
