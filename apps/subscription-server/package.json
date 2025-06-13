@@ -10,7 +10,8 @@
     "dev": "tsx watch src/index.ts",
     "build": "tsc",
     "start": "node dist/index.js",
-    "test": "jest --coverage"
+    "test": "jest --coverage",
+    "migrate": "knex migrate:latest --knexfile ./knex.config.ts"
   },
   "keywords": [],
   "author": "",
