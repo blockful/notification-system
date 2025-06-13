@@ -8,7 +8,7 @@
 import { Context } from 'telegraf';
 import { CONFIRM_SELECTION_BUTTON, NO_DAO_SELECTED_MESSAGE, SELECTED_DAOS_MESSAGE, DAO_SELECTION_MESSAGE, EDIT_DAOS_MESSAGE } from '../messages';
 import { SubscriptionAPIService } from './subscription-api.service';
-import { AnticaptureClient } from '../clients/anticapture-client';
+import { AnticaptureClient } from '@notification-system/anticapture-client';
 
 export class DAOService {
   // Store selected DAOs for each user temporarily

@@ -10,7 +10,9 @@
     "dev": "tsx watch src/index.ts",
     "build": "tsc",
     "start": "node dist/index.js",
-    "test": "jest --coverage"
+    "start:with-migrate": "pnpm migrate && pnpm start",
+    "test": "jest --coverage",
+    "migrate": "knex migrate:latest --knexfile ./knex.config.ts"
   },
   "keywords": [],
   "author": "",

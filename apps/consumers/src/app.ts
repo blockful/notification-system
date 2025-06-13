@@ -7,7 +7,7 @@ import swaggerUi from '@fastify/swagger-ui';
 import axios, { AxiosInstance } from 'axios';
 import { BotController } from './controllers/bot.controller';
 import { DAOService } from './services/dao.service';
-import { AnticaptureClient } from './clients/anticapture-client';
+import { AnticaptureClient } from '@notification-system/anticapture-client';
 import { SubscriptionAPIService } from './services/subscription-api.service';
 import { NotificationService } from './services/notification.service';
 import { APIController } from './controllers/api.controller';

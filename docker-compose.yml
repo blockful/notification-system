@@ -1,30 +1,43 @@
 services:
+  subscription-db:
+    image: postgres:16
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: postgres
+    ports:
+      - "5432:5432"
+    networks:
+      - notification-network
+
   # Subscription Server (base service, others depend on it)
   subscription-server:
     build:
-      context: ./apps/subscription-server
-      dockerfile: Dockerfile
+      context: .
+      dockerfile: apps/subscription-server/Dockerfile
     container_name: subscription-server
     ports:
       - "3001:3003"
     environment:
-      DATABASE_URL: ${SUBSCRIPTION_DATABASE_URL}
+      DATABASE_URL: postgresql://postgres:postgres@subscription-db:5432/postgres
       PORT: 3003
     networks:
       - notification-network
     restart: unless-stopped
+    depends_on:
+      - subscription-db
 
   # Consumers (Telegram Bot + API)
   consumers:
     build:
-      context: ./apps/consumers
-      dockerfile: Dockerfile
+      context: .
+      dockerfile: apps/consumers/Dockerfile
     container_name: consumers
     ports:
       - "3000:3000"
     environment:
       TELEGRAM_BOT_TOKEN: ${TELEGRAM_BOT_TOKEN}
-      ANTICAPTURE_DATABASE_URL: ${ANTICAPTURE_DATABASE_URL}
+      ANTICAPTURE_GRAPHQL_ENDPOINT: ${ANTICAPTURE_GRAPHQL_ENDPOINT}
       SUBSCRIPTION_SERVER_URL: http://subscription-server:3003
       API_PORT: 3000
     depends_on:
@@ -55,11 +68,11 @@ services:
   # Logic System (worker, no ports exposed)
   logic-system:
     build:
-      context: ./apps/logic-system
-      dockerfile: Dockerfile
+      context: .
+      dockerfile: apps/logic-system/Dockerfile
     container_name: logic-system
     environment:
-      DATABASE_URL: ${LOGIC_SYSTEM_DATABASE_URL}
+      ANTICAPTURE_GRAPHQL_ENDPOINT: ${ANTICAPTURE_GRAPHQL_ENDPOINT}
       DISPATCHER_ENDPOINT: http://dispatcher:3002/messages
       TRIGGER_INTERVAL: 10000
       PROPOSAL_STATUS: active
@@ -71,4 +84,4 @@ services:
 
 networks:
   notification-network:
-    driver: bridge 
+    driver: bridge

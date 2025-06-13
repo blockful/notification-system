@@ -1,5 +1,5 @@
 schema: '${ANTICAPTURE_GRAPHQL_ENDPOINT}'
-documents: '*.graphql'
+documents: 'queries/*.graphql'
 generates:
   src/gql/:
     preset: 'client-preset'
