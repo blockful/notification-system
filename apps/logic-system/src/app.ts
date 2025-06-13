@@ -10,7 +10,6 @@ export class App {
   private proposalStatus: ProposalStatus;
 
   constructor(
-    anticaptureEndpoint: string, 
     dispatcherEndpoint: string, 
     triggerInterval: number, 
     proposalStatus: ProposalStatus,
@@ -19,7 +18,7 @@ export class App {
   ) {
     this.proposalStatus = proposalStatus;
     
-    const anticaptureClient = new AnticaptureClient(anticaptureEndpoint, anticaptureHttpClient);
+    const anticaptureClient = new AnticaptureClient(anticaptureHttpClient);
     const proposalDB = new ProposalRepository(anticaptureClient);
     const dispatcherService = new DispatcherApiClient(dispatcherEndpoint, dispatcherHttpClient);
 

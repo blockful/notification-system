@@ -57,7 +57,6 @@ export const startTestApps = async (db: Knex, mockHttpClient: any): Promise<Test
   
   // Start consumer
   const consumerApp = new ConsumerApp(
-    TEST_CONFIG.urls.mockGraphQL,
     TEST_CONFIG.telegram.botToken,
     TEST_CONFIG.urls.subscriptionServer,
     TEST_CONFIG.ports.consumer,
@@ -67,7 +66,6 @@ export const startTestApps = async (db: Knex, mockHttpClient: any): Promise<Test
   
   // Start logic system
   const logicSystemApp = new LogicSystemApp(
-    TEST_CONFIG.urls.mockGraphQL,
     TEST_CONFIG.urls.dispatcher,
     TEST_CONFIG.logicSystem.interval,
     TEST_CONFIG.logicSystem.proposalState,

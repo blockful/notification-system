@@ -18,11 +18,10 @@ const config = loadConfig();
 
 // Create and start the application
 const app = new App(
-  config.anticaptureGraphqlEndpoint,
   config.telegramBotToken,
   config.subscriptionServerUrl,
   config.port,
-  axios.create()
+  axios.create({ baseURL: config.anticaptureGraphqlEndpoint })
 );
 
 (async () => {

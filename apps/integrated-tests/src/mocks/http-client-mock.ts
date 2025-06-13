@@ -8,7 +8,10 @@ export const createMockHttpClient = () => ({
   post: jest.fn(),
   get: jest.fn(),
   put: jest.fn(),
-  delete: jest.fn()
+  delete: jest.fn(),
+  defaults: {
+    baseURL: 'http://mocked-endpoint.com/graphql'
+  }
 } as any);
 
 export class HttpClientMockSetup {

@@ -20,7 +20,6 @@ export class App {
   private port: number;
 
   constructor(
-    anticaptureGraphqlEndpoint: string, 
     telegramBotToken: string, 
     subscriptionServerUrl: string, 
     port: number,
@@ -28,7 +27,7 @@ export class App {
   ) {
     this.port = port;
     const subscriptionApi = new SubscriptionAPIService(subscriptionServerUrl);
-    const anticaptureClient = new AnticaptureClient(anticaptureGraphqlEndpoint, httpClient);
+    const anticaptureClient = new AnticaptureClient(httpClient);
     const daoService = new DAOService(anticaptureClient, subscriptionApi);
     const bot = new Telegraf(telegramBotToken);
     

@@ -12,10 +12,8 @@ import { GetDaOsDocument, GetProposalByIdDocument, ListProposalsDocument } from 
 
 export class AnticaptureClient {
   private readonly httpClient: AxiosInstance;
-  private readonly endpoint: string;
 
-  constructor(endpoint: string, httpClient: AxiosInstance) {
-    this.endpoint = endpoint;
+  constructor(httpClient: AxiosInstance) {
     this.httpClient = httpClient;
   }
 
@@ -34,7 +32,7 @@ export class AnticaptureClient {
       headers["anticapture-dao-id"] = daoId;
     }
 
-    const response = await this.httpClient.post(this.endpoint, {
+    const response = await this.httpClient.post('', {
       query: print(document),
       variables,
     }, { headers });
