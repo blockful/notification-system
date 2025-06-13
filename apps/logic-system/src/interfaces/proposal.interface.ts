@@ -1,6 +1,6 @@
 import type { GetProposalByIdQuery } from '@notification-system/anticapture-client';
 
-export type ProposalOnChain = GetProposalByIdQuery['proposalsOnchains']['items'][0];
+export type ProposalOnChain = GetProposalByIdQuery['proposalsOnchain'];
 export type ProposalOrNull = ProposalOnChain | null;
 
 /**

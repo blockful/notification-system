@@ -59,17 +59,13 @@ export class AnticaptureClient {
   /**
    * Fetches a single proposal by ID with full type safety
    */
-  async getProposalById(id: string): Promise<GetProposalByIdQuery['proposalsOnchains']['items'][0] | null> {
+  async getProposalById(id: string): Promise<GetProposalByIdQuery['proposalsOnchain'] | null> {
     const variables: GetProposalByIdQueryVariables = {
-      where: {
-        id: id
-      }
+      id: id
     };
 
     const response = await this.query(GetProposalByIdDocument, variables);
-    const proposals = response.proposalsOnchains.items;
-
-    return proposals.length > 0 ? proposals[0] : null;
+    return response.proposalsOnchain;
   }
 
   /**
