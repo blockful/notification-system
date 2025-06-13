@@ -2,5 +2,4 @@ schema: '${ANTICAPTURE_GRAPHQL_ENDPOINT}'
 documents: 'queries/*.graphql'
 generates:
   src/gql/:
-    preset: 'client-preset',
-    plugins: ["typescript", "typescript-operations"]
+    preset: 'client-preset'
