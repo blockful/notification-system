@@ -66,11 +66,10 @@ export const startTestApps = async (db: Knex, mockHttpClient: any): Promise<Test
   
   // Start logic system
   const logicSystemApp = new LogicSystemApp(
-    TEST_CONFIG.urls.dispatcher,
     TEST_CONFIG.logicSystem.interval,
     TEST_CONFIG.logicSystem.proposalState,
     mockHttpClient,
-    axios.create() as any
+    axios.create({ baseURL: TEST_CONFIG.urls.dispatcher }) as any
   );
   logicSystemApp.start();
   

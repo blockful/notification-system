@@ -17,6 +17,21 @@ export class GraphQLMockSetup {
           }
         });
       }
+      
+      if (data.query && data.query.includes('GetDAOs')) {
+        // Extract unique DAOs from proposals
+        const uniqueDaoIds = [...new Set(proposals.map(p => p.daoId))];
+        return Promise.resolve({
+          data: {
+            data: {
+              daos: {
+                items: uniqueDaoIds.map(daoId => ({ id: daoId }))
+              }
+            }
+          }
+        });
+      }
+      
       return Promise.resolve({ data: { data: {} } });
     });
   }
