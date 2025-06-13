@@ -46,8 +46,7 @@ export class SubscriptionAPIService {
       const subscribers = await this.getDaoSubscribers(daoId);
       return subscribers.some(sub => 
           sub.channel === 'telegram' && 
-          sub.channel_user_id === channelUserId.toString() &&
-          sub.is_active
+          sub.channel_user_id === channelUserId.toString()
       )
     }
     return false;
@@ -81,8 +80,7 @@ export class SubscriptionAPIService {
         const subscribers = await this.getDaoSubscribers(daoId);
         const isSubscribed = subscribers.some(sub => 
           sub.channel === 'telegram' && 
-          sub.channel_user_id === channelUserId.toString() &&
-          sub.is_active
+          sub.channel_user_id === channelUserId.toString()
         );
         
         if (isSubscribed) {

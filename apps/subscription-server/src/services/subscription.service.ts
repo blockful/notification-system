@@ -33,7 +33,7 @@ export class SubscriptionService {
     dao: string,
     channel: string,
     channel_user_id: string,
-    is_active: boolean
+    is_active: boolean,
   ) {
     let user = await this.userRepository.findByChannelAndId(channel, channel_user_id);
     

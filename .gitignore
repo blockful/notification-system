@@ -27,6 +27,11 @@ out/
 build
 dist
 
+# Generated GraphQL files
+**/src/gql/
+**/src/generated/
+**/src/__generated__/
+
 # Database
 *.db 
 

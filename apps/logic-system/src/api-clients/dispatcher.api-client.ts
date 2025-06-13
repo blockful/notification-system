@@ -1,15 +1,15 @@
 import { DispatcherService, DispatcherMessage } from '../interfaces/dispatcher.interface';
-import axios from 'axios';
+import { AxiosInstance } from 'axios';
 
 /**
  * Client for the Dispatcher API that handles sending notification messages
  * via HTTP/REST requests
  */
 export class DispatcherApiClient implements DispatcherService {
-  private readonly url: string;
+  private readonly httpClient: AxiosInstance;
 
-  constructor(endpoint: string) {
-    this.url = endpoint;
+  constructor(httpClient: AxiosInstance) {
+    this.httpClient = httpClient;
   }
 
   /**
@@ -17,11 +17,7 @@ export class DispatcherApiClient implements DispatcherService {
    * @param message - Message to be dispatched
    */
   async sendMessage(message: DispatcherMessage) {
-    const response = await axios.post(this.url, message, {
-      headers: {
-        'Content-Type': 'application/json',
-      }
-    });
+    const response = await this.httpClient.post('', message);
     return response.data;
   }
 } 

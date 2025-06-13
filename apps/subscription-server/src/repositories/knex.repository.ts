@@ -73,6 +73,7 @@ export class KnexPreferenceRepository implements IPreferenceRepository {
     const now = new Date();
     const [preference] = await this.knex<UserPreference>('user_preferences')
       .insert({
+        id: uuidv4(),
         ...data,
         created_at: now,
         updated_at: now

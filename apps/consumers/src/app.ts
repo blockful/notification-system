@@ -1,13 +1,13 @@
 import { Telegraf } from 'telegraf';
-import { Knex } from 'knex';
 import Fastify from 'fastify';
 import { validatorCompiler, serializerCompiler } from 'fastify-type-provider-zod';
 import cors from '@fastify/cors';
 import swagger from '@fastify/swagger';
 import swaggerUi from '@fastify/swagger-ui';
+import axios, { AxiosInstance } from 'axios';
 import { BotController } from './controllers/bot.controller';
 import { DAOService } from './services/dao.service';
-import { DatabaseService } from './repositories/db';
+import { AnticaptureClient } from '@notification-system/anticapture-client';
 import { SubscriptionAPIService } from './services/subscription-api.service';
 import { NotificationService } from './services/notification.service';
 import { APIController } from './controllers/api.controller';
@@ -19,14 +19,19 @@ export class App {
   private server?: FastifyTypedInstance;
   private port: number;
 
-  constructor(daosDb: Knex, usersDb: Knex, telegramBotToken: string, subscriptionServerUrl: string, port: number) {
+  constructor(
+    telegramBotToken: string, 
+    subscriptionServerUrl: string, 
+    port: number,
+    httpClient: AxiosInstance
+  ) {
     this.port = port;
     const subscriptionApi = new SubscriptionAPIService(subscriptionServerUrl);
-    const dbService = new DatabaseService(daosDb, usersDb);
-    const daoService = new DAOService(dbService, subscriptionApi);
+    const anticaptureClient = new AnticaptureClient(httpClient);
+    const daoService = new DAOService(anticaptureClient, subscriptionApi);
     const bot = new Telegraf(telegramBotToken);
     
-    this.notificationService = new NotificationService(bot, subscriptionApi, dbService);
+    this.notificationService = new NotificationService(bot);
     this.botController = new BotController(telegramBotToken, daoService);
   }
 
@@ -91,7 +96,4 @@ export class App {
     await this.server.close();
     this.botController.stop('SIGINT');
   }
-}
-
-// Library exports for external consumption
-export { setupDatabaseConnection } from './config/db.config'; 
+} 

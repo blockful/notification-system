@@ -3,12 +3,10 @@ FROM node:20-slim
 RUN npm install -g pnpm
 WORKDIR /app
 
-COPY package.json ./
-COPY tsconfig.json ./
-COPY src ./src
+COPY . .
 
 RUN pnpm install
 RUN pnpm build
 
 EXPOSE 3000
-ENTRYPOINT ["pnpm", "start"] 
+ENTRYPOINT ["pnpm", "consumer", "start"]

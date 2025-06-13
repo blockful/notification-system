@@ -1,4 +1,4 @@
-import { db } from '../config/database';
+import { db } from './database-config';
 import { v4 as uuidv4 } from 'uuid';
 
 export async function setupDatabase(): Promise<void> {
@@ -35,7 +35,6 @@ async function createTestUser(timestamp: string) {
     id: uuidv4(),
     channel: 'telegram',
     channel_user_id: '123456789',
-    is_active: true,
     created_at: timestamp
   };
   await db('users').insert(user);
