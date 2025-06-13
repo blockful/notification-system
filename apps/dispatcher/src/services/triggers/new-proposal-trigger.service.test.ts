@@ -17,8 +17,8 @@ describe('NewProposalTriggerHandler', () => {
   
   beforeAll(() => {
     mockUsers = [
-      { id: '1', channel: 'telegram', channel_user_id: '123', is_active: true, created_at: new Date() },
-      { id: '2', channel: 'telegram', channel_user_id: '456', is_active: true, created_at: new Date() }
+      { id: '1', channel: 'telegram', channel_user_id: '123', created_at: new Date() },
+      { id: '2', channel: 'telegram', channel_user_id: '456', created_at: new Date() }
     ];
     
     mockNotifications = [
@@ -102,7 +102,7 @@ describe('NewProposalTriggerHandler', () => {
 
     it('should process multiple proposals in a single message', async () => {
       const mockUsersForMultiple: User[] = [
-        { id: '1', channel: 'telegram', channel_user_id: '123', is_active: true, created_at: new Date() }
+        { id: '1', channel: 'telegram', channel_user_id: '123', created_at: new Date() }
       ];
       const mockNotificationsForMultiple: Notification[] = [
         { user_id: '1', event_id: 'prop1', dao_id: 'dao123' },
@@ -141,7 +141,7 @@ describe('NewProposalTriggerHandler', () => {
 
     it('should extract title from multiline descriptions', async () => {
       const mockUsersForMultiline: User[] = [
-        { id: '1', channel: 'telegram', channel_user_id: '123', is_active: true, created_at: new Date() }
+        { id: '1', channel: 'telegram', channel_user_id: '123', created_at: new Date() }
       ];
       const mockNotificationsForMultiline: Notification[] = [
         { user_id: '1', event_id: 'prop456', dao_id: 'dao123' }

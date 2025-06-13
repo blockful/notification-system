@@ -28,4 +28,4 @@ export const db = knex({
 
 export function closeDatabase(): void {
   db.destroy();
-} 
+}

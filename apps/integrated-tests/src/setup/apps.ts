@@ -13,44 +13,71 @@ export type TestApps = {
 };
 
 /**
+ * Configuration for test applications
+ */
+const TEST_CONFIG = {
+  ports: {
+    subscriptionServer: 14001,
+    consumer: 14002,
+    dispatcher: 13002,
+  },
+  urls: {
+    subscriptionServer: 'http://127.0.0.1:14001',
+    consumer: 'http://127.0.0.1:14002',
+    dispatcher: 'http://127.0.0.1:13002/messages',
+    mockGraphQL: 'http://mocked-endpoint.com/graphql',
+  },
+  telegram: {
+    botToken: '7117895712:AAH96CfnDvvfLNl2nJbRKbNYPay4V936mWY',
+  },
+  logicSystem: {
+    interval: 5000,
+    proposalState: 'active',
+  },
+  timeouts: {
+    appStartup: 2000,
+  },
+} as const;
+
+/**
  * Starts all test applications with proper configuration
  */
 export const startTestApps = async (db: Knex, mockHttpClient: any): Promise<TestApps> => {
   // Start subscription server
-  const subscriptionServerApp = new SubscriptionServerApp(db, 14001);
+  const subscriptionServerApp = new SubscriptionServerApp(db, TEST_CONFIG.ports.subscriptionServer);
   await subscriptionServerApp.start();
   
   // Start dispatcher
   const dispatcherApp = new DispatcherApp(
-    13002, 
-    'http://127.0.0.1:14001', 
-    'http://127.0.0.1:14002'
+    TEST_CONFIG.ports.dispatcher, 
+    TEST_CONFIG.urls.subscriptionServer, 
+    TEST_CONFIG.urls.consumer
   );
   await dispatcherApp.start();
   
   // Start consumer
   const consumerApp = new ConsumerApp(
-    'http://mocked-endpoint.com/graphql',
-    '7117895712:AAH96CfnDvvfLNl2nJbRKbNYPay4V936mWY',
-    'http://127.0.0.1:14001',
-    14002,
+    TEST_CONFIG.urls.mockGraphQL,
+    TEST_CONFIG.telegram.botToken,
+    TEST_CONFIG.urls.subscriptionServer,
+    TEST_CONFIG.ports.consumer,
     mockHttpClient
   );
   await consumerApp.start();
   
   // Start logic system
   const logicSystemApp = new LogicSystemApp(
-    'http://mocked-endpoint.com/graphql',
-    'http://127.0.0.1:13002/messages',
-    5000,
-    'active',
+    TEST_CONFIG.urls.mockGraphQL,
+    TEST_CONFIG.urls.dispatcher,
+    TEST_CONFIG.logicSystem.interval,
+    TEST_CONFIG.logicSystem.proposalState,
     mockHttpClient,
     axios.create() as any
   );
   logicSystemApp.start();
   
   // Wait for apps to be ready
-  await new Promise(resolve => setTimeout(resolve, 3000));
+  await new Promise(resolve => setTimeout(resolve, TEST_CONFIG.timeouts.appStartup));
   
   return {
     consumerApp,
@@ -78,4 +105,6 @@ export const stopTestApps = async (apps: TestApps) => {
   if (subscriptionServerApp) {
     await subscriptionServerApp.stop();
   }
-}; 
+};
+
+export { TEST_CONFIG }; 

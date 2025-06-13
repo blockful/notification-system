@@ -1,13 +1,3 @@
-/**
- * Test Mocks Configuration
- * 
- * Mock external dependencies BEFORE importing applications:
- * - Telegraf: Prevents real Telegram API calls, returns predictable responses
- * - dotenv: Prevents loading .env files that could override test environment
- * 
- * Mocks must be defined before app imports since modules are evaluated immediately.
- */
-
 import { jest } from '@jest/globals';
 
 const mockSendMessage = jest.fn().mockImplementation(() => 
@@ -44,4 +34,4 @@ export function setupTelegramMock(): any {
   }));
 
   return mockSendMessage;
-} 
+}

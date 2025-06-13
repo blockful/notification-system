@@ -1,15 +1,36 @@
 import { jest } from '@jest/globals';
+import { ProposalData } from '../test-data/proposal-factory';
 
-/**
- * Creates a minimal mock HTTP client for testing
- * Used to mock axios instances in integration tests
- */
-export const createMockHttpClient = () => ({
-  post: jest.fn(),
-  get: jest.fn(),
-  put: jest.fn(),
-  delete: jest.fn()
-} as any);
+export class GraphQLMockSetup {
+  static setupProposalMock(mockHttpClient: any, proposals: ProposalData[]): void {
+    mockHttpClient.post.mockImplementation((url: string, data: any) => {
+      if (data.query && data.query.includes('ListProposals')) {
+        const hasActiveFilter = data.variables?.where?.status === 'active';
+        const proposalsToReturn = hasActiveFilter ? proposals : [];
+        return Promise.resolve({
+          data: {
+            data: {
+              proposalsOnchains: {
+                items: proposalsToReturn
+              }
+            }
+          }
+        });
+      }
+      return Promise.resolve({ data: { data: {} } });
+    });
+  }
+
+  static setupEmptyMock(mockHttpClient: any): void {
+    mockHttpClient.post.mockImplementation(() => {
+      return Promise.resolve({ data: { data: {} } });
+    });
+  }
+
+  static resetMock(mockHttpClient: any): void {
+    mockHttpClient.post.mockReset();
+  }
+}
 
 /**
  * Mock proposal data structure for GraphQL responses
@@ -59,7 +80,7 @@ export const createGetDAOsResponse = (daoId: string) => ({
 });
 
 /**
- * Sets up GraphQL mock implementation for HTTP client
+ * Sets up GraphQL mock implementation for HTTP client (Legacy - for complete-notification-flow.test.ts)
  */
 export const setupGraphQLMock = (
   mockHttpClient: any, 
@@ -84,4 +105,4 @@ export const setupGraphQLMock = (
     // Default response for unknown queries
     return Promise.resolve({ data: { data: {} } });
   });
-}; 
+};

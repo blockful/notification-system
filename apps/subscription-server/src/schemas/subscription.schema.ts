@@ -47,7 +47,6 @@ export const getDaoSubscribersResponseSchema = {
     id: z.string(),
     channel: z.string(),
     channel_user_id: z.string(),
-    is_active: z.boolean(),
     created_at: z.string().optional()
   }).describe('User DTO'))
 };
