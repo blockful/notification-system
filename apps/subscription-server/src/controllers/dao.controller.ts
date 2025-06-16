@@ -47,7 +47,8 @@ export class DaoController {
       }
     }, (request) => {
       const { dao } = request.params;
-      return this.daoHandler.getDaoSubscribers(dao);
+      const { proposal_timestamp } = request.query as { proposal_timestamp?: string };
+      return this.daoHandler.getDaoSubscribers(dao, proposal_timestamp);
     });
   }
 } 

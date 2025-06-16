@@ -71,10 +71,11 @@ export class SubscriptionService {
    * Gets all subscribers for a specific DAO
    * 
    * @param {string} dao - The DAO identifier
+   * @param {string} proposalTimestamp - Optional timestamp to filter subscribers by subscription date
    * @returns {Promise<{subscribers: Array<User>}>} The list of subscribers
    */
-  async getDaoSubscribers(dao: string) {
-    const preferences = await this.preferenceRepository.findByDao(dao);
+  async getDaoSubscribers(dao: string, proposalTimestamp?: string) {
+    const preferences = await this.preferenceRepository.findByDao(dao, proposalTimestamp);
     const subscribers: User[] = [];
     
     // Fetch user details for each preference
