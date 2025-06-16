@@ -4,7 +4,7 @@
 export interface DispatcherMessage {
   /** Identifier of the trigger that generated this message */
   triggerId: string;
-  /** Proposal data to be processed */
+  /** Event data to be processed */
   events: {
     id: string;
     daoId: string;
