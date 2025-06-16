@@ -2,10 +2,11 @@ import { ProposalDB, ProposalOnChain, ProposalOrNull, ListProposalsOptions } fro
 import { AnticaptureClient, ListProposalsQueryVariables } from '@notification-system/anticapture-client';
 
 function generateStatusVariations(status: string): string[] {
+  const normalized = status.toLowerCase();
   return [
-    status.toLowerCase(),
-    status.toUpperCase(), 
-    status.charAt(0).toUpperCase() + status.slice(1).toLowerCase()
+    normalized,                                                    // lowercase: "pending"
+    normalized.toUpperCase(),                                      // uppercase: "PENDING"
+    normalized.charAt(0).toUpperCase() + normalized.slice(1)       // title case: "Pending"
   ];
 }
 
