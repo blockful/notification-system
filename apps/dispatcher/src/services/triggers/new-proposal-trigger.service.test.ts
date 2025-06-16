@@ -84,12 +84,12 @@ describe('NewProposalTriggerHandler', () => {
     it('should process single proposal message correctly', async () => {
       const mockMessage: DispatcherMessage = {
         triggerId: 'new-proposal',
-        payload: [mockProposal]
+        events: [mockProposal]
       };
       
       await handler.handleMessage(mockMessage);
       
-      expect(mockSubscriptionClient.getDaoSubscribers).toHaveBeenCalledWith('dao123');
+      expect(mockSubscriptionClient.getDaoSubscribers).toHaveBeenCalledWith('dao123', '2023-01-01T00:00:00Z');
       expect(mockSubscriptionClient.shouldSend).toHaveBeenCalledWith(mockUsers, 'prop456', 'dao123');
       expect(mockNotificationClient.sendNotification).toHaveBeenCalledTimes(2);
       expect(mockNotificationClient.sendNotification).toHaveBeenCalledWith(expect.objectContaining({
@@ -110,7 +110,7 @@ describe('NewProposalTriggerHandler', () => {
       ];
       const mockMessage: DispatcherMessage = {
         triggerId: 'new-proposal',
-        payload: [
+        events: [
           { ...mockProposal, id: 'prop1', daoId: 'dao123', description: 'First Proposal' },
           { ...mockProposal, id: 'prop2', daoId: 'dao456', description: 'Second Proposal' }
         ]
@@ -122,15 +122,15 @@ describe('NewProposalTriggerHandler', () => {
       await handler.handleMessage(mockMessage);
       
       expect(mockSubscriptionClient.getDaoSubscribers).toHaveBeenCalledTimes(2);
-      expect(mockSubscriptionClient.getDaoSubscribers).toHaveBeenCalledWith('dao123');
-      expect(mockSubscriptionClient.getDaoSubscribers).toHaveBeenCalledWith('dao456');
+      expect(mockSubscriptionClient.getDaoSubscribers).toHaveBeenCalledWith('dao123', '2023-01-01T00:00:00Z');
+      expect(mockSubscriptionClient.getDaoSubscribers).toHaveBeenCalledWith('dao456', '2023-01-01T00:00:00Z');
       expect(mockNotificationClient.sendNotification).toHaveBeenCalledTimes(2);
     });
 
-    it('should handle empty payload array', async () => {
+    it('should handle empty proposals array', async () => {
       const mockMessage: DispatcherMessage = {
         triggerId: 'new-proposal',
-        payload: []
+        events: []
       };
       
       await handler.handleMessage(mockMessage);
@@ -152,7 +152,7 @@ describe('NewProposalTriggerHandler', () => {
       };
       const mockMessage: DispatcherMessage = {
         triggerId: 'new-proposal',
-        payload: [proposalWithMultilineDesc]
+        events: [proposalWithMultilineDesc]
       };
       
       mockSubscriptionClient.getDaoSubscribers.mockResolvedValue(mockUsersForMultiline);

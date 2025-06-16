@@ -5,7 +5,12 @@ import { z } from "zod";
  */
 export const dispatcherMessageSchema = z.object({
   triggerId: z.string().min(1, "Trigger ID is required"),
-  payload: z.any()
+  events: z.array(z.object({
+    id: z.string(),
+    daoId: z.string(),
+    description: z.string(),
+    timestamp: z.string()
+  }))
 });
 
 /**

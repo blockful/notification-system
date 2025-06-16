@@ -220,7 +220,7 @@ describe('Subscription Service', () => {
       expect(result.subscribers[0]).toHaveProperty('channel_user_id');
       expect(result.subscribers[0]).toHaveProperty('is_active');
       
-      expect(prefRepo.findByDao).toHaveBeenCalledWith('dao123');
+      expect(prefRepo.findByDao).toHaveBeenCalledWith('dao123', undefined);
     });
     
     test('should return empty array when no subscribers exist', async () => {

@@ -29,11 +29,11 @@ export abstract class BaseTriggerHandler implements TriggerHandler {
    * Gets subscribers for a specific DAO and event (already filtered)
    * @param daoId DAO identifier
    * @param eventId Event identifier
-   * @param proposalTimestamp Timestamp when the proposal was created
+   * @param eventTimestamp Timestamp when the proposal was created
    * @returns List of subscribers that should receive notifications
    */
-  protected async getSubscribers(daoId: string, eventId: string, proposalTimestamp?: string): Promise<User[]> {
-    const allSubscribers = await this.subscriptionClient.getDaoSubscribers(daoId, proposalTimestamp);
+  protected async getSubscribers(daoId: string, eventId: string, eventTimestamp?: string): Promise<User[]> {
+    const allSubscribers = await this.subscriptionClient.getDaoSubscribers(daoId, eventTimestamp);
     const filteredNotifications = await this.subscriptionClient.shouldSend(allSubscribers, eventId, daoId);
     return allSubscribers.filter(subscriber => 
       filteredNotifications.some(notification => notification.user_id === subscriber.id)

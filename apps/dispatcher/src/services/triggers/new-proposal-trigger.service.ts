@@ -25,9 +25,7 @@ export class NewProposalTriggerHandler extends BaseTriggerHandler {
    * @param message The message containing proposal data
    */
   async handleMessage(message: DispatcherMessage): Promise<MessageProcessingResult> {
-    const proposals = Array.isArray(message.payload) ? message.payload : [message.payload];
-    
-    for (const proposal of proposals) {
+    for (const proposal of message.events) {
       const { daoId, id: proposalId, description, timestamp } = proposal;
       const proposalTitle = description.split('\n')[0].replace(/^#+\s*/, '') || 'Unnamed Proposal';
       const subscribers = await this.getSubscribers(daoId, proposalId, timestamp);

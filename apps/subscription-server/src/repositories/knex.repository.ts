@@ -101,16 +101,16 @@ export class KnexPreferenceRepository implements IPreferenceRepository {
   /**
    * Finds all active preference records for a specific DAO
    * @param daoId - The DAO's ID
-   * @param proposalTimestamp - Optional timestamp to filter subscribers by subscription date
+   * @param eventTimestamp - Optional timestamp to filter subscribers by subscription date
    */
-  async findByDao(daoId: string, proposalTimestamp?: string): Promise<UserPreference[]> {
+  async findByDao(daoId: string, eventTimestamp?: string): Promise<UserPreference[]> {
     let query = this.knex<UserPreference>('user_preferences')
       .where({ 
         dao_id: daoId,
         is_active: true
       });
-    if (proposalTimestamp) {
-      query = query.where('updated_at', '<=', proposalTimestamp);
+    if (eventTimestamp) {
+      query = query.where('updated_at', '<=', eventTimestamp);
     }
     return query.select('*');
   }
