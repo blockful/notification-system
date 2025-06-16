@@ -1,6 +1,14 @@
 import { ProposalDB, ProposalOnChain, ProposalOrNull, ListProposalsOptions } from '../interfaces/proposal.interface';
 import { AnticaptureClient, ListProposalsQueryVariables } from '@notification-system/anticapture-client';
 
+function generateStatusVariations(status: string): string[] {
+  return [
+    status.toLowerCase(),
+    status.toUpperCase(), 
+    status.charAt(0).toUpperCase() + status.slice(1).toLowerCase()
+  ];
+}
+
 export class ProposalRepository implements ProposalDB {
   private anticaptureClient: AnticaptureClient;
 
@@ -18,7 +26,7 @@ export class ProposalRepository implements ProposalDB {
     if (options?.status || options?.daoId) {
       variables.where = {};  
       if (options.status) {
-        variables.where.status = options.status.toLowerCase();
+        variables.where.status_in = generateStatusVariations(options.status);
       }
       if (options.daoId) {
         variables.where.daoId = options.daoId;
