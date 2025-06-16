@@ -25,9 +25,10 @@ export interface ISubscriptionClient {
   /**
    * Fetches all subscribers for a specific DAO
    * @param daoId The ID of the DAO
+   * @param proposalTimestamp Optional timestamp to filter subscribers by subscription date
    * @returns List of subscribers
    */
-  getDaoSubscribers(daoId: string): Promise<User[]>;
+  getDaoSubscribers(daoId: string, proposalTimestamp?: string): Promise<User[]>;
 
   /**
    * Filters subscribers to return only those who should receive notifications
