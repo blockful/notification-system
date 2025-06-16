@@ -109,8 +109,14 @@ export class KnexPreferenceRepository implements IPreferenceRepository {
         dao_id: daoId,
         is_active: true
       });
+    
     if (eventTimestamp) {
-      query = query.where('updated_at', '<=', eventTimestamp);
+      let formattedTimestamp = eventTimestamp;
+      if (/^\d+$/.test(eventTimestamp)) {
+        const timestampNum = parseInt(eventTimestamp, 10);
+        formattedTimestamp = new Date(timestampNum * 1000).toISOString();
+      }
+      query = query.where('updated_at', '<=', formattedTimestamp);
     }
     return query.select('*');
   }
