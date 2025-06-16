@@ -5,10 +5,12 @@ export class GraphQLMockSetup {
   static setupProposalMock(mockHttpClient: any, proposals: ProposalData[]): void {
     mockHttpClient.post.mockImplementation((url: string, data: any) => {
       if (data.query && data.query.includes('ListProposals')) {
-        const requestedStatus = data.variables?.where?.status?.toLowerCase();
-        const proposalsToReturn = requestedStatus 
-          ? proposals.filter(p => p.status.toLowerCase() === requestedStatus)
-          : proposals;
+        const requestedStatusIn = data.variables?.where?.status_in;
+        let proposalsToReturn = proposals;
+        
+        if (requestedStatusIn && Array.isArray(requestedStatusIn)) {
+          proposalsToReturn = proposals.filter(p => requestedStatusIn.includes(p.status));
+        }
         return Promise.resolve({
           data: {
             data: {
