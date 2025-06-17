@@ -2,6 +2,7 @@ import type { FastifyTypedInstance } from "../interfaces";
 import {
   subscriptionParamsSchema,
   subscriptionBodySchema,
+  subscriptionQuerystringSchema,
   createUpdateSubscriptionResponseSchema,
   getDaoSubscribersResponseSchema
 } from '../schemas/subscription.schema';
@@ -43,11 +44,12 @@ export class DaoController {
         tags: ['dao'],
         description: 'Get all users subscribed to a specific DAO',
         params: subscriptionParamsSchema,
+        querystring: subscriptionQuerystringSchema,
         response: getDaoSubscribersResponseSchema
       }
     }, (request) => {
       const { dao } = request.params;
-      const { proposal_timestamp } = request.query as { proposal_timestamp?: string };
+      const { proposal_timestamp } = request.query;
       return this.daoHandler.getDaoSubscribers(dao, proposal_timestamp);
     });
   }

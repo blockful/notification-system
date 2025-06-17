@@ -24,6 +24,14 @@ export const subscriptionBodySchema = z.object({
 });
 
 /**
+ * Schema for subscription querystring parameters
+ * Validates optional query parameters for subscription endpoints
+ */
+export const subscriptionQuerystringSchema = z.object({
+  proposal_timestamp: z.string().optional().describe('Optional timestamp to filter subscribers by subscription date')
+});
+
+/**
  * Schema for create/update subscription response
  * Defines the structure and validation for success and error responses
  * when creating or updating a user subscription
