@@ -28,7 +28,20 @@ export const subscriptionBodySchema = z.object({
  * Validates optional query parameters for subscription endpoints
  */
 export const subscriptionQuerystringSchema = z.object({
-  proposal_timestamp: z.string().optional().describe('Optional timestamp to filter subscribers by subscription date')
+  proposal_timestamp: z.string().optional()
+    .transform((val) => {
+      if (!val) return undefined;
+      
+      // If it's a unix timestamp (only digits), convert to ISO string
+      if (/^\d+$/.test(val)) {
+        const timestampNum = parseInt(val, 10);
+        return new Date(timestampNum * 1000).toISOString();
+      }
+      
+      // If it's already an ISO string or other format, keep as is
+      return val;
+    })
+    .describe('Optional timestamp to filter subscribers by subscription date')
 });
 
 /**

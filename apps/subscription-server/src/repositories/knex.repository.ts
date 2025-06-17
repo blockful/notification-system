@@ -111,12 +111,7 @@ export class KnexPreferenceRepository implements IPreferenceRepository {
       });
     
     if (eventTimestamp) {
-      let formattedTimestamp = eventTimestamp;
-      if (/^\d+$/.test(eventTimestamp)) {
-        const timestampNum = parseInt(eventTimestamp, 10);
-        formattedTimestamp = new Date(timestampNum * 1000).toISOString();
-      }
-      query = query.where('updated_at', '<=', formattedTimestamp);
+      query = query.where('updated_at', '<=', eventTimestamp);
     }
     return query.select('*');
   }
