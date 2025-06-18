@@ -21,7 +21,7 @@ export class NewProposalTrigger extends Trigger<ProposalOnChain, ListProposalsOp
   async process(data: ProposalOnChain[]) {
     const message: DispatcherMessage = {
       triggerId: this.id,
-      payload: data
+      events: data
     };   
     await this.dispatcherService.sendMessage(message);
   }

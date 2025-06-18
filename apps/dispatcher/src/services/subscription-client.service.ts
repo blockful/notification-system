@@ -1,4 +1,4 @@
-import axios, { AxiosInstance } from 'axios';
+import { AxiosInstance } from 'axios';
 import { ISubscriptionClient, User, Notification } from '../interfaces/subscription-client.interface';
 
 /**
@@ -19,10 +19,15 @@ export class SubscriptionClient implements ISubscriptionClient {
   /**
    * Fetches all subscribers for a specific DAO
    * @param daoId The ID of the DAO
+   * @param eventTimestamp Optional timestamp to filter subscribers by subscription date
    * @returns List of subscribers
    */
-  async getDaoSubscribers(daoId: string): Promise<User[]> {
-    const response = await this.client.get(`/subscriptions/${daoId}`);
+  async getDaoSubscribers(daoId: string, eventTimestamp?: string): Promise<User[]> {
+    const url = eventTimestamp 
+      ? `/subscriptions/${daoId}?proposal_timestamp=${encodeURIComponent(eventTimestamp)}`
+      : `/subscriptions/${daoId}`;
+    
+    const response = await this.client.get(url);
     return response.data;
   }
 
