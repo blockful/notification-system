@@ -1,10 +1,11 @@
-import { Telegraf, session } from 'telegraf';
+import { Telegraf } from 'telegraf';
+import { session } from 'telegraf/session';
 import Fastify from 'fastify';
 import { validatorCompiler, serializerCompiler } from 'fastify-type-provider-zod';
 import cors from '@fastify/cors';
 import swagger from '@fastify/swagger';
 import swaggerUi from '@fastify/swagger-ui';
-import axios, { AxiosInstance } from 'axios';
+import { AxiosInstance } from 'axios';
 import { BotController } from './controllers/bot.controller';
 import { DAOService } from './services/dao.service';
 import { AnticaptureClient } from '@notification-system/anticapture-client';
