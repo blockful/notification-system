@@ -67,21 +67,9 @@ export class AnticaptureClient {
   }
 
   /**
-   * Lists proposals with optional filtering and pagination with full type safety
+   * Lists proposals for a specific DAO with full type safety
    */
-  async listProposals(variables?: ListProposalsQueryVariables, daoId?: string): Promise<ListProposalsQuery['proposalsOnchains']['items']> {
-    if (!daoId) {
-      const allDAOs = await this.getDAOs();
-      const allProposals: ListProposalsQuery['proposalsOnchains']['items'] = [];
-
-      for (const currentDaoId of allDAOs) {
-        const response = await this.query(ListProposalsDocument, variables, currentDaoId);
-        allProposals.push(...response.proposalsOnchains.items.filter(item => item !== null));
-      }
-
-      return allProposals;
-    }
-
+  async listProposalsForDAO(daoId: string, variables?: ListProposalsQueryVariables): Promise<ListProposalsQuery['proposalsOnchains']['items']> {
     const response = await this.query(ListProposalsDocument, variables, daoId);
     return response.proposalsOnchains.items.filter(item => item !== null);
   }
