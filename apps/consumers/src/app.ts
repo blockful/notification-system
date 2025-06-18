@@ -1,10 +1,11 @@
 import { Telegraf } from 'telegraf';
+import { session } from 'telegraf/session';
 import Fastify from 'fastify';
 import { validatorCompiler, serializerCompiler } from 'fastify-type-provider-zod';
 import cors from '@fastify/cors';
 import swagger from '@fastify/swagger';
 import swaggerUi from '@fastify/swagger-ui';
-import axios, { AxiosInstance } from 'axios';
+import { AxiosInstance } from 'axios';
 import { BotController } from './controllers/bot.controller';
 import { DAOService } from './services/dao.service';
 import { AnticaptureClient } from '@notification-system/anticapture-client';
@@ -12,6 +13,7 @@ import { SubscriptionAPIService } from './services/subscription-api.service';
 import { NotificationService } from './services/notification.service';
 import { APIController } from './controllers/api.controller';
 import { FastifyTypedInstance } from './interfaces/fastify.interface';
+import { ContextWithSession } from './interfaces/bot.interface';
 
 export class App {
   private notificationService: NotificationService;
@@ -29,10 +31,10 @@ export class App {
     const subscriptionApi = new SubscriptionAPIService(subscriptionServerUrl);
     const anticaptureClient = new AnticaptureClient(httpClient);
     const daoService = new DAOService(anticaptureClient, subscriptionApi);
-    const bot = new Telegraf(telegramBotToken);
-    
+    const bot = new Telegraf<ContextWithSession>(telegramBotToken);
+    bot.use(session());
     this.notificationService = new NotificationService(bot);
-    this.botController = new BotController(telegramBotToken, daoService);
+    this.botController = new BotController(bot, daoService);
   }
 
   private async setupServer(): Promise<FastifyTypedInstance> {

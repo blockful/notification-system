@@ -7,13 +7,14 @@
 import { Telegraf, Markup } from 'telegraf';
 import { WELCOME_MESSAGE, HELP_MESSAGE, DAOS_BUTTON_TEXT, LEARN_MORE_BUTTON_TEXT } from '../messages';
 import { DAOService } from '../services/dao.service';
+import { ContextWithSession } from '../interfaces/bot.interface';
 
 export class BotController {
-  private bot: Telegraf;
+  private bot: Telegraf<ContextWithSession>;
   private daoService: DAOService;
 
-  constructor(token: string, daoService: DAOService) {
-    this.bot = new Telegraf(token);
+  constructor(bot: Telegraf<ContextWithSession>, daoService: DAOService) {
+    this.bot = bot;
     this.daoService = daoService;
     this.setupCommands();
   }
