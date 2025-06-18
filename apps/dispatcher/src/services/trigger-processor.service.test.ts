@@ -15,6 +15,15 @@ jest.mock('../envConfig', () => ({
   }
 }));
 
+const MOCK_MESSAGE_BASE: Omit<DispatcherMessage, 'triggerId'> = {
+  events: [{ 
+    id: '123',
+    daoId: 'test-dao',
+    description: 'Test proposal',
+    timestamp: new Date().toISOString()
+  }]
+};
+
 describe('TriggerProcessorService', () => {
   let service: TriggerProcessorService;
   let mockNewProposalHandler: jest.Mocked<NewProposalTriggerHandler>;
@@ -42,7 +51,7 @@ describe('TriggerProcessorService', () => {
     it('should process a message with the correct handler', async () => {
       const mockMessage: DispatcherMessage = {
         triggerId: 'new-proposal',
-        payload: { id: '123' }
+        ...MOCK_MESSAGE_BASE
       };
       const mockResult: MessageProcessingResult = {
         messageId: 'processed-123',
@@ -57,7 +66,7 @@ describe('TriggerProcessorService', () => {
     it('should throw error for unknown trigger', async () => {
       const mockMessage: DispatcherMessage = {
         triggerId: 'unknown-trigger',
-        payload: { id: '123' }
+        ...MOCK_MESSAGE_BASE
       };
       await expect(service.processTrigger(mockMessage))
         .rejects
@@ -72,7 +81,7 @@ describe('TriggerProcessorService', () => {
       
       const mockMessage: DispatcherMessage = {
         triggerId: 'test-trigger',
-        payload: { id: '123' }
+        ...MOCK_MESSAGE_BASE
       };
       
       await service.processTrigger(mockMessage);

@@ -83,4 +83,18 @@ export class UserFactory {
     
     return { user, preference, subscription };
   }
+
+  static async updateUserPreference(
+    userId: string,
+    daoId: string,
+    isActive: boolean,
+    timestamp: string
+  ): Promise<void> {
+    await db('user_preferences')
+      .where({ user_id: userId, dao_id: daoId })
+      .update({
+        is_active: isActive,
+        updated_at: timestamp
+      });
+  }
 }

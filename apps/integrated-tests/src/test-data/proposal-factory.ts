@@ -32,7 +32,7 @@ export class ProposalFactory {
       endBlock: 12345978,
       description: `Test ${daoId} proposal`,
       timestamp: new Date().toISOString(),
-      status: 'ACTIVE',
+      status: 'PENDING',
       forVotes: '1000000000000000000',
       againstVotes: '500000000000000000',
       abstainVotes: '200000000000000000',

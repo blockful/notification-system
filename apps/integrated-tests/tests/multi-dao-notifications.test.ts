@@ -134,32 +134,4 @@ describe('Multi-DAO Notification Flow - Integration Test', () => {
     );
     expect(ensFollowerCalls.length).toBe(0);
   });
-
-  test('should notify only new user when added to DAO with existing active proposals', async () => {
-    // First, setup UNI proposal and wait for initial notifications
-    const uniProposal = ProposalFactory.createProposal('UNISWAP', 'existing-uni-proposal');
-    GraphQLMockSetup.setupProposalMock(httpMockSetup.getMockClient(), [uniProposal]);
-    await new Promise(resolve => setTimeout(resolve, 5000));
-    
-    const beforeNewUserCallCount = mockSendMessage.mock.calls.length;
-    
-    // Add a new user that subscribes to UNISWAP
-    const now = new Date().toISOString();
-    await UserFactory.createUserWithFullSetup('444444444', 'new_uni_follower', 'UNISWAP', true, now);
-    
-    // Wait for logic system to trigger again
-    await new Promise(resolve => setTimeout(resolve, 5000));
-    
-    const afterNewUserCallCount = mockSendMessage.mock.calls.length;
-    const newCallsForNewUser = afterNewUserCallCount - beforeNewUserCallCount;
-    
-    // Should have exactly 1 new call (only for the new user)
-    expect(newCallsForNewUser).toBe(1);
-    
-    // Verify it was sent to the new user
-    const newUserCalls = mockSendMessage.mock.calls.filter(
-      call => call[0].toString() === '444444444'
-    );
-    expect(newUserCalls.length).toBe(1);
-  });
 });

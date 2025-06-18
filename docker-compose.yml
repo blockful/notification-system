@@ -75,7 +75,7 @@ services:
       ANTICAPTURE_GRAPHQL_ENDPOINT: ${ANTICAPTURE_GRAPHQL_ENDPOINT}
       DISPATCHER_ENDPOINT: http://dispatcher:3002/messages
       TRIGGER_INTERVAL: 10000
-      PROPOSAL_STATUS: active
+      PROPOSAL_STATUS: pending
     depends_on:
       - dispatcher
     networks:
