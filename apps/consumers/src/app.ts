@@ -1,4 +1,5 @@
 import { Telegraf } from 'telegraf';
+import LocalSession from 'telegraf-session-local';
 import Fastify from 'fastify';
 import { validatorCompiler, serializerCompiler } from 'fastify-type-provider-zod';
 import cors from '@fastify/cors';
@@ -12,6 +13,7 @@ import { SubscriptionAPIService } from './services/subscription-api.service';
 import { NotificationService } from './services/notification.service';
 import { APIController } from './controllers/api.controller';
 import { FastifyTypedInstance } from './interfaces/fastify.interface';
+import { SessionData } from './interfaces/session.interface';
 
 export class App {
   private notificationService: NotificationService;
@@ -30,6 +32,9 @@ export class App {
     const anticaptureClient = new AnticaptureClient(httpClient);
     const daoService = new DAOService(anticaptureClient, subscriptionApi);
     const bot = new Telegraf(telegramBotToken);
+    
+    const localSession = new LocalSession<SessionData>();
+    bot.use(localSession.middleware());
     
     this.notificationService = new NotificationService(bot);
     this.botController = new BotController(telegramBotToken, daoService);

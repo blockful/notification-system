@@ -11,8 +11,6 @@ import { SubscriptionAPIService } from './subscription-api.service';
 import { AnticaptureClient } from '@notification-system/anticapture-client';
 
 export class DAOService {
-  // Store selected DAOs for each user temporarily
-  private userSelections = new Map<number, Set<string>>();
   
   // DAO emojis mapping
   private daoEmojis = new Map<string, string>([
@@ -44,7 +42,7 @@ export class DAOService {
 
       const userPreferences = await this.subscriptionApi.getUserPreferences(chatId, daos);
       const currentSelections = new Set<string>(userPreferences);
-      this.userSelections.set(chatId, currentSelections);
+      ctx.session.daoSelections = currentSelections;
 
       const keyboard = {
         inline_keyboard: [
@@ -74,14 +72,14 @@ export class DAOService {
     const chatId = ctx.chat?.id;
     const messageId = ctx.callbackQuery?.message?.message_id;
     if (!chatId || !messageId) return;
-    const userSelectedDAOs = this.userSelections.get(chatId) || new Set();
+    const userSelectedDAOs = ctx.session.daoSelections || new Set();
     const normalizedDaoName = daoName.toUpperCase();
     if (userSelectedDAOs.has(normalizedDaoName)) {
       userSelectedDAOs.delete(normalizedDaoName);
     } else {
       userSelectedDAOs.add(normalizedDaoName);
     }
-    this.userSelections.set(chatId, userSelectedDAOs);
+    ctx.session.daoSelections = userSelectedDAOs;
     try {
       const daos = await this.anticaptureClient.getDAOs();
       const keyboard = {
@@ -110,7 +108,7 @@ export class DAOService {
     const chatId = ctx.chat?.id;
     if (!chatId) return;
     
-    const selectedDAOs = this.userSelections.get(chatId);
+    const selectedDAOs = ctx.session.daoSelections;
     if (!selectedDAOs) {
       await ctx.reply('Something went wrong. Please try again.');
       return;
@@ -119,7 +117,7 @@ export class DAOService {
     try {
       await this.updateSubscriptions(chatId, selectedDAOs);
       await this.showConfirmationMessage(ctx, selectedDAOs);
-      this.userSelections.delete(chatId);
+      delete ctx.session.daoSelections;
     } catch (error) {
       console.error('Error updating subscriptions:', error);
       await ctx.reply('Sorry, there was an error updating your subscriptions. Please try again later.');
