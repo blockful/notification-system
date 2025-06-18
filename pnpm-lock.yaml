@@ -40,7 +40,7 @@ importers:
         version: link:../../packages/anticapture-client
       axios:
         specifier: ^1.7.2
-        version: 1.9.0(debug@4.4.0)
+        version: 1.9.0
       dotenv:
         specifier: ^16.4.7
         version: 16.5.0
@@ -53,9 +53,6 @@ importers:
       telegraf:
         specifier: ^4.16.3
         version: 4.16.3(encoding@0.1.13)
-      telegraf-session-local:
-        specifier: ^2.1.1
-        version: 2.1.1(debug@4.4.0)(telegraf@4.16.3(encoding@0.1.13))
       zod:
         specifier: ^3.24.3
         version: 3.24.3
@@ -89,7 +86,7 @@ importers:
         version: 29.7.0
       axios:
         specifier: ^1.9.0
-        version: 1.9.0(debug@4.4.0)
+        version: 1.9.0
       dotenv:
         specifier: ^16.5.0
         version: 16.5.0
@@ -177,7 +174,7 @@ importers:
         version: link:../../packages/anticapture-client
       axios:
         specifier: ^1.6.7
-        version: 1.9.0(debug@4.4.0)
+        version: 1.9.0
       dotenv:
         specifier: ^16.3.1
         version: 16.5.0
@@ -241,7 +238,7 @@ importers:
         version: 9.0.8
       axios:
         specifier: ^1.9.0
-        version: 1.9.0(debug@4.4.0)
+        version: 1.9.0
       dotenv:
         specifier: ^16.5.0
         version: 16.5.0
@@ -296,7 +293,7 @@ importers:
         version: 3.2.0(graphql@16.11.0)
       axios:
         specifier: ^1.7.2
-        version: 1.9.0(debug@4.4.0)
+        version: 1.9.0
       graphql:
         specifier: ^16.11.0
         version: 16.11.0
@@ -1255,12 +1252,6 @@ packages:
   '@types/knex@0.16.1':
     resolution: {integrity: sha512-54gWD1HWwdVx5iLHaJ1qxH3I6KyBsj5fFqzRpXFn7REWiEB2jwspeVCombNsocSrqPd7IRPqKrsIME7/cD+TFQ==}
     deprecated: This is a stub types definition. knex provides its own type definitions, so you do not need this installed.
-
-  '@types/lodash@4.17.18':
-    resolution: {integrity: sha512-KJ65INaxqxmU6EoCiJmRPZC9H9RVWCRd349tXM2M3O5NA7cY6YL7c0bHAHQ93NOfTObEQ004kd2QVHs/r0+m4g==}
-
-  '@types/lowdb@1.0.15':
-    resolution: {integrity: sha512-xaMNIveDCryK4UvnUJOc2BCOH0lPivdvWHrutsLryo9r9Id3RqZq2RDmT4eddiEPYzu7nJMw6nFIcVifcqjWqg==}
 
   '@types/node@18.19.101':
     resolution: {integrity: sha512-Ykg7fcE3+cOQlLUv2Ds3zil6DVjriGQaSN/kEpl5HQ3DIGM6W0F2n9+GkWV4bRt7KjLymgzNdTnSKCbFUUJ7Kw==}
@@ -2460,9 +2451,6 @@ packages:
     resolution: {integrity: sha512-Fd4gABb+ycGAmKou8eMftCupSir5lRxqf4aD/vd0cD2qc4HL07OjCeuHMr8Ro4CoMaeCKDB0/ECBOVWjTwUvPQ==}
     engines: {node: '>=8'}
 
-  is-promise@2.2.2:
-    resolution: {integrity: sha512-+lP4/6lKUBfQjZ2pdxThZvLUAafmZb8OAxFb8XXtiQmS35INgr85hdOGoEs124ez1FCnZJt6jau/T+alh58QFQ==}
-
   is-relative@1.0.0:
     resolution: {integrity: sha512-Kw/ReK0iqwKeu0MITLFuj0jbPAmEiOsIwyIXvvbfa6QfmN9pkD1M+8pdk7Rl/dTKbH34/XBFMbgD4iMJhLQbGA==}
     engines: {node: '>=0.10.0'}
@@ -2809,10 +2797,6 @@ packages:
   loose-envify@1.4.0:
     resolution: {integrity: sha512-lyuxPGr/Wfhrlem2CL/UcnUc1zcqKAImBDzukY7Y5F/yQiNdko6+fRLevlw1HgMySw7f611UIY408EtxRSoK3Q==}
     hasBin: true
-
-  lowdb@1.0.0:
-    resolution: {integrity: sha512-2+x8esE/Wb9SQ1F9IHaYWfsC9FIecLOPrK4g17FGEayjUWH172H6nwicRovGvSE2CPZouc2MCIqCI7h9d+GftQ==}
-    engines: {node: '>=4'}
 
   lower-case-first@2.0.2:
     resolution: {integrity: sha512-EVm/rR94FJTZi3zefZ82fLWab+GX14LJN4HrWBcuo6Evmsl9hEfnqxgcHCKb9q+mNf6EVdsjx/qucYFIIB84pg==}
@@ -3219,10 +3203,6 @@ packages:
     resolution: {integrity: sha512-JU3teHTNjmE2VCGFzuY8EXzCDVwEqB2a8fsIvwaStHhAWJEeVd1o1QD80CU6+ZdEXXSLbSsuLwJjkCBWqRQUVA==}
     engines: {node: '>=8.6'}
 
-  pify@3.0.0:
-    resolution: {integrity: sha512-C3FsVNH1udSEX48gGX1xfvwTWfsYWj5U+8/uK15BGzIGrKoUpghX8hWZwa/OFnakBiiVNmBvemTJR5mcy7iPcg==}
-    engines: {node: '>=4'}
-
   pino-abstract-transport@2.0.0:
     resolution: {integrity: sha512-F63x5tizV6WCh4R6RHyi2Ml+M70DNRXt/+HANowMflpgGFMAym/VKm6G7ZOQRjqN7XbGxK1Lg9t6ZrtzOaivMw==}
 
@@ -3587,9 +3567,6 @@ packages:
     resolution: {integrity: sha512-RwNA9Z/7PrK06rYLIzFMlaF+l73iwpzsqRIFgbMLbTcLD6cOao82TaWefPXQvB2fOC4AjuYSEndS7N/mTCbkdQ==}
     engines: {node: '>= 0.8'}
 
-  steno@0.4.4:
-    resolution: {integrity: sha512-EEHMVYHNXFHfGtgjNITnka0aHhiAlo93F7z2/Pwd+g0teG9CnM3JIINM7hVVB5/rhw9voufD7Wukwgtw2uqh6w==}
-
   string-env-interpolation@1.0.1:
     resolution: {integrity: sha512-78lwMoCcn0nNu8LszbP1UA7g55OeE4v7rCeWnM5B453rnNr4aq+5it3FEYtZrSEiMvHZOZ9Jlqb0OD0M2VInqg==}
 
@@ -3669,13 +3646,6 @@ packages:
   tarn@3.0.2:
     resolution: {integrity: sha512-51LAVKUSZSVfI05vjPESNc5vwqqZpbXCsU+/+wxlOrUjk2SnFTt97v9ZgQrD4YmxYW1Px6w2KjaDitCfkvgxMQ==}
     engines: {node: '>=8.0.0'}
-
-  telegraf-session-local@2.1.1:
-    resolution: {integrity: sha512-ApcTkNh8MizkuOmt+MReKDWQkflNHkOQthuLmRc+zM+ltMTOxHRd5kKvMBKCiNFA77frDRs1a3ryUDRpF+JPJA==}
-    engines: {node: '>=12'}
-    peerDependencies:
-      debug: ^2.0.0 || ^3.0.0 || ^4.0.0
-      telegraf: ^3.38.0 || ^4.0.0
 
   telegraf@4.16.3:
     resolution: {integrity: sha512-yjEu2NwkHlXu0OARWoNhJlIjX09dRktiMQFsM678BAH/PEPVwctzL67+tvXqLCRQQvm3SDtki2saGO9hLlz68w==}
@@ -5350,12 +5320,6 @@ snapshots:
       - supports-color
       - tedious
 
-  '@types/lodash@4.17.18': {}
-
-  '@types/lowdb@1.0.15':
-    dependencies:
-      '@types/lodash': 4.17.18
-
   '@types/node@18.19.101':
     dependencies:
       undici-types: 5.26.5
@@ -5606,9 +5570,9 @@ snapshots:
       '@fastify/error': 4.1.0
       fastq: 1.19.1
 
-  axios@1.9.0(debug@4.4.0):
+  axios@1.9.0:
     dependencies:
-      follow-redirects: 1.15.9(debug@4.4.0)
+      follow-redirects: 1.15.9
       form-data: 4.0.2
       proxy-from-env: 1.1.0
     transitivePeerDependencies:
@@ -6382,9 +6346,7 @@ snapshots:
 
   flatted@3.3.3: {}
 
-  follow-redirects@1.15.9(debug@4.4.0):
-    optionalDependencies:
-      debug: 4.4.0(supports-color@5.5.0)
+  follow-redirects@1.15.9: {}
 
   foreground-child@3.3.1:
     dependencies:
@@ -6739,8 +6701,6 @@ snapshots:
   is-number@7.0.0: {}
 
   is-path-inside@3.0.3: {}
-
-  is-promise@2.2.2: {}
 
   is-relative@1.0.0:
     dependencies:
@@ -7421,14 +7381,6 @@ snapshots:
     dependencies:
       js-tokens: 4.0.0
 
-  lowdb@1.0.0:
-    dependencies:
-      graceful-fs: 4.2.11
-      is-promise: 2.2.2
-      lodash: 4.17.21
-      pify: 3.0.0
-      steno: 0.4.4
-
   lower-case-first@2.0.2:
     dependencies:
       tslib: 2.8.1
@@ -7846,8 +7798,6 @@ snapshots:
 
   picomatch@2.3.1: {}
 
-  pify@3.0.0: {}
-
   pino-abstract-transport@2.0.0:
     dependencies:
       split2: 4.2.0
@@ -8196,10 +8146,6 @@ snapshots:
 
   statuses@2.0.1: {}
 
-  steno@0.4.4:
-    dependencies:
-      graceful-fs: 4.2.11
-
   string-env-interpolation@1.0.1: {}
 
   string-length@4.0.2:
@@ -8288,13 +8234,6 @@ snapshots:
       yallist: 4.0.0
 
   tarn@3.0.2: {}
-
-  telegraf-session-local@2.1.1(debug@4.4.0)(telegraf@4.16.3(encoding@0.1.13)):
-    dependencies:
-      '@types/lowdb': 1.0.15
-      debug: 4.4.0(supports-color@5.5.0)
-      lowdb: 1.0.0
-      telegraf: 4.16.3(encoding@0.1.13)
 
   telegraf@4.16.3(encoding@0.1.13):
     dependencies:
