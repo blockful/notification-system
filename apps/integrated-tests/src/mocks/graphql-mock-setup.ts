@@ -3,19 +3,27 @@ import { ProposalData } from '../test-data/proposal-factory';
 
 export class GraphQLMockSetup {
   static setupProposalMock(mockHttpClient: any, proposals: ProposalData[]): void {
-    mockHttpClient.post.mockImplementation((url: string, data: any) => {
+    mockHttpClient.post.mockImplementation((url: string, data: any, config: any) => {
       if (data.query && data.query.includes('ListProposals')) {
         const requestedStatusIn = data.variables?.where?.status_in;
+        const daoIdHeader = config?.headers?.['anticapture-dao-id'];
         let proposalsToReturn = proposals;
-        
-        if (requestedStatusIn && Array.isArray(requestedStatusIn)) {
-          proposalsToReturn = proposals.filter(p => requestedStatusIn.includes(p.status));
+        // Filter by DAO ID from header
+        if (daoIdHeader) {
+          proposalsToReturn = proposals.filter(p => p.daoId === daoIdHeader);
         }
+        // Filter by status
+        if (requestedStatusIn && Array.isArray(requestedStatusIn)) {
+          proposalsToReturn = proposalsToReturn.filter(p => requestedStatusIn.includes(p.status));
+        }
+        // Remove daoId from response (since GraphQL query doesn't include it anymore)
+        const proposalsWithoutDaoId = proposalsToReturn.map(({ daoId, ...proposal }) => proposal);
+        
         return Promise.resolve({
           data: {
             data: {
               proposalsOnchains: {
-                items: proposalsToReturn
+                items: proposalsWithoutDaoId
               }
             }
           }
@@ -56,7 +64,6 @@ export class GraphQLMockSetup {
  */
 export const createMockProposal = (daoId: string, status: string) => ({
   id: "test-proposal-1",
-  daoId,
   status,
   description: "# Test Proposal\\n\\nThis is a test proposal for integration testing.",
   abstainVotes: "0",
