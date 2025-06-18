@@ -5,11 +5,12 @@
 
 import { Telegraf } from 'telegraf';
 import { NotificationPayload } from '../interfaces/notification.interface';
+import { ContextWithSession } from '../interfaces/bot.interface';
 
 export class NotificationService {
-  private bot: Telegraf;
+  private bot: Telegraf<ContextWithSession>;
 
-  constructor(bot: Telegraf) {
+  constructor(bot: Telegraf<ContextWithSession>) {
     this.bot = bot;
   }
 

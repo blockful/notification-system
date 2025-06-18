@@ -9,6 +9,7 @@ import { Context } from 'telegraf';
 import { CONFIRM_SELECTION_BUTTON, NO_DAO_SELECTED_MESSAGE, SELECTED_DAOS_MESSAGE, DAO_SELECTION_MESSAGE, EDIT_DAOS_MESSAGE } from '../messages';
 import { SubscriptionAPIService } from './subscription-api.service';
 import { AnticaptureClient } from '@notification-system/anticapture-client';
+import { ContextWithSession } from '../interfaces/bot.interface';
 
 export class DAOService {
   
@@ -29,7 +30,7 @@ export class DAOService {
     return `${emoji} ${dao}`;
   }
 
-  async initialize(ctx: Context): Promise<void> {
+  async initialize(ctx: ContextWithSession): Promise<void> {
     const chatId = ctx.chat?.id;
     if (!chatId) return;
 
@@ -68,11 +69,11 @@ export class DAOService {
     }
   }
 
-  async toggle(ctx: Context, daoName: string): Promise<void> {
+  async toggle(ctx: ContextWithSession, daoName: string): Promise<void> {
     const chatId = ctx.chat?.id;
     const messageId = ctx.callbackQuery?.message?.message_id;
     if (!chatId || !messageId) return;
-    const userSelectedDAOs = ctx.session.daoSelections || new Set();
+    const userSelectedDAOs = ctx.session.daoSelections;
     const normalizedDaoName = daoName.toUpperCase();
     if (userSelectedDAOs.has(normalizedDaoName)) {
       userSelectedDAOs.delete(normalizedDaoName);
@@ -104,7 +105,7 @@ export class DAOService {
     }
   }
 
-  async confirm(ctx: Context): Promise<void> {
+  async confirm(ctx: ContextWithSession): Promise<void> {
     const chatId = ctx.chat?.id;
     if (!chatId) return;
     
@@ -117,7 +118,7 @@ export class DAOService {
     try {
       await this.updateSubscriptions(chatId, selectedDAOs);
       await this.showConfirmationMessage(ctx, selectedDAOs);
-      delete ctx.session.daoSelections;
+      ctx.session.daoSelections = new Set<string>();
     } catch (error) {
       console.error('Error updating subscriptions:', error);
       await ctx.reply('Sorry, there was an error updating your subscriptions. Please try again later.');
