@@ -24,20 +24,15 @@ export class ProposalRepository implements ProposalDB {
   async listAll(options?: ListProposalsOptions): Promise<ProposalOnChain[]> {
     const variables: ListProposalsQueryVariables = {};
     
-    if (options?.status || options?.daoId) {
+    if (options?.status) {
       variables.where = {};  
-      if (options.status) {
-        variables.where.status_in = generateStatusVariations(options.status);
-      }
-      if (options.daoId) {
-        variables.where.daoId = options.daoId;
-      }
+      variables.where.status_in = generateStatusVariations(options.status);
     }
     if (options?.limit) {
       variables.limit = options.limit;
     }
     
-    return await this.anticaptureClient.listProposals(variables);
+    return await this.anticaptureClient.listProposals(variables, options?.daoId);
   }
 
 } 

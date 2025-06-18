@@ -70,7 +70,7 @@ export class AnticaptureClient {
    * Lists proposals with optional filtering and pagination with full type safety
    */
   async listProposals(variables?: ListProposalsQueryVariables, daoId?: string): Promise<ListProposalsQuery['proposalsOnchains']['items']> {
-    if (!daoId && !variables?.where?.daoId) {
+    if (!daoId) {
       const allDAOs = await this.getDAOs();
       const allProposals: ListProposalsQuery['proposalsOnchains']['items'] = [];
 

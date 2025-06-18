@@ -1,7 +1,6 @@
 query GetProposalById($id: String!) {
   proposalsOnchain(id: $id) {
     id
-    daoId
     proposerAccountId
     targets
     values
@@ -22,7 +21,6 @@ query ListProposals($where: proposalsOnchainFilter, $limit: Int) {
   proposalsOnchains(where: $where, limit: $limit) {
     items {
       id
-      daoId
       proposerAccountId
       targets
       values
