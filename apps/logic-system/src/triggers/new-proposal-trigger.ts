@@ -4,12 +4,12 @@
  */
 
 import { Trigger } from './base-trigger';
-import { ProposalOnChain, ListProposalsOptions, ProposalDB } from '../interfaces/proposal.interface';
+import { ProposalWithDAO, ListProposalsOptions, ProposalDB } from '../interfaces/proposal.interface';
 import { DispatcherService, DispatcherMessage } from '../interfaces/dispatcher.interface';
 
 const triggerId = 'new-proposal';
 
-export class NewProposalTrigger extends Trigger<ProposalOnChain, ListProposalsOptions> {
+export class NewProposalTrigger extends Trigger<ProposalWithDAO, ListProposalsOptions> {
   constructor(
     private readonly dispatcherService: DispatcherService,
     private readonly proposalDB: ProposalDB,
@@ -18,7 +18,7 @@ export class NewProposalTrigger extends Trigger<ProposalOnChain, ListProposalsOp
     super(triggerId, interval);
   }
 
-  async process(data: ProposalOnChain[]) {
+  async process(data: ProposalWithDAO[]) {
     const message: DispatcherMessage = {
       triggerId: this.id,
       events: data
@@ -30,7 +30,7 @@ export class NewProposalTrigger extends Trigger<ProposalOnChain, ListProposalsOp
    * Fetches proposals from the database
    * @returns Array of proposals
    */
-  protected async fetchData(options?: ListProposalsOptions): Promise<ProposalOnChain[]> {
+  protected async fetchData(options?: ListProposalsOptions): Promise<ProposalWithDAO[]> {
     if (!options?.status) {
       throw new Error('Status is required in filter options');
     }

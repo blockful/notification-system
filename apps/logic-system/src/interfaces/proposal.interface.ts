@@ -2,6 +2,7 @@ import type { GetProposalByIdQuery } from '@notification-system/anticapture-clie
 
 export type ProposalOnChain = GetProposalByIdQuery['proposalsOnchain'];
 export type ProposalOrNull = ProposalOnChain | null;
+export type ProposalWithDAO = ProposalOnChain & { daoId: string };
 
 /**
  * Valid status values for a proposal
@@ -44,7 +45,7 @@ export interface ProposalDB {
     /**
      * Lists proposals with pagination and filtering
      * @param options - Listing options for pagination and filtering
-     * @returns Array of proposals matching the criteria
+     * @returns Array of proposals with DAO information
      */
-    listAll(options?: ListProposalsOptions): Promise<ProposalOnChain[]>;
+    listAll(options?: ListProposalsOptions): Promise<ProposalWithDAO[]>;
 } 
