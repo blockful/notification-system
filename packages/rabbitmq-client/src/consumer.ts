@@ -28,7 +28,7 @@ export class RabbitMQConsumer {
         
         this.channel.ack(msg);
       } catch {
-        this.channel.nack(msg, false, false);
+        this.channel.nack(msg, false, true);
       }
     });
   }
