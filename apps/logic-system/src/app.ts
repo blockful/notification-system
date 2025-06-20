@@ -1,25 +1,41 @@
 import { NewProposalTrigger } from './triggers/new-proposal-trigger';
 import { ProposalRepository } from './repositories/proposal.repository';
-import { DispatcherApiClient } from './api-clients/dispatcher.api-client';
+import { RabbitMQDispatcherService } from './api-clients/rabbitmq-dispatcher.service';
 import { AnticaptureClient } from '@notification-system/anticapture-client';
+import { RabbitMQConnection, RabbitMQPublisher } from '@notification-system/rabbitmq-client';
 import { ProposalStatus } from './interfaces/proposal.interface';
-import axios, { AxiosInstance } from 'axios';
+import { AxiosInstance } from 'axios';
 
 export class App {
-  private trigger: NewProposalTrigger;
+  private trigger!: NewProposalTrigger;
   private proposalStatus: ProposalStatus;
+  private rabbitMQConnection!: RabbitMQConnection;
+  private rabbitMQPublisher!: RabbitMQPublisher;
 
   constructor(
     triggerInterval: number, 
     proposalStatus: ProposalStatus,
     anticaptureHttpClient: AxiosInstance,
-    dispatcherHttpClient: AxiosInstance
+    rabbitmqUrl: string
   ) {
     this.proposalStatus = proposalStatus;
     
     const anticaptureClient = new AnticaptureClient(anticaptureHttpClient);
     const proposalDB = new ProposalRepository(anticaptureClient);
-    const dispatcherService = new DispatcherApiClient(dispatcherHttpClient);
+
+    this.initializeRabbitMQ(rabbitmqUrl, proposalDB, triggerInterval);
+  }
+
+  private async initializeRabbitMQ(
+    rabbitmqUrl: string, 
+    proposalDB: ProposalRepository, 
+    triggerInterval: number
+  ): Promise<void> {
+    this.rabbitMQConnection = new RabbitMQConnection(rabbitmqUrl);
+    await this.rabbitMQConnection.connect();
+    
+    this.rabbitMQPublisher = await RabbitMQPublisher.create(this.rabbitMQConnection);
+    const dispatcherService = new RabbitMQDispatcherService(this.rabbitMQPublisher);
 
     this.trigger = new NewProposalTrigger(
       dispatcherService,
@@ -35,6 +51,12 @@ export class App {
 
   async stop(): Promise<void> {
     await this.trigger.stop();
+    if (this.rabbitMQPublisher) {
+      await this.rabbitMQPublisher.close();
+    }
+    if (this.rabbitMQConnection) {
+      await this.rabbitMQConnection.close();
+    }
   }
 }
 
