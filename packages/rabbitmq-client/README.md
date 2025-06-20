@@ -23,10 +23,7 @@ pnpm install @notification-system/rabbitmq-client
 import { RabbitMQConnection } from '@notification-system/rabbitmq-client';
 
 // Create and connect
-const connection = new RabbitMQConnection({
-  url: 'amqp://localhost:5672'
-});
-
+const connection = new RabbitMQConnection('amqp://localhost:5672');
 await connection.connect();
 ```
 

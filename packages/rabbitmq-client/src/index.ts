@@ -4,4 +4,4 @@ export { RabbitMQPublisher } from './publisher';
 export { RabbitMQConsumer } from './consumer';
 
 // Types
-export type { RabbitMQConfig, RabbitMQMessage, MessageHandler } from './types';
+export type { RabbitMQMessage, MessageHandler } from './types';
