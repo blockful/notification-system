@@ -10,8 +10,7 @@
   "scripts": {
     "build": "tsc",
     "dev": "tsc --watch",
-    "test": "jest",
-    "test:watch": "jest --watch"
+    "clean": "rm -rf dist"
   },
   "keywords": ["rabbitmq", "message-broker", "amqp", "client"],
   "author": "",
@@ -19,10 +18,7 @@
   "devDependencies": {
     "@types/amqplib": "^0.10.5",
     "@types/node": "^20.17.46",
-    "@types/jest": "^29.5.14",
     "@types/uuid": "^10.0.0",
-    "jest": "^29.7.0",
-    "ts-jest": "^29.1.2",
     "typescript": "^5.8.3"
   },
   "dependencies": {
