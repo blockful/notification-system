@@ -9,8 +9,7 @@
   ],
   "scripts": {
     "build": "tsc",
-    "dev": "tsc --watch",
-    "clean": "rm -rf dist"
+    "dev": "tsc --watch"
   },
   "keywords": ["rabbitmq", "message-broker", "amqp", "client"],
   "author": "",
