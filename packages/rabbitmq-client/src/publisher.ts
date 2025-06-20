@@ -1,12 +1,11 @@
 import * as amqp from 'amqplib';
 import { v4 as uuidv4 } from 'uuid';
-import { RabbitMQConnection } from './connection';
-import { RabbitMQMessage, PublishMessage } from './types';
+import { RabbitMQMessage, PublishMessage, AmqpConnection } from './types';
 
 export class RabbitMQPublisher {
   private constructor(private channel: amqp.ConfirmChannel) {}
 
-  static async create(connection: RabbitMQConnection): Promise<RabbitMQPublisher> {
+  static async create(connection: AmqpConnection): Promise<RabbitMQPublisher> {
     const channel = await connection.createConfirmChannel();
     return new RabbitMQPublisher(channel);
   }

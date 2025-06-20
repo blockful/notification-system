@@ -1,6 +1,5 @@
 import * as amqp from 'amqplib';
-import { RabbitMQConnection } from './connection';
-import { RabbitMQMessage, MessageHandler } from './types';
+import { RabbitMQMessage, MessageHandler, AmqpConnection } from './types';
 
 export class RabbitMQConsumer {
   private constructor(
@@ -8,7 +7,7 @@ export class RabbitMQConsumer {
     private queueName: string
   ) {}
 
-  static async create(connection: RabbitMQConnection, queueName: string): Promise<RabbitMQConsumer> {
+  static async create(connection: AmqpConnection, queueName: string): Promise<RabbitMQConsumer> {
     const channel = await connection.createChannel();
     await channel.assertQueue(queueName, { durable: true });
     await channel.prefetch(1);

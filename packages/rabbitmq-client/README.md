@@ -20,11 +20,10 @@ pnpm install @notification-system/rabbitmq-client
 ### Basic Setup
 
 ```typescript
-import { RabbitMQConnection } from '@notification-system/rabbitmq-client';
+import * as amqp from 'amqplib';
 
-// Create and connect
-const connection = new RabbitMQConnection('amqp://localhost:5672');
-await connection.connect();
+// Create connection
+const connection = await amqp.connect('amqp://localhost:5672');
 ```
 
 ### Publishing Messages
@@ -60,6 +59,9 @@ await consumer.consume(async (message) => {
 
 // Consumer runs indefinitely, close when needed
 await consumer.close();
+
+// Close connection when done
+await connection.close();
 ```
 
 ## Message Format
