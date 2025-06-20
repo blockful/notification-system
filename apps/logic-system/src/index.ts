@@ -6,7 +6,7 @@ const app = new App(
   env.TRIGGER_INTERVAL,
   env.PROPOSAL_STATUS,
   axios.create({ baseURL: env.ANTICAPTURE_GRAPHQL_ENDPOINT }),
-  axios.create({ baseURL: env.DISPATCHER_ENDPOINT })
+  env.RABBITMQ_URL
 );
 
 app.start();
