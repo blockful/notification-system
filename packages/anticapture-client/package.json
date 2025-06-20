@@ -10,7 +10,6 @@
   "scripts": {
     "build": "npm run codegen && tsc",
     "dev": "tsc --watch",
-    "clean": "rm -rf dist",
     "codegen": "dotenv -e .env -- graphql-codegen"
   },
   "keywords": ["graphql", "anticapture", "client"],
