@@ -4,25 +4,17 @@ import { RabbitMQConnection } from './connection';
 import { RabbitMQMessage } from './types';
 
 export class RabbitMQPublisher {
-  private connection: RabbitMQConnection;
-  private channel: amqp.ConfirmChannel | null = null;
+  private constructor(private channel: amqp.ConfirmChannel) {}
 
-  constructor(connection: RabbitMQConnection) {
-    this.connection = connection;
-  }
-
-  async initialize(): Promise<void> {
-    this.channel = await this.connection.createConfirmChannel();
+  static async create(connection: RabbitMQConnection): Promise<RabbitMQPublisher> {
+    const channel = await connection.createConfirmChannel();
+    return new RabbitMQPublisher(channel);
   }
 
   async publish<T = any>(
     queueName: string,
     message: Omit<RabbitMQMessage<T>, 'id' | 'timestamp'>
   ): Promise<void> {
-    if (!this.channel) {
-      throw new Error('Publisher not initialized. Call initialize() first.');
-    }
-
     const fullMessage: RabbitMQMessage<T> = {
       id: uuidv4(),
       timestamp: new Date().toISOString(),
@@ -37,7 +29,6 @@ export class RabbitMQPublisher {
   }
 
   async close(): Promise<void> {
-    await this.channel?.close();
-    this.channel = null;
+    await this.channel.close();
   }
 }

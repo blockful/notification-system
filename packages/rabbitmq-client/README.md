@@ -32,8 +32,7 @@ await connection.connect();
 ```typescript
 import { RabbitMQPublisher } from '@notification-system/rabbitmq-client';
 
-const publisher = new RabbitMQPublisher(connection);
-await publisher.initialize();
+const publisher = await RabbitMQPublisher.create(connection);
 
 await publisher.publish('dispatcher-queue', {
   type: 'NEW_PROPOSAL',
@@ -51,8 +50,7 @@ await publisher.close();
 ```typescript
 import { RabbitMQConsumer } from '@notification-system/rabbitmq-client';
 
-const consumer = new RabbitMQConsumer(connection, 'dispatcher-queue');
-await consumer.initialize();
+const consumer = await RabbitMQConsumer.create(connection, 'dispatcher-queue');
 
 await consumer.consume(async (message) => {
   console.log('Processing:', message.payload);
