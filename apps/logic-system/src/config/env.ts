@@ -13,7 +13,6 @@ const validProposalStatuses = [
 // Define environment variables schema with validation
 const envSchema = z.object({
   ANTICAPTURE_GRAPHQL_ENDPOINT: z.string().url('ANTICAPTURE_GRAPHQL_ENDPOINT must be a valid URL'),
-  DISPATCHER_ENDPOINT: z.string(),
   RABBITMQ_URL: z.string().default('amqp://localhost:5672'),
   TRIGGER_INTERVAL: z.coerce.number().optional().default(60000),
   PROPOSAL_STATUS: z.enum(validProposalStatuses),
