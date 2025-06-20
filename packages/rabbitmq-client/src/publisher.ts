@@ -1,7 +1,7 @@
 import * as amqp from 'amqplib';
 import { v4 as uuidv4 } from 'uuid';
 import { RabbitMQConnection } from './connection';
-import { RabbitMQMessage } from './types';
+import { RabbitMQMessage, PublishMessage } from './types';
 
 export class RabbitMQPublisher {
   private constructor(private channel: amqp.ConfirmChannel) {}
@@ -13,7 +13,7 @@ export class RabbitMQPublisher {
 
   async publish<T = any>(
     queueName: string,
-    message: Omit<RabbitMQMessage<T>, 'id' | 'timestamp'>
+    message: PublishMessage<T>
   ): Promise<void> {
     const fullMessage: RabbitMQMessage<T> = {
       id: uuidv4(),
