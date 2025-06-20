@@ -84,6 +84,9 @@ importers:
       '@jest/globals':
         specifier: ^29.7.0
         version: 29.7.0
+      '@notification-system/rabbitmq-client':
+        specifier: workspace:*
+        version: link:../../packages/rabbitmq-client
       axios:
         specifier: ^1.9.0
         version: 1.9.0

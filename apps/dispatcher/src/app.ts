@@ -4,8 +4,9 @@ import fastifyCors from '@fastify/cors';
 import fastifySwagger from '@fastify/swagger';
 import fastifySwaggerUi from '@fastify/swagger-ui';
 import axios from 'axios';
-import { HealthController, MessageController } from './controllers';
+import { HealthController } from './controllers';
 import { TriggerProcessorService } from './services/trigger-processor.service';
+import { RabbitMQConsumerService } from './services/rabbitmq-consumer.service';
 import { SubscriptionClient } from './services/subscription-client.service';
 import { NotificationClientFactory } from './services/notification/notification-factory.service';
 import { TelegramNotificationClient } from './services/notification/telegram-notification.service';
@@ -14,15 +15,16 @@ import { NewProposalTriggerHandler } from './services/triggers/new-proposal-trig
 export class App {
   private server: FastifyInstance;
   private port: number;
+  private rabbitMQConsumerService: RabbitMQConsumerService | null = null;
 
-  constructor(port: number, subscriptionServerUrl: string, telegramConsumerUrl: string) {
+  constructor(port: number, subscriptionServerUrl: string, telegramConsumerUrl: string, rabbitmqUrl: string) {
     this.port = port;
     this.server = fastify({
       logger: true
     });
 
     this.setupFastify();
-    this.setupServices(subscriptionServerUrl, telegramConsumerUrl);
+    this.setupServices(subscriptionServerUrl, telegramConsumerUrl, rabbitmqUrl);
   }
 
   private setupFastify(): void {
@@ -62,7 +64,7 @@ export class App {
     });
   }
 
-  private setupServices(subscriptionServerUrl: string, telegramConsumerUrl: string): void {
+  private setupServices(subscriptionServerUrl: string, telegramConsumerUrl: string, rabbitmqUrl: string): void {
     // Configure services
     const subscriptionAxiosClient = axios.create({
       baseURL: subscriptionServerUrl,
@@ -82,27 +84,33 @@ export class App {
     );
 
     const healthController = new HealthController();
-    const messageController = new MessageController(triggerProcessorService);
 
-    this.setupRoutes(healthController, messageController);
+    // Setup RabbitMQ consumer
+    this.rabbitMQConsumerService = new RabbitMQConsumerService(rabbitmqUrl, triggerProcessorService);
+
+    this.setupRoutes(healthController);
   }
 
-  private setupRoutes(healthController: HealthController, messageController: MessageController): void {
+  private setupRoutes(healthController: HealthController): void {
     this.server.register(async (instance) => {
       await healthController.healthRoutes(instance);
-    });
-    
-    this.server.register(async (instance) => {
-      await messageController.messageRoutes(instance);
     });
   }
 
   async start(): Promise<void> {
+    // Start RabbitMQ consumer
+    await this.rabbitMQConsumerService?.start();
+    
+    // Start HTTP server
     await this.server.listen({ port: this.port, host: '0.0.0.0' });
     console.log(`Dispatcher server running on port ${this.port}!`);
   }
 
   async stop(): Promise<void> {
+    // Stop RabbitMQ consumer
+    await this.rabbitMQConsumerService?.stop();
+    
+    // Stop HTTP server
     await this.server.close();
   }
 } 
