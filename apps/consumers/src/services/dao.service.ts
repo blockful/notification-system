@@ -25,14 +25,8 @@ export class DAOService {
   ) {}
 
   private ensureSession(ctx: ContextWithSession): Set<string> {
-    if (!ctx.session) {
-      ctx.session = {
-        daoSelections: new Set<string>()
-      };
-    }
-    if (!ctx.session.daoSelections) {
-      ctx.session.daoSelections = new Set<string>();
-    }
+    ctx.session ??= { daoSelections: new Set<string>() };
+    ctx.session.daoSelections ??= new Set<string>();
     return ctx.session.daoSelections;
   }
 
