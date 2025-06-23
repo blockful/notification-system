@@ -6,6 +6,6 @@ import { Context } from 'telegraf';
   
 export interface ContextWithSession extends Context {
     session: {
-        daoSelections?: Set<string>;
+        daoSelections: Set<string>;
     };
 }
