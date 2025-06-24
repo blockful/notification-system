@@ -27,8 +27,7 @@ out/
 build
 dist
 
-# Generated GraphQL files
-**/src/gql/
+# Generated GraphQL files (except anticapture-client)
 **/src/generated/
 **/src/__generated__/
 
@@ -134,7 +133,6 @@ out
 
 # Nuxt.js build / generate output
 .nuxt
-dist
 
 # Gatsby files
 .cache/

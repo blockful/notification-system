@@ -5,7 +5,8 @@
     "apps/*"
   ],
   "scripts": {
-    "build": "turbo run codegen && turbo run build",
+    "build": "turbo run build",
+    "build:dev": "pnpm client codegen && turbo run build",
     "format": "prettier --write \"**/*.{ts,tsx,md}\"",
     "dev": "docker-compose up --build",
     "test": "turbo run test",
