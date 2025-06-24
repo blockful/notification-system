@@ -27,7 +27,7 @@ out/
 build
 dist
 
-# Generated GraphQL files (except anticapture-client)
+# Generated GraphQL files
 **/src/generated/
 **/src/__generated__/
 
