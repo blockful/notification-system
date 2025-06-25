@@ -24,6 +24,12 @@ export class DAOService {
     private subscriptionApi: SubscriptionAPIService
   ) {}
 
+  private ensureSession(ctx: ContextWithSession): Set<string> {
+    ctx.session ??= { daoSelections: new Set<string>() };
+    ctx.session.daoSelections ??= new Set<string>();
+    return ctx.session.daoSelections;
+  }
+
   private getDaoWithEmoji(dao: string): string {
     const normalizedDao = dao.toUpperCase();
     const emoji = this.daoEmojis.get(normalizedDao) || '🏛️';
@@ -43,6 +49,7 @@ export class DAOService {
 
       const userPreferences = await this.subscriptionApi.getUserPreferences(chatId, daos);
       const currentSelections = new Set<string>(userPreferences);
+      this.ensureSession(ctx);
       ctx.session.daoSelections = currentSelections;
 
       const keyboard = {
@@ -73,7 +80,7 @@ export class DAOService {
     const chatId = ctx.chat?.id;
     const messageId = ctx.callbackQuery?.message?.message_id;
     if (!chatId || !messageId) return;
-    const userSelectedDAOs = ctx.session.daoSelections;
+    const userSelectedDAOs = this.ensureSession(ctx);
     const normalizedDaoName = daoName.toUpperCase();
     if (userSelectedDAOs.has(normalizedDaoName)) {
       userSelectedDAOs.delete(normalizedDaoName);
@@ -109,11 +116,7 @@ export class DAOService {
     const chatId = ctx.chat?.id;
     if (!chatId) return;
     
-    const selectedDAOs = ctx.session.daoSelections;
-    if (!selectedDAOs) {
-      await ctx.reply('Something went wrong. Please try again.');
-      return;
-    }
+    const selectedDAOs = this.ensureSession(ctx);
 
     try {
       await this.updateSubscriptions(chatId, selectedDAOs);
