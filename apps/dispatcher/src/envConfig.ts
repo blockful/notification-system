@@ -10,7 +10,7 @@ import { z } from 'zod';
 const envSchema = z.object({
   SUBSCRIPTION_SERVER_URL: z.string().url(),
   TELEGRAM_CONSUMER_URL: z.string().url(),
-  RABBITMQ_URL: z.string().default('amqp://localhost:5672'),
+  RABBITMQ_URL: z.string().url(),
 });
 
 export function loadConfig() {
