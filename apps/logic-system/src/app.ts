@@ -7,50 +7,46 @@ import { ProposalStatus } from './interfaces/proposal.interface';
 import { AxiosInstance } from 'axios';
 
 export class App {
-  private trigger!: NewProposalTrigger;
+  private trigger?: NewProposalTrigger;
   private proposalStatus: ProposalStatus;
-  private rabbitMQConnection!: RabbitMQConnection;
-  private rabbitMQPublisher!: RabbitMQPublisher;
+  private rabbitMQConnection?: RabbitMQConnection;
+  private rabbitMQPublisher?: RabbitMQPublisher;
 
   constructor(
-    triggerInterval: number, 
+    private triggerInterval: number, 
     proposalStatus: ProposalStatus,
-    anticaptureHttpClient: AxiosInstance,
-    rabbitmqUrl: string
+    private anticaptureHttpClient: AxiosInstance,
+    private rabbitmqUrl: string
   ) {
     this.proposalStatus = proposalStatus;
-    
-    const anticaptureClient = new AnticaptureClient(anticaptureHttpClient);
-    const proposalDB = new ProposalRepository(anticaptureClient);
-
-    this.initializeRabbitMQ(rabbitmqUrl, proposalDB, triggerInterval);
   }
 
-  private async initializeRabbitMQ(
-    rabbitmqUrl: string, 
-    proposalDB: ProposalRepository, 
-    triggerInterval: number
-  ): Promise<void> {
-    this.rabbitMQConnection = new RabbitMQConnection(rabbitmqUrl);
-    await this.rabbitMQConnection.connect();
-    
-    this.rabbitMQPublisher = await RabbitMQPublisher.create(this.rabbitMQConnection);
-    const dispatcherService = new RabbitMQDispatcherService(this.rabbitMQPublisher);
+  async start(): Promise<void> {
+    if (!this.trigger) {
+      const anticaptureClient = new AnticaptureClient(this.anticaptureHttpClient);
+      const proposalDB = new ProposalRepository(anticaptureClient);
 
-    this.trigger = new NewProposalTrigger(
-      dispatcherService,
-      proposalDB,
-      triggerInterval
-    );
-  }
+      this.rabbitMQConnection = new RabbitMQConnection(this.rabbitmqUrl);
+      await this.rabbitMQConnection.connect();
+      
+      this.rabbitMQPublisher = await RabbitMQPublisher.create(this.rabbitMQConnection);
+      const dispatcherService = new RabbitMQDispatcherService(this.rabbitMQPublisher);
 
-  start(): void {
+      this.trigger = new NewProposalTrigger(
+        dispatcherService,
+        proposalDB,
+        this.triggerInterval
+      );
+    }
+
     this.trigger.start({ status: this.proposalStatus });
     console.log('Logic system is running. Press Ctrl+C to stop.');
   }
 
   async stop(): Promise<void> {
-    await this.trigger.stop();
+    if (this.trigger) {
+      await this.trigger.stop();
+    }
     if (this.rabbitMQPublisher) {
       await this.rabbitMQPublisher.close();
     }
