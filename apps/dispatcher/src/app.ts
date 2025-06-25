@@ -7,7 +7,7 @@ import { TelegramNotificationClient } from './services/notification/telegram-not
 import { NewProposalTriggerHandler } from './services/triggers/new-proposal-trigger.service';
 
 export class App {
-  private rabbitMQConsumerService: RabbitMQConsumerService | null = null;
+  private rabbitMQConsumerService!: RabbitMQConsumerService;
 
   constructor(subscriptionServerUrl: string, telegramConsumerUrl: string, rabbitmqUrl: string) {
     this.setupServices(subscriptionServerUrl, telegramConsumerUrl, rabbitmqUrl);
@@ -37,13 +37,11 @@ export class App {
   }
 
   async start(): Promise<void> {
-    // Start RabbitMQ consumer
     await this.rabbitMQConsumerService?.start();
     console.log('Dispatcher service running!');
   }
 
   async stop(): Promise<void> {
-    // Stop RabbitMQ consumer
     await this.rabbitMQConsumerService?.stop();
   }
 } 
