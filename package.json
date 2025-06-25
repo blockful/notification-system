@@ -5,13 +5,15 @@
     "apps/*"
   ],
   "scripts": {
-    "build": "turbo run codegen && turbo run build",
+    "build": "turbo run build",
+    "build:dev": "pnpm client codegen && turbo run build",
     "format": "prettier --write \"**/*.{ts,tsx,md}\"",
     "dev": "docker-compose up --build",
     "test": "turbo run test",
     "consumer": "pnpm --filter @notification-system/consumer",
     "logic-system": "pnpm --filter @notification-system/logic-system",
     "subscription-server": "pnpm --filter @notification-system/subscription-server",
+    "dispatcher": "pnpm --filter @notification-system/dispatcher",
     "client": "pnpm --filter @notification-system/anticapture-client"
   },
   "devDependencies": {

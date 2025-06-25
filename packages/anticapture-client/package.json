@@ -8,7 +8,7 @@
     "dist"
   ],
   "scripts": {
-    "build": "npm run codegen && tsc",
+    "build": "tsc",
     "dev": "tsc --watch",
     "codegen": "dotenv -e .env -- graphql-codegen"
   },
