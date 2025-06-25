@@ -6,8 +6,13 @@ export class RabbitMQTestSetup {
   private connection: RabbitMQConnection | null = null;
   
   async setup(): Promise<string> {
-    this.container = await new RabbitMQContainer().start();
+    this.container = await new RabbitMQContainer()
+      .withStartupTimeout(90000)
+      .start();
+    
     const amqpUrl = this.container.getAmqpUrl();
+    await new Promise(resolve => setTimeout(resolve, 3000));
+    
     this.connection = new RabbitMQConnection(amqpUrl);
     await this.connection.connect();
     await this.clearQueue('dispatcher-queue');
