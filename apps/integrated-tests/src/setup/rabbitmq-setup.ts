@@ -2,10 +2,13 @@ import { RabbitMQContainer, StartedRabbitMQContainer } from '@testcontainers/rab
 import { RabbitMQConnection } from '@notification-system/rabbitmq-client';
 
 export class RabbitMQTestSetup {
-  private container: StartedRabbitMQContainer | null = null;
-  private connection: RabbitMQConnection | null = null;
+  private container!: StartedRabbitMQContainer;
+  private connection!: RabbitMQConnection;
+  private isCreated = false;
   
   async setup(): Promise<string> {
+    if (this.isCreated) return this.container.getAmqpUrl();
+
     this.container = await new RabbitMQContainer()
       .withStartupTimeout(90000)
       .start();
@@ -17,24 +20,22 @@ export class RabbitMQTestSetup {
     await this.connection.connect();
     await this.clearQueue('dispatcher-queue');
 
+    this.isCreated = true;
     return amqpUrl;
   }
 
   async cleanup(): Promise<void> {
-    if (this.connection) {
-      await this.clearQueue('dispatcher-queue');
-      await this.connection.close();
-      this.connection = null;
-    }
+    if (!this.isCreated) return;
     
-    if (this.container) {
-      await this.container.stop();
-      this.container = null;
-    }
+    await this.clearQueue('dispatcher-queue');
+    await this.connection.close();
+    await this.container.stop();
+    
+    this.isCreated = false;
   }
 
   private async clearQueue(queueName: string): Promise<void> {
-    if (!this.connection) return;
+    if (!this.isCreated) return;
     
     const channel = await this.connection.createChannel();
     await channel.assertQueue(queueName, { durable: true });
