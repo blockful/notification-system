@@ -38,6 +38,9 @@ importers:
       '@notification-system/anticapture-client':
         specifier: workspace:*
         version: link:../../packages/anticapture-client
+      '@notification-system/rabbitmq-client':
+        specifier: workspace:*
+        version: link:../../packages/rabbitmq-client
       axios:
         specifier: ^1.7.2
         version: 1.9.0
