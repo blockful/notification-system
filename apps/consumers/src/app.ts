@@ -14,18 +14,22 @@ import { NotificationService } from './services/notification.service';
 import { APIController } from './controllers/api.controller';
 import { FastifyTypedInstance } from './interfaces/fastify.interface';
 import { ContextWithSession } from './interfaces/bot.interface';
+import { RabbitMQNotificationConsumerService } from './services/rabbitmq-notification-consumer.service';
 
 export class App {
   private notificationService: NotificationService;
   private botController: BotController;
   private server?: FastifyTypedInstance;
   private port: number;
+  private rabbitmqConsumerService: RabbitMQNotificationConsumerService;
+  private rabbitmqUrl: string;
 
   constructor(
     telegramBotToken: string, 
     subscriptionServerUrl: string, 
     port: number,
-    httpClient: AxiosInstance
+    httpClient: AxiosInstance,
+    rabbitmqUrl: string
   ) {
     this.port = port;
     const subscriptionApi = new SubscriptionAPIService(subscriptionServerUrl);
@@ -35,6 +39,11 @@ export class App {
     bot.use(session());
     this.notificationService = new NotificationService(bot);
     this.botController = new BotController(bot, daoService);
+    this.rabbitmqUrl = rabbitmqUrl;
+    this.rabbitmqConsumerService = new RabbitMQNotificationConsumerService(
+      this.rabbitmqUrl, 
+      this.notificationService
+    );
   }
 
   private async setupServer(): Promise<FastifyTypedInstance> {
@@ -86,6 +95,7 @@ export class App {
     console.log(`API server running on http://localhost:${this.port}`);
     console.log(`API documentation available at http://localhost:${this.port}/docs`);
     
+    await this.rabbitmqConsumerService.start();
     this.botController.launch();
     console.log('Telegram bot and API server are now running!');
   }
@@ -95,6 +105,7 @@ export class App {
       console.log('Server is not running');
       return;
     }
+    await this.rabbitmqConsumerService.stop();
     await this.server.close();
     this.botController.stop('SIGINT');
   }
