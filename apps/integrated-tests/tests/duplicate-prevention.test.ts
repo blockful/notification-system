@@ -7,7 +7,6 @@ import { setupDatabase } from '../src/setup/database';
 import { startTestApps, stopTestApps, TestApps } from '../src/setup/apps';
 import { HttpClientMockSetup } from '../src/mocks/http-client-mock';
 import { GraphQLMockSetup } from '../src/mocks/graphql-mock-setup';
-import { DaoFactory } from '../src/test-data/dao-factory';
 import { UserFactory } from '../src/test-data/user-factory';
 import { ProposalFactory } from '../src/test-data/proposal-factory';
 
@@ -53,8 +52,7 @@ describe('Duplicate Prevention - Integration Test', () => {
     const now = new Date().toISOString();
     
     // Create DAO
-    const uniDao = await DaoFactory.createDao('UNISWAP');
-    uniDaoId = uniDao.id;
+    uniDaoId = 'UNISWAP';
     
     // Create Users with subscriptions
     const uniFollower = await UserFactory.createUserWithFullSetup('111111111', 'uni_follower', uniDaoId, true, now);
