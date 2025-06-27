@@ -37,7 +37,7 @@ export class App {
       this.notificationService
     );
     this.botController.launch();
-    console.log('Telegram bot and RabbitMQ consumer are now running!');
+    console.log('Telegram bot is running!');
   }
 
   async stop(): Promise<void> {
