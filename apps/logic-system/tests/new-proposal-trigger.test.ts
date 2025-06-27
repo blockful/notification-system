@@ -1,11 +1,11 @@
 import { describe, it, expect, jest, beforeEach, afterEach } from '@jest/globals';
 import { NewProposalTrigger } from '../src/triggers/new-proposal-trigger';
 import { DispatcherService } from '../src/interfaces/dispatcher.interface';
-import { ProposalOnChain, ProposalStatus, ProposalDB } from '../src/interfaces/proposal.interface';
+import { ProposalOnChain, ProposalStatus, ProposalDataSource } from '../src/interfaces/proposal.interface';
 
 describe('NewProposalTrigger', () => {
   let mockDispatcherService: jest.Mocked<DispatcherService>;
-  let mockProposalDB: jest.Mocked<ProposalDB>;
+  let mockProposalDataSource: jest.Mocked<ProposalDataSource>;
   let trigger: NewProposalTrigger;
   
   const mockProposal: ProposalOnChain = {
@@ -29,14 +29,14 @@ describe('NewProposalTrigger', () => {
       sendMessage: jest.fn()
     };
     
-    mockProposalDB = {
+    mockProposalDataSource = {
       getById: jest.fn(),
       listAll: jest.fn()
     };
     
     trigger = new NewProposalTrigger(
       mockDispatcherService,
-      mockProposalDB,
+      mockProposalDataSource,
       60000
     );
   });
@@ -89,7 +89,7 @@ describe('NewProposalTrigger', () => {
   describe('start and stop', () => {
     beforeEach(() => {
       jest.useFakeTimers();
-      mockProposalDB.listAll.mockResolvedValue([mockProposal]);
+      mockProposalDataSource.listAll.mockResolvedValue([mockProposal]);
     });
     
     afterEach(() => {
@@ -105,8 +105,8 @@ describe('NewProposalTrigger', () => {
       trigger.start({ status: 'pending' });
       jest.advanceTimersByTime(60000);
       
-      expect(mockProposalDB.listAll).toHaveBeenCalledTimes(1);
-      expect(mockProposalDB.listAll).toHaveBeenCalledWith({ status: 'pending' });
+      expect(mockProposalDataSource.listAll).toHaveBeenCalledTimes(1);
+      expect(mockProposalDataSource.listAll).toHaveBeenCalledWith({ status: 'pending' });
     });
     
     it('should stop and restart the interval if start is called twice', () => {
@@ -116,21 +116,21 @@ describe('NewProposalTrigger', () => {
       expect(stopSpy).toHaveBeenCalledTimes(1);
       jest.advanceTimersByTime(60000);
       
-      expect(mockProposalDB.listAll).toHaveBeenCalledWith({ status: 'pending' });
+      expect(mockProposalDataSource.listAll).toHaveBeenCalledWith({ status: 'pending' });
     });
     
     it('should stop the interval when stop is called', () => {
       trigger.start({ status: 'active' });
       jest.advanceTimersByTime(60000);
       
-      expect(mockProposalDB.listAll).toHaveBeenCalledTimes(1);
-      expect(mockProposalDB.listAll).toHaveBeenCalledWith({ status: 'active' });
+      expect(mockProposalDataSource.listAll).toHaveBeenCalledTimes(1);
+      expect(mockProposalDataSource.listAll).toHaveBeenCalledWith({ status: 'active' });
       
-      mockProposalDB.listAll.mockClear();
+      mockProposalDataSource.listAll.mockClear();
       trigger.stop();
       
       jest.advanceTimersByTime(60000);
-      expect(mockProposalDB.listAll).not.toHaveBeenCalled();
+      expect(mockProposalDataSource.listAll).not.toHaveBeenCalled();
     });
   });
 }); 

@@ -1,4 +1,4 @@
-import { ProposalDB, ProposalOnChain, ProposalOrNull, ListProposalsOptions } from '../interfaces/proposal.interface';
+import { ProposalDataSource, ProposalOnChain, ProposalOrNull, ListProposalsOptions } from '../interfaces/proposal.interface';
 import { AnticaptureClient, ListProposalsQueryVariables } from '@notification-system/anticapture-client';
 
 function generateStatusVariations(status: string): string[] {
@@ -10,7 +10,7 @@ function generateStatusVariations(status: string): string[] {
   ];
 }
 
-export class ProposalRepository implements ProposalDB {
+export class ProposalRepository implements ProposalDataSource {
   private anticaptureClient: AnticaptureClient;
 
   constructor(anticaptureClient: AnticaptureClient) {

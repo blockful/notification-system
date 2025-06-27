@@ -4,7 +4,7 @@
  */
 
 import { Trigger } from './base-trigger';
-import { ProposalOnChain, ListProposalsOptions, ProposalDB } from '../interfaces/proposal.interface';
+import { ProposalOnChain, ListProposalsOptions, ProposalDataSource } from '../interfaces/proposal.interface';
 import { DispatcherService, DispatcherMessage } from '../interfaces/dispatcher.interface';
 
 const triggerId = 'new-proposal';
@@ -12,7 +12,7 @@ const triggerId = 'new-proposal';
 export class NewProposalTrigger extends Trigger<ProposalOnChain, ListProposalsOptions> {
   constructor(
     private readonly dispatcherService: DispatcherService,
-    private readonly proposalDB: ProposalDB,
+    private readonly proposalDB: ProposalDataSource,
     interval: number
   ) {
     super(triggerId, interval);
