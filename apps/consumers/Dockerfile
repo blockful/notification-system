@@ -8,5 +8,4 @@ COPY . .
 RUN pnpm install
 RUN pnpm build
 
-EXPOSE 3000
 ENTRYPOINT ["pnpm", "consumer", "start"]

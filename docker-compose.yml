@@ -45,19 +45,16 @@ services:
     depends_on:
       - subscription-db
 
-  # Consumers (Telegram Bot + API)
+  # Consumers (Telegram Bot + RabbitMQ Consumer)
   consumers:
     build:
       context: .
       dockerfile: apps/consumers/Dockerfile
     container_name: consumers
-    ports:
-      - "3000:3000"
     environment:
       TELEGRAM_BOT_TOKEN: ${TELEGRAM_BOT_TOKEN}
       ANTICAPTURE_GRAPHQL_ENDPOINT: ${ANTICAPTURE_GRAPHQL_ENDPOINT}
       SUBSCRIPTION_SERVER_URL: http://subscription-server:3003
-      API_PORT: 3000
       RABBITMQ_URL: amqp://admin:admin@rabbitmq:5672
     depends_on:
       subscription-server:

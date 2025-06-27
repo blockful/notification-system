@@ -19,7 +19,6 @@ export type TestApps = {
 const TEST_CONFIG = {
   ports: {
     subscriptionServer: 14001,
-    consumer: 14002,
   },
   urls: {
     subscriptionServer: 'http://127.0.0.1:14001',
@@ -51,7 +50,6 @@ export const startTestApps = async (db: Knex, mockHttpClient: any): Promise<Test
   const consumerApp = new ConsumerApp(
     TEST_CONFIG.telegram.botToken,
     TEST_CONFIG.urls.subscriptionServer,
-    TEST_CONFIG.ports.consumer,
     mockHttpClient,
     rabbitmqUrl
   );
