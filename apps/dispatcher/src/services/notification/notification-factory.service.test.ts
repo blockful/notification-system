@@ -1,28 +1,27 @@
 import { describe, it, expect, jest, beforeEach } from '@jest/globals';
 import { NotificationClientFactory } from './notification-factory.service';
-import { TelegramNotificationClient } from './telegram-notification.service';
+import { RabbitMQNotificationService } from './rabbitmq-notification.service';
 
-jest.mock('./telegram-notification.service', () => ({
-  TelegramNotificationClient: jest.fn()
+jest.mock('./rabbitmq-notification.service', () => ({
+  RabbitMQNotificationService: jest.fn()
 }));
 
 describe('NotificationClientFactory', () => {
   let factory: NotificationClientFactory;
-  const telegramBaseUrl = 'https://api.telegram.example.com';
-  let mockTelegramClient: any;
+  let mockRabbitMQClient: any;
   
   beforeEach(() => {
     jest.clearAllMocks();
-    mockTelegramClient = { sendNotification: jest.fn() };
-    (TelegramNotificationClient as jest.Mock).mockReturnValue(mockTelegramClient);
+    mockRabbitMQClient = { sendNotification: jest.fn() };
+    (RabbitMQNotificationService as jest.Mock).mockReturnValue(mockRabbitMQClient);
     factory = new NotificationClientFactory();
   });
   
   describe('getClient', () => {
     it('should return the correct client for a supported channel', () => {
-      factory.addClient('telegram', mockTelegramClient);
+      factory.addClient('telegram', mockRabbitMQClient);
       const client = factory.getClient('telegram');
-      expect(client).toBe(mockTelegramClient);
+      expect(client).toBe(mockRabbitMQClient);
     });
     
     it('should throw error for unsupported channel', () => {
@@ -33,14 +32,14 @@ describe('NotificationClientFactory', () => {
   
   describe('addClient', () => {
     it('should add a client to the factory', () => {
-      factory.addClient('telegram', mockTelegramClient);
+      factory.addClient('telegram', mockRabbitMQClient);
       expect(factory.supportsChannel('telegram')).toBe(true);
     });
   });
   
   describe('supportsChannel', () => {
     it('should return true for supported channels', () => {
-      factory.addClient('telegram', mockTelegramClient);
+      factory.addClient('telegram', mockRabbitMQClient);
       expect(factory.supportsChannel('telegram')).toBe(true);
     });
     

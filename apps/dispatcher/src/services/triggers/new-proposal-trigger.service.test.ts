@@ -2,7 +2,7 @@ import { describe, it, expect, jest, beforeEach, afterEach, beforeAll } from '@j
 import { NewProposalTriggerHandler } from './new-proposal-trigger.service';
 import { ISubscriptionClient, User, Notification } from '../../interfaces/subscription-client.interface';
 import { NotificationClientFactory } from '../notification/notification-factory.service';
-import { INotificationClient, NotificationResponse } from '../../interfaces/notification-client.interface';
+import { INotificationClient } from '../../interfaces/notification-client.interface';
 import { DispatcherMessage } from '../../interfaces/dispatcher-message.interface';
 
 describe('NewProposalTriggerHandler', () => {
@@ -12,7 +12,6 @@ describe('NewProposalTriggerHandler', () => {
   let handler: NewProposalTriggerHandler;
   let mockUsers: User[];
   let mockNotifications: Notification[];
-  let mockResponse: NotificationResponse;
   let mockProposal: any;
   
   beforeAll(() => {
@@ -25,12 +24,6 @@ describe('NewProposalTriggerHandler', () => {
       { user_id: '1', event_id: 'prop456', dao_id: 'dao123' },
       { user_id: '2', event_id: 'prop456', dao_id: 'dao123' }
     ];
-    
-    mockResponse = {
-      id: 'notification-id',
-      status: 'delivered',
-      timestamp: new Date().toISOString()
-    };
     
     mockProposal = {
       id: 'prop456',
@@ -71,7 +64,7 @@ describe('NewProposalTriggerHandler', () => {
     mockSubscriptionClient.getDaoSubscribers.mockResolvedValue(mockUsers);
     mockSubscriptionClient.shouldSend.mockResolvedValue(mockNotifications);
     mockSubscriptionClient.markAsSent.mockResolvedValue();
-    mockNotificationClient.sendNotification.mockResolvedValue(mockResponse);
+    mockNotificationClient.sendNotification.mockResolvedValue();
     
     handler = new NewProposalTriggerHandler(mockSubscriptionClient, mockNotificationFactory);
   });
