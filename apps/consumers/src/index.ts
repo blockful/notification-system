@@ -17,13 +17,13 @@ import { loadConfig } from './config/env';
 const config = loadConfig();
 
 // Create and start the application
-const app = new App(
-  config.telegramBotToken,
-  config.subscriptionServerUrl,
-  axios.create({ baseURL: config.anticaptureGraphqlEndpoint }),
-  config.rabbitmqUrl
-);
-
 (async () => {
+  const app = App.create({
+    telegramBotToken: config.telegramBotToken,
+    subscriptionServerUrl: config.subscriptionServerUrl,
+    httpClient: axios.create({ baseURL: config.anticaptureGraphqlEndpoint }),
+    rabbitmqUrl: config.rabbitmqUrl
+  });
+
   await app.start();
 })();

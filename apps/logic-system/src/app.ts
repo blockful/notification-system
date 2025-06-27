@@ -6,47 +6,51 @@ import { RabbitMQConnection, RabbitMQPublisher } from '@notification-system/rabb
 import { ProposalStatus } from './interfaces/proposal.interface';
 import { AxiosInstance } from 'axios';
 
+export interface LogicSystemAppConfig {
+  triggerInterval: number;
+  proposalStatus: ProposalStatus;
+  anticaptureHttpClient: AxiosInstance;
+  rabbitmqUrl: string;
+}
+
 export class App {
-  private trigger!: NewProposalTrigger;
+  private trigger: NewProposalTrigger;
   private proposalStatus: ProposalStatus;
-  private rabbitMQConnection!: RabbitMQConnection;
-  private rabbitMQPublisher!: RabbitMQPublisher;
-  private initPromise: Promise<void>;
+  private rabbitMQConnection: RabbitMQConnection;
+  private rabbitMQPublisher: RabbitMQPublisher;
 
-  constructor(
-    triggerInterval: number, 
+  private constructor(
+    trigger: NewProposalTrigger,
     proposalStatus: ProposalStatus,
-    anticaptureHttpClient: AxiosInstance,
-    rabbitmqUrl: string
+    rabbitMQConnection: RabbitMQConnection,
+    rabbitMQPublisher: RabbitMQPublisher
   ) {
+    this.trigger = trigger;
     this.proposalStatus = proposalStatus;
-    
-    const anticaptureClient = new AnticaptureClient(anticaptureHttpClient);
-    const proposalDB = new ProposalRepository(anticaptureClient);
-
-    this.initPromise = this.initializeRabbitMQ(rabbitmqUrl, proposalDB, triggerInterval);
+    this.rabbitMQConnection = rabbitMQConnection;
+    this.rabbitMQPublisher = rabbitMQPublisher;
   }
 
-  private async initializeRabbitMQ(
-    rabbitmqUrl: string, 
-    proposalDB: ProposalRepository, 
-    triggerInterval: number
-  ): Promise<void> {
-    this.rabbitMQConnection = new RabbitMQConnection(rabbitmqUrl);
-    await this.rabbitMQConnection.connect();
-    
-    this.rabbitMQPublisher = await RabbitMQPublisher.create(this.rabbitMQConnection);
-    const dispatcherService = new RabbitMQDispatcherService(this.rabbitMQPublisher);
+  static async create(config: LogicSystemAppConfig): Promise<App> {
+    const anticaptureClient = new AnticaptureClient(config.anticaptureHttpClient);
+    const proposalDB = new ProposalRepository(anticaptureClient);
 
-    this.trigger = new NewProposalTrigger(
+    const rabbitMQConnection = new RabbitMQConnection(config.rabbitmqUrl);
+    await rabbitMQConnection.connect();
+    
+    const rabbitMQPublisher = await RabbitMQPublisher.create(rabbitMQConnection);
+    const dispatcherService = new RabbitMQDispatcherService(rabbitMQPublisher);
+
+    const trigger = new NewProposalTrigger(
       dispatcherService,
       proposalDB,
-      triggerInterval
+      config.triggerInterval
     );
+
+    return new App(trigger, config.proposalStatus, rabbitMQConnection, rabbitMQPublisher);
   }
 
   async start(): Promise<void> {
-    await this.initPromise;
     this.trigger.start({ status: this.proposalStatus });
     console.log('Logic system is running. Press Ctrl+C to stop.');
   }

@@ -9,26 +9,39 @@ import { NotificationService } from './services/notification.service';
 import { ContextWithSession } from './interfaces/bot.interface';
 import { RabbitMQNotificationConsumerService } from './services/rabbitmq-notification-consumer.service';
 
+export interface ConsumerAppConfig {
+  telegramBotToken: string;
+  subscriptionServerUrl: string;
+  httpClient: AxiosInstance;
+  rabbitmqUrl: string;
+}
+
 export class App {
   private notificationService: NotificationService;
   private botController: BotController;
   private rabbitmqConsumerService?: RabbitMQNotificationConsumerService;
   private rabbitmqUrl: string;
 
-  constructor(
-    telegramBotToken: string, 
-    subscriptionServerUrl: string, 
-    httpClient: AxiosInstance,
+  private constructor(
+    notificationService: NotificationService,
+    botController: BotController,
     rabbitmqUrl: string
   ) {
-    const subscriptionApi = new SubscriptionAPIService(subscriptionServerUrl);
-    const anticaptureClient = new AnticaptureClient(httpClient);
-    const daoService = new DAOService(anticaptureClient, subscriptionApi);
-    const bot = new Telegraf<ContextWithSession>(telegramBotToken);
-    bot.use(session());
-    this.notificationService = new NotificationService(bot);
-    this.botController = new BotController(bot, daoService);
+    this.notificationService = notificationService;
+    this.botController = botController;
     this.rabbitmqUrl = rabbitmqUrl;
+  }
+
+  static create(config: ConsumerAppConfig): App {
+    const subscriptionApi = new SubscriptionAPIService(config.subscriptionServerUrl);
+    const anticaptureClient = new AnticaptureClient(config.httpClient);
+    const daoService = new DAOService(anticaptureClient, subscriptionApi);
+    const bot = new Telegraf<ContextWithSession>(config.telegramBotToken);
+    bot.use(session());
+    const notificationService = new NotificationService(bot);
+    const botController = new BotController(bot, daoService);
+    
+    return new App(notificationService, botController, config.rabbitmqUrl);
   }
 
   async start(): Promise<void> {

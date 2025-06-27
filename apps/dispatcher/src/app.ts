@@ -7,26 +7,34 @@ import { RabbitMQNotificationService } from './services/notification/rabbitmq-no
 import { NewProposalTriggerHandler } from './services/triggers/new-proposal-trigger.service';
 import { RabbitMQConnection, RabbitMQPublisher } from '@notification-system/rabbitmq-client';
 
+export interface DispatcherAppConfig {
+  subscriptionServerUrl: string;
+  rabbitmqUrl: string;
+}
+
 export class App {
-  private rabbitMQConsumerService!: RabbitMQConsumerService;
-  private rabbitmqConnection!: RabbitMQConnection;
-  private isCreated = false;
+  private rabbitMQConsumerService: RabbitMQConsumerService;
+  private rabbitmqConnection: RabbitMQConnection;
 
-  constructor(private subscriptionServerUrl: string, private rabbitmqUrl: string) {}
+  private constructor(
+    rabbitMQConsumerService: RabbitMQConsumerService,
+    rabbitmqConnection: RabbitMQConnection
+  ) {
+    this.rabbitMQConsumerService = rabbitMQConsumerService;
+    this.rabbitmqConnection = rabbitmqConnection;
+  }
 
-  private async setupServices(): Promise<void> {
-    if (this.isCreated) return;
-
+  static async create(config: DispatcherAppConfig): Promise<App> {
     const subscriptionAxiosClient = axios.create({
-      baseURL: this.subscriptionServerUrl,
+      baseURL: config.subscriptionServerUrl,
       headers: {
         'Content-Type': 'application/json',
       },
     });
     const subscriptionClient = new SubscriptionClient(subscriptionAxiosClient);
-    this.rabbitmqConnection = new RabbitMQConnection(this.rabbitmqUrl);
-    await this.rabbitmqConnection.connect();
-    const publisher = await RabbitMQPublisher.create(this.rabbitmqConnection);
+    const rabbitmqConnection = new RabbitMQConnection(config.rabbitmqUrl);
+    await rabbitmqConnection.connect();
+    const publisher = await RabbitMQPublisher.create(rabbitmqConnection);
     const notificationFactory = new NotificationClientFactory();
     notificationFactory.addClient('telegram', new RabbitMQNotificationService(publisher));
     const triggerProcessorService = new TriggerProcessorService();
@@ -36,18 +44,18 @@ export class App {
       new NewProposalTriggerHandler(subscriptionClient, notificationFactory)
     );
 
-    this.rabbitMQConsumerService = new RabbitMQConsumerService(this.rabbitmqUrl, triggerProcessorService);
-    this.isCreated = true;
+    const rabbitMQConsumerService = new RabbitMQConsumerService(config.rabbitmqUrl, triggerProcessorService);
+    
+    return new App(rabbitMQConsumerService, rabbitmqConnection);
   }
 
   async start(): Promise<void> {
-    await this.setupServices();
-    await this.rabbitMQConsumerService?.start();
+    await this.rabbitMQConsumerService.start();
     console.log('Dispatcher service running!');
   }
 
   async stop(): Promise<void> {
-    await this.rabbitMQConsumerService?.stop();
-    await this.rabbitmqConnection?.close();
+    await this.rabbitMQConsumerService.stop();
+    await this.rabbitmqConnection.close();
   }
 } 

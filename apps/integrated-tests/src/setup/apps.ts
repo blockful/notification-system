@@ -43,32 +43,35 @@ export const startTestApps = async (db: Knex, mockHttpClient: any): Promise<Test
   const rabbitmqSetup = new RabbitMQTestSetup();
   const rabbitmqUrl = await rabbitmqSetup.setup();
   
-  const subscriptionServerApp = new SubscriptionServerApp(db, TEST_CONFIG.ports.subscriptionServer);
+  const subscriptionServerApp = SubscriptionServerApp.create({
+    db,
+    port: TEST_CONFIG.ports.subscriptionServer
+  });
   await subscriptionServerApp.start();
   
   // Start consumer
-  const consumerApp = new ConsumerApp(
-    TEST_CONFIG.telegram.botToken,
-    TEST_CONFIG.urls.subscriptionServer,
-    mockHttpClient,
+  const consumerApp = ConsumerApp.create({
+    telegramBotToken: TEST_CONFIG.telegram.botToken,
+    subscriptionServerUrl: TEST_CONFIG.urls.subscriptionServer,
+    httpClient: mockHttpClient,
     rabbitmqUrl
-  );
+  });
   await consumerApp.start();
   
   // Start dispatcher
-  const dispatcherApp = new DispatcherApp(
-    TEST_CONFIG.urls.subscriptionServer, 
+  const dispatcherApp = await DispatcherApp.create({
+    subscriptionServerUrl: TEST_CONFIG.urls.subscriptionServer,
     rabbitmqUrl
-  );
+  });
   await dispatcherApp.start();
   
   // Start logic system
-  const logicSystemApp = new LogicSystemApp(
-    TEST_CONFIG.logicSystem.interval,
-    TEST_CONFIG.logicSystem.proposalState,
-    mockHttpClient,
+  const logicSystemApp = await LogicSystemApp.create({
+    triggerInterval: TEST_CONFIG.logicSystem.interval,
+    proposalStatus: TEST_CONFIG.logicSystem.proposalState,
+    anticaptureHttpClient: mockHttpClient,
     rabbitmqUrl
-  );
+  });
   await logicSystemApp.start();
   
   // Wait for apps to be ready

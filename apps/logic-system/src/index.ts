@@ -2,14 +2,16 @@ import axios from 'axios';
 import { App } from './app';
 import { env } from './config/env';
 
-const app = new App(
-  env.TRIGGER_INTERVAL,
-  env.PROPOSAL_STATUS,
-  axios.create({ baseURL: env.ANTICAPTURE_GRAPHQL_ENDPOINT }),
-  env.RABBITMQ_URL
-);
+(async () => {
+  const app = await App.create({
+    triggerInterval: env.TRIGGER_INTERVAL,
+    proposalStatus: env.PROPOSAL_STATUS,
+    anticaptureHttpClient: axios.create({ baseURL: env.ANTICAPTURE_GRAPHQL_ENDPOINT }),
+    rabbitmqUrl: env.RABBITMQ_URL
+  });
 
-app.start();
+  await app.start();
+})();
 
 //@ts-ignore
 BigInt.prototype.toJSON = function () {

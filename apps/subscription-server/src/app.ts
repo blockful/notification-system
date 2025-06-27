@@ -10,18 +10,27 @@ import { KnexUserRepository, KnexPreferenceRepository, KnexNotificationRepositor
 import { SubscriptionService, NotificationService } from './services';
 import { DaoHandler } from './handlers/dao.handlers';
 
+export interface SubscriptionServerAppConfig {
+  db: Knex;
+  port: number;
+}
+
 export class App {
   private server: FastifyInstance;
   private port: number;
 
-  constructor(db: Knex, port: number) {
+  private constructor(server: FastifyInstance, port: number) {
+    this.server = server;
     this.port = port;
-    this.server = fastify();
+  }
+
+  static create(config: SubscriptionServerAppConfig): App {
+    const server = fastify();
     
     // Repository instances
-    const userRepository = new KnexUserRepository(db);
-    const preferenceRepository = new KnexPreferenceRepository(db);
-    const notificationRepository = new KnexNotificationRepository(db);
+    const userRepository = new KnexUserRepository(config.db);
+    const preferenceRepository = new KnexPreferenceRepository(config.db);
+    const notificationRepository = new KnexNotificationRepository(config.db);
     
     // Service instances
     const subscriptionService = new SubscriptionService(userRepository, preferenceRepository);
@@ -34,8 +43,11 @@ export class App {
     const daoController = new DaoController(daoHandler);
     const notificationController = new NotificationController(notificationService);
 
-    this.setupFastify();
-    this.setupRoutes(daoController, notificationController);
+    const app = new App(server, config.port);
+    app.setupFastify();
+    app.setupRoutes(daoController, notificationController);
+    
+    return app;
   }
 
   private setupFastify(): void {

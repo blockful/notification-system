@@ -3,8 +3,11 @@ import { setupDatabaseConnection, config } from './config';
 
 const db = setupDatabaseConnection('pg', config.databaseUrl);
 
-const app = new App(db, config.port);
-
 (async () => {
+  const app = App.create({
+    db,
+    port: config.port
+  });
+
   await app.start();
 })();
