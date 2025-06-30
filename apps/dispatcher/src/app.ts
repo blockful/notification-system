@@ -3,45 +3,51 @@ import { TriggerProcessorService } from './services/trigger-processor.service';
 import { RabbitMQConsumerService } from './services/rabbitmq-consumer.service';
 import { SubscriptionClient } from './services/subscription-client.service';
 import { NotificationClientFactory } from './services/notification/notification-factory.service';
-import { TelegramNotificationClient } from './services/notification/telegram-notification.service';
+import { RabbitMQNotificationService } from './services/notification/rabbitmq-notification.service';
 import { NewProposalTriggerHandler } from './services/triggers/new-proposal-trigger.service';
+import { RabbitMQConnection, RabbitMQPublisher } from '@notification-system/rabbitmq-client';
 
 export class App {
   private rabbitMQConsumerService!: RabbitMQConsumerService;
+  private rabbitmqConnection!: RabbitMQConnection;
+  private isCreated = false;
 
-  constructor(subscriptionServerUrl: string, telegramConsumerUrl: string, rabbitmqUrl: string) {
-    this.setupServices(subscriptionServerUrl, telegramConsumerUrl, rabbitmqUrl);
-  }
+  constructor(private subscriptionServerUrl: string, private rabbitmqUrl: string) {}
 
-  private setupServices(subscriptionServerUrl: string, telegramConsumerUrl: string, rabbitmqUrl: string): void {
-    // Configure services
+  private async setupServices(): Promise<void> {
+    if (this.isCreated) return;
+
     const subscriptionAxiosClient = axios.create({
-      baseURL: subscriptionServerUrl,
+      baseURL: this.subscriptionServerUrl,
       headers: {
         'Content-Type': 'application/json',
       },
     });
     const subscriptionClient = new SubscriptionClient(subscriptionAxiosClient);
+    this.rabbitmqConnection = new RabbitMQConnection(this.rabbitmqUrl);
+    await this.rabbitmqConnection.connect();
+    const publisher = await RabbitMQPublisher.create(this.rabbitmqConnection);
     const notificationFactory = new NotificationClientFactory();
-    notificationFactory.addClient('telegram', new TelegramNotificationClient(telegramConsumerUrl));
+    notificationFactory.addClient('telegram', new RabbitMQNotificationService(publisher));
     const triggerProcessorService = new TriggerProcessorService();
 
-    // Register trigger handlers
     triggerProcessorService.addHandler(
       'new-proposal',
       new NewProposalTriggerHandler(subscriptionClient, notificationFactory)
     );
 
-    // Setup RabbitMQ consumer
-    this.rabbitMQConsumerService = new RabbitMQConsumerService(rabbitmqUrl, triggerProcessorService);
+    this.rabbitMQConsumerService = new RabbitMQConsumerService(this.rabbitmqUrl, triggerProcessorService);
+    this.isCreated = true;
   }
 
   async start(): Promise<void> {
+    await this.setupServices();
     await this.rabbitMQConsumerService?.start();
     console.log('Dispatcher service running!');
   }
 
   async stop(): Promise<void> {
     await this.rabbitMQConsumerService?.stop();
+    await this.rabbitmqConnection?.close();
   }
 } 

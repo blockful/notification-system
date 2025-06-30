@@ -14,14 +14,6 @@ export interface UserPreferenceData {
   is_active: boolean;
 }
 
-export interface SubscriptionData {
-  id: string;
-  user_id: string;
-  dao_id: string;
-  notification_type: string;
-  notification_channels: string;
-}
-
 export class UserFactory {
   static async createUser(channelUserId: string, name: string): Promise<UserData> {
     const user = {
@@ -52,36 +44,17 @@ export class UserFactory {
     return preference;
   }
 
-  static async createSubscription(
-    userId: string, 
-    daoId: string, 
-    timestamp?: string
-  ): Promise<SubscriptionData> {
-    const subscription = {
-      id: uuidv4(),
-      user_id: userId,
-      dao_id: daoId,
-      notification_type: 'proposal_created',
-      notification_channels: JSON.stringify(['telegram']),
-      created_at: timestamp || new Date().toISOString(),
-      updated_at: timestamp || new Date().toISOString()
-    };
-    await db('subscriptions').insert(subscription);
-    return subscription;
-  }
-
   static async createUserWithFullSetup(
     channelUserId: string, 
     name: string, 
     daoId: string,
     preferenceActive: boolean = true,
     timestamp?: string
-  ): Promise<{ user: UserData; preference: UserPreferenceData; subscription: SubscriptionData }> {
+  ): Promise<{ user: UserData; preference: UserPreferenceData }> {
     const user = await this.createUser(channelUserId, name);
     const preference = await this.createUserPreference(user.id, daoId, preferenceActive, timestamp);
-    const subscription = await this.createSubscription(user.id, daoId, timestamp);
     
-    return { user, preference, subscription };
+    return { user, preference };
   }
 
   static async updateUserPreference(

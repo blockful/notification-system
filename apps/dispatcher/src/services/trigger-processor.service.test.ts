@@ -10,8 +10,7 @@ jest.mock('./subscription-client.service');
 jest.mock('./notification/notification-factory.service');
 jest.mock('../envConfig', () => ({
   config: {
-    subscriptionServerUrl: 'https://subscription.example.com',
-    telegramConsumerUrl: 'https://telegram.example.com'
+    subscriptionServerUrl: 'https://subscription.example.com'
   }
 }));
 

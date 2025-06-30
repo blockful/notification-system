@@ -10,7 +10,7 @@ const envSchema = z.object({
   TELEGRAM_BOT_TOKEN: z.string().min(1, "Telegram bot token is required"),
   ANTICAPTURE_GRAPHQL_ENDPOINT: z.string().url("ANTICAPTURE_GRAPHQL_ENDPOINT must be a valid URL"),
   SUBSCRIPTION_SERVER_URL: z.string().min(1, "Subscription server URL is required"),
-  API_PORT: z.coerce.number().default(3004),
+  RABBITMQ_URL: z.string().url(),
 });
 
 export function loadConfig() {
@@ -21,6 +21,6 @@ export function loadConfig() {
     telegramBotToken: env.TELEGRAM_BOT_TOKEN,
     anticaptureGraphqlEndpoint: env.ANTICAPTURE_GRAPHQL_ENDPOINT,
     subscriptionServerUrl: env.SUBSCRIPTION_SERVER_URL,
-    port: env.API_PORT,
+    rabbitmqUrl: env.RABBITMQ_URL,
   } as const;
 } 

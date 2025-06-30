@@ -19,11 +19,9 @@ export type TestApps = {
 const TEST_CONFIG = {
   ports: {
     subscriptionServer: 14001,
-    consumer: 14002,
   },
   urls: {
     subscriptionServer: 'http://127.0.0.1:14001',
-    consumer: 'http://127.0.0.1:14002',
     mockGraphQL: 'http://mocked-endpoint.com/graphql',
   },
   telegram: {
@@ -52,15 +50,14 @@ export const startTestApps = async (db: Knex, mockHttpClient: any): Promise<Test
   const consumerApp = new ConsumerApp(
     TEST_CONFIG.telegram.botToken,
     TEST_CONFIG.urls.subscriptionServer,
-    TEST_CONFIG.ports.consumer,
-    mockHttpClient
+    mockHttpClient,
+    rabbitmqUrl
   );
   await consumerApp.start();
   
   // Start dispatcher
   const dispatcherApp = new DispatcherApp(
     TEST_CONFIG.urls.subscriptionServer, 
-    TEST_CONFIG.urls.consumer,
     rabbitmqUrl
   );
   await dispatcherApp.start();

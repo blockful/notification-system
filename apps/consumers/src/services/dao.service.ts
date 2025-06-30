@@ -24,6 +24,12 @@ export class DAOService {
     private subscriptionApi: SubscriptionAPIService
   ) {}
 
+  private ensureSession(ctx: ContextWithSession): void {
+    if (!ctx.session) {
+      ctx.session = { daoSelections: new Set<string>() };
+    }
+  }
+
   private getDaoWithEmoji(dao: string): string {
     const normalizedDao = dao.toUpperCase();
     const emoji = this.daoEmojis.get(normalizedDao) || '🏛️';
@@ -33,6 +39,8 @@ export class DAOService {
   async initialize(ctx: ContextWithSession): Promise<void> {
     const chatId = ctx.chat?.id;
     if (!chatId) return;
+
+    this.ensureSession(ctx);
 
     try {
       const daos = await this.anticaptureClient.getDAOs();
@@ -73,6 +81,9 @@ export class DAOService {
     const chatId = ctx.chat?.id;
     const messageId = ctx.callbackQuery?.message?.message_id;
     if (!chatId || !messageId) return;
+    
+    this.ensureSession(ctx);
+    
     const userSelectedDAOs = ctx.session.daoSelections;
     const normalizedDaoName = daoName.toUpperCase();
     if (userSelectedDAOs.has(normalizedDaoName)) {
@@ -108,6 +119,8 @@ export class DAOService {
   async confirm(ctx: ContextWithSession): Promise<void> {
     const chatId = ctx.chat?.id;
     if (!chatId) return;
+    
+    this.ensureSession(ctx);
     
     const selectedDAOs = ctx.session.daoSelections;
     if (!selectedDAOs) {

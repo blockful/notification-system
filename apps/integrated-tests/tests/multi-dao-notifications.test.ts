@@ -7,7 +7,6 @@ import { setupDatabase } from '../src/setup/database';
 import { startTestApps, stopTestApps, TestApps } from '../src/setup/apps';
 import { HttpClientMockSetup } from '../src/mocks/http-client-mock';
 import { GraphQLMockSetup } from '../src/mocks/graphql-mock-setup';
-import { DaoFactory } from '../src/test-data/dao-factory';
 import { UserFactory } from '../src/test-data/user-factory';
 import { ProposalFactory } from '../src/test-data/proposal-factory';
 
@@ -55,10 +54,8 @@ describe('Multi-DAO Notification Flow - Integration Test', () => {
     const now = new Date().toISOString();
     
     // Create DAOs
-    const uniDao = await DaoFactory.createDao('UNISWAP');
-    const ensDao = await DaoFactory.createDao('ENS');
-    uniDaoId = uniDao.id;
-    ensDaoId = ensDao.id;
+    uniDaoId = 'UNISWAP';
+    ensDaoId = 'ENS';
     
     // Create Users with subscriptions
     const uniFollower = await UserFactory.createUserWithFullSetup('111111111', 'uni_follower', uniDaoId, true, now);
@@ -71,7 +68,6 @@ describe('Multi-DAO Notification Flow - Integration Test', () => {
     
     // Create second subscription for bothFollower
     await UserFactory.createUserPreference(bothFollowerUserId, ensDaoId, true, now);
-    await UserFactory.createSubscription(bothFollowerUserId, ensDaoId, now);
   }
 
   test('Both DAOs proposals should notify user following both DAOs twice', async () => {

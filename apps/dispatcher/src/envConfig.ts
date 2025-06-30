@@ -9,7 +9,6 @@ import { z } from 'zod';
 
 const envSchema = z.object({
   SUBSCRIPTION_SERVER_URL: z.string().url(),
-  TELEGRAM_CONSUMER_URL: z.string().url(),
   RABBITMQ_URL: z.string().url(),
 });
 
@@ -19,7 +18,6 @@ export function loadConfig() {
   
   return {
     subscriptionServerUrl: env.SUBSCRIPTION_SERVER_URL,
-    telegramConsumerUrl: env.TELEGRAM_CONSUMER_URL,
     rabbitmqUrl: env.RABBITMQ_URL,
   } as const;
 } 

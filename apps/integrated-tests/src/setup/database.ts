@@ -8,26 +8,16 @@ export async function setupDatabase(): Promise<void> {
 
 export async function createTestData() {
   const now = new Date().toISOString();
-  const testDao = await createTestDao(now);
   const testUser = await createTestUser(now);
-  const testUserPreference = await createTestUserPreference(testUser.id, testDao.id, now);
-  const testProposal = await createTestProposal(testDao.id, now);
-  const testSubscription = await createTestSubscription(testUser.id, testDao.id, now);
+  const daoId = 'test-dao-id';
+  const testUserPreference = await createTestUserPreference(testUser.id, daoId, now);
+  const testProposal = await createTestProposal(daoId, now);
   return { 
-    testDao, 
     testUser, 
     testUserPreference, 
     testProposal,
-    testSubscription 
+    daoId 
   };
-}
-
-async function createTestDao(timestamp: string) {
-  const dao = {
-    id: uuidv4()
-  };
-  await db('dao').insert(dao);
-  return dao;
 }
 
 async function createTestUser(timestamp: string) {
@@ -76,19 +66,4 @@ async function createTestProposal(daoId: string, timestamp: string) {
   };
   await db('proposals_onchain').insert(proposal);
   return proposal;
-}
-
-async function createTestSubscription(userId: string, daoId: string, timestamp: string) {
-  const subscription = {
-    id: uuidv4(),
-    user_id: userId,
-    dao_id: daoId,
-    notification_type: 'proposal_created',
-    notification_channels: JSON.stringify(['telegram']),
-    is_active: true,
-    created_at: timestamp,
-    updated_at: timestamp
-  };
-  await db('subscriptions').insert(subscription);
-  return subscription;
 } 
