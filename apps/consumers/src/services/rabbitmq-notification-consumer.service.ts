@@ -1,5 +1,5 @@
 import { RabbitMQConnection, RabbitMQConsumer, RabbitMQMessage } from '@notification-system/rabbitmq-client';
-import { NotificationService } from './notification.service';
+import { TelegramBotService } from './telegram-bot.service';
 
 /**
  * Interface for the notification payload received from RabbitMQ
@@ -11,18 +11,18 @@ interface NotificationPayload {
 }
 
 /**
- * Service to consume notification messages from RabbitMQ and process them through NotificationService
+ * Service to consume notification messages from RabbitMQ and process them through TelegramBotService
  */
 export class RabbitMQNotificationConsumerService {
   private constructor(
     private readonly connection: RabbitMQConnection,
     private readonly consumer: RabbitMQConsumer,
-    private readonly notificationService: NotificationService
+    private readonly telegramBotService: TelegramBotService
   ) {}
 
   static async create(
     rabbitmqUrl: string,
-    notificationService: NotificationService
+    telegramBotService: TelegramBotService
   ): Promise<RabbitMQNotificationConsumerService> {
     const connection = new RabbitMQConnection(rabbitmqUrl);
     await connection.connect();
@@ -32,7 +32,7 @@ export class RabbitMQNotificationConsumerService {
     const service = new RabbitMQNotificationConsumerService(
       connection, 
       consumer, 
-      notificationService
+      telegramBotService
     );
 
     await consumer.consume(async (message: RabbitMQMessage<NotificationPayload>) => {
@@ -51,7 +51,7 @@ export class RabbitMQNotificationConsumerService {
     if (message.type !== 'NOTIFICATION_EVENT') {
       return;
     }
-    await this.notificationService.sendNotification({
+    await this.telegramBotService.sendNotification({
       userId: message.payload.userId,
       channelUserId: message.payload.channelUserId,
       message: message.payload.message,
