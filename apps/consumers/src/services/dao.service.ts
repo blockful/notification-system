@@ -15,7 +15,7 @@ export class DAOService {
   
   // DAO emojis mapping
   private daoEmojis = new Map<string, string>([
-    ['UNISWAP', '🦄'],
+    ['UNI', '🦄'],
     ['ENS', '🔷']
   ]);
   
@@ -24,7 +24,7 @@ export class DAOService {
     private subscriptionApi: SubscriptionAPIService
   ) {}
 
-  private ensureSession(ctx: ContextWithSession): void {
+ private ensureSession(ctx: ContextWithSession): void {
     if (!ctx.session) {
       ctx.session = { daoSelections: new Set<string>() };
     }
@@ -51,6 +51,7 @@ export class DAOService {
 
       const userPreferences = await this.subscriptionApi.getUserPreferences(chatId, daos);
       const currentSelections = new Set<string>(userPreferences);
+      this.ensureSession(ctx);
       ctx.session.daoSelections = currentSelections;
 
       const keyboard = {
@@ -80,8 +81,7 @@ export class DAOService {
   async toggle(ctx: ContextWithSession, daoName: string): Promise<void> {
     const chatId = ctx.chat?.id;
     const messageId = ctx.callbackQuery?.message?.message_id;
-    if (!chatId || !messageId) return;
-    
+    if (!chatId || !messageId) return;    
     this.ensureSession(ctx);
     
     const userSelectedDAOs = ctx.session.daoSelections;
@@ -119,7 +119,6 @@ export class DAOService {
   async confirm(ctx: ContextWithSession): Promise<void> {
     const chatId = ctx.chat?.id;
     if (!chatId) return;
-    
     this.ensureSession(ctx);
     
     const selectedDAOs = ctx.session.daoSelections;
