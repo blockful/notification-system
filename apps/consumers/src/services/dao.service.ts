@@ -24,10 +24,10 @@ export class DAOService {
     private subscriptionApi: SubscriptionAPIService
   ) {}
 
-  private ensureSession(ctx: ContextWithSession): Set<string> {
-    ctx.session ??= { daoSelections: new Set<string>() };
-    ctx.session.daoSelections ??= new Set<string>();
-    return ctx.session.daoSelections;
+ private ensureSession(ctx: ContextWithSession): void {
+    if (!ctx.session) {
+      ctx.session = { daoSelections: new Set<string>() };
+    }
   }
 
   private getDaoWithEmoji(dao: string): string {
@@ -39,6 +39,8 @@ export class DAOService {
   async initialize(ctx: ContextWithSession): Promise<void> {
     const chatId = ctx.chat?.id;
     if (!chatId) return;
+
+    this.ensureSession(ctx);
 
     try {
       const daos = await this.anticaptureClient.getDAOs();
@@ -79,8 +81,10 @@ export class DAOService {
   async toggle(ctx: ContextWithSession, daoName: string): Promise<void> {
     const chatId = ctx.chat?.id;
     const messageId = ctx.callbackQuery?.message?.message_id;
-    if (!chatId || !messageId) return;
-    const userSelectedDAOs = this.ensureSession(ctx);
+    if (!chatId || !messageId) return;    
+    this.ensureSession(ctx);
+    
+    const userSelectedDAOs = ctx.session.daoSelections;
     const normalizedDaoName = daoName.toUpperCase();
     if (userSelectedDAOs.has(normalizedDaoName)) {
       userSelectedDAOs.delete(normalizedDaoName);
@@ -115,8 +119,13 @@ export class DAOService {
   async confirm(ctx: ContextWithSession): Promise<void> {
     const chatId = ctx.chat?.id;
     if (!chatId) return;
+    this.ensureSession(ctx);
     
-    const selectedDAOs = this.ensureSession(ctx);
+    const selectedDAOs = ctx.session.daoSelections;
+    if (!selectedDAOs) {
+      await ctx.reply('Something went wrong. Please try again.');
+      return;
+    }
 
     try {
       await this.updateSubscriptions(chatId, selectedDAOs);

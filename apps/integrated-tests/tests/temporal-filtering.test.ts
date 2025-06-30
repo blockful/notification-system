@@ -7,7 +7,6 @@ import { setupDatabase } from '../src/setup/database';
 import { startTestApps, stopTestApps, TestApps } from '../src/setup/apps';
 import { HttpClientMockSetup } from '../src/mocks/http-client-mock';
 import { GraphQLMockSetup } from '../src/mocks/graphql-mock-setup';
-import { DaoFactory } from '../src/test-data/dao-factory';
 import { UserFactory } from '../src/test-data/user-factory';
 import { ProposalFactory } from '../src/test-data/proposal-factory';
 
@@ -47,8 +46,7 @@ describe('Temporal Filtering - Integration Test', () => {
 
   test('should NOT notify users about proposals created BEFORE their subscription', async () => {
     // Create DAO for this test
-    const testDao = await DaoFactory.createDao('TEMPORAL_DAO_1');
-    const testDaoId = testDao.id;
+    const testDaoId = 'TEMPORAL_DAO_1';
     
     const baseTime = new Date('2024-01-01T10:00:00Z');
     
@@ -84,8 +82,7 @@ describe('Temporal Filtering - Integration Test', () => {
 
   test('should notify users about proposals created AFTER their subscription', async () => {
     // Create DAO for this test
-    const testDao = await DaoFactory.createDao('TEMPORAL_DAO_2');
-    const testDaoId = testDao.id;
+    const testDaoId = 'TEMPORAL_DAO_2';
     
     // User subscribes FIRST
     const subscriptionTime = new Date('2024-01-01T10:00:00Z'); // 10:00 AM
@@ -123,8 +120,7 @@ describe('Temporal Filtering - Integration Test', () => {
   });
 
   test('should NOT notify about proposals created during unsubscribed period after resubscribing', async () => {
-    const testDao = await DaoFactory.createDao('TEMPORAL_DAO_3');
-    const testDaoId = testDao.id;
+    const testDaoId = 'TEMPORAL_DAO_3';
     
     // User subscribes initially
     const subscriptionTime = new Date('2024-01-01T10:00:00Z'); // 10:00 AM

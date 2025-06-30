@@ -33,7 +33,7 @@ export interface ListProposalsOptions {
 /**
  * Interface for accessing proposal data from the database
  */
-export interface ProposalDB {
+export interface ProposalDataSource {
     /**
      * Retrieves a proposal by its ID
      * @param id - The proposal ID

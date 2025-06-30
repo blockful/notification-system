@@ -3,13 +3,14 @@ import { App as LogicSystemApp } from '@notification-system/logic-system';
 import { App as DispatcherApp } from '@notification-system/dispatcher';
 import { App as SubscriptionServerApp } from '@notification-system/subscription-server';
 import { Knex } from 'knex';
-import axios from 'axios';
+import { RabbitMQTestSetup } from './rabbitmq-setup';
 
 export type TestApps = {
   consumerApp: ConsumerApp;
   logicSystemApp: LogicSystemApp;
   dispatcherApp: DispatcherApp;
   subscriptionServerApp: SubscriptionServerApp;
+  rabbitmqSetup: RabbitMQTestSetup;
 };
 
 /**
@@ -18,13 +19,9 @@ export type TestApps = {
 const TEST_CONFIG = {
   ports: {
     subscriptionServer: 14001,
-    consumer: 14002,
-    dispatcher: 13002,
   },
   urls: {
     subscriptionServer: 'http://127.0.0.1:14001',
-    consumer: 'http://127.0.0.1:14002',
-    dispatcher: 'http://127.0.0.1:13002/messages',
     mockGraphQL: 'http://mocked-endpoint.com/graphql',
   },
   telegram: {
@@ -43,35 +40,36 @@ const TEST_CONFIG = {
  * Starts all test applications with proper configuration
  */
 export const startTestApps = async (db: Knex, mockHttpClient: any): Promise<TestApps> => {
-  // Start subscription server
+  const rabbitmqSetup = new RabbitMQTestSetup();
+  const rabbitmqUrl = await rabbitmqSetup.setup();
+  
   const subscriptionServerApp = new SubscriptionServerApp(db, TEST_CONFIG.ports.subscriptionServer);
   await subscriptionServerApp.start();
-  
-  // Start dispatcher
-  const dispatcherApp = new DispatcherApp(
-    TEST_CONFIG.ports.dispatcher, 
-    TEST_CONFIG.urls.subscriptionServer, 
-    TEST_CONFIG.urls.consumer
-  );
-  await dispatcherApp.start();
   
   // Start consumer
   const consumerApp = new ConsumerApp(
     TEST_CONFIG.telegram.botToken,
     TEST_CONFIG.urls.subscriptionServer,
-    TEST_CONFIG.ports.consumer,
-    mockHttpClient
+    mockHttpClient,
+    rabbitmqUrl
   );
   await consumerApp.start();
+  
+  // Start dispatcher
+  const dispatcherApp = new DispatcherApp(
+    TEST_CONFIG.urls.subscriptionServer, 
+    rabbitmqUrl
+  );
+  await dispatcherApp.start();
   
   // Start logic system
   const logicSystemApp = new LogicSystemApp(
     TEST_CONFIG.logicSystem.interval,
     TEST_CONFIG.logicSystem.proposalState,
     mockHttpClient,
-    axios.create({ baseURL: TEST_CONFIG.urls.dispatcher }) as any
+    rabbitmqUrl
   );
-  logicSystemApp.start();
+  await logicSystemApp.start();
   
   // Wait for apps to be ready
   await new Promise(resolve => setTimeout(resolve, TEST_CONFIG.timeouts.appStartup));
@@ -80,7 +78,8 @@ export const startTestApps = async (db: Knex, mockHttpClient: any): Promise<Test
     consumerApp,
     logicSystemApp,
     dispatcherApp,
-    subscriptionServerApp
+    subscriptionServerApp,
+    rabbitmqSetup
   };
 };
 
@@ -88,7 +87,7 @@ export const startTestApps = async (db: Knex, mockHttpClient: any): Promise<Test
  * Stops all test applications gracefully
  */
 export const stopTestApps = async (apps: TestApps) => {
-  const { consumerApp, logicSystemApp, dispatcherApp, subscriptionServerApp } = apps;
+  const { consumerApp, logicSystemApp, dispatcherApp, subscriptionServerApp, rabbitmqSetup } = apps;
   
   if (logicSystemApp) {
     await logicSystemApp.stop();
@@ -101,6 +100,9 @@ export const stopTestApps = async (apps: TestApps) => {
   }
   if (subscriptionServerApp) {
     await subscriptionServerApp.stop();
+  }
+  if (rabbitmqSetup) {
+    await rabbitmqSetup.cleanup();
   }
 };
 

@@ -7,7 +7,6 @@ import { setupDatabase } from '../src/setup/database';
 import { startTestApps, stopTestApps, TestApps } from '../src/setup/apps';
 import { HttpClientMockSetup } from '../src/mocks/http-client-mock';
 import { GraphQLMockSetup } from '../src/mocks/graphql-mock-setup';
-import { DaoFactory } from '../src/test-data/dao-factory';
 import { UserFactory } from '../src/test-data/user-factory';
 import { ProposalFactory } from '../src/test-data/proposal-factory';
 
@@ -52,8 +51,7 @@ describe('Case Insensitive Status Filtering - Integration Test', () => {
     const now = new Date().toISOString();
     
     // Create DAO
-    const testDao = await DaoFactory.createDao('TEST_DAO');
-    testDaoId = testDao.id;
+    testDaoId = 'TEST_DAO';
     
     // Create User with subscription
     const testUser = await UserFactory.createUserWithFullSetup('555555555', 'test_user', testDaoId, true, now);

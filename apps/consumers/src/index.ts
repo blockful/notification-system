@@ -20,8 +20,8 @@ const config = loadConfig();
 const app = new App(
   config.telegramBotToken,
   config.subscriptionServerUrl,
-  config.port,
-  axios.create({ baseURL: config.anticaptureGraphqlEndpoint })
+  axios.create({ baseURL: config.anticaptureGraphqlEndpoint }),
+  config.rabbitmqUrl
 );
 
 (async () => {

@@ -9,7 +9,6 @@ import { setupDatabase } from '../src/setup/database';
 import { startTestApps, stopTestApps, TestApps } from '../src/setup/apps';
 import { HttpClientMockSetup } from '../src/mocks/http-client-mock';
 import { GraphQLMockSetup } from '../src/mocks/graphql-mock-setup';
-import { DaoFactory } from '../src/test-data/dao-factory';
 import { UserFactory } from '../src/test-data/user-factory';
 import { ProposalFactory } from '../src/test-data/proposal-factory';
 
@@ -57,10 +56,8 @@ describe('Inactive Preference Handling - Integration Test', () => {
     const now = new Date().toISOString();
     
     // Create DAOs
-    const uniDao = await DaoFactory.createDao('UNISWAP');
-    const ensDao = await DaoFactory.createDao('ENS');
-    uniDaoId = uniDao.id;
-    ensDaoId = ensDao.id;
+    uniDaoId = 'UNISWAP';
+    ensDaoId = 'ENS';
     
     // Create user that follows UNI with active preference
     const activeUser = await UserFactory.createUserWithFullSetup('111111111', 'active_user', uniDaoId, true, now);

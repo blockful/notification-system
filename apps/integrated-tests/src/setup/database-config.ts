@@ -19,8 +19,6 @@ export const db = knex({
   useNullAsDefault: true,
   migrations: {
     directory: [
-      // Including migrations from all apps to have the complete schema
-      path.join(__dirname, '../../../logic-system/db/migrations'),
       path.join(__dirname, '../../../subscription-server/db/migrations')
     ]
   }

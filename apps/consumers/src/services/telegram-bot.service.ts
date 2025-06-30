@@ -1,15 +1,16 @@
 /**
- * Main command controller for the Telegram bot.
- * Sets up all available commands and their corresponding actions.
- * Routes callback queries to appropriate services based on their type.
+ * Telegram Bot Service
+ * Handles all Telegram bot functionality including commands, notifications, and user interactions.
+ * Consolidates both interactive commands and notification sending capabilities.
  */
 
 import { Telegraf, Markup } from 'telegraf';
 import { WELCOME_MESSAGE, HELP_MESSAGE, DAOS_BUTTON_TEXT, LEARN_MORE_BUTTON_TEXT } from '../messages';
 import { DAOService } from '../services/dao.service';
 import { ContextWithSession } from '../interfaces/bot.interface';
+import { NotificationPayload } from '../interfaces/notification.interface';
 
-export class BotController {
+export class TelegramBotService {
   private bot: Telegraf<ContextWithSession>;
   private daoService: DAOService;
 
@@ -84,5 +85,19 @@ export class BotController {
 
   public stop(signal: string): void {
     this.bot.stop(signal);
+  }
+
+  /**
+   * Send a notification to a specific Telegram user
+   * @param payload Notification payload containing user information and message
+   * @returns Message ID of the sent notification
+   * @throws Error if sending fails
+   */
+  public async sendNotification(payload: NotificationPayload): Promise<string> {
+    const sentMessage = await this.bot.telegram.sendMessage(
+      payload.channelUserId, 
+      payload.message
+    );
+    return `${sentMessage.message_id}`;
   }
 } 

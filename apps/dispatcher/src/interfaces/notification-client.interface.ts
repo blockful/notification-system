@@ -9,15 +9,6 @@ export interface NotificationPayload {
 }
 
 /**
- * Interface for notification response data
- */
-export interface NotificationResponse {
-  id: string;
-  status: 'delivered' | 'queued' | 'failed';
-  timestamp: string;
-}
-
-/**
  * Interface for notification client
  * Represents a client that can send notifications to consumers
  */
@@ -25,7 +16,7 @@ export interface INotificationClient {
   /**
    * Send a notification to a specific user
    * @param payload The notification payload
-   * @returns The notification response
+   * @throws Error if notification fails to be queued/sent
    */
-  sendNotification(payload: NotificationPayload): Promise<NotificationResponse>;
+  sendNotification(payload: NotificationPayload): Promise<void>;
 } 
