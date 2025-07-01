@@ -128,4 +128,3 @@ notificationSystem/
 
 ### Extension Guides
 - [Adding New Trigger Types](./docs/guides/add-trigger-logic.md) - Extend monitoring capabilities
-- [Adding New Consumer Channels](./docs/guides/add-consumer-channel.md) - Support Discord, Slack, etc.
