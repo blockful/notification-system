@@ -31,9 +31,6 @@ src/
 │   └── notification.service.ts     # Notification deduplication logic
 ├── repositories/
 │   └── knex.repository.ts          # Database access layer
-├── schemas/
-│   ├── subscription.schema.ts      # Subscription API schemas
-│   └── notification.schema.ts      # Notification API schemas
 ```
 
 ## 🔧 Configuration

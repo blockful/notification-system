@@ -1,6 +1,6 @@
 # Logic System Service
 
-The Logic System is the **business logic orchestrator** and first layer of the notification pipeline. It monitors blockchain proposal data and triggers notification events when specific conditions are met.
+The Logic System is the **business logic orchestrator** and first layer of the notification pipeline. It monitors blockchain data and triggers notification events when specific conditions are met.
 
 ## 🎯 Purpose
 
@@ -22,8 +22,6 @@ The Logic System is the **business logic orchestrator** and first layer of the n
 src/
 ├── app.ts                     # Main application class and dependency injection
 ├── index.ts                   # Service entry point and bootstrap
-├── config/
-│   └── env.ts                # Environment configuration with Zod validation
 ├── repositories/
 │   └── proposal.repository.ts # Data access layer for proposals
 ├── triggers/
@@ -184,9 +182,3 @@ pnpm test
 # Run specific test file
 pnpm test new-proposal-trigger.test.ts
 ```
-
-### Test Structure
-- **Unit Tests**: Mock external dependencies (GraphQL, RabbitMQ)
-- **Integration Tests**: Test with real RabbitMQ instance
-- **Timer Tests**: Use fake timers for interval testing
-- **Error Tests**: Validate error handling scenarios

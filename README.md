@@ -15,7 +15,6 @@ The system consists of four main microservices that work together to provide sca
 
 - **Data Monitoring**: Polls AntiCapture GraphQL API for new proposals
 - **Business Logic**: Applies filtering rules based on proposal status
-- **Technologies**: Node.js, TypeScript, GraphQL, RabbitMQ
 
 ### 2. [Dispatcher](./apps/dispatcher/README.md)
 **Message Orchestrator** - Processes events and coordinates notification delivery
