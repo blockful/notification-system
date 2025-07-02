@@ -66,33 +66,8 @@ export class AnticaptureClient {
     return response.proposalsOnchain;
   }
 
-  /**
-   * Lists proposals with optional filtering and pagination with full type safety
-   */
-  async listProposals(variables?: ListProposalsQueryVariables, daoId?: string): Promise<ListProposalsQuery['proposalsOnchains']['items']> {
-    if (!daoId && !variables?.where?.daoId) {
-      const allDAOs = await this.getDAOs();
-      const allProposals: ListProposalsQuery['proposalsOnchains']['items'] = [];
-
-      for (const currentDaoId of allDAOs) {
-        const response = await this.query(ListProposalsDocument, variables, currentDaoId);
-        const proposalsWithDaoId = response.proposalsOnchains.items.reduce((acc, proposal) => {
-          if (proposal !== null) {
-            acc.push({
-              ...proposal,
-              daoId: proposal.daoId || currentDaoId
-            });
-          }
-          return acc;
-        }, [] as typeof response.proposalsOnchains.items);
-        allProposals.push(...proposalsWithDaoId);
-      }
-
-      return allProposals;
-    }
-
-    const response = await this.query(ListProposalsDocument, variables, daoId);
-    return response.proposalsOnchains.items.reduce((acc, proposal) => {
+  private processProposalItems(items: ListProposalsQuery['proposalsOnchains']['items'], daoId: string): ListProposalsQuery['proposalsOnchains']['items'] {
+    return items.reduce((acc, proposal) => {
       if (proposal !== null) {
         acc.push({
           ...proposal,
@@ -100,6 +75,24 @@ export class AnticaptureClient {
         });
       }
       return acc;
-    }, [] as typeof response.proposalsOnchains.items);
+    }, [] as typeof items);
+  }
+
+  async listProposals(variables?: ListProposalsQueryVariables, daoId?: string): Promise<ListProposalsQuery['proposalsOnchains']['items']> {
+    if (!daoId && !variables?.where?.daoId) {
+      const allDAOs = await this.getDAOs();
+      const allProposals: ListProposalsQuery['proposalsOnchains']['items'] = [];
+
+      for (const currentDaoId of allDAOs) {
+        const response = await this.query(ListProposalsDocument, variables, currentDaoId);
+        const proposalsWithDaoId = this.processProposalItems(response.proposalsOnchains.items, currentDaoId);
+        allProposals.push(...proposalsWithDaoId);
+      }
+
+      return allProposals;
+    }
+
+    const response = await this.query(ListProposalsDocument, variables, daoId);
+    return this.processProposalItems(response.proposalsOnchains.items, daoId!);
   }
 }

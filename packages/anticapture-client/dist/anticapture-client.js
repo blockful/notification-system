@@ -43,30 +43,8 @@ class AnticaptureClient {
         const response = await this.query(graphql_2.GetProposalByIdDocument, variables);
         return response.proposalsOnchain;
     }
-    /**
-     * Lists proposals with optional filtering and pagination with full type safety
-     */
-    async listProposals(variables, daoId) {
-        if (!daoId && !variables?.where?.daoId) {
-            const allDAOs = await this.getDAOs();
-            const allProposals = [];
-            for (const currentDaoId of allDAOs) {
-                const response = await this.query(graphql_2.ListProposalsDocument, variables, currentDaoId);
-                const proposalsWithDaoId = response.proposalsOnchains.items.reduce((acc, proposal) => {
-                    if (proposal !== null) {
-                        acc.push({
-                            ...proposal,
-                            daoId: proposal.daoId || currentDaoId
-                        });
-                    }
-                    return acc;
-                }, []);
-                allProposals.push(...proposalsWithDaoId);
-            }
-            return allProposals;
-        }
-        const response = await this.query(graphql_2.ListProposalsDocument, variables, daoId);
-        return response.proposalsOnchains.items.reduce((acc, proposal) => {
+    processProposalItems(items, daoId) {
+        return items.reduce((acc, proposal) => {
             if (proposal !== null) {
                 acc.push({
                     ...proposal,
@@ -75,6 +53,20 @@ class AnticaptureClient {
             }
             return acc;
         }, []);
+    }
+    async listProposals(variables, daoId) {
+        if (!daoId && !variables?.where?.daoId) {
+            const allDAOs = await this.getDAOs();
+            const allProposals = [];
+            for (const currentDaoId of allDAOs) {
+                const response = await this.query(graphql_2.ListProposalsDocument, variables, currentDaoId);
+                const proposalsWithDaoId = this.processProposalItems(response.proposalsOnchains.items, currentDaoId);
+                allProposals.push(...proposalsWithDaoId);
+            }
+            return allProposals;
+        }
+        const response = await this.query(graphql_2.ListProposalsDocument, variables, daoId);
+        return this.processProposalItems(response.proposalsOnchains.items, daoId);
     }
 }
 exports.AnticaptureClient = AnticaptureClient;
