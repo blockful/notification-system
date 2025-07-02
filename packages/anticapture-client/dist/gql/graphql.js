@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.ListProposalsDocument = exports.GetProposalByIdDocument = exports.GetDaOsDocument = exports.QueryInput_TotalAssets_Days = exports.QueryInput_TotalAssets_DaoId = exports.QueryInput_HistoricalTokenData_DaoId = exports.QueryInput_CompareVotes_Days = exports.QueryInput_CompareVotes_DaoId = exports.QueryInput_CompareTreasury_Days = exports.QueryInput_CompareTreasury_DaoId = exports.QueryInput_CompareTotalSupply_Days = exports.QueryInput_CompareTotalSupply_DaoId = exports.QueryInput_CompareProposals_Days = exports.QueryInput_CompareProposals_DaoId = exports.QueryInput_CompareLendingSupply_Days = exports.QueryInput_CompareLendingSupply_DaoId = exports.QueryInput_CompareDexSupply_Days = exports.QueryInput_CompareDexSupply_DaoId = exports.QueryInput_CompareDelegatedSupply_Days = exports.QueryInput_CompareDelegatedSupply_DaoId = exports.QueryInput_CompareCirculatingSupply_Days = exports.QueryInput_CompareCirculatingSupply_DaoId = exports.QueryInput_CompareCexSupply_Days = exports.QueryInput_CompareCexSupply_DaoId = exports.QueryInput_CompareAverageTurnout_Days = exports.QueryInput_CompareAverageTurnout_DaoId = exports.QueryInput_CompareActiveSupply_Days = exports.QueryInput_CompareActiveSupply_DaoId = exports.MetricType = exports.HttpMethod = void 0;
+exports.ListProposalsDocument = exports.GetProposalByIdDocument = exports.GetDaOsDocument = exports.QueryInput_TotalAssets_Days = exports.QueryInput_TotalAssets_DaoId = exports.QueryInput_ProposalsActivity_DaoId = exports.QueryInput_HistoricalVotingPower_DaoId = exports.QueryInput_HistoricalTokenData_DaoId = exports.QueryInput_HistoricalBalances_DaoId = exports.QueryInput_CompareVotes_Days = exports.QueryInput_CompareVotes_DaoId = exports.QueryInput_CompareTreasury_Days = exports.QueryInput_CompareTreasury_DaoId = exports.QueryInput_CompareTotalSupply_Days = exports.QueryInput_CompareTotalSupply_DaoId = exports.QueryInput_CompareProposals_Days = exports.QueryInput_CompareProposals_DaoId = exports.QueryInput_CompareLendingSupply_Days = exports.QueryInput_CompareLendingSupply_DaoId = exports.QueryInput_CompareDexSupply_Days = exports.QueryInput_CompareDexSupply_DaoId = exports.QueryInput_CompareDelegatedSupply_Days = exports.QueryInput_CompareDelegatedSupply_DaoId = exports.QueryInput_CompareCirculatingSupply_Days = exports.QueryInput_CompareCirculatingSupply_DaoId = exports.QueryInput_CompareCexSupply_Days = exports.QueryInput_CompareCexSupply_DaoId = exports.QueryInput_CompareAverageTurnout_Days = exports.QueryInput_CompareAverageTurnout_DaoId = exports.QueryInput_CompareActiveSupply_Days = exports.QueryInput_CompareActiveSupply_DaoId = exports.MetricType = exports.HttpMethod = void 0;
 var HttpMethod;
 (function (HttpMethod) {
     HttpMethod["Connect"] = "CONNECT";
@@ -177,12 +177,30 @@ var QueryInput_CompareVotes_Days;
     QueryInput_CompareVotes_Days["180d"] = "_180d";
     QueryInput_CompareVotes_Days["365d"] = "_365d";
 })(QueryInput_CompareVotes_Days || (exports.QueryInput_CompareVotes_Days = QueryInput_CompareVotes_Days = {}));
+var QueryInput_HistoricalBalances_DaoId;
+(function (QueryInput_HistoricalBalances_DaoId) {
+    QueryInput_HistoricalBalances_DaoId["Arb"] = "ARB";
+    QueryInput_HistoricalBalances_DaoId["Ens"] = "ENS";
+    QueryInput_HistoricalBalances_DaoId["Uni"] = "UNI";
+})(QueryInput_HistoricalBalances_DaoId || (exports.QueryInput_HistoricalBalances_DaoId = QueryInput_HistoricalBalances_DaoId = {}));
 var QueryInput_HistoricalTokenData_DaoId;
 (function (QueryInput_HistoricalTokenData_DaoId) {
     QueryInput_HistoricalTokenData_DaoId["Arb"] = "ARB";
     QueryInput_HistoricalTokenData_DaoId["Ens"] = "ENS";
     QueryInput_HistoricalTokenData_DaoId["Uni"] = "UNI";
 })(QueryInput_HistoricalTokenData_DaoId || (exports.QueryInput_HistoricalTokenData_DaoId = QueryInput_HistoricalTokenData_DaoId = {}));
+var QueryInput_HistoricalVotingPower_DaoId;
+(function (QueryInput_HistoricalVotingPower_DaoId) {
+    QueryInput_HistoricalVotingPower_DaoId["Arb"] = "ARB";
+    QueryInput_HistoricalVotingPower_DaoId["Ens"] = "ENS";
+    QueryInput_HistoricalVotingPower_DaoId["Uni"] = "UNI";
+})(QueryInput_HistoricalVotingPower_DaoId || (exports.QueryInput_HistoricalVotingPower_DaoId = QueryInput_HistoricalVotingPower_DaoId = {}));
+var QueryInput_ProposalsActivity_DaoId;
+(function (QueryInput_ProposalsActivity_DaoId) {
+    QueryInput_ProposalsActivity_DaoId["Arb"] = "ARB";
+    QueryInput_ProposalsActivity_DaoId["Ens"] = "ENS";
+    QueryInput_ProposalsActivity_DaoId["Uni"] = "UNI";
+})(QueryInput_ProposalsActivity_DaoId || (exports.QueryInput_ProposalsActivity_DaoId = QueryInput_ProposalsActivity_DaoId = {}));
 var QueryInput_TotalAssets_DaoId;
 (function (QueryInput_TotalAssets_DaoId) {
     QueryInput_TotalAssets_DaoId["Arb"] = "ARB";

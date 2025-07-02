@@ -76,13 +76,30 @@ export class AnticaptureClient {
 
       for (const currentDaoId of allDAOs) {
         const response = await this.query(ListProposalsDocument, variables, currentDaoId);
-        allProposals.push(...response.proposalsOnchains.items.filter(item => item !== null));
+        const proposalsWithDaoId = response.proposalsOnchains.items.reduce((acc, proposal) => {
+          if (proposal !== null) {
+            acc.push({
+              ...proposal,
+              daoId: proposal.daoId || currentDaoId
+            });
+          }
+          return acc;
+        }, [] as typeof response.proposalsOnchains.items);
+        allProposals.push(...proposalsWithDaoId);
       }
 
       return allProposals;
     }
 
     const response = await this.query(ListProposalsDocument, variables, daoId);
-    return response.proposalsOnchains.items.filter(item => item !== null);
+    return response.proposalsOnchains.items.reduce((acc, proposal) => {
+      if (proposal !== null) {
+        acc.push({
+          ...proposal,
+          daoId: proposal.daoId || daoId
+        });
+      }
+      return acc;
+    }, [] as typeof response.proposalsOnchains.items);
   }
 }

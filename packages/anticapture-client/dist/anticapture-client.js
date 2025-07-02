@@ -47,17 +47,36 @@ class AnticaptureClient {
      * Lists proposals with optional filtering and pagination with full type safety
      */
     async listProposals(variables, daoId) {
+        console.log('Listing proposals');
         if (!daoId && !variables?.where?.daoId) {
             const allDAOs = await this.getDAOs();
             const allProposals = [];
             for (const currentDaoId of allDAOs) {
                 const response = await this.query(graphql_2.ListProposalsDocument, variables, currentDaoId);
-                allProposals.push(...response.proposalsOnchains.items.filter(item => item !== null));
+                const proposalsWithDaoId = response.proposalsOnchains.items.reduce((acc, proposal) => {
+                    if (proposal !== null) {
+                        acc.push({
+                            ...proposal,
+                            daoId: proposal.daoId || currentDaoId
+                        });
+                    }
+                    return acc;
+                }, []);
+                allProposals.push(...proposalsWithDaoId);
             }
+            console.log('All proposals:', allProposals.length);
             return allProposals;
         }
         const response = await this.query(graphql_2.ListProposalsDocument, variables, daoId);
-        return response.proposalsOnchains.items.filter(item => item !== null);
+        return response.proposalsOnchains.items.reduce((acc, proposal) => {
+            if (proposal !== null) {
+                acc.push({
+                    ...proposal,
+                    daoId: proposal.daoId || daoId
+                });
+            }
+            return acc;
+        }, []);
     }
 }
 exports.AnticaptureClient = AnticaptureClient;
