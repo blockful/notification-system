@@ -13,8 +13,6 @@ export declare class AnticaptureClient {
      * Fetches a single proposal by ID with full type safety
      */
     getProposalById(id: string): Promise<GetProposalByIdQuery['proposalsOnchain'] | null>;
-    /**
-     * Lists proposals with optional filtering and pagination with full type safety
-     */
+    private processProposalItems;
     listProposals(variables?: ListProposalsQueryVariables, daoId?: string): Promise<ListProposalsQuery['proposalsOnchains']['items']>;
 }

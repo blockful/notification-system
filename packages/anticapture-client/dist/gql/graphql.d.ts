@@ -51,7 +51,17 @@ export type Scalars = {
         input: any;
         output: any;
     };
+    /** Integers that will have a value of 0 or more. */
+    NonNegativeInt: {
+        input: any;
+        output: any;
+    };
     ObjMap: {
+        input: any;
+        output: any;
+    };
+    /** Integers that will have a value greater than 0. */
+    PositiveInt: {
         input: any;
         output: any;
     };
@@ -115,8 +125,14 @@ export type Query = {
     daos: DaoPage;
     delegation?: Maybe<Delegation>;
     delegations: DelegationPage;
+    /** Fetch historical token balances for multiple addresses at a specific block number using multicall */
+    historicalBalances?: Maybe<Array<Maybe<Query_HistoricalBalances_Items>>>;
     /** Get historical market data for a specific token */
     historicalTokenData?: Maybe<HistoricalTokenData_200_Response>;
+    /** Fetch historical voting power for multiple addresses at a specific block number using multicall */
+    historicalVotingPower?: Maybe<Array<Maybe<Query_HistoricalVotingPower_Items>>>;
+    /** Returns proposal activity data including voting history, win rates, and detailed proposal information for the specified delegate within the given time window */
+    proposalsActivity?: Maybe<ProposalsActivity_200_Response>;
     proposalsOnchain?: Maybe<ProposalsOnchain>;
     proposalsOnchains: ProposalsOnchainPage;
     token?: Maybe<Token>;
@@ -134,7 +150,8 @@ export type QueryAccountArgs = {
     id: Scalars['String']['input'];
 };
 export type QueryAccountBalanceArgs = {
-    id: Scalars['String']['input'];
+    accountId: Scalars['String']['input'];
+    tokenId: Scalars['String']['input'];
 };
 export type QueryAccountBalancesArgs = {
     after?: InputMaybe<Scalars['String']['input']>;
@@ -145,7 +162,7 @@ export type QueryAccountBalancesArgs = {
     where?: InputMaybe<AccountBalanceFilter>;
 };
 export type QueryAccountPowerArgs = {
-    id: Scalars['String']['input'];
+    accountId: Scalars['String']['input'];
 };
 export type QueryAccountPowersArgs = {
     after?: InputMaybe<Scalars['String']['input']>;
@@ -211,7 +228,6 @@ export type QueryDaoArgs = {
     id: Scalars['String']['input'];
 };
 export type QueryDaoMetricsDayBucketArgs = {
-    daoId: Scalars['String']['input'];
     date: Scalars['BigInt']['input'];
     metricType: Scalars['String']['input'];
     tokenId: Scalars['String']['input'];
@@ -233,7 +249,7 @@ export type QueryDaosArgs = {
     where?: InputMaybe<DaoFilter>;
 };
 export type QueryDelegationArgs = {
-    id: Scalars['String']['input'];
+    transactionHash: Scalars['String']['input'];
 };
 export type QueryDelegationsArgs = {
     after?: InputMaybe<Scalars['String']['input']>;
@@ -243,8 +259,25 @@ export type QueryDelegationsArgs = {
     orderDirection?: InputMaybe<Scalars['String']['input']>;
     where?: InputMaybe<DelegationFilter>;
 };
+export type QueryHistoricalBalancesArgs = {
+    addresses: Scalars['JSON']['input'];
+    blockNumber: Scalars['NonNegativeInt']['input'];
+    daoId: QueryInput_HistoricalBalances_DaoId;
+};
 export type QueryHistoricalTokenDataArgs = {
     daoId: QueryInput_HistoricalTokenData_DaoId;
+};
+export type QueryHistoricalVotingPowerArgs = {
+    addresses: Scalars['JSON']['input'];
+    blockNumber: Scalars['NonNegativeInt']['input'];
+    daoId: QueryInput_HistoricalVotingPower_DaoId;
+};
+export type QueryProposalsActivityArgs = {
+    address: Scalars['String']['input'];
+    daoId: QueryInput_ProposalsActivity_DaoId;
+    fromDate?: InputMaybe<Scalars['NonNegativeInt']['input']>;
+    limit?: InputMaybe<Scalars['PositiveInt']['input']>;
+    skip?: InputMaybe<Scalars['NonNegativeInt']['input']>;
 };
 export type QueryProposalsOnchainArgs = {
     id: Scalars['String']['input'];
@@ -273,7 +306,7 @@ export type QueryTotalAssetsArgs = {
     days?: InputMaybe<QueryInput_TotalAssets_Days>;
 };
 export type QueryTransferArgs = {
-    id: Scalars['String']['input'];
+    transactionHash: Scalars['String']['input'];
 };
 export type QueryTransfersArgs = {
     after?: InputMaybe<Scalars['String']['input']>;
@@ -295,7 +328,8 @@ export type QueryVotesOnchainsArgs = {
     where?: InputMaybe<VotesOnchainFilter>;
 };
 export type QueryVotingPowerHistoryArgs = {
-    id: Scalars['String']['input'];
+    accountId: Scalars['String']['input'];
+    transactionHash: Scalars['String']['input'];
 };
 export type QueryVotingPowerHistorysArgs = {
     after?: InputMaybe<Scalars['String']['input']>;
@@ -308,13 +342,16 @@ export type QueryVotingPowerHistorysArgs = {
 export type Account = {
     __typename?: 'account';
     balances?: Maybe<AccountBalancePage>;
-    delegatedFrom?: Maybe<AccountBalancePage>;
-    delegateeDelegations?: Maybe<DelegationPage>;
-    delegatorDelegations?: Maybe<DelegationPage>;
+    delegatedFromBalances?: Maybe<AccountBalancePage>;
+    delegationsFrom?: Maybe<DelegationPage>;
+    delegationsTo?: Maybe<DelegationPage>;
     id: Scalars['String']['output'];
     powers?: Maybe<AccountPowerPage>;
+    proposals?: Maybe<ProposalsOnchainPage>;
     receivedTransfers?: Maybe<TransferPage>;
     sentTransfers?: Maybe<TransferPage>;
+    type: Scalars['String']['output'];
+    votes?: Maybe<VotesOnchainPage>;
 };
 export type AccountBalancesArgs = {
     after?: InputMaybe<Scalars['String']['input']>;
@@ -324,7 +361,7 @@ export type AccountBalancesArgs = {
     orderDirection?: InputMaybe<Scalars['String']['input']>;
     where?: InputMaybe<AccountBalanceFilter>;
 };
-export type AccountDelegatedFromArgs = {
+export type AccountDelegatedFromBalancesArgs = {
     after?: InputMaybe<Scalars['String']['input']>;
     before?: InputMaybe<Scalars['String']['input']>;
     limit?: InputMaybe<Scalars['Int']['input']>;
@@ -332,7 +369,7 @@ export type AccountDelegatedFromArgs = {
     orderDirection?: InputMaybe<Scalars['String']['input']>;
     where?: InputMaybe<AccountBalanceFilter>;
 };
-export type AccountDelegateeDelegationsArgs = {
+export type AccountDelegationsFromArgs = {
     after?: InputMaybe<Scalars['String']['input']>;
     before?: InputMaybe<Scalars['String']['input']>;
     limit?: InputMaybe<Scalars['Int']['input']>;
@@ -340,7 +377,7 @@ export type AccountDelegateeDelegationsArgs = {
     orderDirection?: InputMaybe<Scalars['String']['input']>;
     where?: InputMaybe<DelegationFilter>;
 };
-export type AccountDelegatorDelegationsArgs = {
+export type AccountDelegationsToArgs = {
     after?: InputMaybe<Scalars['String']['input']>;
     before?: InputMaybe<Scalars['String']['input']>;
     limit?: InputMaybe<Scalars['Int']['input']>;
@@ -355,6 +392,14 @@ export type AccountPowersArgs = {
     orderBy?: InputMaybe<Scalars['String']['input']>;
     orderDirection?: InputMaybe<Scalars['String']['input']>;
     where?: InputMaybe<AccountPowerFilter>;
+};
+export type AccountProposalsArgs = {
+    after?: InputMaybe<Scalars['String']['input']>;
+    before?: InputMaybe<Scalars['String']['input']>;
+    limit?: InputMaybe<Scalars['Int']['input']>;
+    orderBy?: InputMaybe<Scalars['String']['input']>;
+    orderDirection?: InputMaybe<Scalars['String']['input']>;
+    where?: InputMaybe<ProposalsOnchainFilter>;
 };
 export type AccountReceivedTransfersArgs = {
     after?: InputMaybe<Scalars['String']['input']>;
@@ -372,18 +417,25 @@ export type AccountSentTransfersArgs = {
     orderDirection?: InputMaybe<Scalars['String']['input']>;
     where?: InputMaybe<TransferFilter>;
 };
+export type AccountVotesArgs = {
+    after?: InputMaybe<Scalars['String']['input']>;
+    before?: InputMaybe<Scalars['String']['input']>;
+    limit?: InputMaybe<Scalars['Int']['input']>;
+    orderBy?: InputMaybe<Scalars['String']['input']>;
+    orderDirection?: InputMaybe<Scalars['String']['input']>;
+    where?: InputMaybe<VotesOnchainFilter>;
+};
 export type AccountBalance = {
     __typename?: 'accountBalance';
     account?: Maybe<Account>;
-    accountId?: Maybe<Scalars['String']['output']>;
+    accountId: Scalars['String']['output'];
     balance: Scalars['BigInt']['output'];
     delegate: Scalars['String']['output'];
+    delegateAccount?: Maybe<Account>;
     delegatePower?: Maybe<AccountPower>;
     delegatedTo?: Maybe<AccountPower>;
-    delegateeAccount?: Maybe<Account>;
-    id: Scalars['String']['output'];
     token?: Maybe<Token>;
-    tokenId?: Maybe<Scalars['String']['output']>;
+    tokenId: Scalars['String']['output'];
 };
 export type AccountBalanceFilter = {
     AND?: InputMaybe<Array<InputMaybe<AccountBalanceFilter>>>;
@@ -416,16 +468,6 @@ export type AccountBalanceFilter = {
     delegate_not_in?: InputMaybe<Array<InputMaybe<Scalars['String']['input']>>>;
     delegate_not_starts_with?: InputMaybe<Scalars['String']['input']>;
     delegate_starts_with?: InputMaybe<Scalars['String']['input']>;
-    id?: InputMaybe<Scalars['String']['input']>;
-    id_contains?: InputMaybe<Scalars['String']['input']>;
-    id_ends_with?: InputMaybe<Scalars['String']['input']>;
-    id_in?: InputMaybe<Array<InputMaybe<Scalars['String']['input']>>>;
-    id_not?: InputMaybe<Scalars['String']['input']>;
-    id_not_contains?: InputMaybe<Scalars['String']['input']>;
-    id_not_ends_with?: InputMaybe<Scalars['String']['input']>;
-    id_not_in?: InputMaybe<Array<InputMaybe<Scalars['String']['input']>>>;
-    id_not_starts_with?: InputMaybe<Scalars['String']['input']>;
-    id_starts_with?: InputMaybe<Scalars['String']['input']>;
     tokenId?: InputMaybe<Scalars['String']['input']>;
     tokenId_contains?: InputMaybe<Scalars['String']['input']>;
     tokenId_ends_with?: InputMaybe<Scalars['String']['input']>;
@@ -456,6 +498,16 @@ export type AccountFilter = {
     id_not_in?: InputMaybe<Array<InputMaybe<Scalars['String']['input']>>>;
     id_not_starts_with?: InputMaybe<Scalars['String']['input']>;
     id_starts_with?: InputMaybe<Scalars['String']['input']>;
+    type?: InputMaybe<Scalars['String']['input']>;
+    type_contains?: InputMaybe<Scalars['String']['input']>;
+    type_ends_with?: InputMaybe<Scalars['String']['input']>;
+    type_in?: InputMaybe<Array<InputMaybe<Scalars['String']['input']>>>;
+    type_not?: InputMaybe<Scalars['String']['input']>;
+    type_not_contains?: InputMaybe<Scalars['String']['input']>;
+    type_not_ends_with?: InputMaybe<Scalars['String']['input']>;
+    type_not_in?: InputMaybe<Array<InputMaybe<Scalars['String']['input']>>>;
+    type_not_starts_with?: InputMaybe<Scalars['String']['input']>;
+    type_starts_with?: InputMaybe<Scalars['String']['input']>;
 };
 export type AccountPage = {
     __typename?: 'accountPage';
@@ -466,23 +518,14 @@ export type AccountPage = {
 export type AccountPower = {
     __typename?: 'accountPower';
     account?: Maybe<Account>;
-    accountId?: Maybe<Scalars['String']['output']>;
-    daoId?: Maybe<Scalars['String']['output']>;
-    delegatedFrom?: Maybe<AccountBalancePage>;
+    accountId: Scalars['String']['output'];
+    daoId: Scalars['String']['output'];
     delegationsCount: Scalars['Int']['output'];
-    id: Scalars['String']['output'];
+    firstVoteTimestamp?: Maybe<Scalars['BigInt']['output']>;
     lastVoteTimestamp: Scalars['BigInt']['output'];
     proposalsCount: Scalars['Int']['output'];
     votesCount: Scalars['Int']['output'];
     votingPower: Scalars['BigInt']['output'];
-};
-export type AccountPowerDelegatedFromArgs = {
-    after?: InputMaybe<Scalars['String']['input']>;
-    before?: InputMaybe<Scalars['String']['input']>;
-    limit?: InputMaybe<Scalars['Int']['input']>;
-    orderBy?: InputMaybe<Scalars['String']['input']>;
-    orderDirection?: InputMaybe<Scalars['String']['input']>;
-    where?: InputMaybe<AccountBalanceFilter>;
 };
 export type AccountPowerFilter = {
     AND?: InputMaybe<Array<InputMaybe<AccountPowerFilter>>>;
@@ -515,16 +558,14 @@ export type AccountPowerFilter = {
     delegationsCount_lte?: InputMaybe<Scalars['Int']['input']>;
     delegationsCount_not?: InputMaybe<Scalars['Int']['input']>;
     delegationsCount_not_in?: InputMaybe<Array<InputMaybe<Scalars['Int']['input']>>>;
-    id?: InputMaybe<Scalars['String']['input']>;
-    id_contains?: InputMaybe<Scalars['String']['input']>;
-    id_ends_with?: InputMaybe<Scalars['String']['input']>;
-    id_in?: InputMaybe<Array<InputMaybe<Scalars['String']['input']>>>;
-    id_not?: InputMaybe<Scalars['String']['input']>;
-    id_not_contains?: InputMaybe<Scalars['String']['input']>;
-    id_not_ends_with?: InputMaybe<Scalars['String']['input']>;
-    id_not_in?: InputMaybe<Array<InputMaybe<Scalars['String']['input']>>>;
-    id_not_starts_with?: InputMaybe<Scalars['String']['input']>;
-    id_starts_with?: InputMaybe<Scalars['String']['input']>;
+    firstVoteTimestamp?: InputMaybe<Scalars['BigInt']['input']>;
+    firstVoteTimestamp_gt?: InputMaybe<Scalars['BigInt']['input']>;
+    firstVoteTimestamp_gte?: InputMaybe<Scalars['BigInt']['input']>;
+    firstVoteTimestamp_in?: InputMaybe<Array<InputMaybe<Scalars['BigInt']['input']>>>;
+    firstVoteTimestamp_lt?: InputMaybe<Scalars['BigInt']['input']>;
+    firstVoteTimestamp_lte?: InputMaybe<Scalars['BigInt']['input']>;
+    firstVoteTimestamp_not?: InputMaybe<Scalars['BigInt']['input']>;
+    firstVoteTimestamp_not_in?: InputMaybe<Array<InputMaybe<Scalars['BigInt']['input']>>>;
     lastVoteTimestamp?: InputMaybe<Scalars['BigInt']['input']>;
     lastVoteTimestamp_gt?: InputMaybe<Scalars['BigInt']['input']>;
     lastVoteTimestamp_gte?: InputMaybe<Scalars['BigInt']['input']>;
@@ -812,12 +853,14 @@ export type DaoPage = {
 export type Delegation = {
     __typename?: 'delegation';
     daoId?: Maybe<Scalars['String']['output']>;
-    delegatee?: Maybe<Account>;
-    delegateeAccountId?: Maybe<Scalars['String']['output']>;
+    delegate?: Maybe<Account>;
+    delegateAccountId?: Maybe<Scalars['String']['output']>;
+    delegatedValue: Scalars['BigInt']['output'];
     delegator?: Maybe<Account>;
     delegatorAccountId?: Maybe<Scalars['String']['output']>;
-    id: Scalars['String']['output'];
+    previousDelegate?: Maybe<Scalars['String']['output']>;
     timestamp?: Maybe<Scalars['BigInt']['output']>;
+    transactionHash: Scalars['String']['output'];
 };
 export type DelegationFilter = {
     AND?: InputMaybe<Array<InputMaybe<DelegationFilter>>>;
@@ -832,16 +875,24 @@ export type DelegationFilter = {
     daoId_not_in?: InputMaybe<Array<InputMaybe<Scalars['String']['input']>>>;
     daoId_not_starts_with?: InputMaybe<Scalars['String']['input']>;
     daoId_starts_with?: InputMaybe<Scalars['String']['input']>;
-    delegateeAccountId?: InputMaybe<Scalars['String']['input']>;
-    delegateeAccountId_contains?: InputMaybe<Scalars['String']['input']>;
-    delegateeAccountId_ends_with?: InputMaybe<Scalars['String']['input']>;
-    delegateeAccountId_in?: InputMaybe<Array<InputMaybe<Scalars['String']['input']>>>;
-    delegateeAccountId_not?: InputMaybe<Scalars['String']['input']>;
-    delegateeAccountId_not_contains?: InputMaybe<Scalars['String']['input']>;
-    delegateeAccountId_not_ends_with?: InputMaybe<Scalars['String']['input']>;
-    delegateeAccountId_not_in?: InputMaybe<Array<InputMaybe<Scalars['String']['input']>>>;
-    delegateeAccountId_not_starts_with?: InputMaybe<Scalars['String']['input']>;
-    delegateeAccountId_starts_with?: InputMaybe<Scalars['String']['input']>;
+    delegateAccountId?: InputMaybe<Scalars['String']['input']>;
+    delegateAccountId_contains?: InputMaybe<Scalars['String']['input']>;
+    delegateAccountId_ends_with?: InputMaybe<Scalars['String']['input']>;
+    delegateAccountId_in?: InputMaybe<Array<InputMaybe<Scalars['String']['input']>>>;
+    delegateAccountId_not?: InputMaybe<Scalars['String']['input']>;
+    delegateAccountId_not_contains?: InputMaybe<Scalars['String']['input']>;
+    delegateAccountId_not_ends_with?: InputMaybe<Scalars['String']['input']>;
+    delegateAccountId_not_in?: InputMaybe<Array<InputMaybe<Scalars['String']['input']>>>;
+    delegateAccountId_not_starts_with?: InputMaybe<Scalars['String']['input']>;
+    delegateAccountId_starts_with?: InputMaybe<Scalars['String']['input']>;
+    delegatedValue?: InputMaybe<Scalars['BigInt']['input']>;
+    delegatedValue_gt?: InputMaybe<Scalars['BigInt']['input']>;
+    delegatedValue_gte?: InputMaybe<Scalars['BigInt']['input']>;
+    delegatedValue_in?: InputMaybe<Array<InputMaybe<Scalars['BigInt']['input']>>>;
+    delegatedValue_lt?: InputMaybe<Scalars['BigInt']['input']>;
+    delegatedValue_lte?: InputMaybe<Scalars['BigInt']['input']>;
+    delegatedValue_not?: InputMaybe<Scalars['BigInt']['input']>;
+    delegatedValue_not_in?: InputMaybe<Array<InputMaybe<Scalars['BigInt']['input']>>>;
     delegatorAccountId?: InputMaybe<Scalars['String']['input']>;
     delegatorAccountId_contains?: InputMaybe<Scalars['String']['input']>;
     delegatorAccountId_ends_with?: InputMaybe<Scalars['String']['input']>;
@@ -852,16 +903,16 @@ export type DelegationFilter = {
     delegatorAccountId_not_in?: InputMaybe<Array<InputMaybe<Scalars['String']['input']>>>;
     delegatorAccountId_not_starts_with?: InputMaybe<Scalars['String']['input']>;
     delegatorAccountId_starts_with?: InputMaybe<Scalars['String']['input']>;
-    id?: InputMaybe<Scalars['String']['input']>;
-    id_contains?: InputMaybe<Scalars['String']['input']>;
-    id_ends_with?: InputMaybe<Scalars['String']['input']>;
-    id_in?: InputMaybe<Array<InputMaybe<Scalars['String']['input']>>>;
-    id_not?: InputMaybe<Scalars['String']['input']>;
-    id_not_contains?: InputMaybe<Scalars['String']['input']>;
-    id_not_ends_with?: InputMaybe<Scalars['String']['input']>;
-    id_not_in?: InputMaybe<Array<InputMaybe<Scalars['String']['input']>>>;
-    id_not_starts_with?: InputMaybe<Scalars['String']['input']>;
-    id_starts_with?: InputMaybe<Scalars['String']['input']>;
+    previousDelegate?: InputMaybe<Scalars['String']['input']>;
+    previousDelegate_contains?: InputMaybe<Scalars['String']['input']>;
+    previousDelegate_ends_with?: InputMaybe<Scalars['String']['input']>;
+    previousDelegate_in?: InputMaybe<Array<InputMaybe<Scalars['String']['input']>>>;
+    previousDelegate_not?: InputMaybe<Scalars['String']['input']>;
+    previousDelegate_not_contains?: InputMaybe<Scalars['String']['input']>;
+    previousDelegate_not_ends_with?: InputMaybe<Scalars['String']['input']>;
+    previousDelegate_not_in?: InputMaybe<Array<InputMaybe<Scalars['String']['input']>>>;
+    previousDelegate_not_starts_with?: InputMaybe<Scalars['String']['input']>;
+    previousDelegate_starts_with?: InputMaybe<Scalars['String']['input']>;
     timestamp?: InputMaybe<Scalars['BigInt']['input']>;
     timestamp_gt?: InputMaybe<Scalars['BigInt']['input']>;
     timestamp_gte?: InputMaybe<Scalars['BigInt']['input']>;
@@ -870,6 +921,16 @@ export type DelegationFilter = {
     timestamp_lte?: InputMaybe<Scalars['BigInt']['input']>;
     timestamp_not?: InputMaybe<Scalars['BigInt']['input']>;
     timestamp_not_in?: InputMaybe<Array<InputMaybe<Scalars['BigInt']['input']>>>;
+    transactionHash?: InputMaybe<Scalars['String']['input']>;
+    transactionHash_contains?: InputMaybe<Scalars['String']['input']>;
+    transactionHash_ends_with?: InputMaybe<Scalars['String']['input']>;
+    transactionHash_in?: InputMaybe<Array<InputMaybe<Scalars['String']['input']>>>;
+    transactionHash_not?: InputMaybe<Scalars['String']['input']>;
+    transactionHash_not_contains?: InputMaybe<Scalars['String']['input']>;
+    transactionHash_not_ends_with?: InputMaybe<Scalars['String']['input']>;
+    transactionHash_not_in?: InputMaybe<Array<InputMaybe<Scalars['String']['input']>>>;
+    transactionHash_not_starts_with?: InputMaybe<Scalars['String']['input']>;
+    transactionHash_starts_with?: InputMaybe<Scalars['String']['input']>;
 };
 export type DelegationPage = {
     __typename?: 'delegationPage';
@@ -892,6 +953,17 @@ export declare enum MetricType {
     TotalSupply = "TOTAL_SUPPLY",
     Treasury = "TREASURY"
 }
+export type ProposalsActivity_200_Response = {
+    __typename?: 'proposalsActivity_200_response';
+    address: Scalars['String']['output'];
+    avgTimeBeforeEnd: Scalars['Float']['output'];
+    neverVoted: Scalars['Boolean']['output'];
+    proposals: Array<Maybe<Query_ProposalsActivity_Proposals_Items>>;
+    totalProposals: Scalars['Float']['output'];
+    votedProposals: Scalars['Float']['output'];
+    winRate: Scalars['Float']['output'];
+    yesRate: Scalars['Float']['output'];
+};
 export type ProposalsOnchain = {
     __typename?: 'proposalsOnchain';
     abstainVotes?: Maybe<Scalars['BigInt']['output']>;
@@ -902,7 +974,7 @@ export type ProposalsOnchain = {
     endBlock?: Maybe<Scalars['String']['output']>;
     forVotes?: Maybe<Scalars['BigInt']['output']>;
     id: Scalars['String']['output'];
-    proposalVotes?: Maybe<VotesOnchainPage>;
+    proposer?: Maybe<Account>;
     proposerAccountId?: Maybe<Scalars['String']['output']>;
     signatures?: Maybe<Scalars['JSON']['output']>;
     startBlock?: Maybe<Scalars['String']['output']>;
@@ -910,8 +982,9 @@ export type ProposalsOnchain = {
     targets?: Maybe<Scalars['JSON']['output']>;
     timestamp?: Maybe<Scalars['BigInt']['output']>;
     values?: Maybe<Scalars['JSON']['output']>;
+    votes?: Maybe<VotesOnchainPage>;
 };
-export type ProposalsOnchainProposalVotesArgs = {
+export type ProposalsOnchainVotesArgs = {
     after?: InputMaybe<Scalars['String']['input']>;
     before?: InputMaybe<Scalars['String']['input']>;
     limit?: InputMaybe<Scalars['Int']['input']>;
@@ -1163,7 +1236,22 @@ export declare enum QueryInput_CompareVotes_Days {
     '180d' = "_180d",
     '365d' = "_365d"
 }
+export declare enum QueryInput_HistoricalBalances_DaoId {
+    Arb = "ARB",
+    Ens = "ENS",
+    Uni = "UNI"
+}
 export declare enum QueryInput_HistoricalTokenData_DaoId {
+    Arb = "ARB",
+    Ens = "ENS",
+    Uni = "UNI"
+}
+export declare enum QueryInput_HistoricalVotingPower_DaoId {
+    Arb = "ARB",
+    Ens = "ENS",
+    Uni = "UNI"
+}
+export declare enum QueryInput_ProposalsActivity_DaoId {
     Arb = "ARB",
     Ens = "ENS",
     Uni = "UNI"
@@ -1180,6 +1268,49 @@ export declare enum QueryInput_TotalAssets_Days {
     '180d' = "_180d",
     '365d' = "_365d"
 }
+export type Query_HistoricalBalances_Items = {
+    __typename?: 'query_historicalBalances_items';
+    address: Scalars['String']['output'];
+    balance: Scalars['String']['output'];
+    blockNumber: Scalars['Float']['output'];
+    tokenAddress: Scalars['String']['output'];
+};
+export type Query_HistoricalVotingPower_Items = {
+    __typename?: 'query_historicalVotingPower_items';
+    address: Scalars['String']['output'];
+    blockNumber: Scalars['Float']['output'];
+    tokenAddress: Scalars['String']['output'];
+    votingPower: Scalars['String']['output'];
+};
+export type Query_ProposalsActivity_Proposals_Items = {
+    __typename?: 'query_proposalsActivity_proposals_items';
+    proposal: Query_ProposalsActivity_Proposals_Items_Proposal;
+    userVote?: Maybe<Query_ProposalsActivity_Proposals_Items_UserVote>;
+};
+export type Query_ProposalsActivity_Proposals_Items_Proposal = {
+    __typename?: 'query_proposalsActivity_proposals_items_proposal';
+    abstainVotes: Scalars['Float']['output'];
+    againstVotes: Scalars['Float']['output'];
+    daoId: Scalars['String']['output'];
+    description?: Maybe<Scalars['String']['output']>;
+    endBlock: Scalars['String']['output'];
+    forVotes: Scalars['Float']['output'];
+    id: Scalars['String']['output'];
+    proposerAccountId: Scalars['String']['output'];
+    startBlock: Scalars['String']['output'];
+    status: Scalars['String']['output'];
+    timestamp: Scalars['String']['output'];
+};
+export type Query_ProposalsActivity_Proposals_Items_UserVote = {
+    __typename?: 'query_proposalsActivity_proposals_items_userVote';
+    id: Scalars['String']['output'];
+    proposalId: Scalars['String']['output'];
+    reason?: Maybe<Scalars['String']['output']>;
+    support?: Maybe<Scalars['String']['output']>;
+    timestamp: Scalars['String']['output'];
+    voterAccountId: Scalars['String']['output'];
+    votingPower?: Maybe<Scalars['String']['output']>;
+};
 export type Query_TotalAssets_Items = {
     __typename?: 'query_totalAssets_items';
     date: Scalars['String']['output'];
@@ -1296,14 +1427,14 @@ export type Transfer = {
     __typename?: 'transfer';
     amount?: Maybe<Scalars['BigInt']['output']>;
     daoId?: Maybe<Scalars['String']['output']>;
-    fromAccount?: Maybe<Account>;
+    from?: Maybe<Account>;
     fromAccountId?: Maybe<Scalars['String']['output']>;
-    id: Scalars['String']['output'];
     timestamp?: Maybe<Scalars['BigInt']['output']>;
-    toAccount?: Maybe<Account>;
+    to?: Maybe<Account>;
     toAccountId?: Maybe<Scalars['String']['output']>;
     token?: Maybe<Token>;
     tokenId?: Maybe<Scalars['String']['output']>;
+    transactionHash: Scalars['String']['output'];
 };
 export type TransferFilter = {
     AND?: InputMaybe<Array<InputMaybe<TransferFilter>>>;
@@ -1336,16 +1467,6 @@ export type TransferFilter = {
     fromAccountId_not_in?: InputMaybe<Array<InputMaybe<Scalars['String']['input']>>>;
     fromAccountId_not_starts_with?: InputMaybe<Scalars['String']['input']>;
     fromAccountId_starts_with?: InputMaybe<Scalars['String']['input']>;
-    id?: InputMaybe<Scalars['String']['input']>;
-    id_contains?: InputMaybe<Scalars['String']['input']>;
-    id_ends_with?: InputMaybe<Scalars['String']['input']>;
-    id_in?: InputMaybe<Array<InputMaybe<Scalars['String']['input']>>>;
-    id_not?: InputMaybe<Scalars['String']['input']>;
-    id_not_contains?: InputMaybe<Scalars['String']['input']>;
-    id_not_ends_with?: InputMaybe<Scalars['String']['input']>;
-    id_not_in?: InputMaybe<Array<InputMaybe<Scalars['String']['input']>>>;
-    id_not_starts_with?: InputMaybe<Scalars['String']['input']>;
-    id_starts_with?: InputMaybe<Scalars['String']['input']>;
     timestamp?: InputMaybe<Scalars['BigInt']['input']>;
     timestamp_gt?: InputMaybe<Scalars['BigInt']['input']>;
     timestamp_gte?: InputMaybe<Scalars['BigInt']['input']>;
@@ -1374,6 +1495,16 @@ export type TransferFilter = {
     tokenId_not_in?: InputMaybe<Array<InputMaybe<Scalars['String']['input']>>>;
     tokenId_not_starts_with?: InputMaybe<Scalars['String']['input']>;
     tokenId_starts_with?: InputMaybe<Scalars['String']['input']>;
+    transactionHash?: InputMaybe<Scalars['String']['input']>;
+    transactionHash_contains?: InputMaybe<Scalars['String']['input']>;
+    transactionHash_ends_with?: InputMaybe<Scalars['String']['input']>;
+    transactionHash_in?: InputMaybe<Array<InputMaybe<Scalars['String']['input']>>>;
+    transactionHash_not?: InputMaybe<Scalars['String']['input']>;
+    transactionHash_not_contains?: InputMaybe<Scalars['String']['input']>;
+    transactionHash_not_ends_with?: InputMaybe<Scalars['String']['input']>;
+    transactionHash_not_in?: InputMaybe<Array<InputMaybe<Scalars['String']['input']>>>;
+    transactionHash_not_starts_with?: InputMaybe<Scalars['String']['input']>;
+    transactionHash_starts_with?: InputMaybe<Scalars['String']['input']>;
 };
 export type TransferPage = {
     __typename?: 'transferPage';
@@ -1390,6 +1521,7 @@ export type VotesOnchain = {
     reason?: Maybe<Scalars['String']['output']>;
     support?: Maybe<Scalars['String']['output']>;
     timestamp?: Maybe<Scalars['BigInt']['output']>;
+    voter?: Maybe<Account>;
     voterAccountId?: Maybe<Scalars['String']['output']>;
     votingPower?: Maybe<Scalars['String']['output']>;
 };
@@ -1483,10 +1615,13 @@ export type VotesOnchainPage = {
 };
 export type VotingPowerHistory = {
     __typename?: 'votingPowerHistory';
+    account?: Maybe<Account>;
     accountId?: Maybe<Scalars['String']['output']>;
     daoId?: Maybe<Scalars['String']['output']>;
-    id: Scalars['String']['output'];
+    delegation?: Maybe<Delegation>;
     timestamp: Scalars['BigInt']['output'];
+    transactionHash: Scalars['String']['output'];
+    transfer?: Maybe<Transfer>;
     votingPower: Scalars['BigInt']['output'];
 };
 export type VotingPowerHistoryFilter = {
@@ -1512,16 +1647,6 @@ export type VotingPowerHistoryFilter = {
     daoId_not_in?: InputMaybe<Array<InputMaybe<Scalars['String']['input']>>>;
     daoId_not_starts_with?: InputMaybe<Scalars['String']['input']>;
     daoId_starts_with?: InputMaybe<Scalars['String']['input']>;
-    id?: InputMaybe<Scalars['String']['input']>;
-    id_contains?: InputMaybe<Scalars['String']['input']>;
-    id_ends_with?: InputMaybe<Scalars['String']['input']>;
-    id_in?: InputMaybe<Array<InputMaybe<Scalars['String']['input']>>>;
-    id_not?: InputMaybe<Scalars['String']['input']>;
-    id_not_contains?: InputMaybe<Scalars['String']['input']>;
-    id_not_ends_with?: InputMaybe<Scalars['String']['input']>;
-    id_not_in?: InputMaybe<Array<InputMaybe<Scalars['String']['input']>>>;
-    id_not_starts_with?: InputMaybe<Scalars['String']['input']>;
-    id_starts_with?: InputMaybe<Scalars['String']['input']>;
     timestamp?: InputMaybe<Scalars['BigInt']['input']>;
     timestamp_gt?: InputMaybe<Scalars['BigInt']['input']>;
     timestamp_gte?: InputMaybe<Scalars['BigInt']['input']>;
@@ -1530,6 +1655,16 @@ export type VotingPowerHistoryFilter = {
     timestamp_lte?: InputMaybe<Scalars['BigInt']['input']>;
     timestamp_not?: InputMaybe<Scalars['BigInt']['input']>;
     timestamp_not_in?: InputMaybe<Array<InputMaybe<Scalars['BigInt']['input']>>>;
+    transactionHash?: InputMaybe<Scalars['String']['input']>;
+    transactionHash_contains?: InputMaybe<Scalars['String']['input']>;
+    transactionHash_ends_with?: InputMaybe<Scalars['String']['input']>;
+    transactionHash_in?: InputMaybe<Array<InputMaybe<Scalars['String']['input']>>>;
+    transactionHash_not?: InputMaybe<Scalars['String']['input']>;
+    transactionHash_not_contains?: InputMaybe<Scalars['String']['input']>;
+    transactionHash_not_ends_with?: InputMaybe<Scalars['String']['input']>;
+    transactionHash_not_in?: InputMaybe<Array<InputMaybe<Scalars['String']['input']>>>;
+    transactionHash_not_starts_with?: InputMaybe<Scalars['String']['input']>;
+    transactionHash_starts_with?: InputMaybe<Scalars['String']['input']>;
     votingPower?: InputMaybe<Scalars['BigInt']['input']>;
     votingPower_gt?: InputMaybe<Scalars['BigInt']['input']>;
     votingPower_gte?: InputMaybe<Scalars['BigInt']['input']>;

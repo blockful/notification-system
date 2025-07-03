@@ -2,13 +2,13 @@ import { AxiosInstance } from 'axios';
 import { print } from 'graphql';
 import type { TypedDocumentNode } from '@graphql-typed-document-node/core';
 import type {
-  GetDaOsQuery,
   GetProposalByIdQuery,
   GetProposalByIdQueryVariables,
   ListProposalsQuery,
   ListProposalsQueryVariables
 } from './gql/graphql';
 import { GetDaOsDocument, GetProposalByIdDocument, ListProposalsDocument } from './gql/graphql';
+type ProposalItems = ListProposalsQuery['proposalsOnchains']['items'];
 
 export class AnticaptureClient {
   private readonly httpClient: AxiosInstance;
@@ -66,23 +66,33 @@ export class AnticaptureClient {
     return response.proposalsOnchain;
   }
 
-  /**
-   * Lists proposals with optional filtering and pagination with full type safety
-   */
-  async listProposals(variables?: ListProposalsQueryVariables, daoId?: string): Promise<ListProposalsQuery['proposalsOnchains']['items']> {
+  private processProposalItems(items: ProposalItems, daoId: string): ProposalItems {
+    return items.reduce((acc, proposal) => {
+      if (proposal !== null) {
+        acc.push({
+          ...proposal,
+          daoId: proposal.daoId || daoId
+        });
+      }
+      return acc;
+    }, [] as typeof items);
+  }
+
+  async listProposals(variables?: ListProposalsQueryVariables, daoId?: string): Promise<ProposalItems> {
     if (!daoId && !variables?.where?.daoId) {
       const allDAOs = await this.getDAOs();
-      const allProposals: ListProposalsQuery['proposalsOnchains']['items'] = [];
+      const allProposals: ProposalItems = [];
 
       for (const currentDaoId of allDAOs) {
         const response = await this.query(ListProposalsDocument, variables, currentDaoId);
-        allProposals.push(...response.proposalsOnchains.items.filter(item => item !== null));
+        const proposalsWithDaoId = this.processProposalItems(response.proposalsOnchains.items, currentDaoId);
+        allProposals.push(...proposalsWithDaoId);
       }
 
       return allProposals;
     }
 
     const response = await this.query(ListProposalsDocument, variables, daoId);
-    return response.proposalsOnchains.items.filter(item => item !== null);
+    return this.processProposalItems(response.proposalsOnchains.items, daoId!);
   }
 }

@@ -43,21 +43,30 @@ class AnticaptureClient {
         const response = await this.query(graphql_2.GetProposalByIdDocument, variables);
         return response.proposalsOnchain;
     }
-    /**
-     * Lists proposals with optional filtering and pagination with full type safety
-     */
+    processProposalItems(items, daoId) {
+        return items.reduce((acc, proposal) => {
+            if (proposal !== null) {
+                acc.push({
+                    ...proposal,
+                    daoId: proposal.daoId || daoId
+                });
+            }
+            return acc;
+        }, []);
+    }
     async listProposals(variables, daoId) {
         if (!daoId && !variables?.where?.daoId) {
             const allDAOs = await this.getDAOs();
             const allProposals = [];
             for (const currentDaoId of allDAOs) {
                 const response = await this.query(graphql_2.ListProposalsDocument, variables, currentDaoId);
-                allProposals.push(...response.proposalsOnchains.items.filter(item => item !== null));
+                const proposalsWithDaoId = this.processProposalItems(response.proposalsOnchains.items, currentDaoId);
+                allProposals.push(...proposalsWithDaoId);
             }
             return allProposals;
         }
         const response = await this.query(graphql_2.ListProposalsDocument, variables, daoId);
-        return response.proposalsOnchains.items.filter(item => item !== null);
+        return this.processProposalItems(response.proposalsOnchains.items, daoId);
     }
 }
 exports.AnticaptureClient = AnticaptureClient;
