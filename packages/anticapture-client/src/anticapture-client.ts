@@ -2,13 +2,13 @@ import { AxiosInstance } from 'axios';
 import { print } from 'graphql';
 import type { TypedDocumentNode } from '@graphql-typed-document-node/core';
 import type {
-  GetDaOsQuery,
   GetProposalByIdQuery,
   GetProposalByIdQueryVariables,
   ListProposalsQuery,
   ListProposalsQueryVariables
 } from './gql/graphql';
 import { GetDaOsDocument, GetProposalByIdDocument, ListProposalsDocument } from './gql/graphql';
+type ProposalItems = ListProposalsQuery['proposalsOnchains']['items'];
 
 export class AnticaptureClient {
   private readonly httpClient: AxiosInstance;
@@ -66,7 +66,7 @@ export class AnticaptureClient {
     return response.proposalsOnchain;
   }
 
-  private processProposalItems(items: ListProposalsQuery['proposalsOnchains']['items'], daoId: string): ListProposalsQuery['proposalsOnchains']['items'] {
+  private processProposalItems(items: ProposalItems, daoId: string): ProposalItems {
     return items.reduce((acc, proposal) => {
       if (proposal !== null) {
         acc.push({
@@ -78,10 +78,10 @@ export class AnticaptureClient {
     }, [] as typeof items);
   }
 
-  async listProposals(variables?: ListProposalsQueryVariables, daoId?: string): Promise<ListProposalsQuery['proposalsOnchains']['items']> {
+  async listProposals(variables?: ListProposalsQueryVariables, daoId?: string): Promise<ProposalItems> {
     if (!daoId && !variables?.where?.daoId) {
       const allDAOs = await this.getDAOs();
-      const allProposals: ListProposalsQuery['proposalsOnchains']['items'] = [];
+      const allProposals: ProposalItems = [];
 
       for (const currentDaoId of allDAOs) {
         const response = await this.query(ListProposalsDocument, variables, currentDaoId);
