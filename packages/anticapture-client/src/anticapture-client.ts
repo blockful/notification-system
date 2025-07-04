@@ -8,6 +8,7 @@ import type {
   ListProposalsQueryVariables
 } from './gql/graphql';
 import { GetDaOsDocument, GetProposalByIdDocument, ListProposalsDocument } from './gql/graphql';
+import { validateDaosResponse, validateProposalByIdResponse, validateAndProcessProposals } from './schemas';
 type ProposalItems = ListProposalsQuery['proposalsOnchains']['items'];
 
 export class AnticaptureClient {
@@ -51,7 +52,8 @@ export class AnticaptureClient {
    */
   async getDAOs(): Promise<string[]> {
     const result = await this.query(GetDaOsDocument);
-    return result.daos.items.map(dao => dao.id);
+    const validated = validateDaosResponse(result);
+    return validated.daos.items.map(dao => dao.id);
   }
 
   /**
@@ -63,20 +65,10 @@ export class AnticaptureClient {
     };
 
     const response = await this.query(GetProposalByIdDocument, variables);
-    return response.proposalsOnchain;
+    const validated = validateProposalByIdResponse(response);
+    return validated.proposalsOnchain;
   }
 
-  private processProposalItems(items: ProposalItems, daoId: string): ProposalItems {
-    return items.reduce((acc, proposal) => {
-      if (proposal !== null) {
-        acc.push({
-          ...proposal,
-          daoId: proposal.daoId || daoId
-        });
-      }
-      return acc;
-    }, [] as typeof items);
-  }
 
   async listProposals(variables?: ListProposalsQueryVariables, daoId?: string): Promise<ProposalItems> {
     if (!daoId && !variables?.where?.daoId) {
@@ -85,14 +77,14 @@ export class AnticaptureClient {
 
       for (const currentDaoId of allDAOs) {
         const response = await this.query(ListProposalsDocument, variables, currentDaoId);
-        const proposalsWithDaoId = this.processProposalItems(response.proposalsOnchains.items, currentDaoId);
-        allProposals.push(...proposalsWithDaoId);
+        const processedProposals = validateAndProcessProposals(response, currentDaoId);
+        allProposals.push(...processedProposals);
       }
 
       return allProposals;
     }
 
     const response = await this.query(ListProposalsDocument, variables, daoId);
-    return this.processProposalItems(response.proposalsOnchains.items, daoId!);
+    return validateAndProcessProposals(response, daoId!);
   }
 }
