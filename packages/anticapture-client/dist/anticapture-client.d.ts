@@ -1,5 +1,6 @@
 import { AxiosInstance } from 'axios';
 import type { GetProposalByIdQuery, ListProposalsQuery, ListProposalsQueryVariables } from './gql/graphql';
+type ProposalItems = ListProposalsQuery['proposalsOnchains']['items'];
 export declare class AnticaptureClient {
     private readonly httpClient;
     constructor(httpClient: AxiosInstance);
@@ -13,6 +14,6 @@ export declare class AnticaptureClient {
      * Fetches a single proposal by ID with full type safety
      */
     getProposalById(id: string): Promise<GetProposalByIdQuery['proposalsOnchain'] | null>;
-    private processProposalItems;
-    listProposals(variables?: ListProposalsQueryVariables, daoId?: string): Promise<ListProposalsQuery['proposalsOnchains']['items']>;
+    listProposals(variables?: ListProposalsQueryVariables, daoId?: string): Promise<ProposalItems>;
 }
+export {};
