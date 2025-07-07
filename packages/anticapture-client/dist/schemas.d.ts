@@ -42,13 +42,6 @@ export declare const SafeDaosResponseSchema: z.ZodCatch<z.ZodEffects<z.ZodObject
         }[];
     } | null;
 }>>;
-export declare function validateDaosResponse(data: unknown): {
-    daos: {
-        items: {
-            id: string;
-        }[];
-    };
-};
 export declare const SafeProposalsResponseSchema: z.ZodCatch<z.ZodEffects<z.ZodObject<{
     proposalsOnchains: z.ZodNullable<z.ZodObject<{
         items: z.ZodArray<z.ZodAny, "many">;
@@ -81,15 +74,7 @@ export declare const SafeProposalByIdResponseSchema: z.ZodCatch<z.ZodObject<{
 }, {
     proposalsOnchain?: any;
 }>>;
-export declare function validateProposalsResponse(data: unknown): {
-    proposalsOnchains: {
-        items: any[];
-    };
-};
-export declare function validateProposalByIdResponse(data: unknown): {
-    proposalsOnchain?: any;
-};
 export type SafeDaosResponse = z.infer<typeof SafeDaosResponseSchema>;
 export type SafeProposalsResponse = z.infer<typeof SafeProposalsResponseSchema>;
 export type SafeProposalByIdResponse = z.infer<typeof SafeProposalByIdResponseSchema>;
-export declare function validateAndProcessProposals(data: unknown, daoId: string): any;
+export declare function processProposals(validated: SafeProposalsResponse, daoId: string): any;

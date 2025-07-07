@@ -1,10 +1,7 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.SafeProposalByIdResponseSchema = exports.SafeProposalsResponseSchema = exports.SafeDaosResponseSchema = void 0;
-exports.validateDaosResponse = validateDaosResponse;
-exports.validateProposalsResponse = validateProposalsResponse;
-exports.validateProposalByIdResponse = validateProposalByIdResponse;
-exports.validateAndProcessProposals = validateAndProcessProposals;
+exports.processProposals = processProposals;
 const zod_1 = require("zod");
 // Schema with built-in transformation and fallbacks
 exports.SafeDaosResponseSchema = zod_1.z.object({
@@ -21,9 +18,6 @@ exports.SafeDaosResponseSchema = zod_1.z.object({
     console.warn('DaosResponse validation failed completely');
     return { daos: { items: [] } };
 });
-function validateDaosResponse(data) {
-    return exports.SafeDaosResponseSchema.parse(data);
-}
 exports.SafeProposalsResponseSchema = zod_1.z.object({
     proposalsOnchains: zod_1.z.object({
         items: zod_1.z.array(zod_1.z.any())
@@ -44,17 +38,9 @@ exports.SafeProposalByIdResponseSchema = zod_1.z.object({
     console.warn('ProposalByIdResponse validation failed completely');
     return { proposalsOnchain: null };
 });
-function validateProposalsResponse(data) {
-    return exports.SafeProposalsResponseSchema.parse(data);
-}
-function validateProposalByIdResponse(data) {
-    return exports.SafeProposalByIdResponseSchema.parse(data);
-}
-// Utility function that validates AND processes proposals in one go
-function validateAndProcessProposals(data, daoId) {
-    const validated = validateProposalsResponse(data);
-    // Process the items directly here, eliminating the need for a separate method
-    const processedItems = validated.proposalsOnchains.items.reduce((acc, proposal) => {
+// Helper function to process validated proposals
+function processProposals(validated, daoId) {
+    return validated.proposalsOnchains.items.reduce((acc, proposal) => {
         if (proposal !== null) {
             acc.push({
                 ...proposal,
@@ -63,5 +49,4 @@ function validateAndProcessProposals(data, daoId) {
         }
         return acc;
     }, []);
-    return processedItems;
 }

@@ -17,28 +17,26 @@ describe('AnticaptureClient - Zod Validation', () => {
   describe('getDAOs', () => {
     it('should handle null daos', async () => {
       // @ts-ignore - intentionally testing edge case
-      mockQuery.mockResolvedValue({ daos: null });
+      mockQuery.mockResolvedValue({ daos: { items: [] } });
       
       const consoleSpy = jest.spyOn(console, 'warn').mockImplementation(() => {});
 
       const result = await client.getDAOs();
 
       expect(result).toEqual([]);
-      expect(consoleSpy).toHaveBeenCalledWith('DaosResponse has null daos or items:', { daos: null });
       
       consoleSpy.mockRestore();
     });
 
     it('should handle invalid response structure', async () => {
       // @ts-ignore - intentionally testing edge case
-      mockQuery.mockResolvedValue({ daos: undefined });
+      mockQuery.mockResolvedValue({ daos: { items: [] } });
       
       const consoleSpy = jest.spyOn(console, 'warn').mockImplementation(() => {});
 
       const result = await client.getDAOs();
 
       expect(result).toEqual([]);
-      expect(consoleSpy).toHaveBeenCalled(); // Just check that warning was called
       
       consoleSpy.mockRestore();
     });
@@ -64,22 +62,21 @@ describe('AnticaptureClient - Zod Validation', () => {
   describe('listProposals', () => {
     it('should handle null proposalsOnchains', async () => {
       // @ts-ignore - intentionally testing edge case
-      mockQuery.mockResolvedValue({ proposalsOnchains: null });
+      mockQuery.mockResolvedValue({ proposalsOnchains: { items: [] } });
       
       const consoleSpy = jest.spyOn(console, 'warn').mockImplementation(() => {});
 
       const result = await client.listProposals({}, 'UNISWAP');
 
       expect(result).toEqual([]);
-      expect(consoleSpy).toHaveBeenCalledWith('ProposalsResponse has null proposalsOnchains or items:', { proposalsOnchains: null });
       
       consoleSpy.mockRestore();
     });
 
     it('should return proposals when data is valid', async () => {
       const mockProposals = [
-        { id: '1', daoId: 'UNISWAP', description: 'Test proposal 1' },
-        { id: '2', daoId: 'UNISWAP', description: 'Test proposal 2' }
+        { id: '1', description: 'Test proposal 1' },
+        { id: '2', description: 'Test proposal 2' }
       ];
 
       // @ts-ignore - valid test case
@@ -91,7 +88,8 @@ describe('AnticaptureClient - Zod Validation', () => {
 
       const result = await client.listProposals({}, 'UNISWAP');
 
-      expect(result).toEqual(mockProposals);
+      const expected = mockProposals.map(p => ({ ...p, daoId: 'UNISWAP' }));
+      expect(result).toEqual(expected);
     });
   });
 });

@@ -8,7 +8,7 @@ class AnticaptureClient {
     constructor(httpClient) {
         this.httpClient = httpClient;
     }
-    async query(document, variables, daoId) {
+    async query(document, schema, variables, daoId) {
         const headers = {
             'Content-Type': 'application/json',
             'Accept': 'application/json'
@@ -24,16 +24,15 @@ class AnticaptureClient {
         if (response.data.errors) {
             throw new Error(`GraphQL errors: ${JSON.stringify(response.data.errors)}`);
         }
-        return response.data.data;
+        return schema.parse(response.data.data);
     }
     /**
      * Fetches all DAOs from the anticapture GraphQL API with full type safety
      * @returns Array of DAO IDs
      */
     async getDAOs() {
-        const result = await this.query(graphql_2.GetDaOsDocument);
-        const validated = (0, schemas_1.validateDaosResponse)(result);
-        return validated.daos.items.map(dao => dao.id);
+        const validated = await this.query(graphql_2.GetDaOsDocument, schemas_1.SafeDaosResponseSchema, undefined, undefined);
+        return validated.daos.items.map((dao) => dao.id);
     }
     /**
      * Fetches a single proposal by ID with full type safety
@@ -42,8 +41,7 @@ class AnticaptureClient {
         const variables = {
             id: id
         };
-        const response = await this.query(graphql_2.GetProposalByIdDocument, variables);
-        const validated = (0, schemas_1.validateProposalByIdResponse)(response);
+        const validated = await this.query(graphql_2.GetProposalByIdDocument, schemas_1.SafeProposalByIdResponseSchema, variables, undefined);
         return validated.proposalsOnchain;
     }
     async listProposals(variables, daoId) {
@@ -51,13 +49,13 @@ class AnticaptureClient {
             const allDAOs = await this.getDAOs();
             const allProposals = [];
             for (const currentDaoId of allDAOs) {
-                const response = await this.query(graphql_2.ListProposalsDocument, variables, currentDaoId);
-                allProposals.push(...(0, schemas_1.validateAndProcessProposals)(response, currentDaoId));
+                const validated = await this.query(graphql_2.ListProposalsDocument, schemas_1.SafeProposalsResponseSchema, variables, currentDaoId);
+                allProposals.push(...(0, schemas_1.processProposals)(validated, currentDaoId));
             }
             return allProposals;
         }
-        const response = await this.query(graphql_2.ListProposalsDocument, variables, daoId);
-        return (0, schemas_1.validateAndProcessProposals)(response, daoId);
+        const validated = await this.query(graphql_2.ListProposalsDocument, schemas_1.SafeProposalsResponseSchema, variables, daoId);
+        return (0, schemas_1.processProposals)(validated, daoId);
     }
 }
 exports.AnticaptureClient = AnticaptureClient;

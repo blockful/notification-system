@@ -1,6 +1,7 @@
 import { AxiosInstance } from 'axios';
 import { print } from 'graphql';
 import type { TypedDocumentNode } from '@graphql-typed-document-node/core';
+import { z } from 'zod';
 import type {
   GetProposalByIdQuery,
   GetProposalByIdQueryVariables,
@@ -8,7 +9,7 @@ import type {
   ListProposalsQueryVariables
 } from './gql/graphql';
 import { GetDaOsDocument, GetProposalByIdDocument, ListProposalsDocument } from './gql/graphql';
-import { validateDaosResponse, validateProposalByIdResponse, validateAndProcessProposals } from './schemas';
+import { SafeDaosResponseSchema, SafeProposalByIdResponseSchema, SafeProposalsResponseSchema, processProposals } from './schemas';
 type ProposalItems = ListProposalsQuery['proposalsOnchains']['items'];
 
 export class AnticaptureClient {
@@ -18,11 +19,12 @@ export class AnticaptureClient {
     this.httpClient = httpClient;
   }
 
-  private async query<TResult, TVariables>(
+  private async query<TResult, TVariables, TSchema extends z.ZodSchema<any>>(
     document: TypedDocumentNode<TResult, TVariables>,
+    schema: TSchema,
     variables?: TVariables,
     daoId?: string
-  ): Promise<TResult> {
+  ): Promise<z.infer<TSchema>> {
     const headers: Record<string, string> = {
       'Content-Type': 'application/json',
       'Accept': 'application/json'
@@ -42,7 +44,7 @@ export class AnticaptureClient {
       throw new Error(`GraphQL errors: ${JSON.stringify(response.data.errors)}`);
     }
 
-    return response.data.data;
+    return schema.parse(response.data.data);
   }
   
 
@@ -51,9 +53,8 @@ export class AnticaptureClient {
    * @returns Array of DAO IDs
    */
   async getDAOs(): Promise<string[]> {
-    const result = await this.query(GetDaOsDocument);
-    const validated = validateDaosResponse(result);
-    return validated.daos.items.map(dao => dao.id);
+    const validated = await this.query(GetDaOsDocument, SafeDaosResponseSchema, undefined, undefined);
+    return validated.daos.items.map((dao: { id: string }) => dao.id);
   }
 
   /**
@@ -64,8 +65,7 @@ export class AnticaptureClient {
       id: id
     };
 
-    const response = await this.query(GetProposalByIdDocument, variables);
-    const validated = validateProposalByIdResponse(response);
+    const validated = await this.query(GetProposalByIdDocument, SafeProposalByIdResponseSchema, variables, undefined);
     return validated.proposalsOnchain;
   }
 
@@ -76,14 +76,14 @@ export class AnticaptureClient {
       const allProposals: ProposalItems = [];
 
       for (const currentDaoId of allDAOs) {
-        const response = await this.query(ListProposalsDocument, variables, currentDaoId);
-        allProposals.push(...validateAndProcessProposals(response, currentDaoId));
+        const validated = await this.query(ListProposalsDocument, SafeProposalsResponseSchema, variables, currentDaoId);
+        allProposals.push(...processProposals(validated, currentDaoId));
       }
 
       return allProposals;
     }
 
-    const response = await this.query(ListProposalsDocument, variables, daoId);
-    return validateAndProcessProposals(response, daoId!);
+    const validated = await this.query(ListProposalsDocument, SafeProposalsResponseSchema, variables, daoId);
+    return processProposals(validated, daoId!);
   }
 }

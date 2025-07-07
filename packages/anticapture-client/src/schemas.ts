@@ -16,9 +16,6 @@ export const SafeDaosResponseSchema = z.object({
   return { daos: { items: [] } };
 });
 
-export function validateDaosResponse(data: unknown) {
-  return SafeDaosResponseSchema.parse(data);
-}
 
 export const SafeProposalsResponseSchema = z.object({
   proposalsOnchains: z.object({
@@ -42,25 +39,16 @@ export const SafeProposalByIdResponseSchema = z.object({
   return { proposalsOnchain: null };
 });
 
-export function validateProposalsResponse(data: unknown) {
-  return SafeProposalsResponseSchema.parse(data);
-}
 
-export function validateProposalByIdResponse(data: unknown) {
-  return SafeProposalByIdResponseSchema.parse(data);
-}
 
 // Export inferred types for use in the client
 export type SafeDaosResponse = z.infer<typeof SafeDaosResponseSchema>;
 export type SafeProposalsResponse = z.infer<typeof SafeProposalsResponseSchema>;
 export type SafeProposalByIdResponse = z.infer<typeof SafeProposalByIdResponseSchema>;
 
-// Utility function that validates AND processes proposals in one go
-export function validateAndProcessProposals(data: unknown, daoId: string) {
-  const validated = validateProposalsResponse(data);
-  
-  // Process the items directly here, eliminating the need for a separate method
-  const processedItems = validated.proposalsOnchains.items.reduce((acc, proposal) => {
+// Helper function to process validated proposals
+export function processProposals(validated: SafeProposalsResponse, daoId: string) {
+  return validated.proposalsOnchains.items.reduce((acc, proposal) => {
     if (proposal !== null) {
       acc.push({
         ...proposal,
@@ -69,6 +57,5 @@ export function validateAndProcessProposals(data: unknown, daoId: string) {
     }
     return acc;
   }, [] as typeof validated.proposalsOnchains.items);
-  
-  return processedItems;
 }
+
