@@ -52,8 +52,7 @@ class AnticaptureClient {
             const allProposals = [];
             for (const currentDaoId of allDAOs) {
                 const response = await this.query(graphql_2.ListProposalsDocument, variables, currentDaoId);
-                const processedProposals = (0, schemas_1.validateAndProcessProposals)(response, currentDaoId);
-                allProposals.push(...processedProposals);
+                allProposals.push(...(0, schemas_1.validateAndProcessProposals)(response, currentDaoId));
             }
             return allProposals;
         }

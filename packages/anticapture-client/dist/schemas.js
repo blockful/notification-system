@@ -58,7 +58,7 @@ function validateAndProcessProposals(data, daoId) {
         if (proposal !== null) {
             acc.push({
                 ...proposal,
-                daoId: proposal.daoId || daoId
+                daoId: daoId
             });
         }
         return acc;

@@ -77,8 +77,7 @@ export class AnticaptureClient {
 
       for (const currentDaoId of allDAOs) {
         const response = await this.query(ListProposalsDocument, variables, currentDaoId);
-        const processedProposals = validateAndProcessProposals(response, currentDaoId);
-        allProposals.push(...processedProposals);
+        allProposals.push(...validateAndProcessProposals(response, currentDaoId));
       }
 
       return allProposals;
