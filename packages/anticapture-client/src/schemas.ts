@@ -64,7 +64,7 @@ export function validateAndProcessProposals(data: unknown, daoId: string) {
     if (proposal !== null) {
       acc.push({
         ...proposal,
-        daoId: proposal.daoId || daoId
+        daoId: daoId
       });
     }
     return acc;
