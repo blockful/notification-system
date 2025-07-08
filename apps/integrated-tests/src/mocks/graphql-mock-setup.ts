@@ -3,14 +3,22 @@ import { ProposalData } from '../test-data/proposal-factory';
 
 export class GraphQLMockSetup {
   static setupProposalMock(mockHttpClient: any, proposals: ProposalData[]): void {
-    mockHttpClient.post.mockImplementation((url: string, data: any) => {
+    mockHttpClient.post.mockImplementation((url: string, data: any, config: any) => {
       if (data.query && data.query.includes('ListProposals')) {
         const requestedStatusIn = data.variables?.where?.status_in;
+        const requestedDaoId = config?.headers?.['anticapture-dao-id'];
         let proposalsToReturn = proposals;
         
+        // Filter by status
         if (requestedStatusIn && Array.isArray(requestedStatusIn)) {
-          proposalsToReturn = proposals.filter(p => requestedStatusIn.includes(p.status));
+          proposalsToReturn = proposalsToReturn.filter(p => requestedStatusIn.includes(p.status));
         }
+        
+        // Filter by daoId from header
+        if (requestedDaoId) {
+          proposalsToReturn = proposalsToReturn.filter(p => p.daoId === requestedDaoId);
+        }
+        
         return Promise.resolve({
           data: {
             data: {
