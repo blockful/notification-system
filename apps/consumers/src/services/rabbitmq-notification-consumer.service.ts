@@ -59,10 +59,10 @@ export class RabbitMQNotificationConsumerService {
       });
     } catch (error: any) {
       if (error?.response?.description === 'Bad Request: chat not found') {
-        console.log('⚠️  Não foi possível mandar mensagem para user:', message.payload.userId);
+        console.log('⚠️  Unable to send message to user:', message.payload.userId);
         return;
       }
-      console.error('❌ Erro ao enviar notificação:', error);
+      console.error('❌ Error sending notification:', error);
       throw error;
     }
   }
