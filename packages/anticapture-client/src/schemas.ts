@@ -39,24 +39,33 @@ export const SafeProposalByIdResponseSchema = z.object({
   return { proposalsOnchain: null };
 });
 
+// Define schema for delegation data (based on actual API response)
+const DelegationSchema = z.object({
+  delegatorAccountId: z.string(),
+  delegatedValue: z.string()
+}).nullable();
+
+// Define schema for transfer data (based on actual API response)
+const TransferSchema = z.object({
+  amount: z.string(),
+  fromAccountId: z.string(),
+  toAccountId: z.string()
+}).nullable();
+
+// Define schema for voting power history item (based on actual API response)
+const VotingPowerHistoryItemSchema = z.object({
+  accountId: z.string(),
+  timestamp: z.string(),
+  votingPower: z.string(),
+  delta: z.string().nullable(),
+  daoId: z.string(),
+  delegation: DelegationSchema,
+  transfer: TransferSchema
+});
+
 export const SafeVotingPowerHistoryResponseSchema = z.object({
   votingPowerHistorys: z.object({
-    items: z.array(z.object({
-      delta: z.number(),
-      accountId: z.string(),
-      daoId: z.string(),
-      votingPower: z.number(),
-      timestamp: z.string(),
-      delegation: z.object({
-        delegatedValue: z.number(),
-        delegatorAccountId: z.string()
-      }),
-      transfer: z.object({
-        amount: z.number(),
-        fromAccountId: z.string(),
-        toAccountId: z.string()
-      }),
-    }))
+    items: z.array(VotingPowerHistoryItemSchema)
   }).nullable()
 }).transform((data, ctx) => {
   if (!data.votingPowerHistorys || !data.votingPowerHistorys.items) {
@@ -77,6 +86,13 @@ export type SafeProposalsResponse = z.infer<typeof SafeProposalsResponseSchema>;
 export type SafeProposalByIdResponse = z.infer<typeof SafeProposalByIdResponseSchema>;
 export type SafeVotingPowerHistoryResponse = z.infer<typeof SafeVotingPowerHistoryResponseSchema>;
 
+// Type for processed voting power history with calculated fields (based on actual API)
+export type ProcessedVotingPowerHistory = z.infer<typeof VotingPowerHistoryItemSchema> & {
+  changeType: 'delegation' | 'transfer' | 'other';
+  sourceAccountId: string | null;
+  targetAccountId: string | null;
+};
+
 // Helper function to process validated proposals
 export function processProposals(validated: SafeProposalsResponse, daoId: string) {
   return validated.proposalsOnchains.items.reduce((acc, proposal) => {
@@ -91,16 +107,18 @@ export function processProposals(validated: SafeProposalsResponse, daoId: string
 }
 
 // Helper function to process validated voting power history
-export function processVotingPowerHistory(validated: SafeVotingPowerHistoryResponse, daoId: string) {
-  return validated.votingPowerHistorys.items.reduce((acc, votingPowerHistory) => {
-    if (votingPowerHistory !== null) {
-      acc.push({
-        ...votingPowerHistory,
-        daoId: daoId,
-        delta: votingPowerHistory.delta || 0
-      });
-    }
-    return acc;
-  }, [] as typeof validated.votingPowerHistorys.items);
+export function processVotingPowerHistory(validated: SafeVotingPowerHistoryResponse, daoId: string): ProcessedVotingPowerHistory[] {
+  return validated.votingPowerHistorys.items.map((item) => {
+    const processed: ProcessedVotingPowerHistory = {
+      ...item,
+      daoId: daoId,
+      delta: item.delta || '0',
+      changeType: item.delegation ? 'delegation' : item.transfer ? 'transfer' : 'other',
+      sourceAccountId: item.transfer?.fromAccountId || item.delegation?.delegatorAccountId || null,
+      targetAccountId: item.accountId
+    };
+    
+    return processed;
+  });
 }
 

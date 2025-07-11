@@ -39,9 +39,30 @@ exports.SafeProposalByIdResponseSchema = zod_1.z.object({
     console.warn('ProposalByIdResponse validation failed completely');
     return { proposalsOnchain: null };
 });
+// Define schema for delegation data (based on actual API response)
+const DelegationSchema = zod_1.z.object({
+    delegatorAccountId: zod_1.z.string(),
+    delegatedValue: zod_1.z.string()
+}).nullable();
+// Define schema for transfer data (based on actual API response)
+const TransferSchema = zod_1.z.object({
+    amount: zod_1.z.string(),
+    fromAccountId: zod_1.z.string(),
+    toAccountId: zod_1.z.string()
+}).nullable();
+// Define schema for voting power history item (based on actual API response)
+const VotingPowerHistoryItemSchema = zod_1.z.object({
+    accountId: zod_1.z.string(),
+    timestamp: zod_1.z.string(),
+    votingPower: zod_1.z.string(),
+    delta: zod_1.z.string().nullable(),
+    daoId: zod_1.z.string(),
+    delegation: DelegationSchema,
+    transfer: TransferSchema
+});
 exports.SafeVotingPowerHistoryResponseSchema = zod_1.z.object({
     votingPowerHistorys: zod_1.z.object({
-        items: zod_1.z.array(zod_1.z.any())
+        items: zod_1.z.array(VotingPowerHistoryItemSchema)
     }).nullable()
 }).transform((data, ctx) => {
     if (!data.votingPowerHistorys || !data.votingPowerHistorys.items) {
@@ -67,13 +88,15 @@ function processProposals(validated, daoId) {
 }
 // Helper function to process validated voting power history
 function processVotingPowerHistory(validated, daoId) {
-    return validated.votingPowerHistorys.items.reduce((acc, votingPowerHistory) => {
-        if (votingPowerHistory !== null) {
-            acc.push({
-                ...votingPowerHistory,
-                daoId: daoId || votingPowerHistory.daoId
-            });
-        }
-        return acc;
-    }, []);
+    return validated.votingPowerHistorys.items.map((item) => {
+        const processed = {
+            ...item,
+            daoId: daoId,
+            delta: item.delta || '0',
+            changeType: item.delegation ? 'delegation' : item.transfer ? 'transfer' : 'other',
+            sourceAccountId: item.transfer?.fromAccountId || item.delegation?.delegatorAccountId || null,
+            targetAccountId: item.accountId
+        };
+        return processed;
+    });
 }

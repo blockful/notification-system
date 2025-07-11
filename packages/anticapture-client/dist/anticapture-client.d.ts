@@ -1,7 +1,8 @@
 import { AxiosInstance } from 'axios';
-import type { GetProposalByIdQuery, ListProposalsQuery, ListProposalsQueryVariables, ListVotingPowerHistorysQuery, ListVotingPowerHistorysQueryVariables } from './gql/graphql';
+import type { GetProposalByIdQuery, ListProposalsQuery, ListProposalsQueryVariables, ListVotingPowerHistorysQueryVariables } from './gql/graphql';
+import { ProcessedVotingPowerHistory } from './schemas';
 type ProposalItems = ListProposalsQuery['proposalsOnchains']['items'];
-type VotingPowerHistoryItems = ListVotingPowerHistorysQuery['votingPowerHistorys']['items'];
+type VotingPowerHistoryItems = ProcessedVotingPowerHistory[];
 export declare class AnticaptureClient {
     private readonly httpClient;
     constructor(httpClient: AxiosInstance);
@@ -22,6 +23,6 @@ export declare class AnticaptureClient {
      * @param daoId - Optional specific DAO ID to query
      * @returns Array of voting power history items
      */
-    listVotingPowerHistory(variables?: ListVotingPowerHistorysQueryVariables, daoId?: string): Promise<VotingPowerHistoryItems>;
+    listVotingPowerHistory(daoId: string, variables?: ListVotingPowerHistorysQueryVariables): Promise<VotingPowerHistoryItems>;
 }
 export {};

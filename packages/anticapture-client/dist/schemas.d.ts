@@ -74,34 +74,249 @@ export declare const SafeProposalByIdResponseSchema: z.ZodCatch<z.ZodObject<{
 }, {
     proposalsOnchain?: any;
 }>>;
+declare const VotingPowerHistoryItemSchema: z.ZodObject<{
+    accountId: z.ZodString;
+    timestamp: z.ZodString;
+    votingPower: z.ZodString;
+    delta: z.ZodNullable<z.ZodString>;
+    daoId: z.ZodString;
+    delegation: z.ZodNullable<z.ZodObject<{
+        delegatorAccountId: z.ZodString;
+        delegatedValue: z.ZodString;
+    }, "strip", z.ZodTypeAny, {
+        delegatorAccountId: string;
+        delegatedValue: string;
+    }, {
+        delegatorAccountId: string;
+        delegatedValue: string;
+    }>>;
+    transfer: z.ZodNullable<z.ZodObject<{
+        amount: z.ZodString;
+        fromAccountId: z.ZodString;
+        toAccountId: z.ZodString;
+    }, "strip", z.ZodTypeAny, {
+        amount: string;
+        fromAccountId: string;
+        toAccountId: string;
+    }, {
+        amount: string;
+        fromAccountId: string;
+        toAccountId: string;
+    }>>;
+}, "strip", z.ZodTypeAny, {
+    delegation: {
+        delegatorAccountId: string;
+        delegatedValue: string;
+    } | null;
+    transfer: {
+        amount: string;
+        fromAccountId: string;
+        toAccountId: string;
+    } | null;
+    daoId: string;
+    timestamp: string;
+    accountId: string;
+    votingPower: string;
+    delta: string | null;
+}, {
+    delegation: {
+        delegatorAccountId: string;
+        delegatedValue: string;
+    } | null;
+    transfer: {
+        amount: string;
+        fromAccountId: string;
+        toAccountId: string;
+    } | null;
+    daoId: string;
+    timestamp: string;
+    accountId: string;
+    votingPower: string;
+    delta: string | null;
+}>;
 export declare const SafeVotingPowerHistoryResponseSchema: z.ZodCatch<z.ZodEffects<z.ZodObject<{
     votingPowerHistorys: z.ZodNullable<z.ZodObject<{
-        items: z.ZodArray<z.ZodAny, "many">;
+        items: z.ZodArray<z.ZodObject<{
+            accountId: z.ZodString;
+            timestamp: z.ZodString;
+            votingPower: z.ZodString;
+            delta: z.ZodNullable<z.ZodString>;
+            daoId: z.ZodString;
+            delegation: z.ZodNullable<z.ZodObject<{
+                delegatorAccountId: z.ZodString;
+                delegatedValue: z.ZodString;
+            }, "strip", z.ZodTypeAny, {
+                delegatorAccountId: string;
+                delegatedValue: string;
+            }, {
+                delegatorAccountId: string;
+                delegatedValue: string;
+            }>>;
+            transfer: z.ZodNullable<z.ZodObject<{
+                amount: z.ZodString;
+                fromAccountId: z.ZodString;
+                toAccountId: z.ZodString;
+            }, "strip", z.ZodTypeAny, {
+                amount: string;
+                fromAccountId: string;
+                toAccountId: string;
+            }, {
+                amount: string;
+                fromAccountId: string;
+                toAccountId: string;
+            }>>;
+        }, "strip", z.ZodTypeAny, {
+            delegation: {
+                delegatorAccountId: string;
+                delegatedValue: string;
+            } | null;
+            transfer: {
+                amount: string;
+                fromAccountId: string;
+                toAccountId: string;
+            } | null;
+            daoId: string;
+            timestamp: string;
+            accountId: string;
+            votingPower: string;
+            delta: string | null;
+        }, {
+            delegation: {
+                delegatorAccountId: string;
+                delegatedValue: string;
+            } | null;
+            transfer: {
+                amount: string;
+                fromAccountId: string;
+                toAccountId: string;
+            } | null;
+            daoId: string;
+            timestamp: string;
+            accountId: string;
+            votingPower: string;
+            delta: string | null;
+        }>, "many">;
     }, "strip", z.ZodTypeAny, {
-        items: any[];
+        items: {
+            delegation: {
+                delegatorAccountId: string;
+                delegatedValue: string;
+            } | null;
+            transfer: {
+                amount: string;
+                fromAccountId: string;
+                toAccountId: string;
+            } | null;
+            daoId: string;
+            timestamp: string;
+            accountId: string;
+            votingPower: string;
+            delta: string | null;
+        }[];
     }, {
-        items: any[];
+        items: {
+            delegation: {
+                delegatorAccountId: string;
+                delegatedValue: string;
+            } | null;
+            transfer: {
+                amount: string;
+                fromAccountId: string;
+                toAccountId: string;
+            } | null;
+            daoId: string;
+            timestamp: string;
+            accountId: string;
+            votingPower: string;
+            delta: string | null;
+        }[];
     }>>;
 }, "strip", z.ZodTypeAny, {
     votingPowerHistorys: {
-        items: any[];
+        items: {
+            delegation: {
+                delegatorAccountId: string;
+                delegatedValue: string;
+            } | null;
+            transfer: {
+                amount: string;
+                fromAccountId: string;
+                toAccountId: string;
+            } | null;
+            daoId: string;
+            timestamp: string;
+            accountId: string;
+            votingPower: string;
+            delta: string | null;
+        }[];
     } | null;
 }, {
     votingPowerHistorys: {
-        items: any[];
+        items: {
+            delegation: {
+                delegatorAccountId: string;
+                delegatedValue: string;
+            } | null;
+            transfer: {
+                amount: string;
+                fromAccountId: string;
+                toAccountId: string;
+            } | null;
+            daoId: string;
+            timestamp: string;
+            accountId: string;
+            votingPower: string;
+            delta: string | null;
+        }[];
     } | null;
 }>, {
     votingPowerHistorys: {
-        items: any[];
+        items: {
+            delegation: {
+                delegatorAccountId: string;
+                delegatedValue: string;
+            } | null;
+            transfer: {
+                amount: string;
+                fromAccountId: string;
+                toAccountId: string;
+            } | null;
+            daoId: string;
+            timestamp: string;
+            accountId: string;
+            votingPower: string;
+            delta: string | null;
+        }[];
     };
 }, {
     votingPowerHistorys: {
-        items: any[];
+        items: {
+            delegation: {
+                delegatorAccountId: string;
+                delegatedValue: string;
+            } | null;
+            transfer: {
+                amount: string;
+                fromAccountId: string;
+                toAccountId: string;
+            } | null;
+            daoId: string;
+            timestamp: string;
+            accountId: string;
+            votingPower: string;
+            delta: string | null;
+        }[];
     } | null;
 }>>;
 export type SafeDaosResponse = z.infer<typeof SafeDaosResponseSchema>;
 export type SafeProposalsResponse = z.infer<typeof SafeProposalsResponseSchema>;
 export type SafeProposalByIdResponse = z.infer<typeof SafeProposalByIdResponseSchema>;
 export type SafeVotingPowerHistoryResponse = z.infer<typeof SafeVotingPowerHistoryResponseSchema>;
+export type ProcessedVotingPowerHistory = z.infer<typeof VotingPowerHistoryItemSchema> & {
+    changeType: 'delegation' | 'transfer' | 'other';
+    sourceAccountId: string | null;
+    targetAccountId: string | null;
+};
 export declare function processProposals(validated: SafeProposalsResponse, daoId: string): any;
-export declare function processVotingPowerHistory(validated: SafeVotingPowerHistoryResponse, daoId?: string): any;
+export declare function processVotingPowerHistory(validated: SafeVotingPowerHistoryResponse, daoId: string): ProcessedVotingPowerHistory[];
+export {};

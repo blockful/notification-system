@@ -125,11 +125,11 @@ export type Query = {
     daos: DaoPage;
     delegation?: Maybe<Delegation>;
     delegations: DelegationPage;
-    /** Fetch historical token balances for multiple addresses at a specific time period using multicall */
+    /** Fetch historical token balances for multiple addresses at a specific block number using multicall */
     historicalBalances?: Maybe<Array<Maybe<Query_HistoricalBalances_Items>>>;
     /** Get historical market data for a specific token */
     historicalTokenData?: Maybe<HistoricalTokenData_200_Response>;
-    /** Fetch historical voting power for multiple addresses at a specific time period using multicall */
+    /** Fetch historical voting power for multiple addresses at a specific block number using multicall */
     historicalVotingPower?: Maybe<Array<Maybe<Query_HistoricalVotingPower_Items>>>;
     /** Returns proposal activity data including voting history, win rates, and detailed proposal information for the specified delegate within the given time window */
     proposalsActivity?: Maybe<ProposalsActivity_200_Response>;
@@ -261,16 +261,16 @@ export type QueryDelegationsArgs = {
 };
 export type QueryHistoricalBalancesArgs = {
     addresses: Scalars['JSON']['input'];
+    blockNumber: Scalars['NonNegativeInt']['input'];
     daoId: QueryInput_HistoricalBalances_DaoId;
-    days?: InputMaybe<QueryInput_HistoricalBalances_Days>;
 };
 export type QueryHistoricalTokenDataArgs = {
     daoId: QueryInput_HistoricalTokenData_DaoId;
 };
 export type QueryHistoricalVotingPowerArgs = {
     addresses: Scalars['JSON']['input'];
+    blockNumber: Scalars['NonNegativeInt']['input'];
     daoId: QueryInput_HistoricalVotingPower_DaoId;
-    days?: InputMaybe<QueryInput_HistoricalVotingPower_Days>;
 };
 export type QueryProposalsActivityArgs = {
     address: Scalars['String']['input'];
@@ -1230,13 +1230,6 @@ export declare enum QueryInput_HistoricalBalances_DaoId {
     Ens = "ENS",
     Uni = "UNI"
 }
-export declare enum QueryInput_HistoricalBalances_Days {
-    '7d' = "_7d",
-    '30d' = "_30d",
-    '90d' = "_90d",
-    '180d' = "_180d",
-    '365d' = "_365d"
-}
 export declare enum QueryInput_HistoricalTokenData_DaoId {
     Arb = "ARB",
     Ens = "ENS",
@@ -1246,13 +1239,6 @@ export declare enum QueryInput_HistoricalVotingPower_DaoId {
     Arb = "ARB",
     Ens = "ENS",
     Uni = "UNI"
-}
-export declare enum QueryInput_HistoricalVotingPower_Days {
-    '7d' = "_7d",
-    '30d' = "_30d",
-    '90d' = "_90d",
-    '180d' = "_180d",
-    '365d' = "_365d"
 }
 export declare enum QueryInput_ProposalsActivity_DaoId {
     Arb = "ARB",
@@ -1769,23 +1755,21 @@ export type ListVotingPowerHistorysQuery = {
         __typename?: 'votingPowerHistoryPage';
         items: Array<{
             __typename?: 'votingPowerHistory';
-            daoId: string;
             accountId?: string | null;
             timestamp: any;
             votingPower: any;
-            transactionHash: string;
+            delta: any;
+            daoId: string;
             delegation?: {
                 __typename?: 'delegation';
                 delegatorAccountId?: string | null;
                 delegatedValue: any;
-                timestamp?: any | null;
             } | null;
             transfer?: {
                 __typename?: 'transfer';
                 amount?: any | null;
                 fromAccountId?: string | null;
                 toAccountId?: string | null;
-                timestamp?: any | null;
             } | null;
         }>;
     };

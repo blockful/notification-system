@@ -63,16 +63,7 @@ class AnticaptureClient {
      * @param daoId - Optional specific DAO ID to query
      * @returns Array of voting power history items
      */
-    async listVotingPowerHistory(variables, daoId) {
-        if (!daoId && !variables?.where?.daoId) {
-            const allDAOs = await this.getDAOs();
-            const allVotingPowerHistory = [];
-            for (const currentDaoId of allDAOs) {
-                const validated = await this.query(graphql_2.ListVotingPowerHistorysDocument, schemas_1.SafeVotingPowerHistoryResponseSchema, variables, currentDaoId);
-                allVotingPowerHistory.push(...(0, schemas_1.processVotingPowerHistory)(validated, currentDaoId));
-            }
-            return allVotingPowerHistory;
-        }
+    async listVotingPowerHistory(daoId, variables) {
         const validated = await this.query(graphql_2.ListVotingPowerHistorysDocument, schemas_1.SafeVotingPowerHistoryResponseSchema, variables, daoId);
         return (0, schemas_1.processVotingPowerHistory)(validated, daoId);
     }
