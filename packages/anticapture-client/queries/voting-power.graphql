@@ -5,6 +5,7 @@ query ListVotingPowerHistorys($where: votingPowerHistoryFilter, $limit: Int, $or
       timestamp
       votingPower
       delta
+      daoId
       delegation {
         delegatorAccountId
         delegatedValue
