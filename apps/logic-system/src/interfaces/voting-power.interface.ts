@@ -16,8 +16,8 @@ export interface ListVotingPowerHistoryOptions {
 export interface VotingPowerDataSource {
   /**
    * Lists voting power history with filtering and pagination
-   * @param options - Filtering and pagination options
+   * @param timestampGt - Timestamp to filter records after (for incremental processing)
    * @returns Array of voting power history records
    */
-  listVotingPowerHistory(options: ListVotingPowerHistoryOptions): Promise<VotingPowerHistoryOnChain[]>;
+  listVotingPowerHistory(timestampGt: string): Promise<VotingPowerHistoryOnChain[]>;
 }

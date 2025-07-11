@@ -23,7 +23,7 @@ describe('VotingPowerChangedTrigger', () => {
   });
 
   describe('Initial state', () => {
-    it('should initialize with null timestamp', () => {
+    it('should initialize with current timestamp', () => {
       const trigger2 = new VotingPowerChangedTrigger(
         createMockDispatcherService(),
         createMockVotingPowerRepository() as any,
@@ -33,7 +33,7 @@ describe('VotingPowerChangedTrigger', () => {
       // Access private field for testing
       const lastProcessed = (trigger2 as any).lastProcessedTimestamp;
       
-      expect(lastProcessed).toBeNull();
+      expect(lastProcessed.toString().slice(0, -3)).toBe(Date.now().toString().slice(0, -3));
     });
   });
 
@@ -49,15 +49,14 @@ describe('VotingPowerChangedTrigger', () => {
       expect(mockVotingPowerDB.listVotingPowerHistory).toHaveBeenCalledWith('1625000000000');
     });
 
-    it('should call listVotingPowerHistory with undefined on first execution', async () => {
+    it('should call listVotingPowerHistory with current timestamp on first execution', async () => {
       mockVotingPowerDB.listVotingPowerHistory.mockResolvedValue([]);
       
-      // Reset timestamp to null (initial state)
-      (trigger as any).lastProcessedTimestamp = null;
+      const currentTimestamp = (trigger as any).lastProcessedTimestamp;
       
       await (trigger as any).fetchData();
       
-      expect(mockVotingPowerDB.listVotingPowerHistory).toHaveBeenCalledWith(undefined);
+      expect(mockVotingPowerDB.listVotingPowerHistory).toHaveBeenCalledWith(currentTimestamp);
     });
   });
 
