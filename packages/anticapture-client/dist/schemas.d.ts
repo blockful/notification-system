@@ -80,6 +80,7 @@ declare const VotingPowerHistoryItemSchema: z.ZodObject<{
     votingPower: z.ZodString;
     delta: z.ZodNullable<z.ZodString>;
     daoId: z.ZodString;
+    transactionHash: z.ZodString;
     delegation: z.ZodNullable<z.ZodObject<{
         delegatorAccountId: z.ZodString;
         delegatedValue: z.ZodString;
@@ -118,6 +119,7 @@ declare const VotingPowerHistoryItemSchema: z.ZodObject<{
     accountId: string;
     votingPower: string;
     delta: string | null;
+    transactionHash: string;
 }, {
     delegation: {
         delegatorAccountId: string;
@@ -133,6 +135,7 @@ declare const VotingPowerHistoryItemSchema: z.ZodObject<{
     accountId: string;
     votingPower: string;
     delta: string | null;
+    transactionHash: string;
 }>;
 export declare const SafeVotingPowerHistoryResponseSchema: z.ZodCatch<z.ZodEffects<z.ZodObject<{
     votingPowerHistorys: z.ZodNullable<z.ZodObject<{
@@ -142,6 +145,7 @@ export declare const SafeVotingPowerHistoryResponseSchema: z.ZodCatch<z.ZodEffec
             votingPower: z.ZodString;
             delta: z.ZodNullable<z.ZodString>;
             daoId: z.ZodString;
+            transactionHash: z.ZodString;
             delegation: z.ZodNullable<z.ZodObject<{
                 delegatorAccountId: z.ZodString;
                 delegatedValue: z.ZodString;
@@ -180,6 +184,7 @@ export declare const SafeVotingPowerHistoryResponseSchema: z.ZodCatch<z.ZodEffec
             accountId: string;
             votingPower: string;
             delta: string | null;
+            transactionHash: string;
         }, {
             delegation: {
                 delegatorAccountId: string;
@@ -195,6 +200,7 @@ export declare const SafeVotingPowerHistoryResponseSchema: z.ZodCatch<z.ZodEffec
             accountId: string;
             votingPower: string;
             delta: string | null;
+            transactionHash: string;
         }>, "many">;
     }, "strip", z.ZodTypeAny, {
         items: {
@@ -212,6 +218,7 @@ export declare const SafeVotingPowerHistoryResponseSchema: z.ZodCatch<z.ZodEffec
             accountId: string;
             votingPower: string;
             delta: string | null;
+            transactionHash: string;
         }[];
     }, {
         items: {
@@ -229,6 +236,7 @@ export declare const SafeVotingPowerHistoryResponseSchema: z.ZodCatch<z.ZodEffec
             accountId: string;
             votingPower: string;
             delta: string | null;
+            transactionHash: string;
         }[];
     }>>;
 }, "strip", z.ZodTypeAny, {
@@ -248,6 +256,7 @@ export declare const SafeVotingPowerHistoryResponseSchema: z.ZodCatch<z.ZodEffec
             accountId: string;
             votingPower: string;
             delta: string | null;
+            transactionHash: string;
         }[];
     } | null;
 }, {
@@ -267,6 +276,7 @@ export declare const SafeVotingPowerHistoryResponseSchema: z.ZodCatch<z.ZodEffec
             accountId: string;
             votingPower: string;
             delta: string | null;
+            transactionHash: string;
         }[];
     } | null;
 }>, {
@@ -286,6 +296,7 @@ export declare const SafeVotingPowerHistoryResponseSchema: z.ZodCatch<z.ZodEffec
             accountId: string;
             votingPower: string;
             delta: string | null;
+            transactionHash: string;
         }[];
     };
 }, {
@@ -305,6 +316,7 @@ export declare const SafeVotingPowerHistoryResponseSchema: z.ZodCatch<z.ZodEffec
             accountId: string;
             votingPower: string;
             delta: string | null;
+            transactionHash: string;
         }[];
     } | null;
 }>>;

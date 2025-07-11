@@ -1760,6 +1760,7 @@ export type ListVotingPowerHistorysQuery = {
             votingPower: any;
             delta: any;
             daoId: string;
+            transactionHash: string;
             delegation?: {
                 __typename?: 'delegation';
                 delegatorAccountId?: string | null;

@@ -57,6 +57,7 @@ const VotingPowerHistoryItemSchema = zod_1.z.object({
     votingPower: zod_1.z.string(),
     delta: zod_1.z.string().nullable(),
     daoId: zod_1.z.string(),
+    transactionHash: zod_1.z.string(),
     delegation: DelegationSchema,
     transfer: TransferSchema
 });

@@ -59,6 +59,7 @@ const VotingPowerHistoryItemSchema = z.object({
   votingPower: z.string(),
   delta: z.string().nullable(),
   daoId: z.string(),
+  transactionHash: z.string(),
   delegation: DelegationSchema,
   transfer: TransferSchema
 });
