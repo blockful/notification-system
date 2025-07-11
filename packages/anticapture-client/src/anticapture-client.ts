@@ -92,11 +92,26 @@ export class AnticaptureClient {
   /**
    * Lists voting power history with full type safety
    * @param variables - Query variables for filtering and pagination
-   * @param daoId - Optional specific DAO ID to query
+   * @param daoId - Optional specific DAO ID to query. If not provided, queries all DAOs
    * @returns Array of voting power history items
    */
-  async listVotingPowerHistory(daoId: string, variables?: ListVotingPowerHistorysQueryVariables): Promise<VotingPowerHistoryItems> {
+  async listVotingPowerHistory(variables?: ListVotingPowerHistorysQueryVariables, daoId?: string): Promise<VotingPowerHistoryItems> {
+    if (!daoId && !variables?.where?.daoId) {
+      const allDAOs = await this.getDAOs();
+      const allVotingPowerHistory: VotingPowerHistoryItems = [];
+
+      for (const currentDaoId of allDAOs) {
+        const validated = await this.query(ListVotingPowerHistorysDocument, SafeVotingPowerHistoryResponseSchema, variables, currentDaoId);
+        allVotingPowerHistory.push(...processVotingPowerHistory(validated, currentDaoId));
+      }
+
+      // Sort by timestamp ascending for chronological processing
+      return allVotingPowerHistory.sort((a, b) => 
+        parseInt(a.timestamp) - parseInt(b.timestamp)
+      );
+    }
+
     const validated = await this.query(ListVotingPowerHistorysDocument, SafeVotingPowerHistoryResponseSchema, variables, daoId);
-    return processVotingPowerHistory(validated, daoId);
+    return processVotingPowerHistory(validated, daoId!);
   }
 }

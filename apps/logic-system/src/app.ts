@@ -59,7 +59,7 @@ export class App {
   async start(): Promise<void> {
     await this.initPromise;
     this.trigger.start({ status: this.proposalStatus });
-    this.votingPowerTrigger.start({ daoId: 'ens', limit: 100 });
+    this.votingPowerTrigger.start();
     console.log('Logic system is running. Press Ctrl+C to stop.');
   }
 

@@ -4,8 +4,9 @@
 
 import { jest } from '@jest/globals';
 import { ProposalDataSource, ProposalOnChain, ProposalStatus } from '../src/interfaces/proposal.interface';
-import { VotingPowerDataSource, VotingPowerHistoryOnChain } from '../src/interfaces/voting-power.interface';
 import { DispatcherService } from '../src/interfaces/dispatcher.interface';
+import { ProcessedVotingPowerHistory } from '@notification-system/anticapture-client';
+import { VotingPowerDataSource } from '../src/interfaces/voting-power.interface';
 
 /**
  * Sample proposal data for testing
@@ -29,7 +30,7 @@ export const mockProposal: ProposalOnChain = {
 /**
  * Sample voting power history data for testing
  */
-export const mockVotingPowerData: VotingPowerHistoryOnChain[] = [
+export const mockVotingPowerData: ProcessedVotingPowerHistory[] = [
   {
     accountId: 'user1.eth',
     timestamp: '1625097600000', // July 1, 2021
@@ -75,7 +76,7 @@ export const createMockProposal = (overrides: Partial<ProposalOnChain> = {}): Pr
 /**
  * Additional voting power data variations for testing
  */
-export const createMockVotingPowerHistory = (overrides: Partial<VotingPowerHistoryOnChain> = {}): VotingPowerHistoryOnChain => ({
+export const createMockVotingPowerHistory = (overrides: Partial<ProcessedVotingPowerHistory> = {}): ProcessedVotingPowerHistory => ({
   ...mockVotingPowerData[0],
   ...overrides
 });
@@ -96,8 +97,8 @@ export const createMockProposalDataSource = (): jest.Mocked<ProposalDataSource> 
 });
 
 /**
- * Creates a mocked VotingPowerDataSource
+ * Creates a mocked VotingPowerRepository
  */
-export const createMockVotingPowerDataSource = (): jest.Mocked<VotingPowerDataSource> => ({
+export const createMockVotingPowerRepository = (): jest.Mocked<VotingPowerDataSource> => ({
   listVotingPowerHistory: jest.fn()
 });

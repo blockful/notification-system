@@ -20,9 +20,9 @@ export declare class AnticaptureClient {
     /**
      * Lists voting power history with full type safety
      * @param variables - Query variables for filtering and pagination
-     * @param daoId - Optional specific DAO ID to query
+     * @param daoId - Optional specific DAO ID to query. If not provided, queries all DAOs
      * @returns Array of voting power history items
      */
-    listVotingPowerHistory(daoId: string, variables?: ListVotingPowerHistorysQueryVariables): Promise<VotingPowerHistoryItems>;
+    listVotingPowerHistory(variables?: ListVotingPowerHistorysQueryVariables, daoId?: string): Promise<VotingPowerHistoryItems>;
 }
 export {};

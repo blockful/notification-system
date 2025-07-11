@@ -4,28 +4,29 @@
  */
 
 import { Trigger } from './base-trigger';
-import { VotingPowerHistoryOnChain, ListVotingPowerHistoryOptions, VotingPowerDataSource } from '../interfaces/voting-power.interface';
+import { VotingPowerRepository } from '../repositories/voting-power.repository';
 import { DispatcherService, DispatcherMessage } from '../interfaces/dispatcher.interface';
+import { ProcessedVotingPowerHistory } from '@notification-system/anticapture-client';
 
 const triggerId = 'voting-power-changed';
 
-export class VotingPowerChangedTrigger extends Trigger<VotingPowerHistoryOnChain, ListVotingPowerHistoryOptions> {
+export class VotingPowerChangedTrigger extends Trigger<ProcessedVotingPowerHistory, void> {
   private lastProcessedTimestamp: string = Date.now().toString();
 
   constructor(
     private readonly dispatcherService: DispatcherService,
-    private readonly votingPowerDB: VotingPowerDataSource,
+    private readonly votingPowerDB: VotingPowerRepository,
     interval: number
   ) {
     super(triggerId, interval);
   }
 
-  async process(data: VotingPowerHistoryOnChain[]) {
+  async process(data: ProcessedVotingPowerHistory[]) {
     if (data.length === 0) {
       return;
     }
 
-    const message: DispatcherMessage<VotingPowerHistoryOnChain> = {
+    const message: DispatcherMessage<ProcessedVotingPowerHistory> = {
       triggerId: this.id,
       events: data
     };
@@ -39,11 +40,10 @@ export class VotingPowerChangedTrigger extends Trigger<VotingPowerHistoryOnChain
 
   /**
    * Fetches voting power history from the database with incremental processing
-   * For now, uses ENS DAO as default. In future, should iterate through all DAOs.
+   * Queries all DAOs for voting power changes
    * @returns Array of voting power history records
    */
-  protected async fetchData(options: ListVotingPowerHistoryOptions): Promise<VotingPowerHistoryOnChain[]> {
-    options.timestamp_gt = this.lastProcessedTimestamp;
-    return await this.votingPowerDB.listVotingPowerHistory(options);
+  protected async fetchData(): Promise<ProcessedVotingPowerHistory[]> {
+    return await this.votingPowerDB.listVotingPowerHistory(this.lastProcessedTimestamp);
   }
 }
