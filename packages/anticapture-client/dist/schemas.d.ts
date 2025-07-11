@@ -74,7 +74,34 @@ export declare const SafeProposalByIdResponseSchema: z.ZodCatch<z.ZodObject<{
 }, {
     proposalsOnchain?: any;
 }>>;
+export declare const SafeVotingPowerHistoryResponseSchema: z.ZodCatch<z.ZodEffects<z.ZodObject<{
+    votingPowerHistorys: z.ZodNullable<z.ZodObject<{
+        items: z.ZodArray<z.ZodAny, "many">;
+    }, "strip", z.ZodTypeAny, {
+        items: any[];
+    }, {
+        items: any[];
+    }>>;
+}, "strip", z.ZodTypeAny, {
+    votingPowerHistorys: {
+        items: any[];
+    } | null;
+}, {
+    votingPowerHistorys: {
+        items: any[];
+    } | null;
+}>, {
+    votingPowerHistorys: {
+        items: any[];
+    };
+}, {
+    votingPowerHistorys: {
+        items: any[];
+    } | null;
+}>>;
 export type SafeDaosResponse = z.infer<typeof SafeDaosResponseSchema>;
 export type SafeProposalsResponse = z.infer<typeof SafeProposalsResponseSchema>;
 export type SafeProposalByIdResponse = z.infer<typeof SafeProposalByIdResponseSchema>;
+export type SafeVotingPowerHistoryResponse = z.infer<typeof SafeVotingPowerHistoryResponseSchema>;
 export declare function processProposals(validated: SafeProposalsResponse, daoId: string): any;
+export declare function processVotingPowerHistory(validated: SafeVotingPowerHistoryResponse, daoId?: string): any;

@@ -1,2 +1,2 @@
 export { AnticaptureClient } from './anticapture-client';
-export type { GetDaOsQuery, GetProposalByIdQuery, GetProposalByIdQueryVariables, ListProposalsQuery, ListProposalsQueryVariables } from './gql/graphql';
+export type { GetDaOsQuery, GetProposalByIdQuery, GetProposalByIdQueryVariables, ListProposalsQuery, ListProposalsQueryVariables, VotingPowerHistory, VotingPowerHistoryFilter, ListVotingPowerHistorysQuery, ListVotingPowerHistorysQueryVariables } from './gql/graphql';

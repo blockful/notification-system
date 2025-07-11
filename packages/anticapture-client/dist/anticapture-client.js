@@ -57,5 +57,24 @@ class AnticaptureClient {
         const validated = await this.query(graphql_2.ListProposalsDocument, schemas_1.SafeProposalsResponseSchema, variables, daoId);
         return (0, schemas_1.processProposals)(validated, daoId);
     }
+    /**
+     * Lists voting power history with full type safety
+     * @param variables - Query variables for filtering and pagination
+     * @param daoId - Optional specific DAO ID to query
+     * @returns Array of voting power history items
+     */
+    async listVotingPowerHistory(variables, daoId) {
+        if (!daoId && !variables?.where?.daoId) {
+            const allDAOs = await this.getDAOs();
+            const allVotingPowerHistory = [];
+            for (const currentDaoId of allDAOs) {
+                const validated = await this.query(graphql_2.ListVotingPowerHistorysDocument, schemas_1.SafeVotingPowerHistoryResponseSchema, variables, currentDaoId);
+                allVotingPowerHistory.push(...(0, schemas_1.processVotingPowerHistory)(validated, currentDaoId));
+            }
+            return allVotingPowerHistory;
+        }
+        const validated = await this.query(graphql_2.ListVotingPowerHistorysDocument, schemas_1.SafeVotingPowerHistoryResponseSchema, variables, daoId);
+        return (0, schemas_1.processVotingPowerHistory)(validated, daoId);
+    }
 }
 exports.AnticaptureClient = AnticaptureClient;

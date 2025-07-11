@@ -1,7 +1,8 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.SafeProposalByIdResponseSchema = exports.SafeProposalsResponseSchema = exports.SafeDaosResponseSchema = void 0;
+exports.SafeVotingPowerHistoryResponseSchema = exports.SafeProposalByIdResponseSchema = exports.SafeProposalsResponseSchema = exports.SafeDaosResponseSchema = void 0;
 exports.processProposals = processProposals;
+exports.processVotingPowerHistory = processVotingPowerHistory;
 const zod_1 = require("zod");
 // Schema with built-in transformation and fallbacks
 exports.SafeDaosResponseSchema = zod_1.z.object({
@@ -38,6 +39,20 @@ exports.SafeProposalByIdResponseSchema = zod_1.z.object({
     console.warn('ProposalByIdResponse validation failed completely');
     return { proposalsOnchain: null };
 });
+exports.SafeVotingPowerHistoryResponseSchema = zod_1.z.object({
+    votingPowerHistorys: zod_1.z.object({
+        items: zod_1.z.array(zod_1.z.any())
+    }).nullable()
+}).transform((data, ctx) => {
+    if (!data.votingPowerHistorys || !data.votingPowerHistorys.items) {
+        console.warn('VotingPowerHistoryResponse has null votingPowerHistorys or items:', data);
+        return { votingPowerHistorys: { items: [] } };
+    }
+    return { votingPowerHistorys: { items: data.votingPowerHistorys.items } };
+}).catch(() => {
+    console.warn('VotingPowerHistoryResponse validation failed completely');
+    return { votingPowerHistorys: { items: [] } };
+});
 // Helper function to process validated proposals
 function processProposals(validated, daoId) {
     return validated.proposalsOnchains.items.reduce((acc, proposal) => {
@@ -45,6 +60,18 @@ function processProposals(validated, daoId) {
             acc.push({
                 ...proposal,
                 daoId: daoId
+            });
+        }
+        return acc;
+    }, []);
+}
+// Helper function to process validated voting power history
+function processVotingPowerHistory(validated, daoId) {
+    return validated.votingPowerHistorys.items.reduce((acc, votingPowerHistory) => {
+        if (votingPowerHistory !== null) {
+            acc.push({
+                ...votingPowerHistory,
+                daoId: daoId || votingPowerHistory.daoId
             });
         }
         return acc;
