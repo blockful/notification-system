@@ -1,16 +1,12 @@
 /**
  * Message payload to be sent to the Dispatcher service
+ * @template T - Type of event data being processed
  */
-export interface DispatcherMessage {
+export interface DispatcherMessage<T = any> {
   /** Identifier of the trigger that generated this message */
   triggerId: string;
   /** Event data to be processed */
-  events: {
-    id: string;
-    daoId: string;
-    description: string;
-    timestamp: string;
-  }[];
+  events: T[];
 }
 
 /**
