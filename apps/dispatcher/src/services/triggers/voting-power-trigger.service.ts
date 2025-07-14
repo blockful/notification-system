@@ -25,8 +25,8 @@ export class VotingPowerTriggerHandler extends BaseTriggerHandler {
    * @param message The message containing voting power history data
    */
   async handleMessage(message: DispatcherMessage): Promise<MessageProcessingResult> {
-    for (const votingPowerHistory of message.events) {
-      const { daoId, accountId, votingPower, timestamp, delta, transactionHash, changeType, sourceAccountId, targetAccountId } = votingPowerHistory;
+    for (const votingPowerEvent of message.events) {
+      const { daoId, accountId, votingPower, timestamp, delta, transactionHash, changeType, sourceAccountId, targetAccountId } = votingPowerEvent;
       
       if (!daoId || !accountId || !transactionHash) {
         continue;
