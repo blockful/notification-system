@@ -33,7 +33,7 @@ export class App {
       this.rabbitmqUrl,
       this.telegramBotService
     );
-    this.telegramBotService.launch();
+    await this.telegramBotService.launch();
     console.log('Telegram bot is running!');
   }
 
