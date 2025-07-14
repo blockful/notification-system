@@ -25,16 +25,16 @@ export class App {
     this.proposalStatus = proposalStatus;
     
     const anticaptureClient = new AnticaptureClient(anticaptureHttpClient);
-    const proposalDB = new ProposalRepository(anticaptureClient);
-    const votingPowerDB = new VotingPowerRepository(anticaptureClient);
+    const proposalRepository = new ProposalRepository(anticaptureClient);
+    const votingPowerRepository = new VotingPowerRepository(anticaptureClient);
 
-    this.initPromise = this.initializeRabbitMQ(rabbitmqUrl, proposalDB, votingPowerDB, triggerInterval);
+    this.initPromise = this.initializeRabbitMQ(rabbitmqUrl, proposalRepository, votingPowerRepository, triggerInterval);
   }
 
   private async initializeRabbitMQ(
     rabbitmqUrl: string, 
-    proposalDB: ProposalRepository,
-    votingPowerDB: VotingPowerRepository,
+    proposalRepository: ProposalRepository,
+    votingPowerRepository: VotingPowerRepository,
     triggerInterval: number
   ): Promise<void> {
     this.rabbitMQConnection = new RabbitMQConnection(rabbitmqUrl);
@@ -45,13 +45,13 @@ export class App {
 
     this.trigger = new NewProposalTrigger(
       dispatcherService,
-      proposalDB,
+      proposalRepository,
       triggerInterval
     );
 
     this.votingPowerTrigger = new VotingPowerChangedTrigger(
       dispatcherService,
-      votingPowerDB,
+      votingPowerRepository,
       triggerInterval
     );
   }

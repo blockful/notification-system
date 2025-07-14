@@ -15,7 +15,7 @@ export class VotingPowerChangedTrigger extends Trigger<ProcessedVotingPowerHisto
 
   constructor(
     private readonly dispatcherService: DispatcherService,
-    private readonly votingPowerDB: VotingPowerRepository,
+    private readonly votingPowerRepository: VotingPowerRepository,
     interval: number
   ) {
     super(triggerId, interval);
@@ -44,6 +44,6 @@ export class VotingPowerChangedTrigger extends Trigger<ProcessedVotingPowerHisto
    * @returns Array of voting power history records
    */
   protected async fetchData(): Promise<ProcessedVotingPowerHistory[]> {
-    return await this.votingPowerDB.listVotingPowerHistory(this.lastProcessedTimestamp);
+    return await this.votingPowerRepository.listVotingPowerHistory(this.lastProcessedTimestamp);
   }
 }
