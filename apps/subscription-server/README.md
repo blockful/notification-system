@@ -88,7 +88,7 @@ Content-Type: application/json
 
 #### Get DAO Subscribers
 ```http
-GET /subscriptions/:dao?proposal_timestamp=1705312200
+GET /subscriptions/:dao?proposal_timestamp=1705312200000
 ```
 
 **Response:**
@@ -159,7 +159,7 @@ Filter subscribers based on when they subscribed:
 // Only get users who subscribed before the proposal timestamp
 const subscribers = await subscriptionService.getDaoSubscribers(
   'dao-name', 
-  1705312200 // Unix timestamp
+  1705312200000 // Unix timestamp in milliseconds
 );
 ```
 

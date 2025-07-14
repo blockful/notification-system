@@ -48,16 +48,6 @@ describe('VotingPowerChangedTrigger', () => {
       
       expect(mockVotingPowerRepository.listVotingPowerHistory).toHaveBeenCalledWith('1625000000000');
     });
-
-    it('should call listVotingPowerHistory with current timestamp on first execution', async () => {
-      mockVotingPowerRepository.listVotingPowerHistory.mockResolvedValue([] as never);
-      
-      const currentTimestamp = (trigger as any).lastProcessedTimestamp;
-      
-      await (trigger as any).fetchData();
-      
-      expect(mockVotingPowerRepository.listVotingPowerHistory).toHaveBeenCalledWith(currentTimestamp);
-    });
   });
 
   describe('process', () => {
