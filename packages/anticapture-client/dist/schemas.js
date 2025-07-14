@@ -62,22 +62,13 @@ exports.SafeVotingPowerHistoryResponseSchema = zod_1.z.object({
     votingPowerHistorys: zod_1.z.object({
         items: zod_1.z.array(VotingPowerHistoryItemSchema)
     }).nullable()
-}).transform((data, ctx) => {
-    if (!data.votingPowerHistorys || !data.votingPowerHistorys.items) {
-        console.warn('VotingPowerHistoryResponse has null votingPowerHistorys or items:', data);
-        return { votingPowerHistorys: { items: [] } };
-    }
-    // Filter out null items (items that failed validation in VotingPowerHistoryItemSchema)
-    const validItems = data.votingPowerHistorys.items.filter(item => item !== null);
-    const invalidCount = data.votingPowerHistorys.items.length - validItems.length;
-    if (invalidCount > 0) {
-        console.warn(`VotingPowerHistoryResponse: Filtered out ${invalidCount} invalid item(s) due to missing required fields (timestamp, votingPower, daoId, or transactionHash)`);
-    }
-    return { votingPowerHistorys: { items: validItems } };
-}).catch((error) => {
-    console.warn('VotingPowerHistoryResponse validation failed completely');
-    console.warn('Error details:', error);
-    console.warn('Input data received:', JSON.stringify(error.input, null, 2));
+}).transform((data) => {
+    // Ensure we always have a valid structure
+    return {
+        votingPowerHistorys: data.votingPowerHistorys || { items: [] }
+    };
+}).catch(() => {
+    console.warn('VotingPowerHistoryResponse validation failed, returning empty data');
     return { votingPowerHistorys: { items: [] } };
 });
 // Internal helper function to process validated proposals
