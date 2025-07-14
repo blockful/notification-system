@@ -51,10 +51,19 @@ export class RabbitMQNotificationConsumerService {
     if (message.type !== 'NOTIFICATION_EVENT') {
       return;
     }
-    await this.telegramBotService.sendNotification({
-      userId: message.payload.userId,
-      channelUserId: message.payload.channelUserId,
-      message: message.payload.message,
-    });
+    try {
+      await this.telegramBotService.sendNotification({
+        userId: message.payload.userId,
+        channelUserId: message.payload.channelUserId,
+        message: message.payload.message,
+      });
+    } catch (error: any) {
+      if (error?.response?.description === 'Bad Request: chat not found') {
+        console.log('⚠️  Unable to send message to user:', message.payload.userId);
+        return;
+      }
+      console.error('❌ Error sending notification:', error);
+      throw error;
+    }
   }
 }
