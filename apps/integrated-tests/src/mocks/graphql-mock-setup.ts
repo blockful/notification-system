@@ -3,6 +3,43 @@ import { ProposalData } from '../test-data/proposal-factory';
 import { ProcessedVotingPowerHistory } from '@notification-system/anticapture-client';
 
 export class GraphQLMockSetup {
+  /**
+   * Transforms ProcessedVotingPowerHistory to raw GraphQL format
+   */
+  private static transformToRawGraphQLFormat(votingPowerData: ProcessedVotingPowerHistory[]): any[] {
+    return votingPowerData.map(vp => ({
+      accountId: vp.accountId,
+      timestamp: vp.timestamp,
+      votingPower: vp.votingPower,
+      delta: vp.delta || null,
+      daoId: vp.daoId,
+      transactionHash: vp.transactionHash,
+      delegation: vp.delegation ? {
+        delegatorAccountId: vp.delegation.delegatorAccountId,
+        delegatedValue: vp.delegation.delegatedValue
+      } : null,
+      transfer: vp.transfer ? {
+        amount: vp.transfer.amount,
+        fromAccountId: vp.transfer.fromAccountId,
+        toAccountId: vp.transfer.toAccountId
+      } : null
+    }));
+  }
+
+  /**
+   * Creates standard empty GraphQL response structure
+   */
+  private static createEmptyGraphQLResponse(): any {
+    return {
+      data: {
+        data: {
+          votingPowerHistorys: { items: [] },
+          proposalsOnchains: { items: [] },
+          daos: { items: [] }
+        }
+      }
+    };
+  }
   static setupProposalMock(mockHttpClient: any, proposals: ProposalData[]): void {
     mockHttpClient.post.mockImplementation((url: string, data: any, config: any) => {
       if (data.query && data.query.includes('ListProposals')) {
@@ -45,41 +82,13 @@ export class GraphQLMockSetup {
         });
       }
       
-      return Promise.resolve({ 
-        data: { 
-          data: { 
-            votingPowerHistorys: { 
-              items: [] 
-            },
-            proposalsOnchains: {
-              items: []
-            },
-            daos: {
-              items: []
-            }
-          } 
-        } 
-      });
+      return Promise.resolve(this.createEmptyGraphQLResponse());
     });
   }
 
   static setupEmptyMock(mockHttpClient: any): void {
     mockHttpClient.post.mockImplementation(() => {
-      return Promise.resolve({ 
-        data: { 
-          data: { 
-            votingPowerHistorys: { 
-              items: [] 
-            },
-            proposalsOnchains: {
-              items: []
-            },
-            daos: {
-              items: []
-            }
-          } 
-        } 
-      });
+      return Promise.resolve(this.createEmptyGraphQLResponse());
     });
   }
 
@@ -97,23 +106,7 @@ export class GraphQLMockSetup {
         }
         
         // Convert ProcessedVotingPowerHistory back to raw GraphQL format
-        const rawVotingPowerData = votingPowerToReturn.map(vp => ({
-          accountId: vp.accountId,
-          timestamp: vp.timestamp,
-          votingPower: vp.votingPower,
-          delta: vp.delta || null,
-          daoId: vp.daoId,
-          transactionHash: vp.transactionHash,
-          delegation: vp.delegation ? {
-            delegatorAccountId: vp.delegation.delegatorAccountId,
-            delegatedValue: vp.delegation.delegatedValue
-          } : null,
-          transfer: vp.transfer ? {
-            amount: vp.transfer.amount,
-            fromAccountId: vp.transfer.fromAccountId,
-            toAccountId: vp.transfer.toAccountId
-          } : null
-        }));
+        const rawVotingPowerData = this.transformToRawGraphQLFormat(votingPowerToReturn);
         
         return Promise.resolve({
           data: {
@@ -126,21 +119,7 @@ export class GraphQLMockSetup {
         });
       }
       
-      return Promise.resolve({ 
-        data: { 
-          data: { 
-            votingPowerHistorys: { 
-              items: [] 
-            },
-            proposalsOnchains: {
-              items: []
-            },
-            daos: {
-              items: []
-            }
-          } 
-        } 
-      });
+      return Promise.resolve(this.createEmptyGraphQLResponse());
     });
   }
 
@@ -187,23 +166,7 @@ export class GraphQLMockSetup {
         }
         
         // Convert ProcessedVotingPowerHistory back to raw GraphQL format
-        const rawVotingPowerData = votingPowerToReturn.map(vp => ({
-          accountId: vp.accountId,
-          timestamp: vp.timestamp,
-          votingPower: vp.votingPower,
-          delta: vp.delta || null,
-          daoId: vp.daoId,
-          transactionHash: vp.transactionHash,
-          delegation: vp.delegation ? {
-            delegatorAccountId: vp.delegation.delegatorAccountId,
-            delegatedValue: vp.delegation.delegatedValue
-          } : null,
-          transfer: vp.transfer ? {
-            amount: vp.transfer.amount,
-            fromAccountId: vp.transfer.fromAccountId,
-            toAccountId: vp.transfer.toAccountId
-          } : null
-        }));
+        const rawVotingPowerData = this.transformToRawGraphQLFormat(votingPowerToReturn);
         
         return Promise.resolve({
           data: {
@@ -233,21 +196,7 @@ export class GraphQLMockSetup {
         });
       }
       
-      return Promise.resolve({ 
-        data: { 
-          data: { 
-            votingPowerHistorys: { 
-              items: [] 
-            },
-            proposalsOnchains: {
-              items: []
-            },
-            daos: {
-              items: []
-            }
-          } 
-        } 
-      });
+      return Promise.resolve(this.createEmptyGraphQLResponse());
     });
   }
 
