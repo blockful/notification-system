@@ -39,7 +39,7 @@ describe('VotingPowerChangedTrigger', () => {
 
   describe('fetchData', () => {
     it('should call listVotingPowerHistory with timestamp for incremental processing', async () => {
-      mockVotingPowerRepository.listVotingPowerHistory.mockResolvedValue([]);
+      mockVotingPowerRepository.listVotingPowerHistory.mockResolvedValue([] as never);
       
       // Set a timestamp to test the timestamp functionality
       (trigger as any).lastProcessedTimestamp = '1625000000000';
@@ -50,7 +50,7 @@ describe('VotingPowerChangedTrigger', () => {
     });
 
     it('should call listVotingPowerHistory with current timestamp on first execution', async () => {
-      mockVotingPowerRepository.listVotingPowerHistory.mockResolvedValue([]);
+      mockVotingPowerRepository.listVotingPowerHistory.mockResolvedValue([] as never);
       
       const currentTimestamp = (trigger as any).lastProcessedTimestamp;
       
@@ -102,7 +102,7 @@ describe('VotingPowerChangedTrigger', () => {
   describe('Incremental Processing Flow', () => {
     it('should process incrementally across multiple executions', async () => {
       // First execution
-      mockVotingPowerRepository.listVotingPowerHistory.mockResolvedValueOnce([mockVotingPowerData[0]]);
+      mockVotingPowerRepository.listVotingPowerHistory.mockResolvedValueOnce([mockVotingPowerData[0]] as never);
       
       let data = await (trigger as any).fetchData();
       await trigger.process(data);
@@ -110,7 +110,7 @@ describe('VotingPowerChangedTrigger', () => {
       expect(mockDispatcherService.sendMessage).toHaveBeenCalledTimes(1);
       
       // Second execution - should use updated timestamp
-      mockVotingPowerRepository.listVotingPowerHistory.mockResolvedValueOnce([mockVotingPowerData[1]]);
+      mockVotingPowerRepository.listVotingPowerHistory.mockResolvedValueOnce([mockVotingPowerData[1]] as never);
       
       data = await (trigger as any).fetchData();
       await trigger.process(data);
@@ -124,13 +124,13 @@ describe('VotingPowerChangedTrigger', () => {
 
     it('should not process when no new data available', async () => {
       // First execution with data
-      mockVotingPowerRepository.listVotingPowerHistory.mockResolvedValueOnce(mockVotingPowerData);
+      mockVotingPowerRepository.listVotingPowerHistory.mockResolvedValueOnce(mockVotingPowerData as never);
       
       let data = await (trigger as any).fetchData();
       await trigger.process(data);
       
       // Second execution with no new data
-      mockVotingPowerRepository.listVotingPowerHistory.mockResolvedValueOnce([]);
+      mockVotingPowerRepository.listVotingPowerHistory.mockResolvedValueOnce([] as never);
       
       data = await (trigger as any).fetchData();
       await trigger.process(data);
@@ -142,7 +142,7 @@ describe('VotingPowerChangedTrigger', () => {
 
   describe('Error Handling', () => {
     it('should handle repository errors gracefully', async () => {
-      mockVotingPowerRepository.listVotingPowerHistory.mockRejectedValue(new Error('API Error'));
+      mockVotingPowerRepository.listVotingPowerHistory.mockRejectedValue(new Error('API Error') as never);
       
       await expect((trigger as any).fetchData()).rejects.toThrow('API Error');
       expect(mockDispatcherService.sendMessage).not.toHaveBeenCalled();

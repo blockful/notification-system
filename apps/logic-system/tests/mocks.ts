@@ -6,7 +6,6 @@ import { jest } from '@jest/globals';
 import { ProposalDataSource, ProposalOnChain, ProposalStatus } from '../src/interfaces/proposal.interface';
 import { DispatcherService } from '../src/interfaces/dispatcher.interface';
 import { ProcessedVotingPowerHistory } from '@notification-system/anticapture-client';
-import { VotingPowerDataSource } from '../src/interfaces/voting-power.interface';
 
 /**
  * Sample proposal data for testing
@@ -22,9 +21,9 @@ export const mockProposal: ProposalOnChain = {
   description: 'Test proposal',
   timestamp: '2023-01-01T00:00:00Z',
   status: 'pending' as ProposalStatus,
-  forVotes: BigInt(100),
-  againstVotes: BigInt(50),
-  abstainVotes: BigInt(10)
+  forVotes: '100',
+  againstVotes: '50',
+  abstainVotes: '10'
 };
 
 /**
@@ -99,6 +98,6 @@ export const createMockProposalDataSource = (): jest.Mocked<ProposalDataSource> 
 /**
  * Creates a mocked VotingPowerRepository
  */
-export const createMockVotingPowerRepository = (): jest.Mocked<VotingPowerDataSource> => ({
+export const createMockVotingPowerRepository = () => ({
   listVotingPowerHistory: jest.fn()
 });
