@@ -113,8 +113,8 @@ export type SafeVotingPowerHistoryResponse = z.infer<typeof SafeVotingPowerHisto
 // Type for processed voting power history with calculated fields (based on actual API)
 export type ProcessedVotingPowerHistory = z.infer<typeof VotingPowerHistoryItemSchema> & {
   changeType: 'delegation' | 'transfer' | 'other';
-  sourceAccountId: string | null;
-  targetAccountId: string | null;
+  sourceAccountId: string;
+  targetAccountId: string;
 };
 
 // Helper function to process validated proposals
@@ -133,16 +133,16 @@ export function processProposals(validated: SafeProposalsResponse, daoId: string
 // Helper function to process validated voting power history
 export function processVotingPowerHistory(validated: SafeVotingPowerHistoryResponse, daoId: string): ProcessedVotingPowerHistory[] {
   return validated.votingPowerHistorys.items
-    .filter(item => item.accountId) // Filter out items without accountId
+    .filter(item => item.accountId)
     .map((item) => {
       const processed: ProcessedVotingPowerHistory = {
         ...item,
-        accountId: item.accountId!,
+        accountId: item.accountId,
         daoId: daoId,
-        delta: item.delta || '0',
+        delta: item.delta,
         changeType: item.delegation ? 'delegation' : item.transfer ? 'transfer' : 'other',
-        sourceAccountId: item.transfer?.fromAccountId || item.delegation?.delegatorAccountId || null,
-        targetAccountId: item.accountId!
+        sourceAccountId: item.transfer?.fromAccountId || item.delegation?.delegatorAccountId || '',
+        targetAccountId: item.accountId
       };
       
       return processed;

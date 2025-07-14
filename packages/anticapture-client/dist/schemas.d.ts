@@ -390,8 +390,8 @@ export type SafeProposalByIdResponse = z.infer<typeof SafeProposalByIdResponseSc
 export type SafeVotingPowerHistoryResponse = z.infer<typeof SafeVotingPowerHistoryResponseSchema>;
 export type ProcessedVotingPowerHistory = z.infer<typeof VotingPowerHistoryItemSchema> & {
     changeType: 'delegation' | 'transfer' | 'other';
-    sourceAccountId: string | null;
-    targetAccountId: string | null;
+    sourceAccountId: string;
+    targetAccountId: string;
 };
 export declare function processProposals(validated: SafeProposalsResponse, daoId: string): any;
 export declare function processVotingPowerHistory(validated: SafeVotingPowerHistoryResponse, daoId: string): ProcessedVotingPowerHistory[];

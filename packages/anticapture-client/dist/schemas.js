@@ -110,15 +110,15 @@ function processProposals(validated, daoId) {
 // Helper function to process validated voting power history
 function processVotingPowerHistory(validated, daoId) {
     return validated.votingPowerHistorys.items
-        .filter(item => item.accountId) // Filter out items without accountId
+        .filter(item => item.accountId)
         .map((item) => {
         const processed = {
             ...item,
             accountId: item.accountId,
             daoId: daoId,
-            delta: item.delta || '0',
+            delta: item.delta,
             changeType: item.delegation ? 'delegation' : item.transfer ? 'transfer' : 'other',
-            sourceAccountId: item.transfer?.fromAccountId || item.delegation?.delegatorAccountId || null,
+            sourceAccountId: item.transfer?.fromAccountId || item.delegation?.delegatorAccountId || '',
             targetAccountId: item.accountId
         };
         return processed;
