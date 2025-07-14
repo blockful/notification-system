@@ -41,37 +41,33 @@ exports.SafeProposalByIdResponseSchema = zod_1.z.object({
 });
 // Define schema for delegation data (based on actual API response)
 const DelegationSchema = zod_1.z.object({
-    delegatorAccountId: zod_1.z.string().nullable(),
+    delegatorAccountId: zod_1.z.string(),
     delegatedValue: zod_1.z.string()
 }).nullable();
 // Define schema for transfer data (based on actual API response)
 const TransferSchema = zod_1.z.object({
     amount: zod_1.z.string().nullable(),
-    fromAccountId: zod_1.z.string().nullable(),
-    toAccountId: zod_1.z.string().nullable()
+    fromAccountId: zod_1.z.string(),
+    toAccountId: zod_1.z.string()
 }).nullable();
 // Define schema for voting power history item (based on actual API response)
 // Handle real-world scenarios where API might return null values or missing fields
 const VotingPowerHistoryItemSchema = zod_1.z.object({
-    accountId: zod_1.z.string().nullable().optional(),
-    timestamp: zod_1.z.string().nullable().optional(),
-    votingPower: zod_1.z.string().nullable().optional(),
-    delta: zod_1.z.string().nullable().optional(),
-    daoId: zod_1.z.string().nullable().optional(),
-    transactionHash: zod_1.z.string().nullable().optional(),
+    accountId: zod_1.z.string(),
+    timestamp: zod_1.z.string(),
+    votingPower: zod_1.z.string().nullable(),
+    delta: zod_1.z.string().nullable(),
+    daoId: zod_1.z.string().optional(),
+    transactionHash: zod_1.z.string(),
     delegation: DelegationSchema.optional(),
     transfer: TransferSchema.optional()
 }).transform((data) => {
-    // Skip items with missing required fields - these are invalid
-    if (!data.timestamp || !data.votingPower || !data.daoId || !data.transactionHash) {
-        return null; // This will be filtered out later
-    }
     return {
-        accountId: data.accountId || null,
+        accountId: data.accountId,
         timestamp: data.timestamp,
         votingPower: data.votingPower,
-        delta: data.delta || '0', // Default delta to '0' if null
-        daoId: data.daoId,
+        delta: data.delta,
+        daoId: data.daoId || null,
         transactionHash: data.transactionHash,
         delegation: data.delegation || null,
         transfer: data.transfer || null

@@ -75,312 +75,312 @@ export declare const SafeProposalByIdResponseSchema: z.ZodCatch<z.ZodObject<{
     proposalsOnchain?: any;
 }>>;
 declare const VotingPowerHistoryItemSchema: z.ZodEffects<z.ZodObject<{
-    accountId: z.ZodOptional<z.ZodNullable<z.ZodString>>;
-    timestamp: z.ZodOptional<z.ZodNullable<z.ZodString>>;
-    votingPower: z.ZodOptional<z.ZodNullable<z.ZodString>>;
-    delta: z.ZodOptional<z.ZodNullable<z.ZodString>>;
-    daoId: z.ZodOptional<z.ZodNullable<z.ZodString>>;
-    transactionHash: z.ZodOptional<z.ZodNullable<z.ZodString>>;
+    accountId: z.ZodString;
+    timestamp: z.ZodString;
+    votingPower: z.ZodNullable<z.ZodString>;
+    delta: z.ZodNullable<z.ZodString>;
+    daoId: z.ZodOptional<z.ZodString>;
+    transactionHash: z.ZodString;
     delegation: z.ZodOptional<z.ZodNullable<z.ZodObject<{
-        delegatorAccountId: z.ZodNullable<z.ZodString>;
+        delegatorAccountId: z.ZodString;
         delegatedValue: z.ZodString;
     }, "strip", z.ZodTypeAny, {
-        delegatorAccountId: string | null;
+        delegatorAccountId: string;
         delegatedValue: string;
     }, {
-        delegatorAccountId: string | null;
+        delegatorAccountId: string;
         delegatedValue: string;
     }>>>;
     transfer: z.ZodOptional<z.ZodNullable<z.ZodObject<{
         amount: z.ZodNullable<z.ZodString>;
-        fromAccountId: z.ZodNullable<z.ZodString>;
-        toAccountId: z.ZodNullable<z.ZodString>;
+        fromAccountId: z.ZodString;
+        toAccountId: z.ZodString;
     }, "strip", z.ZodTypeAny, {
         amount: string | null;
-        fromAccountId: string | null;
-        toAccountId: string | null;
+        fromAccountId: string;
+        toAccountId: string;
     }, {
         amount: string | null;
-        fromAccountId: string | null;
-        toAccountId: string | null;
+        fromAccountId: string;
+        toAccountId: string;
     }>>>;
 }, "strip", z.ZodTypeAny, {
-    delegation?: {
-        delegatorAccountId: string | null;
-        delegatedValue: string;
-    } | null | undefined;
-    transfer?: {
-        amount: string | null;
-        fromAccountId: string | null;
-        toAccountId: string | null;
-    } | null | undefined;
-    daoId?: string | null | undefined;
-    timestamp?: string | null | undefined;
-    accountId?: string | null | undefined;
-    votingPower?: string | null | undefined;
-    delta?: string | null | undefined;
-    transactionHash?: string | null | undefined;
-}, {
-    delegation?: {
-        delegatorAccountId: string | null;
-        delegatedValue: string;
-    } | null | undefined;
-    transfer?: {
-        amount: string | null;
-        fromAccountId: string | null;
-        toAccountId: string | null;
-    } | null | undefined;
-    daoId?: string | null | undefined;
-    timestamp?: string | null | undefined;
-    accountId?: string | null | undefined;
-    votingPower?: string | null | undefined;
-    delta?: string | null | undefined;
-    transactionHash?: string | null | undefined;
-}>, {
-    accountId: string | null;
     timestamp: string;
-    votingPower: string;
-    delta: string;
-    daoId: string;
+    accountId: string;
+    votingPower: string | null;
+    delta: string | null;
+    transactionHash: string;
+    delegation?: {
+        delegatorAccountId: string;
+        delegatedValue: string;
+    } | null | undefined;
+    transfer?: {
+        amount: string | null;
+        fromAccountId: string;
+        toAccountId: string;
+    } | null | undefined;
+    daoId?: string | undefined;
+}, {
+    timestamp: string;
+    accountId: string;
+    votingPower: string | null;
+    delta: string | null;
+    transactionHash: string;
+    delegation?: {
+        delegatorAccountId: string;
+        delegatedValue: string;
+    } | null | undefined;
+    transfer?: {
+        amount: string | null;
+        fromAccountId: string;
+        toAccountId: string;
+    } | null | undefined;
+    daoId?: string | undefined;
+}>, {
+    accountId: string;
+    timestamp: string;
+    votingPower: string | null;
+    delta: string | null;
+    daoId: string | null;
     transactionHash: string;
     delegation: {
-        delegatorAccountId: string | null;
+        delegatorAccountId: string;
         delegatedValue: string;
     } | null;
     transfer: {
         amount: string | null;
-        fromAccountId: string | null;
-        toAccountId: string | null;
+        fromAccountId: string;
+        toAccountId: string;
     } | null;
-} | null, {
+}, {
+    timestamp: string;
+    accountId: string;
+    votingPower: string | null;
+    delta: string | null;
+    transactionHash: string;
     delegation?: {
-        delegatorAccountId: string | null;
+        delegatorAccountId: string;
         delegatedValue: string;
     } | null | undefined;
     transfer?: {
         amount: string | null;
-        fromAccountId: string | null;
-        toAccountId: string | null;
+        fromAccountId: string;
+        toAccountId: string;
     } | null | undefined;
-    daoId?: string | null | undefined;
-    timestamp?: string | null | undefined;
-    accountId?: string | null | undefined;
-    votingPower?: string | null | undefined;
-    delta?: string | null | undefined;
-    transactionHash?: string | null | undefined;
+    daoId?: string | undefined;
 }>;
 export declare const SafeVotingPowerHistoryResponseSchema: z.ZodCatch<z.ZodEffects<z.ZodObject<{
     votingPowerHistorys: z.ZodNullable<z.ZodObject<{
         items: z.ZodArray<z.ZodEffects<z.ZodObject<{
-            accountId: z.ZodOptional<z.ZodNullable<z.ZodString>>;
-            timestamp: z.ZodOptional<z.ZodNullable<z.ZodString>>;
-            votingPower: z.ZodOptional<z.ZodNullable<z.ZodString>>;
-            delta: z.ZodOptional<z.ZodNullable<z.ZodString>>;
-            daoId: z.ZodOptional<z.ZodNullable<z.ZodString>>;
-            transactionHash: z.ZodOptional<z.ZodNullable<z.ZodString>>;
+            accountId: z.ZodString;
+            timestamp: z.ZodString;
+            votingPower: z.ZodNullable<z.ZodString>;
+            delta: z.ZodNullable<z.ZodString>;
+            daoId: z.ZodOptional<z.ZodString>;
+            transactionHash: z.ZodString;
             delegation: z.ZodOptional<z.ZodNullable<z.ZodObject<{
-                delegatorAccountId: z.ZodNullable<z.ZodString>;
+                delegatorAccountId: z.ZodString;
                 delegatedValue: z.ZodString;
             }, "strip", z.ZodTypeAny, {
-                delegatorAccountId: string | null;
+                delegatorAccountId: string;
                 delegatedValue: string;
             }, {
-                delegatorAccountId: string | null;
+                delegatorAccountId: string;
                 delegatedValue: string;
             }>>>;
             transfer: z.ZodOptional<z.ZodNullable<z.ZodObject<{
                 amount: z.ZodNullable<z.ZodString>;
-                fromAccountId: z.ZodNullable<z.ZodString>;
-                toAccountId: z.ZodNullable<z.ZodString>;
+                fromAccountId: z.ZodString;
+                toAccountId: z.ZodString;
             }, "strip", z.ZodTypeAny, {
                 amount: string | null;
-                fromAccountId: string | null;
-                toAccountId: string | null;
+                fromAccountId: string;
+                toAccountId: string;
             }, {
                 amount: string | null;
-                fromAccountId: string | null;
-                toAccountId: string | null;
+                fromAccountId: string;
+                toAccountId: string;
             }>>>;
         }, "strip", z.ZodTypeAny, {
-            delegation?: {
-                delegatorAccountId: string | null;
-                delegatedValue: string;
-            } | null | undefined;
-            transfer?: {
-                amount: string | null;
-                fromAccountId: string | null;
-                toAccountId: string | null;
-            } | null | undefined;
-            daoId?: string | null | undefined;
-            timestamp?: string | null | undefined;
-            accountId?: string | null | undefined;
-            votingPower?: string | null | undefined;
-            delta?: string | null | undefined;
-            transactionHash?: string | null | undefined;
-        }, {
-            delegation?: {
-                delegatorAccountId: string | null;
-                delegatedValue: string;
-            } | null | undefined;
-            transfer?: {
-                amount: string | null;
-                fromAccountId: string | null;
-                toAccountId: string | null;
-            } | null | undefined;
-            daoId?: string | null | undefined;
-            timestamp?: string | null | undefined;
-            accountId?: string | null | undefined;
-            votingPower?: string | null | undefined;
-            delta?: string | null | undefined;
-            transactionHash?: string | null | undefined;
-        }>, {
-            accountId: string | null;
             timestamp: string;
-            votingPower: string;
-            delta: string;
-            daoId: string;
+            accountId: string;
+            votingPower: string | null;
+            delta: string | null;
+            transactionHash: string;
+            delegation?: {
+                delegatorAccountId: string;
+                delegatedValue: string;
+            } | null | undefined;
+            transfer?: {
+                amount: string | null;
+                fromAccountId: string;
+                toAccountId: string;
+            } | null | undefined;
+            daoId?: string | undefined;
+        }, {
+            timestamp: string;
+            accountId: string;
+            votingPower: string | null;
+            delta: string | null;
+            transactionHash: string;
+            delegation?: {
+                delegatorAccountId: string;
+                delegatedValue: string;
+            } | null | undefined;
+            transfer?: {
+                amount: string | null;
+                fromAccountId: string;
+                toAccountId: string;
+            } | null | undefined;
+            daoId?: string | undefined;
+        }>, {
+            accountId: string;
+            timestamp: string;
+            votingPower: string | null;
+            delta: string | null;
+            daoId: string | null;
             transactionHash: string;
             delegation: {
-                delegatorAccountId: string | null;
+                delegatorAccountId: string;
                 delegatedValue: string;
             } | null;
             transfer: {
                 amount: string | null;
-                fromAccountId: string | null;
-                toAccountId: string | null;
+                fromAccountId: string;
+                toAccountId: string;
             } | null;
-        } | null, {
+        }, {
+            timestamp: string;
+            accountId: string;
+            votingPower: string | null;
+            delta: string | null;
+            transactionHash: string;
             delegation?: {
-                delegatorAccountId: string | null;
+                delegatorAccountId: string;
                 delegatedValue: string;
             } | null | undefined;
             transfer?: {
                 amount: string | null;
-                fromAccountId: string | null;
-                toAccountId: string | null;
+                fromAccountId: string;
+                toAccountId: string;
             } | null | undefined;
-            daoId?: string | null | undefined;
-            timestamp?: string | null | undefined;
-            accountId?: string | null | undefined;
-            votingPower?: string | null | undefined;
-            delta?: string | null | undefined;
-            transactionHash?: string | null | undefined;
+            daoId?: string | undefined;
         }>, "many">;
     }, "strip", z.ZodTypeAny, {
-        items: ({
-            accountId: string | null;
+        items: {
+            accountId: string;
             timestamp: string;
-            votingPower: string;
-            delta: string;
-            daoId: string;
+            votingPower: string | null;
+            delta: string | null;
+            daoId: string | null;
             transactionHash: string;
             delegation: {
-                delegatorAccountId: string | null;
+                delegatorAccountId: string;
                 delegatedValue: string;
             } | null;
             transfer: {
                 amount: string | null;
-                fromAccountId: string | null;
-                toAccountId: string | null;
+                fromAccountId: string;
+                toAccountId: string;
             } | null;
-        } | null)[];
+        }[];
     }, {
         items: {
+            timestamp: string;
+            accountId: string;
+            votingPower: string | null;
+            delta: string | null;
+            transactionHash: string;
             delegation?: {
-                delegatorAccountId: string | null;
+                delegatorAccountId: string;
                 delegatedValue: string;
             } | null | undefined;
             transfer?: {
                 amount: string | null;
-                fromAccountId: string | null;
-                toAccountId: string | null;
+                fromAccountId: string;
+                toAccountId: string;
             } | null | undefined;
-            daoId?: string | null | undefined;
-            timestamp?: string | null | undefined;
-            accountId?: string | null | undefined;
-            votingPower?: string | null | undefined;
-            delta?: string | null | undefined;
-            transactionHash?: string | null | undefined;
+            daoId?: string | undefined;
         }[];
     }>>;
 }, "strip", z.ZodTypeAny, {
     votingPowerHistorys: {
-        items: ({
-            accountId: string | null;
+        items: {
+            accountId: string;
             timestamp: string;
-            votingPower: string;
-            delta: string;
-            daoId: string;
+            votingPower: string | null;
+            delta: string | null;
+            daoId: string | null;
             transactionHash: string;
             delegation: {
-                delegatorAccountId: string | null;
+                delegatorAccountId: string;
                 delegatedValue: string;
             } | null;
             transfer: {
                 amount: string | null;
-                fromAccountId: string | null;
-                toAccountId: string | null;
+                fromAccountId: string;
+                toAccountId: string;
             } | null;
-        } | null)[];
+        }[];
     } | null;
 }, {
     votingPowerHistorys: {
         items: {
+            timestamp: string;
+            accountId: string;
+            votingPower: string | null;
+            delta: string | null;
+            transactionHash: string;
             delegation?: {
-                delegatorAccountId: string | null;
+                delegatorAccountId: string;
                 delegatedValue: string;
             } | null | undefined;
             transfer?: {
                 amount: string | null;
-                fromAccountId: string | null;
-                toAccountId: string | null;
+                fromAccountId: string;
+                toAccountId: string;
             } | null | undefined;
-            daoId?: string | null | undefined;
-            timestamp?: string | null | undefined;
-            accountId?: string | null | undefined;
-            votingPower?: string | null | undefined;
-            delta?: string | null | undefined;
-            transactionHash?: string | null | undefined;
+            daoId?: string | undefined;
         }[];
     } | null;
 }>, {
     votingPowerHistorys: {
         items: {
-            accountId: string | null;
+            accountId: string;
             timestamp: string;
-            votingPower: string;
-            delta: string;
-            daoId: string;
+            votingPower: string | null;
+            delta: string | null;
+            daoId: string | null;
             transactionHash: string;
             delegation: {
-                delegatorAccountId: string | null;
+                delegatorAccountId: string;
                 delegatedValue: string;
             } | null;
             transfer: {
                 amount: string | null;
-                fromAccountId: string | null;
-                toAccountId: string | null;
+                fromAccountId: string;
+                toAccountId: string;
             } | null;
         }[];
     };
 }, {
     votingPowerHistorys: {
         items: {
+            timestamp: string;
+            accountId: string;
+            votingPower: string | null;
+            delta: string | null;
+            transactionHash: string;
             delegation?: {
-                delegatorAccountId: string | null;
+                delegatorAccountId: string;
                 delegatedValue: string;
             } | null | undefined;
             transfer?: {
                 amount: string | null;
-                fromAccountId: string | null;
-                toAccountId: string | null;
+                fromAccountId: string;
+                toAccountId: string;
             } | null | undefined;
-            daoId?: string | null | undefined;
-            timestamp?: string | null | undefined;
-            accountId?: string | null | undefined;
-            votingPower?: string | null | undefined;
-            delta?: string | null | undefined;
-            transactionHash?: string | null | undefined;
+            daoId?: string | undefined;
         }[];
     } | null;
 }>>;

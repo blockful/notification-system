@@ -41,40 +41,35 @@ export const SafeProposalByIdResponseSchema = z.object({
 
 // Define schema for delegation data (based on actual API response)
 const DelegationSchema = z.object({
-  delegatorAccountId: z.string().nullable(),
+  delegatorAccountId: z.string(),
   delegatedValue: z.string()
 }).nullable();
 
 // Define schema for transfer data (based on actual API response)
 const TransferSchema = z.object({
   amount: z.string().nullable(),
-  fromAccountId: z.string().nullable(),
-  toAccountId: z.string().nullable()
+  fromAccountId: z.string(),
+  toAccountId: z.string()
 }).nullable();
 
 // Define schema for voting power history item (based on actual API response)
 // Handle real-world scenarios where API might return null values or missing fields
 const VotingPowerHistoryItemSchema = z.object({
-  accountId: z.string().nullable().optional(),
-  timestamp: z.string().nullable().optional(),
-  votingPower: z.string().nullable().optional(),
-  delta: z.string().nullable().optional(),
-  daoId: z.string().nullable().optional(),
-  transactionHash: z.string().nullable().optional(),
+  accountId: z.string(),
+  timestamp: z.string(),
+  votingPower: z.string().nullable(),
+  delta: z.string().nullable(),
+  daoId: z.string().optional(),
+  transactionHash: z.string(),
   delegation: DelegationSchema.optional(),
   transfer: TransferSchema.optional()
 }).transform((data) => {
-  // Skip items with missing required fields - these are invalid
-  if (!data.timestamp || !data.votingPower || !data.daoId || !data.transactionHash) {
-    return null; // This will be filtered out later
-  }
-  
   return {
-    accountId: data.accountId || null,
+    accountId: data.accountId,
     timestamp: data.timestamp,
     votingPower: data.votingPower,
-    delta: data.delta || '0', // Default delta to '0' if null
-    daoId: data.daoId,
+    delta: data.delta,
+    daoId: data.daoId || null,
     transactionHash: data.transactionHash,
     delegation: data.delegation || null,
     transfer: data.transfer || null
