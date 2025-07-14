@@ -39,17 +39,6 @@ exports.SafeProposalByIdResponseSchema = zod_1.z.object({
     console.warn('ProposalByIdResponse validation failed completely');
     return { proposalsOnchain: null };
 });
-// Define schema for delegation data (based on actual API response)
-const DelegationSchema = zod_1.z.object({
-    delegatorAccountId: zod_1.z.string(),
-    delegatedValue: zod_1.z.string()
-}).nullable();
-// Define schema for transfer data (based on actual API response)
-const TransferSchema = zod_1.z.object({
-    amount: zod_1.z.string().nullable(),
-    fromAccountId: zod_1.z.string(),
-    toAccountId: zod_1.z.string()
-}).nullable();
 // Define schema for voting power history item (based on actual API response)
 // Handle real-world scenarios where API might return null values or missing fields
 const VotingPowerHistoryItemSchema = zod_1.z.object({
@@ -57,21 +46,17 @@ const VotingPowerHistoryItemSchema = zod_1.z.object({
     timestamp: zod_1.z.string(),
     votingPower: zod_1.z.string().nullable(),
     delta: zod_1.z.string().nullable(),
-    daoId: zod_1.z.string().optional(),
+    daoId: zod_1.z.string().nullable().default(null),
     transactionHash: zod_1.z.string(),
-    delegation: DelegationSchema.optional(),
-    transfer: TransferSchema.optional()
-}).transform((data) => {
-    return {
-        accountId: data.accountId,
-        timestamp: data.timestamp,
-        votingPower: data.votingPower,
-        delta: data.delta,
-        daoId: data.daoId || null,
-        transactionHash: data.transactionHash,
-        delegation: data.delegation || null,
-        transfer: data.transfer || null
-    };
+    delegation: zod_1.z.object({
+        delegatorAccountId: zod_1.z.string(),
+        delegatedValue: zod_1.z.string()
+    }).nullable().default(null),
+    transfer: zod_1.z.object({
+        amount: zod_1.z.string().nullable(),
+        fromAccountId: zod_1.z.string(),
+        toAccountId: zod_1.z.string()
+    }).nullable().default(null)
 });
 exports.SafeVotingPowerHistoryResponseSchema = zod_1.z.object({
     votingPowerHistorys: zod_1.z.object({
@@ -95,7 +80,7 @@ exports.SafeVotingPowerHistoryResponseSchema = zod_1.z.object({
     console.warn('Input data received:', JSON.stringify(error.input, null, 2));
     return { votingPowerHistorys: { items: [] } };
 });
-// Helper function to process validated proposals
+// Internal helper function to process validated proposals
 function processProposals(validated, daoId) {
     return validated.proposalsOnchains.items.reduce((acc, proposal) => {
         if (proposal !== null) {
@@ -107,7 +92,7 @@ function processProposals(validated, daoId) {
         return acc;
     }, []);
 }
-// Helper function to process validated voting power history
+// Internal helper function to process validated voting power history
 function processVotingPowerHistory(validated, daoId) {
     return validated.votingPowerHistorys.items
         .filter(item => item.accountId)

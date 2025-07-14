@@ -105,7 +105,7 @@ export class AnticaptureClient {
       });
 
       const results = await Promise.all(queryPromises);
-      return results.flat().sort((a, b) => 
+      return results.flat().sort((a: ProcessedVotingPowerHistory, b: ProcessedVotingPowerHistory) => 
         parseInt(a.timestamp) - parseInt(b.timestamp)
       );
     }

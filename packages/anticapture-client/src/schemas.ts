@@ -39,19 +39,6 @@ export const SafeProposalByIdResponseSchema = z.object({
   return { proposalsOnchain: null };
 });
 
-// Define schema for delegation data (based on actual API response)
-const DelegationSchema = z.object({
-  delegatorAccountId: z.string(),
-  delegatedValue: z.string()
-}).nullable();
-
-// Define schema for transfer data (based on actual API response)
-const TransferSchema = z.object({
-  amount: z.string().nullable(),
-  fromAccountId: z.string(),
-  toAccountId: z.string()
-}).nullable();
-
 // Define schema for voting power history item (based on actual API response)
 // Handle real-world scenarios where API might return null values or missing fields
 const VotingPowerHistoryItemSchema = z.object({
@@ -59,21 +46,17 @@ const VotingPowerHistoryItemSchema = z.object({
   timestamp: z.string(),
   votingPower: z.string().nullable(),
   delta: z.string().nullable(),
-  daoId: z.string().optional(),
+  daoId: z.string().nullable().default(null),
   transactionHash: z.string(),
-  delegation: DelegationSchema.optional(),
-  transfer: TransferSchema.optional()
-}).transform((data) => {
-  return {
-    accountId: data.accountId,
-    timestamp: data.timestamp,
-    votingPower: data.votingPower,
-    delta: data.delta,
-    daoId: data.daoId || null,
-    transactionHash: data.transactionHash,
-    delegation: data.delegation || null,
-    transfer: data.transfer || null
-  };
+  delegation: z.object({
+    delegatorAccountId: z.string(),
+    delegatedValue: z.string()
+  }).nullable().default(null),
+  transfer: z.object({
+    amount: z.string().nullable(),
+    fromAccountId: z.string(),
+    toAccountId: z.string()
+  }).nullable().default(null)
 });
 
 export const SafeVotingPowerHistoryResponseSchema = z.object({
@@ -104,11 +87,9 @@ export const SafeVotingPowerHistoryResponseSchema = z.object({
 
 
 
-// Export inferred types for use in the client
-export type SafeDaosResponse = z.infer<typeof SafeDaosResponseSchema>;
-export type SafeProposalsResponse = z.infer<typeof SafeProposalsResponseSchema>;
-export type SafeProposalByIdResponse = z.infer<typeof SafeProposalByIdResponseSchema>;
-export type SafeVotingPowerHistoryResponse = z.infer<typeof SafeVotingPowerHistoryResponseSchema>;
+// Internal types for schema validation
+type SafeProposalsResponse = z.infer<typeof SafeProposalsResponseSchema>;
+type SafeVotingPowerHistoryResponse = z.infer<typeof SafeVotingPowerHistoryResponseSchema>;
 
 // Type for processed voting power history with calculated fields (based on actual API)
 export type ProcessedVotingPowerHistory = z.infer<typeof VotingPowerHistoryItemSchema> & {
@@ -117,7 +98,7 @@ export type ProcessedVotingPowerHistory = z.infer<typeof VotingPowerHistoryItemS
   targetAccountId: string;
 };
 
-// Helper function to process validated proposals
+// Internal helper function to process validated proposals
 export function processProposals(validated: SafeProposalsResponse, daoId: string) {
   return validated.proposalsOnchains.items.reduce((acc, proposal) => {
     if (proposal !== null) {
@@ -130,7 +111,7 @@ export function processProposals(validated: SafeProposalsResponse, daoId: string
   }, [] as typeof validated.proposalsOnchains.items);
 }
 
-// Helper function to process validated voting power history
+// Internal helper function to process validated voting power history
 export function processVotingPowerHistory(validated: SafeVotingPowerHistoryResponse, daoId: string): ProcessedVotingPowerHistory[] {
   return validated.votingPowerHistorys.items
     .filter(item => item.accountId)
