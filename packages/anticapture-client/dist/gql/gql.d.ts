@@ -1,5 +1,5 @@
 import * as types from './graphql';
-import { TypedDocumentNode as DocumentNode } from '@graphql-typed-document-node/core';
+import type { TypedDocumentNode as DocumentNode } from '@graphql-typed-document-node/core';
 /**
  * Map of all GraphQL operations in the project.
  *

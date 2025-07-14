@@ -1,5 +1,5 @@
 /* eslint-disable */
-import { TypedDocumentNode as DocumentNode } from '@graphql-typed-document-node/core';
+import type { TypedDocumentNode as DocumentNode } from '@graphql-typed-document-node/core';
 export type Maybe<T> = T | null;
 export type InputMaybe<T> = Maybe<T>;
 export type Exact<T extends { [key: string]: unknown }> = { [K in keyof T]: T[K] };
@@ -14,7 +14,7 @@ export type Scalars = {
   Boolean: { input: boolean; output: boolean; }
   Int: { input: number; output: number; }
   Float: { input: number; output: number; }
-  BigInt: { input: any; output: any; }
+  BigInt: { input: string; output: string; }
   /** The `JSON` scalar type represents JSON values as specified by [ECMA-404](http://www.ecma-international.org/publications/files/ECMA-ST/ECMA-404.pdf). */
   JSON: { input: any; output: any; }
   /** Integers that will have a value of 0 or more. */
@@ -1827,7 +1827,7 @@ export type GetProposalByIdQueryVariables = Exact<{
 }>;
 
 
-export type GetProposalByIdQuery = { __typename?: 'Query', proposalsOnchain?: { __typename?: 'proposalsOnchain', id: string, daoId: string, proposerAccountId?: string | null, targets?: any | null, values?: any | null, signatures?: any | null, calldatas?: any | null, startBlock?: string | null, endBlock?: string | null, description?: string | null, timestamp?: any | null, status?: string | null, forVotes: any, againstVotes: any, abstainVotes: any } | null };
+export type GetProposalByIdQuery = { __typename?: 'Query', proposalsOnchain?: { __typename?: 'proposalsOnchain', id: string, daoId: string, proposerAccountId?: string | null, targets?: any | null, values?: any | null, signatures?: any | null, calldatas?: any | null, startBlock?: string | null, endBlock?: string | null, description?: string | null, timestamp?: string | null, status?: string | null, forVotes: string, againstVotes: string, abstainVotes: string } | null };
 
 export type ListProposalsQueryVariables = Exact<{
   where?: InputMaybe<ProposalsOnchainFilter>;
@@ -1835,7 +1835,7 @@ export type ListProposalsQueryVariables = Exact<{
 }>;
 
 
-export type ListProposalsQuery = { __typename?: 'Query', proposalsOnchains: { __typename?: 'proposalsOnchainPage', items: Array<{ __typename?: 'proposalsOnchain', id: string, daoId: string, proposerAccountId?: string | null, targets?: any | null, values?: any | null, signatures?: any | null, calldatas?: any | null, startBlock?: string | null, endBlock?: string | null, description?: string | null, timestamp?: any | null, status?: string | null, forVotes: any, againstVotes: any, abstainVotes: any }> } };
+export type ListProposalsQuery = { __typename?: 'Query', proposalsOnchains: { __typename?: 'proposalsOnchainPage', items: Array<{ __typename?: 'proposalsOnchain', id: string, daoId: string, proposerAccountId?: string | null, targets?: any | null, values?: any | null, signatures?: any | null, calldatas?: any | null, startBlock?: string | null, endBlock?: string | null, description?: string | null, timestamp?: string | null, status?: string | null, forVotes: string, againstVotes: string, abstainVotes: string }> } };
 
 export type ListVotingPowerHistorysQueryVariables = Exact<{
   where?: InputMaybe<VotingPowerHistoryFilter>;
@@ -1845,7 +1845,7 @@ export type ListVotingPowerHistorysQueryVariables = Exact<{
 }>;
 
 
-export type ListVotingPowerHistorysQuery = { __typename?: 'Query', votingPowerHistorys: { __typename?: 'votingPowerHistoryPage', items: Array<{ __typename?: 'votingPowerHistory', accountId?: string | null, timestamp: any, votingPower: any, delta: any, daoId: string, transactionHash: string, delegation?: { __typename?: 'delegation', delegatorAccountId?: string | null, delegatedValue: any } | null, transfer?: { __typename?: 'transfer', amount?: any | null, fromAccountId?: string | null, toAccountId?: string | null } | null }> } };
+export type ListVotingPowerHistorysQuery = { __typename?: 'Query', votingPowerHistorys: { __typename?: 'votingPowerHistoryPage', items: Array<{ __typename?: 'votingPowerHistory', accountId?: string | null, timestamp: string, votingPower: string, delta: string, daoId: string, transactionHash: string, delegation?: { __typename?: 'delegation', delegatorAccountId?: string | null, delegatedValue: string } | null, transfer?: { __typename?: 'transfer', amount?: string | null, fromAccountId?: string | null, toAccountId?: string | null } | null }> } };
 
 
 export const GetDaOsDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"query","name":{"kind":"Name","value":"GetDAOs"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"daos"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"items"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}}]}}]}}]}}]} as unknown as DocumentNode<GetDaOsQuery, GetDaOsQueryVariables>;

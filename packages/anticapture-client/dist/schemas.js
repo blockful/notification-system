@@ -41,25 +41,41 @@ exports.SafeProposalByIdResponseSchema = zod_1.z.object({
 });
 // Define schema for delegation data (based on actual API response)
 const DelegationSchema = zod_1.z.object({
-    delegatorAccountId: zod_1.z.string(),
+    delegatorAccountId: zod_1.z.string().nullable(),
     delegatedValue: zod_1.z.string()
 }).nullable();
 // Define schema for transfer data (based on actual API response)
 const TransferSchema = zod_1.z.object({
-    amount: zod_1.z.string(),
-    fromAccountId: zod_1.z.string(),
-    toAccountId: zod_1.z.string()
+    amount: zod_1.z.string().nullable(),
+    fromAccountId: zod_1.z.string().nullable(),
+    toAccountId: zod_1.z.string().nullable()
 }).nullable();
 // Define schema for voting power history item (based on actual API response)
+// Handle real-world scenarios where API might return null values or missing fields
 const VotingPowerHistoryItemSchema = zod_1.z.object({
-    accountId: zod_1.z.string(),
-    timestamp: zod_1.z.string(),
-    votingPower: zod_1.z.string(),
-    delta: zod_1.z.string().nullable(),
-    daoId: zod_1.z.string(),
-    transactionHash: zod_1.z.string(),
-    delegation: DelegationSchema,
-    transfer: TransferSchema
+    accountId: zod_1.z.string().nullable().optional(),
+    timestamp: zod_1.z.string().nullable().optional(),
+    votingPower: zod_1.z.string().nullable().optional(),
+    delta: zod_1.z.string().nullable().optional(),
+    daoId: zod_1.z.string().nullable().optional(),
+    transactionHash: zod_1.z.string().nullable().optional(),
+    delegation: DelegationSchema.optional(),
+    transfer: TransferSchema.optional()
+}).transform((data) => {
+    // Skip items with missing required fields - these are invalid
+    if (!data.timestamp || !data.votingPower || !data.daoId || !data.transactionHash) {
+        return null; // This will be filtered out later
+    }
+    return {
+        accountId: data.accountId || null,
+        timestamp: data.timestamp,
+        votingPower: data.votingPower,
+        delta: data.delta || '0', // Default delta to '0' if null
+        daoId: data.daoId,
+        transactionHash: data.transactionHash,
+        delegation: data.delegation || null,
+        transfer: data.transfer || null
+    };
 });
 exports.SafeVotingPowerHistoryResponseSchema = zod_1.z.object({
     votingPowerHistorys: zod_1.z.object({
@@ -70,9 +86,17 @@ exports.SafeVotingPowerHistoryResponseSchema = zod_1.z.object({
         console.warn('VotingPowerHistoryResponse has null votingPowerHistorys or items:', data);
         return { votingPowerHistorys: { items: [] } };
     }
-    return { votingPowerHistorys: { items: data.votingPowerHistorys.items } };
-}).catch(() => {
+    // Filter out null items (items that failed validation in VotingPowerHistoryItemSchema)
+    const validItems = data.votingPowerHistorys.items.filter(item => item !== null);
+    const invalidCount = data.votingPowerHistorys.items.length - validItems.length;
+    if (invalidCount > 0) {
+        console.warn(`VotingPowerHistoryResponse: Filtered out ${invalidCount} invalid item(s) due to missing required fields (timestamp, votingPower, daoId, or transactionHash)`);
+    }
+    return { votingPowerHistorys: { items: validItems } };
+}).catch((error) => {
     console.warn('VotingPowerHistoryResponse validation failed completely');
+    console.warn('Error details:', error);
+    console.warn('Input data received:', JSON.stringify(error.input, null, 2));
     return { votingPowerHistorys: { items: [] } };
 });
 // Helper function to process validated proposals
@@ -89,9 +113,12 @@ function processProposals(validated, daoId) {
 }
 // Helper function to process validated voting power history
 function processVotingPowerHistory(validated, daoId) {
-    return validated.votingPowerHistorys.items.map((item) => {
+    return validated.votingPowerHistorys.items
+        .filter(item => item.accountId) // Filter out items without accountId
+        .map((item) => {
         const processed = {
             ...item,
+            accountId: item.accountId,
             daoId: daoId,
             delta: item.delta || '0',
             changeType: item.delegation ? 'delegation' : item.transfer ? 'transfer' : 'other',

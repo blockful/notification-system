@@ -35,7 +35,16 @@ export const subscriptionQuerystringSchema = z.object({
       // If it's a unix timestamp (only digits), convert to ISO string
       if (/^\d+$/.test(val)) {
         const timestampNum = parseInt(val, 10);
-        return new Date(timestampNum * 1000).toISOString();
+        
+        // Check if it's milliseconds (13 digits) or seconds (10 digits)
+        // Timestamps in milliseconds are much larger than seconds
+        if (timestampNum.toString().length >= 13) {
+          // It's already in milliseconds
+          return new Date(timestampNum).toISOString();
+        } else {
+          // It's in seconds, convert to milliseconds
+          return new Date(timestampNum * 1000).toISOString();
+        }
       }
       
       // If it's already an ISO string or other format, keep as is

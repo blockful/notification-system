@@ -1,4 +1,4 @@
-import { TypedDocumentNode as DocumentNode } from '@graphql-typed-document-node/core';
+import type { TypedDocumentNode as DocumentNode } from '@graphql-typed-document-node/core';
 export type Maybe<T> = T | null;
 export type InputMaybe<T> = Maybe<T>;
 export type Exact<T extends {
@@ -43,8 +43,8 @@ export type Scalars = {
         output: number;
     };
     BigInt: {
-        input: any;
-        output: any;
+        input: string;
+        output: string;
     };
     /** The `JSON` scalar type represents JSON values as specified by [ECMA-404](http://www.ecma-international.org/publications/files/ECMA-ST/ECMA-404.pdf). */
     JSON: {
@@ -1708,11 +1708,11 @@ export type GetProposalByIdQuery = {
         startBlock?: string | null;
         endBlock?: string | null;
         description?: string | null;
-        timestamp?: any | null;
+        timestamp?: string | null;
         status?: string | null;
-        forVotes: any;
-        againstVotes: any;
-        abstainVotes: any;
+        forVotes: string;
+        againstVotes: string;
+        abstainVotes: string;
     } | null;
 };
 export type ListProposalsQueryVariables = Exact<{
@@ -1735,11 +1735,11 @@ export type ListProposalsQuery = {
             startBlock?: string | null;
             endBlock?: string | null;
             description?: string | null;
-            timestamp?: any | null;
+            timestamp?: string | null;
             status?: string | null;
-            forVotes: any;
-            againstVotes: any;
-            abstainVotes: any;
+            forVotes: string;
+            againstVotes: string;
+            abstainVotes: string;
         }>;
     };
 };
@@ -1756,19 +1756,19 @@ export type ListVotingPowerHistorysQuery = {
         items: Array<{
             __typename?: 'votingPowerHistory';
             accountId?: string | null;
-            timestamp: any;
-            votingPower: any;
-            delta: any;
+            timestamp: string;
+            votingPower: string;
+            delta: string;
             daoId: string;
             transactionHash: string;
             delegation?: {
                 __typename?: 'delegation';
                 delegatorAccountId?: string | null;
-                delegatedValue: any;
+                delegatedValue: string;
             } | null;
             transfer?: {
                 __typename?: 'transfer';
-                amount?: any | null;
+                amount?: string | null;
                 fromAccountId?: string | null;
                 toAccountId?: string | null;
             } | null;

@@ -7,6 +7,7 @@
     "test": "jest"
   },
   "devDependencies": {
+    "@notification-system/anticapture-client": "workspace:*",
     "@notification-system/consumer": "workspace:*",
     "@notification-system/dispatcher": "workspace:*",
     "@notification-system/logic-system": "workspace:*",

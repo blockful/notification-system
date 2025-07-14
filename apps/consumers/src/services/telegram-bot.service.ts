@@ -78,8 +78,8 @@ export class TelegramBotService {
     });
   }
 
-  public launch(): void {
-    this.bot.launch();
+  async launch(): Promise<void> {
+    await this.bot.launch();
     console.log('🤖 Bot is running...');
   }
 
