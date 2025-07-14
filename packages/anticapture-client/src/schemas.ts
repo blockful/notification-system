@@ -41,27 +41,44 @@ export const SafeProposalByIdResponseSchema = z.object({
 
 // Define schema for delegation data (based on actual API response)
 const DelegationSchema = z.object({
-  delegatorAccountId: z.string(),
+  delegatorAccountId: z.string().nullable(),
   delegatedValue: z.string()
 }).nullable();
 
 // Define schema for transfer data (based on actual API response)
 const TransferSchema = z.object({
-  amount: z.string(),
-  fromAccountId: z.string(),
-  toAccountId: z.string()
+  amount: z.string().nullable(),
+  fromAccountId: z.string().nullable(),
+  toAccountId: z.string().nullable()
 }).nullable();
 
 // Define schema for voting power history item (based on actual API response)
+// Handle real-world scenarios where API might return null values or missing fields
 const VotingPowerHistoryItemSchema = z.object({
-  accountId: z.string(),
-  timestamp: z.string(),
-  votingPower: z.string(),
-  delta: z.string().nullable(),
-  daoId: z.string(),
-  transactionHash: z.string(),
-  delegation: DelegationSchema,
-  transfer: TransferSchema
+  accountId: z.string().nullable().optional(),
+  timestamp: z.string().nullable().optional(),
+  votingPower: z.string().nullable().optional(),
+  delta: z.string().nullable().optional(),
+  daoId: z.string().nullable().optional(),
+  transactionHash: z.string().nullable().optional(),
+  delegation: DelegationSchema.optional(),
+  transfer: TransferSchema.optional()
+}).transform((data) => {
+  // Skip items with missing required fields - these are invalid
+  if (!data.timestamp || !data.votingPower || !data.daoId || !data.transactionHash) {
+    return null; // This will be filtered out later
+  }
+  
+  return {
+    accountId: data.accountId || null,
+    timestamp: data.timestamp,
+    votingPower: data.votingPower,
+    delta: data.delta || '0', // Default delta to '0' if null
+    daoId: data.daoId,
+    transactionHash: data.transactionHash,
+    delegation: data.delegation || null,
+    transfer: data.transfer || null
+  };
 });
 
 export const SafeVotingPowerHistoryResponseSchema = z.object({
@@ -73,9 +90,20 @@ export const SafeVotingPowerHistoryResponseSchema = z.object({
     console.warn('VotingPowerHistoryResponse has null votingPowerHistorys or items:', data);
     return { votingPowerHistorys: { items: [] } };
   }
-  return { votingPowerHistorys: { items: data.votingPowerHistorys.items } };
-}).catch(() => {
+  
+  // Filter out null items (items that failed validation in VotingPowerHistoryItemSchema)
+  const validItems = data.votingPowerHistorys.items.filter(item => item !== null);
+  const invalidCount = data.votingPowerHistorys.items.length - validItems.length;
+  
+  if (invalidCount > 0) {
+    console.warn(`VotingPowerHistoryResponse: Filtered out ${invalidCount} invalid item(s) due to missing required fields (timestamp, votingPower, daoId, or transactionHash)`);
+  }
+  
+  return { votingPowerHistorys: { items: validItems } };
+}).catch((error) => {
   console.warn('VotingPowerHistoryResponse validation failed completely');
+  console.warn('Error details:', error);
+  console.warn('Input data received:', JSON.stringify(error.input, null, 2));
   return { votingPowerHistorys: { items: [] } };
 });
 
@@ -109,17 +137,20 @@ export function processProposals(validated: SafeProposalsResponse, daoId: string
 
 // Helper function to process validated voting power history
 export function processVotingPowerHistory(validated: SafeVotingPowerHistoryResponse, daoId: string): ProcessedVotingPowerHistory[] {
-  return validated.votingPowerHistorys.items.map((item) => {
-    const processed: ProcessedVotingPowerHistory = {
-      ...item,
-      daoId: daoId,
-      delta: item.delta || '0',
-      changeType: item.delegation ? 'delegation' : item.transfer ? 'transfer' : 'other',
-      sourceAccountId: item.transfer?.fromAccountId || item.delegation?.delegatorAccountId || null,
-      targetAccountId: item.accountId
-    };
-    
-    return processed;
-  });
+  return validated.votingPowerHistorys.items
+    .filter(item => item.accountId) // Filter out items without accountId
+    .map((item) => {
+      const processed: ProcessedVotingPowerHistory = {
+        ...item,
+        accountId: item.accountId!,
+        daoId: daoId,
+        delta: item.delta || '0',
+        changeType: item.delegation ? 'delegation' : item.transfer ? 'transfer' : 'other',
+        sourceAccountId: item.transfer?.fromAccountId || item.delegation?.delegatorAccountId || null,
+        targetAccountId: item.accountId!
+      };
+      
+      return processed;
+    });
 }
 

@@ -100,6 +100,9 @@ importers:
       '@jest/globals':
         specifier: ^29.7.0
         version: 29.7.0
+      '@notification-system/anticapture-client':
+        specifier: workspace:*
+        version: link:../../packages/anticapture-client
       '@notification-system/consumer':
         specifier: workspace:*
         version: link:../consumers
