@@ -103,6 +103,7 @@ export class AnticaptureClient {
         const validated = await this.query(ListVotingPowerHistorysDocument, SafeVotingPowerHistoryResponseSchema, variables, currentDaoId);
         return processVotingPowerHistory(validated, currentDaoId);
       });
+
       const results = await Promise.all(queryPromises);
       return results.flat().sort((a, b) => 
         parseInt(a.timestamp) - parseInt(b.timestamp)

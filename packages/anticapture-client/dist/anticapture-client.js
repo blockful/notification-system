@@ -66,15 +66,12 @@ class AnticaptureClient {
     async listVotingPowerHistory(variables, daoId) {
         if (!daoId && !variables?.where?.daoId) {
             const allDAOs = await this.getDAOs();
-            // Execute all DAO queries in parallel instead of sequentially
             const queryPromises = allDAOs.map(async (currentDaoId) => {
                 const validated = await this.query(graphql_2.ListVotingPowerHistorysDocument, schemas_1.SafeVotingPowerHistoryResponseSchema, variables, currentDaoId);
                 return (0, schemas_1.processVotingPowerHistory)(validated, currentDaoId);
             });
             const results = await Promise.all(queryPromises);
-            const allVotingPowerHistory = results.flat();
-            // Sort by timestamp ascending for chronological processing
-            return allVotingPowerHistory.sort((a, b) => parseInt(a.timestamp) - parseInt(b.timestamp));
+            return results.flat().sort((a, b) => parseInt(a.timestamp) - parseInt(b.timestamp));
         }
         const validated = await this.query(graphql_2.ListVotingPowerHistorysDocument, schemas_1.SafeVotingPowerHistoryResponseSchema, variables, daoId);
         return (0, schemas_1.processVotingPowerHistory)(validated, daoId);
