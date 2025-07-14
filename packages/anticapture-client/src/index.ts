@@ -13,5 +13,4 @@ export type {
   ListVotingPowerHistorysQueryVariables
 } from './gql/graphql';
 
-// Export processed types with helper methods
 export type { ProcessedVotingPowerHistory } from './schemas';
