@@ -21,9 +21,11 @@ export class KnexUserRepository implements IUserRepository {
    * @param channelUserId - The user ID from the specific channel
    */
   async findByChannelAndId(channel: string, channelUserId: string): Promise<User | undefined> {
-    return this.knex<User>('users')
+    const user = await this.knex<User>('users')
       .where({ channel, channel_user_id: channelUserId })
       .first();
+    
+    return user || undefined;
   }
 
   /**
@@ -32,8 +34,9 @@ export class KnexUserRepository implements IUserRepository {
    */
   async create(data: Omit<User, 'id'>): Promise<User> {
     const [user] = await this.knex<User>('users')
-      .insert({ id: uuidv4(), ...data, created_at: new Date() })
+      .insert({ id: uuidv4(), ...data, created_at: new Date().toISOString() })
       .returning('*');
+    
     return user;
   }
 
@@ -42,9 +45,11 @@ export class KnexUserRepository implements IUserRepository {
    * @param id - The user's ID
    */
   async findById(id: string): Promise<User | undefined> {
-    return this.knex<User>('users')
+    const user = await this.knex<User>('users')
       .where({ id })
       .first();
+    
+    return user || undefined;
   }
 }
 
@@ -61,9 +66,11 @@ export class KnexPreferenceRepository implements IPreferenceRepository {
    * @param daoId - The DAO's ID
    */
   async findByUserAndDao(userId: string, daoId: string): Promise<UserPreference | undefined> {
-    return this.knex<UserPreference>('user_preferences')
+    const preference = await this.knex<UserPreference>('user_preferences')
       .where({ user_id: userId, dao_id: daoId })
       .first();
+    
+    return preference || undefined;
   }
 
   /**
@@ -71,7 +78,7 @@ export class KnexPreferenceRepository implements IPreferenceRepository {
    * @param data - The preference data to insert
    */
   async create(data: Omit<UserPreference, 'id' | 'created_at' | 'updated_at'>): Promise<UserPreference> {
-    const now = new Date();
+    const now = new Date().toISOString();
     const [preference] = await this.knex<UserPreference>('user_preferences')
       .insert({
         id: uuidv4(),
@@ -80,6 +87,7 @@ export class KnexPreferenceRepository implements IPreferenceRepository {
         updated_at: now
       })
       .returning('*');
+    
     return preference;
   }
 
@@ -93,9 +101,10 @@ export class KnexPreferenceRepository implements IPreferenceRepository {
       .where({ id })
       .update({
         ...data,
-        updated_at: new Date()
+        updated_at: new Date().toISOString()
       })
       .returning('*');
+    
     return preference;
   }
 
@@ -114,7 +123,10 @@ export class KnexPreferenceRepository implements IPreferenceRepository {
     if (eventTimestamp) {
       query = query.where('updated_at', '<=', eventTimestamp);
     }
-    return query.select('*');
+    
+    const preferences = await query.select('*');
+    
+    return preferences;
   }
 }
 
@@ -172,10 +184,12 @@ export class KnexUserAddressRepository implements IUserAddressRepository {
    * @returns Array of active UserAddress records
    */
   async findByUser(userId: string): Promise<UserAddress[]> {
-    return this.knex<UserAddress>('user_addresses')
+    const addresses = await this.knex<UserAddress>('user_addresses')
       .where({ user_id: userId, is_active: true })
       .orderBy('created_at', 'desc')
       .select('*');
+    
+    return addresses;
   }
 
   /**
@@ -184,9 +198,11 @@ export class KnexUserAddressRepository implements IUserAddressRepository {
    * @returns Array of UserAddress records for active addresses
    */
   async findByAddress(address: string): Promise<UserAddress[]> {
-    return this.knex<UserAddress>('user_addresses')
+    const addresses = await this.knex<UserAddress>('user_addresses')
       .where({ address: address.toLowerCase(), is_active: true })
       .select('*');
+    
+    return addresses;
   }
 
   /**
@@ -196,9 +212,11 @@ export class KnexUserAddressRepository implements IUserAddressRepository {
    * @returns UserAddress record if found, undefined otherwise
    */
   async findByUserAndAddress(userId: string, address: string): Promise<UserAddress | undefined> {
-    return this.knex<UserAddress>('user_addresses')
+    const address_record = await this.knex<UserAddress>('user_addresses')
       .where({ user_id: userId, address: address.toLowerCase() })
       .first();
+    
+    return address_record || undefined;
   }
 
   /**
@@ -207,7 +225,7 @@ export class KnexUserAddressRepository implements IUserAddressRepository {
    * @returns Created UserAddress record
    */
   async create(data: Omit<UserAddress, 'id' | 'created_at' | 'updated_at'>): Promise<UserAddress> {
-    const now = new Date();
+    const now = new Date().toISOString();
     const [userAddress] = await this.knex<UserAddress>('user_addresses')
       .insert({
         id: uuidv4(),
@@ -218,6 +236,7 @@ export class KnexUserAddressRepository implements IUserAddressRepository {
         updated_at: now
       })
       .returning('*');
+    
     return userAddress;
   }
 
@@ -232,9 +251,10 @@ export class KnexUserAddressRepository implements IUserAddressRepository {
       .where({ user_id: userId, address: address.toLowerCase() })
       .update({
         is_active: false,
-        updated_at: new Date()
+        updated_at: new Date().toISOString()
       })
       .returning('*');
+    
     return userAddress;
   }
 
@@ -249,9 +269,10 @@ export class KnexUserAddressRepository implements IUserAddressRepository {
       .where({ user_id: userId, address: address.toLowerCase() })
       .update({
         is_active: true,
-        updated_at: new Date()
+        updated_at: new Date().toISOString()
       })
       .returning('*');
+    
     return userAddress;
   }
 } 
