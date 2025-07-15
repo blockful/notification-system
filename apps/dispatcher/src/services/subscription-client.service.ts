@@ -61,4 +61,14 @@ export class SubscriptionClient implements ISubscriptionClient {
       notifications
     });
   }
+
+  /**
+   * Get users who own a specific wallet address
+   * @param address The wallet address
+   * @returns List of users who own the address
+   */
+  async getWalletOwners(address: string): Promise<User[]> {
+    const response = await this.client.get(`/users/by-address/${encodeURIComponent(address)}`);
+    return response.data;
+  }
 } 

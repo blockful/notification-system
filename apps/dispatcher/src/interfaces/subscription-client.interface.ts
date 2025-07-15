@@ -44,4 +44,11 @@ export interface ISubscriptionClient {
    * @param notifications List of notifications to mark as sent
    */
   markAsSent(notifications: Notification[]): Promise<void>;
+
+  /**
+   * Get users who own a specific wallet address
+   * @param address The wallet address
+   * @returns List of users who own the address
+   */
+  getWalletOwners(address: string): Promise<User[]>;
 } 
