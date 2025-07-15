@@ -32,17 +32,16 @@ export const subscriptionQuerystringSchema = z.object({
     .transform((val) => {
       if (!val) return undefined;
       
-      // If it's a unix timestamp (only digits), expect it in milliseconds
+      // If it's a unix timestamp (only digits), convert to ISO string
       if (/^\d+$/.test(val)) {
         const timestampNum = parseInt(val, 10);
-        // Convert milliseconds timestamp to ISO string
-        return new Date(timestampNum).toISOString();
+        return new Date(timestampNum * 1000).toISOString();
       }
       
       // If it's already an ISO string or other format, keep as is
       return val;
     })
-    .describe('Optional timestamp in milliseconds to filter subscribers by subscription date')
+    .describe('Optional timestamp to filter subscribers by subscription date')
 });
 
 /**
