@@ -18,10 +18,6 @@ export const toSubscriptionResponse = (
   user_id: preference.user_id,
   dao_id: daoId || preference.dao_id,
   is_active: preference.is_active,
-  created_at: preference.created_at ? 
-    (typeof preference.created_at === 'string' ? preference.created_at : preference.created_at.toISOString()) 
-    : undefined,
-  updated_at: preference.updated_at ? 
-    (typeof preference.updated_at === 'string' ? preference.updated_at : preference.updated_at.toISOString()) 
-    : undefined
+  created_at: preference.created_at,
+  updated_at: preference.updated_at
 }); 
