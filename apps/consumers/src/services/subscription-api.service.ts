@@ -130,7 +130,10 @@ export class SubscriptionAPIService {
    */
   async removeUserWallet(userId: string, address: string, channel: string): Promise<void> {
     await this.client.delete(`/users/${userId}/addresses/${encodeURIComponent(address)}`, {
-      params: { channel }
+      params: { channel },
+      headers: {
+        'Content-Type': undefined
+      }
     });
   }
 } 
