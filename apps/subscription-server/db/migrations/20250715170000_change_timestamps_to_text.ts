@@ -6,11 +6,20 @@ export async function up(knex: Knex): Promise<void> {
     table.text('created_at_new');
   });
   
-  // Copy existing data converting to ISO string
-  await knex.raw(`
-    UPDATE users 
-    SET created_at_new = to_char(created_at, 'YYYY-MM-DD"T"HH24:MI:SS.MS"Z"')
-  `);
+  // Copy existing data converting to ISO string (database-specific SQL)
+  if (knex.client.config.client === 'pg') {
+    // PostgreSQL
+    await knex.raw(`
+      UPDATE users 
+      SET created_at_new = to_char(created_at, 'YYYY-MM-DD"T"HH24:MI:SS.MS"Z"')
+    `);
+  } else {
+    // SQLite
+    await knex.raw(`
+      UPDATE users 
+      SET created_at_new = datetime(created_at, 'localtime') || 'Z'
+    `);
+  }
   
   // Drop old column and rename new one
   await knex.schema.alterTable('users', (table) => {
@@ -24,11 +33,21 @@ export async function up(knex: Knex): Promise<void> {
     table.text('updated_at_new');
   });
   
-  await knex.raw(`
-    UPDATE user_preferences 
-    SET created_at_new = to_char(created_at, 'YYYY-MM-DD"T"HH24:MI:SS.MS"Z"'),
-        updated_at_new = to_char(updated_at, 'YYYY-MM-DD"T"HH24:MI:SS.MS"Z"')
-  `);
+  if (knex.client.config.client === 'pg') {
+    // PostgreSQL
+    await knex.raw(`
+      UPDATE user_preferences 
+      SET created_at_new = to_char(created_at, 'YYYY-MM-DD"T"HH24:MI:SS.MS"Z"'),
+          updated_at_new = to_char(updated_at, 'YYYY-MM-DD"T"HH24:MI:SS.MS"Z"')
+    `);
+  } else {
+    // SQLite
+    await knex.raw(`
+      UPDATE user_preferences 
+      SET created_at_new = datetime(created_at, 'localtime') || 'Z',
+          updated_at_new = datetime(updated_at, 'localtime') || 'Z'
+    `);
+  }
   
   await knex.schema.alterTable('user_preferences', (table) => {
     table.dropColumn('created_at');
@@ -43,11 +62,21 @@ export async function up(knex: Knex): Promise<void> {
     table.text('updated_at_new');
   });
   
-  await knex.raw(`
-    UPDATE user_addresses 
-    SET created_at_new = to_char(created_at, 'YYYY-MM-DD"T"HH24:MI:SS.MS"Z"'),
-        updated_at_new = to_char(updated_at, 'YYYY-MM-DD"T"HH24:MI:SS.MS"Z"')
-  `);
+  if (knex.client.config.client === 'pg') {
+    // PostgreSQL
+    await knex.raw(`
+      UPDATE user_addresses 
+      SET created_at_new = to_char(created_at, 'YYYY-MM-DD"T"HH24:MI:SS.MS"Z"'),
+          updated_at_new = to_char(updated_at, 'YYYY-MM-DD"T"HH24:MI:SS.MS"Z"')
+    `);
+  } else {
+    // SQLite
+    await knex.raw(`
+      UPDATE user_addresses 
+      SET created_at_new = datetime(created_at, 'localtime') || 'Z',
+          updated_at_new = datetime(updated_at, 'localtime') || 'Z'
+    `);
+  }
   
   await knex.schema.alterTable('user_addresses', (table) => {
     table.dropColumn('created_at');
@@ -63,18 +92,23 @@ export async function down(knex: Knex): Promise<void> {
     table.datetime('created_at_old');
   });
   
-  await knex.raw(`
-    UPDATE users 
-    SET created_at_old = created_at::timestamp
-  `);
+  if (knex.client.config.client === 'pg') {
+    // PostgreSQL
+    await knex.raw(`
+      UPDATE users 
+      SET created_at_old = created_at::timestamp
+    `);
+  } else {
+    // SQLite
+    await knex.raw(`
+      UPDATE users 
+      SET created_at_old = datetime(created_at)
+    `);
+  }
   
   await knex.schema.alterTable('users', (table) => {
     table.dropColumn('created_at');
-  });
-  
-  await knex.schema.alterTable('users', (table) => {
     table.renameColumn('created_at_old', 'created_at');
-    table.datetime('created_at').notNullable().defaultTo(knex.fn.now()).alter();
   });
 
   // Revert user_preferences table
@@ -83,22 +117,27 @@ export async function down(knex: Knex): Promise<void> {
     table.datetime('updated_at_old');
   });
   
-  await knex.raw(`
-    UPDATE user_preferences 
-    SET created_at_old = created_at::timestamp,
-        updated_at_old = updated_at::timestamp
-  `);
+  if (knex.client.config.client === 'pg') {
+    // PostgreSQL
+    await knex.raw(`
+      UPDATE user_preferences 
+      SET created_at_old = created_at::timestamp,
+          updated_at_old = updated_at::timestamp
+    `);
+  } else {
+    // SQLite
+    await knex.raw(`
+      UPDATE user_preferences 
+      SET created_at_old = datetime(created_at),
+          updated_at_old = datetime(updated_at)
+    `);
+  }
   
   await knex.schema.alterTable('user_preferences', (table) => {
     table.dropColumn('created_at');
     table.dropColumn('updated_at');
-  });
-  
-  await knex.schema.alterTable('user_preferences', (table) => {
     table.renameColumn('created_at_old', 'created_at');
     table.renameColumn('updated_at_old', 'updated_at');
-    table.datetime('created_at').notNullable().defaultTo(knex.fn.now()).alter();
-    table.datetime('updated_at').notNullable().defaultTo(knex.fn.now()).alter();
   });
 
   // Revert user_addresses table
@@ -107,21 +146,26 @@ export async function down(knex: Knex): Promise<void> {
     table.datetime('updated_at_old');
   });
   
-  await knex.raw(`
-    UPDATE user_addresses 
-    SET created_at_old = created_at::timestamp,
-        updated_at_old = updated_at::timestamp
-  `);
+  if (knex.client.config.client === 'pg') {
+    // PostgreSQL
+    await knex.raw(`
+      UPDATE user_addresses 
+      SET created_at_old = created_at::timestamp,
+          updated_at_old = updated_at::timestamp
+    `);
+  } else {
+    // SQLite
+    await knex.raw(`
+      UPDATE user_addresses 
+      SET created_at_old = datetime(created_at),
+          updated_at_old = datetime(updated_at)
+    `);
+  }
   
   await knex.schema.alterTable('user_addresses', (table) => {
     table.dropColumn('created_at');
     table.dropColumn('updated_at');
-  });
-  
-  await knex.schema.alterTable('user_addresses', (table) => {
     table.renameColumn('created_at_old', 'created_at');
     table.renameColumn('updated_at_old', 'updated_at');
-    table.datetime('created_at').notNullable().defaultTo(knex.fn.now()).alter();
-    table.datetime('updated_at').notNullable().defaultTo(knex.fn.now()).alter();
   });
 }
