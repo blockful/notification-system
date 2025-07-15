@@ -6,9 +6,10 @@ import fastifySwaggerUi from '@fastify/swagger-ui';
 import { Knex } from 'knex';
 import { initial_routes } from './controllers/initial_routes';
 import { DaoController, NotificationController } from './controllers';
-import { KnexUserRepository, KnexPreferenceRepository, KnexNotificationRepository } from './repositories/knex.repository';
+import { KnexUserRepository, KnexPreferenceRepository, KnexNotificationRepository, KnexUserAddressRepository } from './repositories/knex.repository';
 import { SubscriptionService, NotificationService } from './services';
 import { DaoHandler } from './handlers/dao.handlers';
+import { UserAddressController } from './controllers/user-address.controller';
 
 export class App {
   private server: FastifyInstance;
@@ -22,9 +23,10 @@ export class App {
     const userRepository = new KnexUserRepository(db);
     const preferenceRepository = new KnexPreferenceRepository(db);
     const notificationRepository = new KnexNotificationRepository(db);
+    const userAddressRepository = new KnexUserAddressRepository(db);
     
     // Service instances
-    const subscriptionService = new SubscriptionService(userRepository, preferenceRepository);
+    const subscriptionService = new SubscriptionService(userRepository, preferenceRepository, userAddressRepository);
     const notificationService = new NotificationService(notificationRepository);
     
     // Handler instances
@@ -33,9 +35,10 @@ export class App {
     // Controller instances
     const daoController = new DaoController(daoHandler);
     const notificationController = new NotificationController(notificationService);
+    const userAddressController = new UserAddressController(subscriptionService);
 
     this.setupFastify();
-    this.setupRoutes(daoController, notificationController);
+    this.setupRoutes(daoController, notificationController, userAddressController);
   }
 
   private setupFastify(): void {
@@ -70,10 +73,11 @@ export class App {
     });
   }
 
-  private setupRoutes(daoController: DaoController, notificationController: NotificationController): void {
+  private setupRoutes(daoController: DaoController, notificationController: NotificationController, userAddressController: UserAddressController): void {
     this.server.register(initial_routes);
     this.server.register((app) => daoController.register(app));
     this.server.register((app) => notificationController.register(app));
+    this.server.register((app) => userAddressController.register(app));
   }
 
   async start(): Promise<void> {

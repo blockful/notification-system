@@ -100,20 +100,31 @@ export class SubscriptionService {
    * @returns UserAddress record
    */
   async addUserAddress(userId: string, address: string): Promise<UserAddress> {
+    // Basic validation
+    if (!address || address.trim().length === 0) {
+      throw new Error('Address is required');
+    }
+    
+    // Basic Ethereum address validation (starts with 0x and has 42 characters)
+    const cleanAddress = address.trim();
+    if (!/^0x[a-fA-F0-9]{40}$/.test(cleanAddress)) {
+      throw new Error('Invalid Ethereum address format');
+    }
+
     // Check if the address already exists for this user
-    const existing = await this.userAddressRepository.findByUserAndAddress(userId, address);
+    const existing = await this.userAddressRepository.findByUserAndAddress(userId, cleanAddress);
     
     if (existing) {
       if (existing.is_active) {
         return existing;
       } else {
-        return await this.userAddressRepository.reactivate(userId, address);
+        return await this.userAddressRepository.reactivate(userId, cleanAddress);
       }
     } else {
       // Create new address record
       return await this.userAddressRepository.create({
         user_id: userId,
-        address: address,
+        address: cleanAddress,
         is_active: true
       });
     }
@@ -126,7 +137,11 @@ export class SubscriptionService {
    * @returns Updated UserAddress record
    */
   async removeUserAddress(userId: string, address: string): Promise<UserAddress> {
-    return await this.userAddressRepository.deactivate(userId, address);
+    if (!address || address.trim().length === 0) {
+      throw new Error('Address is required');
+    }
+
+    return await this.userAddressRepository.deactivate(userId, address.trim());
   }
 
   /**
