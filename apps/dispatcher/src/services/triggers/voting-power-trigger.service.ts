@@ -64,20 +64,16 @@ export class VotingPowerTriggerHandler extends BaseTriggerHandler {
       const deltaValue = delta ? parseInt(delta) : 0;
 
       if (changeType === 'delegation') {
-        // Delegation event - sourceAccountId is delegatorAccountId
         if (deltaValue >= 0) {
           notificationMessage = `🥳 You've received a new delegation in ${daoId}!\n${sourceAccountId} delegated to you, increasing your voting power by ${deltaValue}.`;
         } else if (deltaValue < 0) {
           notificationMessage = `🥺 A delegator just undelegated in ${daoId}!\n${sourceAccountId} removed their delegation, reducing your voting power by ${deltaValue}.`;
         } 
       } else if (changeType === 'transfer') {
-        // Transfer event - check who caused the change based on delta
         if (deltaValue >= 0) {
-          // Received tokens - sourceAccountId is fromAccountId (who sent)
-          notificationMessage = `💰 You've received new tokens in ${daoId}!\n${sourceAccountId} transferred tokens to you, increasing your voting power by ${deltaValue}.`;
+          notificationMessage = `📈 Your voting power increased in ${daoId}!\nYou gained ${deltaValue} voting power from token transfer activity.`;
         } else if (deltaValue < 0) {
-          // Sent tokens - targetAccountId is toAccountId (who received)  
-          notificationMessage = `📤 You've transferred tokens in ${daoId}!\nYou sent tokens to ${targetAccountId}, reducing your voting power by ${deltaValue}.`;
+          notificationMessage = `📉 Your voting power decreased in ${daoId}!\nYou lost ${Math.abs(deltaValue)} voting power from token transfer activity.`;
         } 
       } else {
         // Generic voting power change
