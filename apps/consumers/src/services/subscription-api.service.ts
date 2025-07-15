@@ -3,10 +3,20 @@
  * Handles communication with the subscription server API for managing user preferences
  */
 
+import axios, { AxiosInstance } from 'axios';
 import { UserSubscriptionResponse, UserResponse } from '../interfaces/subscription.interface';
 
 export class SubscriptionAPIService {
-  constructor(private readonly baseUrl: string) {}
+  private client: AxiosInstance;
+
+  constructor(private readonly baseUrl: string) {
+    this.client = axios.create({
+      baseURL: this.baseUrl,
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    });
+  }
 
   /**
    * Updates or creates a user subscription for a specific DAO
@@ -16,22 +26,12 @@ export class SubscriptionAPIService {
    * @returns The subscription response
    */
   public async saveUserPreference(daoId: string, channelUserId: number, isActive: boolean = true): Promise<UserSubscriptionResponse> {
-    const response = await fetch(`${this.baseUrl}/subscriptions/${daoId}`, {
-    method: 'POST',
-    headers: {
-        'Content-Type': 'application/json'
-    },
-    body: JSON.stringify({
-        channel: 'telegram',
-        channel_user_id: channelUserId.toString(),
-        is_active: isActive
-    })
+    const { data } = await this.client.post(`/subscriptions/${daoId}`, {
+      channel: 'telegram',
+      channel_user_id: channelUserId.toString(),
+      is_active: isActive
     });
-    if (!response.ok) {
-    throw new Error(`Server responded with ${response.status}: ${response.statusText}`);
-    }
-    const data = await response.json();
-    return data as UserSubscriptionResponse;
+    return data;
   }
 
   /**
@@ -58,12 +58,8 @@ export class SubscriptionAPIService {
    * @returns List of subscribers
    */
   private async getDaoSubscribers(daoId: string): Promise<UserResponse[]> {
-    const response = await fetch(`${this.baseUrl}/subscriptions/${daoId}`);
-    if (!response.ok) {
-      throw new Error(`Server responded with ${response.status}: ${response.statusText}`);
-    }
-    const data = await response.json();
-    return data as UserResponse[];
+    const { data } = await this.client.get(`/subscriptions/${daoId}`);
+    return data;
   }
 
   /**
@@ -100,13 +96,8 @@ export class SubscriptionAPIService {
    * @returns List of user's wallet addresses
    */
   async getUserWallets(userId: string): Promise<{ address: string; created_at: string }[]> {
-    const response = await fetch(`${this.baseUrl}/users/${userId}/addresses`);
-    if (!response.ok) {
-      throw new Error(`Server responded with ${response.status}: ${response.statusText}`);
-    }
-    
-    const addresses = await response.json();
-    return addresses.map((addr: any) => ({
+    const { data } = await this.client.get(`/users/${userId}/addresses`);
+    return data.map((addr: any) => ({
       address: addr.address,
       created_at: addr.created_at
     }));
@@ -118,18 +109,7 @@ export class SubscriptionAPIService {
    * @param address The wallet address to add
    */
   async addUserWallet(userId: string, address: string): Promise<void> {
-    const response = await fetch(`${this.baseUrl}/users/${userId}/addresses`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({ address })
-    });
-    
-    if (!response.ok) {
-      const error = await response.json();
-      throw new Error(error.error || 'Failed to add wallet address');
-    }
+    await this.client.post(`/users/${userId}/addresses`, { address });
   }
 
   /**
@@ -138,13 +118,6 @@ export class SubscriptionAPIService {
    * @param address The wallet address to remove
    */
   async removeUserWallet(userId: string, address: string): Promise<void> {
-    const response = await fetch(`${this.baseUrl}/users/${userId}/addresses/${encodeURIComponent(address)}`, {
-      method: 'DELETE'
-    });
-    
-    if (!response.ok) {
-      const error = await response.json();
-      throw new Error(error.error || 'Failed to remove wallet address');
-    }
+    await this.client.delete(`/users/${userId}/addresses/${encodeURIComponent(address)}`);
   }
 } 
