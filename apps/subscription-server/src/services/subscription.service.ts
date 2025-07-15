@@ -4,6 +4,7 @@
  */
 
 import { IUserRepository, IPreferenceRepository, User, UserPreference } from '../interfaces';
+import { IUserAddressRepository, UserAddress } from '../interfaces/user-address.interface';
 
 /**
  * Service class for handling subscription operations
@@ -11,7 +12,8 @@ import { IUserRepository, IPreferenceRepository, User, UserPreference } from '..
 export class SubscriptionService {
   constructor(
     private userRepository: IUserRepository,
-    private preferenceRepository: IPreferenceRepository
+    private preferenceRepository: IPreferenceRepository,
+    private userAddressRepository: IUserAddressRepository
   ) {}
 
   /**
@@ -89,5 +91,78 @@ export class SubscriptionService {
     return {
       subscribers
     };
+  }
+
+  /**
+   * Add a wallet address to a user (create new or reactivate existing)
+   * @param userId - The user ID
+   * @param address - The wallet address to add
+   * @returns UserAddress record
+   */
+  async addUserAddress(userId: string, address: string): Promise<UserAddress> {
+    // Check if the address already exists for this user
+    const existing = await this.userAddressRepository.findByUserAndAddress(userId, address);
+    
+    if (existing) {
+      if (existing.is_active) {
+        return existing;
+      } else {
+        return await this.userAddressRepository.reactivate(userId, address);
+      }
+    } else {
+      // Create new address record
+      return await this.userAddressRepository.create({
+        user_id: userId,
+        address: address,
+        is_active: true
+      });
+    }
+  }
+
+  /**
+   * Remove a wallet address from a user (soft delete)
+   * @param userId - The user ID
+   * @param address - The wallet address to remove
+   * @returns Updated UserAddress record
+   */
+  async removeUserAddress(userId: string, address: string): Promise<UserAddress> {
+    return await this.userAddressRepository.deactivate(userId, address);
+  }
+
+  /**
+   * Get all active wallet addresses for a user
+   * @param userId - The user ID
+   * @returns Array of active UserAddress records
+   */
+  async getUserAddresses(userId: string): Promise<UserAddress[]> {
+    return await this.userAddressRepository.findByUser(userId);
+  }
+
+  /**
+   * Get all users who own a specific wallet address
+   * @param address - The wallet address
+   * @returns Array of UserAddress records with user information
+   */
+  async getAddressOwners(address: string): Promise<UserAddress[]> {
+    return await this.userAddressRepository.findByAddress(address);
+  }
+
+  /**
+   * Get full user information for users who own a specific wallet address
+   * @param address - The wallet address
+   * @returns Array of Users who own the address
+   */
+  async getUsersByWalletAddress(address: string): Promise<User[]> {
+    const userAddresses = await this.userAddressRepository.findByAddress(address);
+    const users: User[] = [];
+    
+    for (const userAddress of userAddresses) {
+      const user = await this.userRepository.findById(userAddress.user_id);
+      if (user) {
+        users.push(user);
+      }
+    }
+    
+    return users;
   }
 } 
