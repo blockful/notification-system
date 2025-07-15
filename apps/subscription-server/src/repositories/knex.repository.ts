@@ -6,6 +6,7 @@
 import { Knex } from 'knex';
 import { v4 as uuidv4 } from 'uuid';
 import { IUserRepository, IPreferenceRepository, INotificationRepository, User, UserPreference, Notification } from '../interfaces';
+import { IUserAddressRepository, UserAddress } from '../interfaces/user-address.interface';
 
 /**
  * User repository implementation using Knex
@@ -155,5 +156,102 @@ export class KnexNotificationRepository implements INotificationRepository {
       .insert(notifications)
       .onConflict(['user_id', 'dao_id', 'event_id'])
       .ignore();
+  }
+}
+
+/**
+ * User Address repository implementation using Knex
+ * Handles all user address-related database operations with soft delete support
+ */
+export class KnexUserAddressRepository implements IUserAddressRepository {
+  constructor(private readonly knex: Knex) {}
+
+  /**
+   * Find all active wallet addresses for a user
+   * @param userId - The user ID
+   * @returns Array of active UserAddress records
+   */
+  async findByUser(userId: string): Promise<UserAddress[]> {
+    return this.knex<UserAddress>('user_addresses')
+      .where({ user_id: userId, is_active: true })
+      .orderBy('created_at', 'desc')
+      .select('*');
+  }
+
+  /**
+   * Find all users who own a specific wallet address
+   * @param address - The wallet address (case-insensitive)
+   * @returns Array of UserAddress records for active addresses
+   */
+  async findByAddress(address: string): Promise<UserAddress[]> {
+    return this.knex<UserAddress>('user_addresses')
+      .where({ address: address.toLowerCase(), is_active: true })
+      .select('*');
+  }
+
+  /**
+   * Find a specific user-address combination
+   * @param userId - The user ID
+   * @param address - The wallet address
+   * @returns UserAddress record if found, undefined otherwise
+   */
+  async findByUserAndAddress(userId: string, address: string): Promise<UserAddress | undefined> {
+    return this.knex<UserAddress>('user_addresses')
+      .where({ user_id: userId, address: address.toLowerCase() })
+      .first();
+  }
+
+  /**
+   * Create a new user address record
+   * @param data - User address data (without id, created_at, updated_at)
+   * @returns Created UserAddress record
+   */
+  async create(data: Omit<UserAddress, 'id' | 'created_at' | 'updated_at'>): Promise<UserAddress> {
+    const now = new Date();
+    const [userAddress] = await this.knex<UserAddress>('user_addresses')
+      .insert({
+        id: uuidv4(),
+        user_id: data.user_id,
+        address: data.address.toLowerCase(),
+        is_active: data.is_active,
+        created_at: now,
+        updated_at: now
+      })
+      .returning('*');
+    return userAddress;
+  }
+
+  /**
+   * Deactivate a user address (soft delete)
+   * @param userId - The user ID
+   * @param address - The wallet address to deactivate
+   * @returns Updated UserAddress record
+   */
+  async deactivate(userId: string, address: string): Promise<UserAddress> {
+    const [userAddress] = await this.knex<UserAddress>('user_addresses')
+      .where({ user_id: userId, address: address.toLowerCase() })
+      .update({
+        is_active: false,
+        updated_at: new Date()
+      })
+      .returning('*');
+    return userAddress;
+  }
+
+  /**
+   * Reactivate a user address
+   * @param userId - The user ID
+   * @param address - The wallet address to reactivate
+   * @returns Updated UserAddress record
+   */
+  async reactivate(userId: string, address: string): Promise<UserAddress> {
+    const [userAddress] = await this.knex<UserAddress>('user_addresses')
+      .where({ user_id: userId, address: address.toLowerCase() })
+      .update({
+        is_active: true,
+        updated_at: new Date()
+      })
+      .returning('*');
+    return userAddress;
   }
 } 
