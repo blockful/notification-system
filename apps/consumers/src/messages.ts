@@ -11,12 +11,10 @@ const generateCommandList = () => {
 
 export const WELCOME_MESSAGE = `
 🔔 Welcome to the Anticapture notification system!
-
 Spotting the "oh no" before it hits your treasury.
 
-To start using the system, you'll need to go through the following steps:
-
-📊 Add the DAOs you want to receive notifications from by clicking on "DAOs"`;
+➡️ To start using the system, you'll need to add the DAOs you want to receive notifications from by clicking on "DAOs".
+➡️ After that, click on "My Wallets" and add your wallet address to receive custom notifications.`;
 
 export const HELP_MESSAGE = `
 <b>What is Anticapture?</b>
@@ -43,4 +41,18 @@ export const EDIT_DAOS_MESSAGE = 'You can edit this list by clicking on 🌐 DAO
 
 // Static buttons messages
 export const DAOS_BUTTON_TEXT = '🌐 DAOs';
-export const LEARN_MORE_BUTTON_TEXT = '💡 Learn More'; 
+export const LEARN_MORE_BUTTON_TEXT = '💡 Learn More';
+export const MY_WALLETS_BUTTON_TEXT = '📝 My Wallets';
+
+// Wallet-related messages
+export const WALLET_SELECTION_MESSAGE = `Here's the wallets you have added to receive custom notifications:`;
+export const ADD_WALLET_BUTTON_TEXT = '➕ Add wallet';
+export const REMOVE_WALLET_BUTTON_TEXT = '❌ Remove wallet';
+export const WALLET_INPUT_MESSAGE = '👉 Please enter your wallet address.';
+export const WALLET_PROCESSING_MESSAGE = '⏱️ Hang tight, we\'re just connecting your data…';
+export const WALLET_SUCCESS_MESSAGE = '✅ All set! Your wallet has been added.';
+export const WALLET_ERROR_MESSAGE = '❌ Invalid wallet address. Please try again.';
+export const WALLET_REMOVE_CONFIRMATION_MESSAGE = 'Select the wallets you want to remove:';
+export const WALLET_REMOVE_CONFIRM_BUTTON_TEXT = '🗑️ Confirm removal';
+export const WALLET_REMOVE_SUCCESS_MESSAGE = '✅ Selected wallets have been removed.';
+export const NO_WALLETS_MESSAGE = 'You haven\'t added any wallets yet. Click "Add wallet" to get started.'; 
