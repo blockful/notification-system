@@ -1,5 +1,5 @@
 import { DispatcherMessage, MessageProcessingResult } from "../../interfaces/dispatcher-message.interface";
-import { ISubscriptionClient } from "../../interfaces/subscription-client.interface";
+import { ISubscriptionClient, User } from "../../interfaces/subscription-client.interface";
 import { NotificationClientFactory } from "../notification/notification-factory.service";
 import { BaseTriggerHandler } from "./base-trigger.service";
 import crypto from 'crypto';
@@ -36,7 +36,7 @@ export class VotingPowerTriggerHandler extends BaseTriggerHandler {
       const walletOwners = await this.subscriptionClient.getWalletOwners(accountId);
       
       // Filter wallet owners to only include those subscribed to this DAO
-      const subscribers = [];
+      const subscribers: User[] = [];
       for (const owner of walletOwners) {
         const daoSubscribers = await this.subscriptionClient.getDaoSubscribers(daoId, timestamp);
         const isSubscribed = daoSubscribers.some(sub => sub.id === owner.id);
