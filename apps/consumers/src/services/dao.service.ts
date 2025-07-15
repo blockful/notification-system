@@ -49,7 +49,7 @@ export class DAOService {
         return;
       }
 
-      const userPreferences = await this.subscriptionApi.getUserPreferences(chatId, daos);
+      const userPreferences = await this.subscriptionApi.getUserPreferences(chatId, 'telegram', daos);
       const currentSelections = new Set<string>(userPreferences);
       this.ensureSession(ctx);
       ctx.session.daoSelections = currentSelections;
@@ -139,15 +139,15 @@ export class DAOService {
 
   private async updateSubscriptions(chatId: number, selectedDAOs: Set<string>) {
     const daos = await this.anticaptureClient.getDAOs();
-    const currentPreferences = await this.subscriptionApi.getUserPreferences(chatId, daos);
+    const currentPreferences = await this.subscriptionApi.getUserPreferences(chatId, 'telegram', daos);
     const currentPreferencesSet = new Set(currentPreferences);
     
     const toSubscribe = Array.from(selectedDAOs).filter(dao => !currentPreferencesSet.has(dao));
     const toUnsubscribe = currentPreferences.filter(dao => !selectedDAOs.has(dao));
     
     const promises = [
-      ...toSubscribe.map(daoId => this.subscriptionApi.saveUserPreference(daoId, chatId, true)),
-      ...toUnsubscribe.map(daoId => this.subscriptionApi.saveUserPreference(daoId, chatId, false))
+      ...toSubscribe.map(daoId => this.subscriptionApi.saveUserPreference(daoId, chatId, 'telegram', true)),
+      ...toUnsubscribe.map(daoId => this.subscriptionApi.saveUserPreference(daoId, chatId, 'telegram', false))
     ];
 
     await Promise.all(promises);

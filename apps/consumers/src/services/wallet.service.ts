@@ -49,7 +49,7 @@ export class WalletService {
 
     try {
       // Get user's current wallets
-      const wallets = await this.subscriptionApi.getUserWallets(userId.toString());
+      const wallets = await this.subscriptionApi.getUserWallets(userId.toString(), 'telegram');
       
       let message = WALLET_SELECTION_MESSAGE;
       
@@ -103,7 +103,7 @@ export class WalletService {
     this.ensureSession(ctx);
 
     try {
-      const wallets = await this.subscriptionApi.getUserWallets(userId.toString());
+      const wallets = await this.subscriptionApi.getUserWallets(userId.toString(), 'telegram');
       
       if (wallets.length === 0) {
         await ctx.reply(NO_WALLETS_MESSAGE);
@@ -153,7 +153,7 @@ export class WalletService {
       await ctx.reply(WALLET_PROCESSING_MESSAGE);
       
       // Add wallet via API
-      await this.subscriptionApi.addUserWallet(userId.toString(), address);
+      await this.subscriptionApi.addUserWallet(userId.toString(), address, 'telegram');
       
       await ctx.reply(WALLET_SUCCESS_MESSAGE);
       
@@ -190,7 +190,7 @@ export class WalletService {
 
     try {
       // Get current wallets to rebuild keyboard
-      const wallets = await this.subscriptionApi.getUserWallets(userId.toString());
+      const wallets = await this.subscriptionApi.getUserWallets(userId.toString(), 'telegram');
       
       const keyboard = {
         inline_keyboard: [
@@ -233,7 +233,7 @@ export class WalletService {
     try {
       // Remove each selected wallet
       const promises = Array.from(walletsToRemove).map(address => 
-        this.subscriptionApi.removeUserWallet(userId.toString(), address)
+        this.subscriptionApi.removeUserWallet(userId.toString(), address, 'telegram')
       );
 
       await Promise.all(promises);

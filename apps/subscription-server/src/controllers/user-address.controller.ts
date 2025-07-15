@@ -11,10 +11,18 @@ const userAddressParamsSchema = z.object({
 });
 
 /**
+ * Schema for user address query parameters
+ */
+const userAddressQuerySchema = z.object({
+  channel: z.string().describe('The notification channel (e.g., telegram, email)')
+});
+
+/**
  * Schema for add address request body
  */
 const addAddressBodySchema = z.object({
-  address: z.string().describe('The wallet address to add')
+  address: z.string().describe('The wallet address to add'),
+  channel: z.string().describe('The notification channel (e.g., telegram, email)')
 });
 
 /**
@@ -55,10 +63,10 @@ export class UserAddressController {
       }
     }, async (request: FastifyRequest, reply: FastifyReply) => {
       const { userId } = request.params as { userId: string };
-      const { address } = request.body as { address: string };
+      const { address, channel } = request.body as { address: string; channel: string };
       
       try {
-        const userAddress = await this.subscriptionService.addUserAddress(userId, address);
+        const userAddress = await this.subscriptionService.addUserAddress(userId, address, channel);
         return reply.send(userAddress);
       } catch (error: any) {
         return reply.status(400).send({ error: error.message });
@@ -68,19 +76,22 @@ export class UserAddressController {
     // Remove wallet address from user
     fastify.delete<{
       Params: z.infer<typeof userAddressParamsSchema>;
+      Querystring: z.infer<typeof userAddressQuerySchema>;
     }>('/users/:userId/addresses/:address', {
       schema: {
         description: 'Remove a wallet address from a user',
         params: userAddressParamsSchema,
+        querystring: userAddressQuerySchema,
         response: {
           200: userAddressResponseSchema
         }
       }
     }, async (request: FastifyRequest, reply: FastifyReply) => {
       const { userId, address } = request.params as { userId: string; address: string };
+      const { channel } = request.query as { channel: string };
       
       try {
-        const userAddress = await this.subscriptionService.removeUserAddress(userId, address);
+        const userAddress = await this.subscriptionService.removeUserAddress(userId, address, channel);
         return reply.send(userAddress);
       } catch (error: any) {
         return reply.status(400).send({ error: error.message });
@@ -90,19 +101,22 @@ export class UserAddressController {
     // Get all wallet addresses for a user
     fastify.get<{
       Params: z.infer<typeof userAddressParamsSchema>;
+      Querystring: z.infer<typeof userAddressQuerySchema>;
     }>('/users/:userId/addresses', {
       schema: {
         description: 'Get all wallet addresses for a user',
         params: userAddressParamsSchema,
+        querystring: userAddressQuerySchema,
         response: {
           200: z.array(userAddressResponseSchema)
         }
       }
     }, async (request: FastifyRequest, reply: FastifyReply) => {
       const { userId } = request.params as { userId: string };
+      const { channel } = request.query as { channel: string };
       
       try {
-        const addresses = await this.subscriptionService.getUserAddresses(userId);
+        const addresses = await this.subscriptionService.getUserAddresses(userId, channel);
         return reply.send(addresses);
       } catch (error: any) {
         return reply.status(500).send({ error: error.message });
