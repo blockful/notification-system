@@ -93,4 +93,58 @@ export class SubscriptionAPIService {
     
     return userDAOs;
   }
+
+  /**
+   * Get user's wallet addresses
+   * @param userId The user ID
+   * @returns List of user's wallet addresses
+   */
+  async getUserWallets(userId: string): Promise<{ address: string; created_at: string }[]> {
+    const response = await fetch(`${this.baseUrl}/users/${userId}/addresses`);
+    if (!response.ok) {
+      throw new Error(`Server responded with ${response.status}: ${response.statusText}`);
+    }
+    
+    const addresses = await response.json();
+    return addresses.map((addr: any) => ({
+      address: addr.address,
+      created_at: addr.created_at
+    }));
+  }
+
+  /**
+   * Add wallet address to user
+   * @param userId The user ID
+   * @param address The wallet address to add
+   */
+  async addUserWallet(userId: string, address: string): Promise<void> {
+    const response = await fetch(`${this.baseUrl}/users/${userId}/addresses`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ address })
+    });
+    
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.error || 'Failed to add wallet address');
+    }
+  }
+
+  /**
+   * Remove wallet address from user
+   * @param userId The user ID
+   * @param address The wallet address to remove
+   */
+  async removeUserWallet(userId: string, address: string): Promise<void> {
+    const response = await fetch(`${this.baseUrl}/users/${userId}/addresses/${encodeURIComponent(address)}`, {
+      method: 'DELETE'
+    });
+    
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.error || 'Failed to remove wallet address');
+    }
+  }
 } 
