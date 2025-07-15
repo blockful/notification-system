@@ -11,7 +11,7 @@ import { ProcessedVotingPowerHistory } from '@notification-system/anticapture-cl
 const triggerId = 'voting-power-changed';
 
 export class VotingPowerChangedTrigger extends Trigger<ProcessedVotingPowerHistory, void> {
-  private lastProcessedTimestamp: string = Date.now().toString();
+  private lastProcessedTimestamp: string = Math.floor(Date.now() / 1000).toString();
 
   constructor(
     private readonly dispatcherService: DispatcherService,

@@ -32,7 +32,7 @@ export const mockProposal: ProposalOnChain = {
 export const mockVotingPowerData: ProcessedVotingPowerHistory[] = [
   {
     accountId: 'user1.eth',
-    timestamp: '1625097600000', // July 1, 2021
+    timestamp: '1625097600', // July 1, 2021
     delta: '100',
     daoId: 'ens',
     transactionHash: '0x123abc',
@@ -48,7 +48,7 @@ export const mockVotingPowerData: ProcessedVotingPowerHistory[] = [
   },
   {
     accountId: 'user2.eth', 
-    timestamp: '1625184000000', // July 2, 2021
+    timestamp: '1625184000', // July 2, 2021
     delta: '-50',
     daoId: 'ens',
     transactionHash: '0x456def',

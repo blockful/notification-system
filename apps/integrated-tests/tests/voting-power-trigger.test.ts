@@ -66,7 +66,7 @@ describe('Voting Power Trigger - Integration Test', () => {
   test('should send voting power change notification to subscribed users', async () => {
     // Create voting power data with a timestamp that's after the user subscription
     // Add some buffer time to ensure the event happens after the user subscription
-    const eventTimestamp = (Date.now() + 2000).toString(); // 2 seconds in the future
+    const eventTimestamp = (Math.floor(Date.now() / 1000) + 2).toString(); // 2 seconds in the future
     
     const votingPowerEvents = [
       VotingPowerFactory.createDelegationEvent(

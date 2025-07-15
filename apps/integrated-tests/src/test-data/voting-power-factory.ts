@@ -2,7 +2,7 @@ import { ProcessedVotingPowerHistory } from '@notification-system/anticapture-cl
 
 export class VotingPowerFactory {
   static createVotingPowerEvent(overrides?: Partial<ProcessedVotingPowerHistory>): ProcessedVotingPowerHistory {
-    const baseTimestamp = Date.now().toString();
+    const baseTimestamp = Math.floor(Date.now() / 1000).toString();
     
     return {
       accountId: 'user1.eth',
@@ -29,7 +29,7 @@ export class VotingPowerFactory {
     daoId: string = 'test-dao'
   ): ProcessedVotingPowerHistory[] {
     return Array.from({ length: count }, (_, index) => {
-      const timestamp = (Date.now() + index * 1000).toString(); // 1 second apart
+      const timestamp = (Math.floor(Date.now() / 1000) + index).toString(); // 1 second apart
       return this.createVotingPowerEvent({
         accountId: `${baseAccountId}${index + 1}.eth`,
         timestamp,
@@ -46,7 +46,7 @@ export class VotingPowerFactory {
     accountId: string = 'user1.eth'
   ): ProcessedVotingPowerHistory[] {
     return daoIds.map((daoId, index) => {
-      const timestamp = (Date.now() + index * 1000).toString();
+      const timestamp = (Math.floor(Date.now() / 1000) + index).toString();
       return this.createVotingPowerEvent({
         accountId,
         daoId,

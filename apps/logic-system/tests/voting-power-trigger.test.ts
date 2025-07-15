@@ -33,7 +33,7 @@ describe('VotingPowerChangedTrigger', () => {
       // Access private field for testing
       const lastProcessed = (trigger2 as any).lastProcessedTimestamp;
       
-      expect(lastProcessed.toString().slice(0, -3)).toBe(Date.now().toString().slice(0, -3));
+      expect(lastProcessed.toString().slice(0, -3)).toBe(Math.floor(Date.now() / 1000).toString().slice(0, -3));
     });
   });
 
@@ -42,11 +42,11 @@ describe('VotingPowerChangedTrigger', () => {
       mockVotingPowerRepository.listVotingPowerHistory.mockResolvedValue([] as never);
       
       // Set a timestamp to test the timestamp functionality
-      (trigger as any).lastProcessedTimestamp = '1625000000000';
+      (trigger as any).lastProcessedTimestamp = '1625000000';
       
       await (trigger as any).fetchData();
       
-      expect(mockVotingPowerRepository.listVotingPowerHistory).toHaveBeenCalledWith('1625000000000');
+      expect(mockVotingPowerRepository.listVotingPowerHistory).toHaveBeenCalledWith('1625000000');
     });
   });
 
@@ -71,7 +71,7 @@ describe('VotingPowerChangedTrigger', () => {
       
       // Should update to timestamp of last item (chronologically last)
       const lastProcessed = (trigger as any).lastProcessedTimestamp;
-      expect(lastProcessed).toBe('1625184000000'); // Last item timestamp
+      expect(lastProcessed).toBe('1625184000'); // Last item timestamp
     });
 
     it('should handle single item correctly', async () => {
@@ -85,7 +85,7 @@ describe('VotingPowerChangedTrigger', () => {
       });
       
       const lastProcessed = (trigger as any).lastProcessedTimestamp;
-      expect(lastProcessed).toBe('1625097600000');
+      expect(lastProcessed).toBe('1625097600');
     });
   });
 
@@ -109,7 +109,7 @@ describe('VotingPowerChangedTrigger', () => {
       
       // Verify the second call used the updated timestamp
       const secondCallArgs = mockVotingPowerRepository.listVotingPowerHistory.mock.calls[1][0];
-      expect(secondCallArgs).toBe('1625097600000'); // Timestamp from first execution
+      expect(secondCallArgs).toBe('1625097600'); // Timestamp from first execution
     });
 
     it('should not process when no new data available', async () => {
