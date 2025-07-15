@@ -105,7 +105,6 @@ export class TelegramBotService {
 
     this.bot.on('message', async (ctx, next) => {
       if ('text' in ctx.message && !ctx.message.text.startsWith('/')) {
-        // Check if we're expecting wallet input
         if (ctx.session?.awaitingWalletInput) {
           await this.walletService.processWalletInput(ctx, ctx.message.text);
           return;
