@@ -14,6 +14,13 @@ export interface UserPreferenceData {
   is_active: boolean;
 }
 
+export interface UserAddressData {
+  id: string;
+  user_id: string;
+  address: string;
+  is_active: boolean;
+}
+
 export class UserFactory {
   static async createUser(channelUserId: string, name: string): Promise<UserData> {
     const user = {
@@ -69,5 +76,22 @@ export class UserFactory {
         is_active: isActive,
         updated_at: timestamp
       });
+  }
+
+  static async createUserAddress(
+    userId: string,
+    address: string,
+    timestamp?: string
+  ): Promise<UserAddressData> {
+    const userAddress = {
+      id: uuidv4(),
+      user_id: userId,
+      address: address,
+      is_active: true,
+      created_at: timestamp || new Date().toISOString(),
+      updated_at: timestamp || new Date().toISOString()
+    };
+    await db('user_addresses').insert(userAddress);
+    return userAddress;
   }
 }

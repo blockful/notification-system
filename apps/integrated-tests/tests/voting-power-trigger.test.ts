@@ -61,6 +61,9 @@ describe('Voting Power Trigger - Integration Test', () => {
 
     // Create user preference (subscription equivalent) for voting power changes with past timestamp
     const preference = await UserFactory.createUserPreference(userWithSub.id, testDaoId, true, pastTimestamp);
+    
+    // Create user address mapping to link user to wallet address
+    await UserFactory.createUserAddress(userWithSub.id, testUserWithSubscription, pastTimestamp);
   };
 
   test('should send voting power change notification to subscribed users', async () => {
