@@ -35,15 +35,29 @@ export class VotingPowerTriggerHandler extends BaseTriggerHandler {
       // Get users who own this specific wallet address
       const walletOwners = await this.subscriptionClient.getWalletOwners(accountId);
       
-      // Filter wallet owners to only include those subscribed to this DAO
-      const subscribers: User[] = [];
-      for (const owner of walletOwners) {
-        const daoSubscribers = await this.subscriptionClient.getDaoSubscribers(daoId, timestamp);
-        const isSubscribed = daoSubscribers.some(sub => sub.id === owner.id);
-        if (isSubscribed) {
-          subscribers.push(owner);
-        }
+      if (walletOwners.length === 0) {
+        continue;
       }
+      
+      // Get all DAO subscribers once
+      const daoSubscribers = await this.subscriptionClient.getDaoSubscribers(daoId, timestamp);
+      
+      // Filter wallet owners to only include those subscribed to this DAO
+      const subscribedOwners = walletOwners.filter(owner => 
+        daoSubscribers.some(sub => sub.id === owner.id)
+      );
+      
+      if (subscribedOwners.length === 0) {
+        continue;
+      }
+      
+      // Check deduplication for all subscribed owners at once
+      const shouldSendNotifications = await this.subscriptionClient.shouldSend(subscribedOwners, transactionHash, daoId);
+      
+      // Final filtered list of subscribers
+      const subscribers = subscribedOwners.filter(owner => 
+        shouldSendNotifications.some(notification => notification.user_id === owner.id)
+      );
       
       let notificationMessage = '';
       
