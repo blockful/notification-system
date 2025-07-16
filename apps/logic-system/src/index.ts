@@ -11,6 +11,7 @@ const app = new App(
 
 app.start();
 
+
 //@ts-ignore
 BigInt.prototype.toJSON = function () {
   return this.toString();

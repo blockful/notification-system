@@ -16,10 +16,11 @@ jobs:
         with:
           filters: |
             logic-system:
-              - 'apps/logic-system/**/*.ts'
+              - 'apps/logic-system/src/**/*.ts'
 
   deploy:
     runs-on: ubuntu-latest
+    needs: changes
     container: ghcr.io/railwayapp/cli:latest
     environment: ${{ github.ref == 'refs/heads/main' && 'production' || 'dev' }}
     env:
