@@ -56,7 +56,12 @@ export class ProposalFinishedTriggerHandler extends BaseTriggerHandler<ProposalF
     description: string;
     daoId: string;
   }): string {
-    const proposalTitle = proposal.description.split('\n')[0].replace(/^#+\s*/, '') || 'Untitled Proposal';
-    return `The proposal "${proposalTitle}" has ended.`;
+    const proposalTitle = proposal.description.split('\n')[0].replace(/^#+\s*/, '').trim();
+    
+    if (proposalTitle) {
+      return `The proposal "${proposalTitle}" has ended.`;
+    } else {
+      return `A proposal has ended on dao ${proposal.daoId}`;
+    }
   }
 }
