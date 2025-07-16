@@ -15,6 +15,8 @@ jobs:
         id: filter
         with:
           filters: |
+            packages:
+              - 'packages/**/*.ts'
             triggers:
               - 'apps/logic-system/src/**/*.ts'
             dispatcher:
@@ -42,15 +44,15 @@ jobs:
             echo "environment=dev" >> $GITHUB_OUTPUT
           fi
       - name: Deploy triggers
-        if: ${{ needs.changes.outputs.triggers == 'true' }}
+        if: ${{ needs.changes.outputs.packages == 'true' }} || ${{ needs.changes.outputs.triggers == 'true' }}
         # run: railway up -s logic-system -e ${{ steps.env.outputs.environment }} --ci -d
         run: echo ${{ needs.changes.outputs.triggers }}
       - name: Deploy subscriptions
-        if: ${{ needs.changes.outputs.subscriptions == 'true' }}
+        if: ${{ needs.changes.outputs.packages == 'true' }} || ${{ needs.changes.outputs.subscriptions == 'true' }}
         run: echo ${{ needs.changes.outputs.subscriptions }}
       - name: Deploy dispatcher
-        if: ${{ needs.changes.outputs.dispatcher == 'true' }} || ${{ needs.changes.outputs.subscriptions == 'true' }}
+        if: ${{ needs.changes.outputs.packages == 'true' }} || ${{ needs.changes.outputs.dispatcher == 'true' }} || ${{ needs.changes.outputs.subscriptions == 'true' }}
         run: echo ${{ needs.changes.outputs.dispatcher }}
       - name: Deploy consumers
-        if: ${{ needs.changes.outputs.consumers == 'true' }}
+        if: ${{ needs.changes.outputs.packages == 'true' }} || ${{ needs.changes.outputs.consumers == 'true' }}
         run: echo ${{ needs.changes.outputs.consumers }}

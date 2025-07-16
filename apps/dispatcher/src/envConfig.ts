@@ -15,7 +15,8 @@ const envSchema = z.object({
 export function loadConfig() {
   dotenv.config();
   const env = envSchema.parse(process.env);
-  
+
+
   return {
     subscriptionServerUrl: env.SUBSCRIPTION_SERVER_URL,
     rabbitmqUrl: env.RABBITMQ_URL,
