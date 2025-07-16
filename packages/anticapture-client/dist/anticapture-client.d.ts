@@ -1,6 +1,10 @@
 import { AxiosInstance } from 'axios';
 import type { GetProposalByIdQuery, ListProposalsQuery, ListProposalsQueryVariables, ListVotingPowerHistorysQueryVariables } from './gql/graphql';
 import { ProcessedVotingPowerHistory } from './schemas';
+export type EnrichedDAO = {
+    id: string;
+    blockTime: number;
+};
 type ProposalItems = ListProposalsQuery['proposalsOnchains']['items'];
 type VotingPowerHistoryItems = ProcessedVotingPowerHistory[];
 export declare class AnticaptureClient {
@@ -12,6 +16,11 @@ export declare class AnticaptureClient {
      * @returns Array of DAO IDs
      */
     getDAOs(): Promise<string[]>;
+    /**
+     * Fetches all DAOs with enriched data including blockTime
+     * @returns Array of enriched DAO objects
+     */
+    getEnrichedDAOs(): Promise<EnrichedDAO[]>;
     /**
      * Fetches a single proposal by ID with full type safety
      */

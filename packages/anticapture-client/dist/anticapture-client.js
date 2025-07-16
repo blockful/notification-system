@@ -35,6 +35,17 @@ class AnticaptureClient {
         return validated.daos.items.map((dao) => dao.id);
     }
     /**
+     * Fetches all DAOs with enriched data including blockTime
+     * @returns Array of enriched DAO objects
+     */
+    async getEnrichedDAOs() {
+        const validated = await this.query(graphql_2.GetDaOsDocument, schemas_1.SafeDaosResponseSchema, undefined, undefined);
+        return validated.daos.items.map((dao) => ({
+            ...dao,
+            blockTime: 12 // Hardcoded for now, will be from API in future
+        }));
+    }
+    /**
      * Fetches a single proposal by ID with full type safety
      */
     async getProposalById(id) {

@@ -11,6 +11,12 @@ import type {
 } from './gql/graphql';
 import { GetDaOsDocument, GetProposalByIdDocument, ListProposalsDocument, ListVotingPowerHistorysDocument } from './gql/graphql';
 import { SafeDaosResponseSchema, SafeProposalByIdResponseSchema, SafeProposalsResponseSchema, SafeVotingPowerHistoryResponseSchema, processProposals, processVotingPowerHistory, ProcessedVotingPowerHistory } from './schemas';
+
+// Type for DAO with enriched blockTime
+export type EnrichedDAO = {
+  id: string;
+  blockTime: number;
+};
 type ProposalItems = ListProposalsQuery['proposalsOnchains']['items'];
 type VotingPowerHistoryItems = ProcessedVotingPowerHistory[];
 
@@ -57,6 +63,18 @@ export class AnticaptureClient {
   async getDAOs(): Promise<string[]> {
     const validated = await this.query(GetDaOsDocument, SafeDaosResponseSchema, undefined, undefined);
     return validated.daos.items.map((dao: { id: string }) => dao.id);
+  }
+
+  /**
+   * Fetches all DAOs with enriched data including blockTime
+   * @returns Array of enriched DAO objects
+   */
+  async getEnrichedDAOs(): Promise<EnrichedDAO[]> {
+    const validated = await this.query(GetDaOsDocument, SafeDaosResponseSchema, undefined, undefined);
+    return validated.daos.items.map((dao) => ({
+      ...dao,
+      blockTime: 12 // Hardcoded for now, will be from API in future
+    }));
   }
 
   /**
