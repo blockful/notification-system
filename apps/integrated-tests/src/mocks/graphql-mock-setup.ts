@@ -44,12 +44,21 @@ export class GraphQLMockSetup {
     mockHttpClient.post.mockImplementation((url: string, data: any, config: any) => {
       if (data.query && data.query.includes('ListProposals')) {
         const requestedStatusIn = data.variables?.where?.status_in;
+        const requestedTimestampGt = data.variables?.where?.timestamp_gt;
         const requestedDaoId = config?.headers?.['anticapture-dao-id'];
         let proposalsToReturn = proposals;
         
         // Filter by status
         if (requestedStatusIn && Array.isArray(requestedStatusIn)) {
           proposalsToReturn = proposalsToReturn.filter(p => requestedStatusIn.includes(p.status));
+        }
+        
+        // Filter by timestamp for incremental processing
+        if (requestedTimestampGt) {
+          proposalsToReturn = proposalsToReturn.filter(p => {
+            const proposalTimestamp = new Date(p.timestamp).getTime() / 1000;
+            return proposalTimestamp > parseInt(requestedTimestampGt);
+          });
         }
         
         // Filter by daoId from header
@@ -132,11 +141,20 @@ export class GraphQLMockSetup {
       // Handle proposal queries
       if (data.query && data.query.includes('ListProposals')) {
         const requestedStatusIn = data.variables?.where?.status_in;
+        const requestedTimestampGt = data.variables?.where?.timestamp_gt;
         const requestedDaoId = config?.headers?.['anticapture-dao-id'];
         let proposalsToReturn = proposals;
         
         if (requestedStatusIn && Array.isArray(requestedStatusIn)) {
           proposalsToReturn = proposalsToReturn.filter(p => requestedStatusIn.includes(p.status));
+        }
+        
+        // Filter by timestamp for incremental processing
+        if (requestedTimestampGt) {
+          proposalsToReturn = proposalsToReturn.filter(p => {
+            const proposalTimestamp = new Date(p.timestamp).getTime() / 1000;
+            return proposalTimestamp > parseInt(requestedTimestampGt);
+          });
         }
         
         if (requestedDaoId) {
