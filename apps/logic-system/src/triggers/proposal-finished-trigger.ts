@@ -1,8 +1,8 @@
 import { Trigger } from './base-trigger';
-import { ProposalFinished } from '../interfaces/proposal-finished.interface';
 import { ProposalFinishedRepository } from '../repositories/proposal-finished.repository';
 import { RabbitMQDispatcherService } from '../api-clients/rabbitmq-dispatcher.service';
 import { DispatcherMessage } from '../interfaces/dispatcher.interface';
+import { ProposalFinished } from '../interfaces/proposal.interface';
 
 /**
  * Trigger for detecting finished proposals

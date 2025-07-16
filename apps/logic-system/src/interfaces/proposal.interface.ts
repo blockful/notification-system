@@ -47,4 +47,21 @@ export interface ProposalDataSource {
      * @returns Array of proposals matching the criteria
      */
     listAll(options?: ListProposalsOptions): Promise<ProposalOnChain[]>;
+}
+
+/**
+ * Interface for finished proposals with computed fields
+ */
+export interface ProposalFinished {
+    id: string;
+    daoId: string;
+    title: string;
+    description: string;
+    endBlock: string;
+    endTimestamp: number;
+    status: string;
+    forVotes: string;
+    againstVotes: string;
+    abstainVotes: string;
+    blockTime: number;
 } 
