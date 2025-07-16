@@ -50,13 +50,16 @@ export interface ProposalDataSource {
 }
 
 /**
- * Interface for finished proposals with computed fields
+ * Interface for finished proposals (internal use in Logic System)
+ * Contains all data needed for processing, sorting, and tracking
  */
 export interface ProposalFinished {
     id: string;
     daoId: string;
     title: string;
     description: string;
+    startBlock: string;
+    startTimestamp: number;
     endBlock: string;
     endTimestamp: number;
     status: string;
@@ -64,4 +67,14 @@ export interface ProposalFinished {
     againstVotes: string;
     abstainVotes: string;
     blockTime: number;
+}
+
+/**
+ * Interface for proposal finished notifications (sent to Dispatcher)
+ * Contains only essential data needed for notification generation
+ */
+export interface ProposalFinishedNotification {
+    id: string;
+    daoId: string;
+    title: string;
 } 
