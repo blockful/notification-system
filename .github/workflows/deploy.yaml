@@ -15,16 +15,17 @@ jobs:
         id: filter
         with:
           filters: |
-            packages:
-              - 'packages/**/*.ts'
             triggers:
               - 'apps/logic-system/src/**/*.ts'
+              - 'packages/**/*.ts'
             dispatcher:
               - 'apps/dispatcher/src/**/*.ts'
+              - 'packages/**/*.ts'
             subscriptions:
               - 'apps/subscription-server/src/**/*.ts'
             consumers:
               - 'apps/consumers/src/**/*.ts'
+              - 'packages/**/*.ts'
 
   deploy:
     runs-on: ubuntu-latest
@@ -44,15 +45,15 @@ jobs:
             echo "environment=dev" >> $GITHUB_OUTPUT
           fi
       - name: Deploy triggers
-        if: ${{ needs.changes.outputs.packages == 'true' }} || ${{ needs.changes.outputs.triggers == 'true' }}
+        if: ${{ needs.changes.outputs.triggers == 'true' }}
         # run: railway up -s logic-system -e ${{ steps.env.outputs.environment }} --ci -d
-        run: echo ${{ needs.changes.outputs.triggers }}
+        run: echo triggers
       - name: Deploy subscriptions
-        if: ${{ needs.changes.outputs.packages == 'true' }} || ${{ needs.changes.outputs.subscriptions == 'true' }}
-        run: echo ${{ needs.changes.outputs.subscriptions }}
+        if: ${{ needs.changes.outputs.subscriptions == 'true' }}
+        run: echo subscriptions
       - name: Deploy dispatcher
-        if: ${{ needs.changes.outputs.packages == 'true' }} || ${{ needs.changes.outputs.dispatcher == 'true' }} || ${{ needs.changes.outputs.subscriptions == 'true' }}
-        run: echo ${{ needs.changes.outputs.dispatcher }}
+        if: ${{ needs.changes.outputs.dispatcher == 'true' }} || ${{ needs.changes.outputs.subscriptions == 'true' }}
+        run: echo dispatcher
       - name: Deploy consumers
-        if: ${{ needs.changes.outputs.packages == 'true' }} || ${{ needs.changes.outputs.consumers == 'true' }}
-        run: echo ${{ needs.changes.outputs.consumers }}
+        if: ${{ needs.changes.outputs.consumers == 'true' }}
+        run: echo consumers
