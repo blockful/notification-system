@@ -8,7 +8,10 @@ jobs:
   changes:
     runs-on: ubuntu-latest
     outputs:
-      logic-system: ${{ steps.filter.outputs.logic-system }}
+      triggers: ${{ steps.filter.outputs.triggers }}
+      dispatcher: ${{ steps.filter.outputs.dispatcher }}
+      subscriptions: ${{ steps.filter.outputs.subscriptions }}
+      consumers: ${{ steps.filter.outputs.consumers }}
     steps:
       - uses: actions/checkout@v3
       - uses: dorny/paths-filter@v2
