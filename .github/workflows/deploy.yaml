@@ -2,7 +2,7 @@ name: Deploy
 
 on:
   push:
-    branches: [dev, main, feat/ci-cd]
+    branches: [dev, main]
 
 jobs:
   changes:
@@ -49,14 +49,13 @@ jobs:
           fi
       - name: Deploy triggers
         if: ${{ needs.changes.outputs.triggers == 'true' }}
-        # run: railway up -s logic-system -e ${{ steps.env.outputs.environment }} --ci -d
-        run: echo triggers
+        run: railway up -s logic-system -e ${{ steps.env.outputs.environment }} --ci -d
       - name: Deploy subscriptions
         if: ${{ needs.changes.outputs.subscriptions == 'true' }}
-        run: echo subscriptions
+        run: railway up -s subscription-server -e ${{ steps.env.outputs.environment }} --ci -d
       - name: Deploy dispatcher
         if: ${{ needs.changes.outputs.dispatcher == 'true' }} || ${{ needs.changes.outputs.subscriptions == 'true' }}
-        run: echo dispatcher
+        run: railway up -s dispatcher -e ${{ steps.env.outputs.environment }} --ci -d
       - name: Deploy consumers
         if: ${{ needs.changes.outputs.consumers == 'true' }}
-        run: echo consumers
+        run: railway up -s consumers -e ${{ steps.env.outputs.environment }} --ci -d
