@@ -27,10 +27,16 @@ export class ProposalFinishedTrigger extends Trigger<ProposalFinished, void> {
       return;
     }
 
+    const notifications: ProposalFinishedNotification[] = data.map(proposal => ({
+      id: proposal.id,
+      daoId: proposal.daoId,
+      description: proposal.description
+    }));
+
     // Send all proposals in a single batch message for maximum efficiency
     const message: DispatcherMessage<ProposalFinishedNotification> = {
       triggerId: this.id,
-      events: data as ProposalFinishedNotification[]
+      events: notifications
     };
     
     await this.rabbitMQDispatcherService.sendMessage(message);
