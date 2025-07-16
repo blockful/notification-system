@@ -56,7 +56,6 @@ export interface ProposalDataSource {
 export interface ProposalFinished {
     id: string;
     daoId: string;
-    title: string;
     description: string;
     startBlock: string;
     startTimestamp: number;
@@ -76,5 +75,5 @@ export interface ProposalFinished {
 export interface ProposalFinishedNotification {
     id: string;
     daoId: string;
-    title: string;
+    description: string;
 } 
