@@ -2,7 +2,7 @@ import { Trigger } from './base-trigger';
 import { ProposalFinishedRepository } from '../repositories/proposal-finished.repository';
 import { RabbitMQDispatcherService } from '../api-clients/rabbitmq-dispatcher.service';
 import { DispatcherMessage } from '../interfaces/dispatcher.interface';
-import { ProposalFinished } from '../interfaces/proposal.interface';
+import { ProposalFinished, ProposalFinishedNotification } from '../interfaces/proposal.interface';
 
 /**
  * Trigger for detecting finished proposals
@@ -28,9 +28,9 @@ export class ProposalFinishedTrigger extends Trigger<ProposalFinished, void> {
     }
 
     // Send all proposals in a single batch message for maximum efficiency
-    const message: DispatcherMessage<ProposalFinished> = {
+    const message: DispatcherMessage<ProposalFinishedNotification> = {
       triggerId: this.id,
-      events: data
+      events: data as ProposalFinishedNotification[]
     };
     
     await this.rabbitMQDispatcherService.sendMessage(message);
