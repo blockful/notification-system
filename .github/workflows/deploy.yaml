@@ -1,0 +1,33 @@
+name: Deploy
+
+on:
+  push:
+    branches: [dev, main, feat/ci-cd]
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    container: ghcr.io/railwayapp/cli:latest
+    environment: ${{ github.ref == 'refs/heads/main' && 'production' || 'dev' }}
+    env:
+      RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
+    steps:
+      - uses: actions/checkout@v3
+      - id: modified
+        uses: pheel/path-watcher-action@v1
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          paths: "apps/logic-system/**/*.ts"
+          return_files: true
+      # - name: Determine environment
+      #   id: env
+      #   run: |
+      #     if [[ "${{ github.ref }}" == "refs/heads/main" || "${{ github.base_ref }}" == "main" ]]; then
+      #       echo "environment=production" >> $GITHUB_OUTPUT
+      #     else
+      #       echo "environment=dev" >> $GITHUB_OUTPUT
+      #     fi
+      - name: Deploy triggers
+        # if: steps.modified.outputs.modified == 'true'
+        # run: railway up -s logic-system -e ${{ steps.env.outputs.environment }} --ci -d
+        run: echo ${{ steps.modified }}
