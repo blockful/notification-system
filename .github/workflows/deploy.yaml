@@ -17,6 +17,7 @@ jobs:
       - uses: dorny/paths-filter@v2
         id: filter
         with:
+          base: ${{ github.ref }}
           filters: |
             triggers:
               - 'apps/logic-system/src/**/*.ts'
@@ -30,15 +31,11 @@ jobs:
               - 'apps/consumers/src/**/*.ts'
               - 'packages/**/*.ts'
 
-  deploy:
+  environment:
     runs-on: ubuntu-latest
-    needs: changes
-    container: ghcr.io/railwayapp/cli:latest
-    environment: ${{ github.ref == 'refs/heads/main' && 'production' || 'dev' }}
-    env:
-      RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
+    outputs:
+      environment: ${{ steps.env.outputs.environment }}
     steps:
-      - uses: actions/checkout@v3
       - name: Determine environment
         id: env
         run: |
@@ -47,15 +44,58 @@ jobs:
           else
             echo "environment=dev" >> $GITHUB_OUTPUT
           fi
+
+  deploy-triggers:
+    runs-on: ubuntu-latest
+    needs: [changes, environment]
+    if: ${{ needs.changes.outputs.triggers == 'true' }}
+    container: ghcr.io/railwayapp/cli:latest
+    environment: ${{ needs.environment.outputs.environment }}
+    env:
+      RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
+    steps:
+      - uses: actions/checkout@v3
       - name: Deploy triggers
-        if: ${{ needs.changes.outputs.triggers == 'true' }}
-        run: railway up -s logic-system -e ${{ steps.env.outputs.environment }} --ci
+        run: railway up -s logic-system -e ${{ needs.environment.outputs.environment }} --ci
+
+  deploy-subscriptions:
+    runs-on: ubuntu-latest
+    needs: [changes, environment]
+    if: ${{ needs.changes.outputs.subscriptions == 'true' }}
+    container: ghcr.io/railwayapp/cli:latest
+    environment: ${{ needs.environment.outputs.environment }}
+    env:
+      RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
+    steps:
+      - uses: actions/checkout@v3
       - name: Deploy subscriptions
-        if: ${{ needs.changes.outputs.subscriptions == 'true' }}
-        run: railway up -s subscription-server -e ${{ steps.env.outputs.environment }} --ci
+        run: echo "subscription-server -e ${{ needs.environment.outputs.environment }} --ci"
+        # run: railway up -s subscription-server -e ${{ needs.environment.outputs.environment }} --ci
+
+  deploy-dispatcher:
+    runs-on: ubuntu-latest
+    needs: [changes, environment, deploy-subscriptions]
+    if: ${{ always() && (needs.changes.outputs.dispatcher == 'true' || needs.changes.outputs.subscriptions == 'true') }}
+    container: ghcr.io/railwayapp/cli:latest
+    environment: ${{ needs.environment.outputs.environment }}
+    env:
+      RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
+    steps:
+      - uses: actions/checkout@v3
       - name: Deploy dispatcher
-        if: ${{ needs.changes.outputs.dispatcher == 'true' }} || ${{ needs.changes.outputs.subscriptions == 'true' }}
-        run: railway up -s dispatcher -e ${{ steps.env.outputs.environment }} --ci
+        run: echo "dispatcher -e ${{ needs.environment.outputs.environment }} --ci"
+        # run: railway up -s dispatcher -e ${{ needs.environment.outputs.environment }} --ci
+
+  deploy-consumers:
+    runs-on: ubuntu-latest
+    needs: [changes, environment]
+    if: ${{ needs.changes.outputs.consumers == 'true' }}
+    container: ghcr.io/railwayapp/cli:latest
+    environment: ${{ needs.environment.outputs.environment }}
+    env:
+      RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
+    steps:
+      - uses: actions/checkout@v3
       - name: Deploy consumers
-        if: ${{ needs.changes.outputs.consumers == 'true' }}
-        run: railway up -s consumer-telegram -e ${{ steps.env.outputs.environment }} --ci
+        run: echo "consumer-telegram -e ${{ needs.environment.outputs.environment }} --ci"
+        # run: railway up -s consumer-telegram -e ${{ needs.environment.outputs.environment }} --ci
