@@ -69,6 +69,12 @@ export class VotingPowerTriggerHandler extends BaseTriggerHandler {
         } else if (deltaValue < 0) {
           notificationMessage = `🥺 A delegator just undelegated in ${daoId}!\n${sourceAccountId} removed their delegation, reducing your voting power by ${deltaValue}.`;
         } 
+      } else if (changeType === 'transfer') {
+        if (deltaValue >= 0) {
+          notificationMessage = `📈 Your voting power increased in ${daoId}!\nYou gained ${deltaValue} voting power from token transfer activity.`;
+        } else if (deltaValue < 0) {
+          notificationMessage = `📉 Your voting power decreased in ${daoId}!\nYou lost ${Math.abs(deltaValue)} voting power from token transfer activity.`;
+        } 
       } else {
         // Generic voting power change
         if (deltaValue !== 0) {
