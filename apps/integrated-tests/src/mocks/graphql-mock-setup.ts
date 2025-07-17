@@ -44,16 +44,21 @@ export class GraphQLMockSetup {
     mockHttpClient.post.mockImplementation((url: string, data: any, config: any) => {
       if (data.query && data.query.includes('ListProposals')) {
         const requestedStatusIn = data.variables?.where?.status_in;
+        const requestedStatus = data.variables?.where?.status;
         const requestedTimestampGt = data.variables?.where?.timestamp_gt;
         const requestedDaoId = config?.headers?.['anticapture-dao-id'];
         let proposalsToReturn = proposals;
         
-        // Filter by status
-        if (requestedStatusIn && Array.isArray(requestedStatusIn)) {
+        // Handle new-proposal trigger requests for 'pending' status
+        if (requestedStatus === 'pending') {
+          proposalsToReturn = proposalsToReturn.filter(p => p.status.toLowerCase() === 'pending');
+        }
+        // Handle status_in filter (array of statuses)
+        else if (requestedStatusIn && Array.isArray(requestedStatusIn)) {
           proposalsToReturn = proposalsToReturn.filter(p => requestedStatusIn.includes(p.status));
         }
         
-        // Filter by timestamp for incremental processing
+        // Filter by timestamp for incremental processing (proposal-finished trigger)
         if (requestedTimestampGt) {
           proposalsToReturn = proposalsToReturn.filter(p => {
             const proposalTimestamp = new Date(p.timestamp).getTime() / 1000;
@@ -84,7 +89,7 @@ export class GraphQLMockSetup {
           data: {
             data: {
               daos: {
-                items: uniqueDaoIds.map(daoId => ({ id: daoId }))
+                items: uniqueDaoIds.map(daoId => ({ id: daoId, blockTime: 12 }))
               }
             }
           }
@@ -141,15 +146,21 @@ export class GraphQLMockSetup {
       // Handle proposal queries
       if (data.query && data.query.includes('ListProposals')) {
         const requestedStatusIn = data.variables?.where?.status_in;
+        const requestedStatus = data.variables?.where?.status;
         const requestedTimestampGt = data.variables?.where?.timestamp_gt;
         const requestedDaoId = config?.headers?.['anticapture-dao-id'];
         let proposalsToReturn = proposals;
         
-        if (requestedStatusIn && Array.isArray(requestedStatusIn)) {
+        // Handle new-proposal trigger requests for 'pending' status
+        if (requestedStatus === 'pending') {
+          proposalsToReturn = proposalsToReturn.filter(p => p.status.toLowerCase() === 'pending');
+        }
+        // Handle status_in filter (array of statuses)
+        else if (requestedStatusIn && Array.isArray(requestedStatusIn)) {
           proposalsToReturn = proposalsToReturn.filter(p => requestedStatusIn.includes(p.status));
         }
         
-        // Filter by timestamp for incremental processing
+        // Filter by timestamp for incremental processing (proposal-finished trigger)
         if (requestedTimestampGt) {
           proposalsToReturn = proposalsToReturn.filter(p => {
             const proposalTimestamp = new Date(p.timestamp).getTime() / 1000;
@@ -207,7 +218,7 @@ export class GraphQLMockSetup {
           data: {
             data: {
               daos: {
-                items: uniqueDaoIds.map(daoId => ({ id: daoId }))
+                items: uniqueDaoIds.map(daoId => ({ id: daoId, blockTime: 12 }))
               }
             }
           }
