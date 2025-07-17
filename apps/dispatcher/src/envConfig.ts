@@ -8,9 +8,8 @@ import dotenv from 'dotenv';
 import { z } from 'zod';
 
 const envSchema = z.object({
-  PORT: z.coerce.number().default(3000),
   SUBSCRIPTION_SERVER_URL: z.string().url(),
-  TELEGRAM_CONSUMER_URL: z.string().url(),
+  RABBITMQ_URL: z.string().url(),
 });
 
 export function loadConfig() {
@@ -18,8 +17,7 @@ export function loadConfig() {
   const env = envSchema.parse(process.env);
   
   return {
-    port: env.PORT,
     subscriptionServerUrl: env.SUBSCRIPTION_SERVER_URL,
-    telegramConsumerUrl: env.TELEGRAM_CONSUMER_URL,
+    rabbitmqUrl: env.RABBITMQ_URL,
   } as const;
 } 

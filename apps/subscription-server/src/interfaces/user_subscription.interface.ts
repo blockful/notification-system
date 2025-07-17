@@ -48,7 +48,7 @@ export interface IUserRepository {
  */
 export interface IPreferenceRepository {
   findByUserAndDao(userId: string, daoId: string): Promise<UserPreference | undefined>;
-  findByDao(daoId: string): Promise<UserPreference[]>;
+  findByDao(daoId: string, eventTimestamp?: string): Promise<UserPreference[]>;
   create(data: Omit<UserPreference, 'id' | 'created_at' | 'updated_at'>): Promise<UserPreference>;
   update(id: string, data: Partial<UserPreference>): Promise<UserPreference>;
 }
@@ -81,6 +81,5 @@ export interface UserResponse {
   id: string;
   channel: string;
   channel_user_id: string;
-  is_active: boolean;
   created_at?: string;
 } 

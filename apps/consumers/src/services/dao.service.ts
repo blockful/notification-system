@@ -8,22 +8,27 @@
 import { Context } from 'telegraf';
 import { CONFIRM_SELECTION_BUTTON, NO_DAO_SELECTED_MESSAGE, SELECTED_DAOS_MESSAGE, DAO_SELECTION_MESSAGE, EDIT_DAOS_MESSAGE } from '../messages';
 import { SubscriptionAPIService } from './subscription-api.service';
-import { IDatabaseService } from '../interfaces/db.interface';
+import { AnticaptureClient } from '@notification-system/anticapture-client';
+import { ContextWithSession } from '../interfaces/bot.interface';
 
 export class DAOService {
-  // Store selected DAOs for each user temporarily
-  private userSelections = new Map<number, Set<string>>();
   
   // DAO emojis mapping
   private daoEmojis = new Map<string, string>([
-    ['UNISWAP', '🦄'],
+    ['UNI', '🦄'],
     ['ENS', '🔷']
   ]);
   
   constructor(
-    private dbService: IDatabaseService,
+    private anticaptureClient: AnticaptureClient,
     private subscriptionApi: SubscriptionAPIService
   ) {}
+
+ private ensureSession(ctx: ContextWithSession): void {
+    if (!ctx.session) {
+      ctx.session = { daoSelections: new Set<string>() };
+    }
+  }
 
   private getDaoWithEmoji(dao: string): string {
     const normalizedDao = dao.toUpperCase();
@@ -31,12 +36,14 @@ export class DAOService {
     return `${emoji} ${dao}`;
   }
 
-  async initialize(ctx: Context): Promise<void> {
+  async initialize(ctx: ContextWithSession): Promise<void> {
     const chatId = ctx.chat?.id;
     if (!chatId) return;
 
+    this.ensureSession(ctx);
+
     try {
-      const daos = await this.dbService.getDAOs();
+      const daos = await this.anticaptureClient.getDAOs();
       if (daos.length === 0) {
         await ctx.reply('No DAOs available at the moment. Please try again later.');
         return;
@@ -44,7 +51,8 @@ export class DAOService {
 
       const userPreferences = await this.subscriptionApi.getUserPreferences(chatId, daos);
       const currentSelections = new Set<string>(userPreferences);
-      this.userSelections.set(chatId, currentSelections);
+      this.ensureSession(ctx);
+      ctx.session.daoSelections = currentSelections;
 
       const keyboard = {
         inline_keyboard: [
@@ -70,20 +78,22 @@ export class DAOService {
     }
   }
 
-  async toggle(ctx: Context, daoName: string): Promise<void> {
+  async toggle(ctx: ContextWithSession, daoName: string): Promise<void> {
     const chatId = ctx.chat?.id;
     const messageId = ctx.callbackQuery?.message?.message_id;
-    if (!chatId || !messageId) return;
-    const userSelectedDAOs = this.userSelections.get(chatId) || new Set();
+    if (!chatId || !messageId) return;    
+    this.ensureSession(ctx);
+    
+    const userSelectedDAOs = ctx.session.daoSelections;
     const normalizedDaoName = daoName.toUpperCase();
     if (userSelectedDAOs.has(normalizedDaoName)) {
       userSelectedDAOs.delete(normalizedDaoName);
     } else {
       userSelectedDAOs.add(normalizedDaoName);
     }
-    this.userSelections.set(chatId, userSelectedDAOs);
+    ctx.session.daoSelections = userSelectedDAOs;
     try {
-      const daos = await this.dbService.getDAOs();
+      const daos = await this.anticaptureClient.getDAOs();
       const keyboard = {
         inline_keyboard: [
           daos.map((dao: string) => {
@@ -106,11 +116,12 @@ export class DAOService {
     }
   }
 
-  async confirm(ctx: Context): Promise<void> {
+  async confirm(ctx: ContextWithSession): Promise<void> {
     const chatId = ctx.chat?.id;
     if (!chatId) return;
+    this.ensureSession(ctx);
     
-    const selectedDAOs = this.userSelections.get(chatId);
+    const selectedDAOs = ctx.session.daoSelections;
     if (!selectedDAOs) {
       await ctx.reply('Something went wrong. Please try again.');
       return;
@@ -119,7 +130,7 @@ export class DAOService {
     try {
       await this.updateSubscriptions(chatId, selectedDAOs);
       await this.showConfirmationMessage(ctx, selectedDAOs);
-      this.userSelections.delete(chatId);
+      ctx.session.daoSelections = new Set<string>();
     } catch (error) {
       console.error('Error updating subscriptions:', error);
       await ctx.reply('Sorry, there was an error updating your subscriptions. Please try again later.');
@@ -127,7 +138,7 @@ export class DAOService {
   }
 
   private async updateSubscriptions(chatId: number, selectedDAOs: Set<string>) {
-    const daos = await this.dbService.getDAOs();
+    const daos = await this.anticaptureClient.getDAOs();
     const currentPreferences = await this.subscriptionApi.getUserPreferences(chatId, daos);
     const currentPreferencesSet = new Set(currentPreferences);
     

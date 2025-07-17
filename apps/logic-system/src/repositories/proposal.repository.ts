@@ -1,47 +1,43 @@
-import { ProposalDB, ProposalOnChain, ListProposalsOptions, ProposalStatus } from '../interfaces/proposal.interface';
-import { ProposalMapper } from '../mappers/proposal.mapper';
-import { Knex } from 'knex';
+import { ProposalDataSource, ProposalOnChain, ProposalOrNull, ListProposalsOptions } from '../interfaces/proposal.interface';
+import { AnticaptureClient, ListProposalsQueryVariables } from '@notification-system/anticapture-client';
 
-export class ProposalRepository implements ProposalDB {
-  private db: Knex;
-  private readonly tableName = 'proposals_onchain';
+function generateStatusVariations(status: string): string[] {
+  const normalized = status.toLowerCase();
+  return [
+    normalized,                                                    // lowercase: "pending"
+    normalized.toUpperCase(),                                      // uppercase: "PENDING"
+    normalized.charAt(0).toUpperCase() + normalized.slice(1)       // title case: "Pending"
+  ];
+}
 
-  constructor(db: Knex) {
-    this.db = db;
+export class ProposalRepository implements ProposalDataSource {
+  private anticaptureClient: AnticaptureClient;
+
+  constructor(anticaptureClient: AnticaptureClient) {
+    this.anticaptureClient = anticaptureClient;
   }
 
-  async getById(id: string): Promise<ProposalOnChain | null> {
-    const proposal = await this.db(this.tableName)
-      .where({ id })
-      .first();
-    
-    if (!proposal) {
-      return null;
-    }
-    
-    return ProposalMapper.fromDatabaseToEntity(proposal);
+  async getById(id: string): Promise<ProposalOrNull> {
+    return await this.anticaptureClient.getProposalById(id);
   }
 
   async listAll(options?: ListProposalsOptions): Promise<ProposalOnChain[]> {
-    let query = this.db(this.tableName).select('*');
+    const variables: ListProposalsQueryVariables = {};
     
-    if (options?.status) {
-      query = query.where('status', options.status);
+    if (options?.status || options?.daoId) {
+      variables.where = {};  
+      if (options.status) {
+        variables.where.status_in = generateStatusVariations(options.status);
+      }
+      if (options.daoId) {
+        variables.where.daoId = options.daoId;
+      }
     }
-    
-    if (options?.daoId) {
-      query = query.where('dao_id', options.daoId);
-    }
-    
     if (options?.limit) {
-      query = query.limit(options.limit);
+      variables.limit = options.limit;
     }
     
-    if (options?.offset) {
-      query = query.offset(options.offset);
-    }
-    
-    const proposals = await query;
-    return proposals.map(ProposalMapper.fromDatabaseToEntity);
+    return await this.anticaptureClient.listProposals(variables);
   }
+
 } 

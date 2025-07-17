@@ -1,90 +1,129 @@
-# Notification System
+# Anticapture Notification System
 
-Asynchronous event-based notification system with pipeline processing and message broker distribution.
+**Event-driven notification system** for DAO governance with real-time proposal monitoring and multi-channel delivery. Built with microservices architecture and RabbitMQ message queues.
 
-## 🏗️ Architecture
+## 🏗️ System Architecture
 
-The system consists of four main components:
+The system consists of four main microservices that work together to provide scalable, reliable notification delivery:
 
-### 1. Logic System (Trigger System)
-- Responsible for pulling data from Anticapture DB
-- Processes business logic to determine when notifications should be sent
-- Implements conditional rules (if X happens, then send Y)
-- Sends events to Message Broker when a notification should be generated
+![System Architecture](./architecture-diagram.png)
 
-### 2. Message Broker
-- Pub/sub queue system for asynchronous message management
-- Manages the event queue between Logic System and Dispatcher
-- Ensures unprocessed messages remain in the queue
+## 🎯 Core Services
 
-### 3. Dispatcher
-System responsible for managing and sending notifications:
-- **Subscription Checker**: Verifies who should receive the notification (integration with Notification System DB)
-- **Build Message**: Assembles the message payload
-- **Send Message**: Sends the message to the Consumer
+### 1. [Logic System](./apps/logic-system/README.md)
+**Trigger Engine** - Monitors blockchain data and initiates notifications
 
-### 4. Consumer
-- Responsible for presenting notifications to the user
-- Ex: Telegram and Slack
+- **Data Monitoring**: Polls AntiCapture GraphQL API for new proposals
+- **Business Logic**: Applies filtering rules based on proposal status
 
-## 🚀 Technologies
+### 2. [Dispatcher](./apps/dispatcher/README.md)
+**Message Orchestrator** - Processes events and coordinates notification delivery
 
-- TypeScript
-- Turborepo (Monorepo)
+- **Event Routing**: Routes trigger events to appropriate handlers
+- **Subscription Management**: Fetches subscriber lists with temporal filtering
+- **Notification Creation**: Builds formatted notifications for each user
 
-## 📦 Monorepo Structure
+### 3. [Subscription Server](./apps/subscription-server/README.md)
+**API Gateway** - Manages user preferences and subscription data
 
-```
-apps/
-  ├── trigger-system/   # Logic and rules system
-  ├── dispatcher/       # Dispatch system
-  ├── consumers/       # Message consumers
-```
+- **REST API**: Subscription CRUD operations with Swagger documentation
+- **Deduplication**: Prevents duplicate notifications via tracking
+- **User Management**: Multi-channel user profiles and preferences
 
-## 🛠️ Project Setup
+### 4. [Consumer Service](./apps/consumers/README.md)
+**Delivery Layer** - Handles notification delivery and user interactions
 
-1. Install dependencies:
+- **Telegram Bot**: Interactive bot for preference management
+- **Message Delivery**: RabbitMQ consumer for notification distribution
+
+## 🚀 Quick Start
+
+### Prerequisites
+- **Node.js** 18+ with pnpm
+- **Docker** and Docker Compose
+- **PostgreSQL** database
+- **RabbitMQ** message broker
+- **Telegram Bot Token** (from [@BotFather](https://t.me/botfather))
+
+### Development Setup
+
+1. **Clone and Install**
 ```bash
+git clone <repository-url>
+cd notificationSystem
 pnpm install
 ```
 
-2. Run in development mode:
+2. **Environment Configuration**
 ```bash
+cp env.example .env
+# Edit .env with your configuration
+```
+
+3. **Start Services**
+```bash
+# Start all services with Docker Compose
 pnpm dev
 ```
 
-## 🐳 Running with Docker Compose
+## 📊 Data Flow
 
-For production-like environment or to run all services together:
-
-### Prerequisites
-1. Copy the environment template:
-```bash
-cp env.example .env
+### Notification Pipeline
+```
+1. Logic System polls AntiCapture API for new proposals
+2. Logic System sends trigger events to Dispatcher via RabbitMQ
+3. Dispatcher processes events and fetches DAO subscribers
+4. Dispatcher creates individual notifications and publishes to Consumer queue
+5. Consumer delivers notifications to users via Telegram
+6. Consumer tracks successful deliveries in Subscription Server
 ```
 
-2. Configure your environment variables in `.env`:
-
-### Running the Application
-```bash
-# Start all services
-pnpm docker:up
-
-# Stop all services
-pnpm docker:down
+### User Interaction Flow
+```
+1. User interacts with Telegram bot (/start, /daos)
+2. Consumer fetches available DAOs from AntiCapture API
+3. Consumer presents interactive selection interface
+4. User selections are sent to Subscription Server
+5. Preferences are stored in PostgreSQL database
+6. Future notifications are filtered by these preferences
 ```
 
-### Service URLs
-- **Consumers API**: http://localhost:3000
-- **Subscription Server**: http://localhost:3001  
-- **Dispatcher**: http://localhost:3002
-- **Logic System**: (worker service, no exposed port)
+## 🔍 Key Features
 
-## 🔄 Processing Pipeline
+### Reliability
+- **Deduplication**: Prevents duplicate notifications via tracking
+- **Temporal Filtering**: Only notifies users subscribed before events
+- **Session Management**: Persistent user state during interactions
 
-1. Trigger System pulls data from Anticapture DB
-2. Applies business rules and sends events to Message Broker
-3. Message Broker keeps events in queue until consumed
-4. Dispatcher consumes events and checks recipients in Notification System DB
-5. Dispatcher builds and sends messages to Consumer
-6. Consumer processes and displays notifications to users
+### Extensibility
+- **Trigger System**: Easy to add new event types and business logic
+- **Multi-Channel**: Framework for adding Discord, Slack, etc.
+
+## 🛠️ Development
+
+### Project Structure
+```
+notificationSystem/
+├── apps/
+│   ├── logic-system/         # Event monitoring and triggering
+│   ├── dispatcher/           # Message processing and routing
+│   ├── subscription-server/  # User preference management
+│   ├── consumers/           # Notification delivery (Telegram)
+│   └── integrated-tests/    # End-to-end testing
+├── packages/
+│   ├── anticapture-client/  # GraphQL client for DAO data
+│   └── rabbitmq-client/     # Shared RabbitMQ utilities
+├── docker-compose.yml       # Multi-service orchestration
+└── pnpm-workspace.yaml     # Monorepo configuration
+```
+
+## 📚 Documentation
+
+### Service-Specific Guides
+- [Logic System Documentation](./apps/logic-system/README.md) - Trigger engine and monitoring
+- [Dispatcher Documentation](./apps/dispatcher/README.md) - Message processing hub
+- [Subscription Server Documentation](./apps/subscription-server/README.md) - REST API and preferences
+- [Consumer Documentation](./apps/consumers/README.md) - Telegram bot and delivery
+
+### Extension Guides
+- [Adding New Trigger Types](./docs/guides/add-trigger-logic.md) - Extend monitoring capabilities

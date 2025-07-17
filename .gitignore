@@ -26,6 +26,11 @@ coverage
 out/
 build
 dist
+!packages/anticapture-client/dist
+
+# Generated GraphQL files
+**/src/generated/
+**/src/__generated__/
 
 # Database
 *.db 
@@ -129,7 +134,6 @@ out
 
 # Nuxt.js build / generate output
 .nuxt
-dist
 
 # Gatsby files
 .cache/

@@ -1,34 +1,66 @@
 services:
+  subscription-db:
+    image: postgres:16
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: postgres
+    ports:
+      - "5432:5432"
+    networks:
+      - notification-network
+
+  # RabbitMQ Message Broker
+  rabbitmq:
+    image: rabbitmq:3-management
+    container_name: rabbitmq
+    environment:
+      RABBITMQ_DEFAULT_USER: admin
+      RABBITMQ_DEFAULT_PASS: admin
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    networks:
+      - notification-network
+    healthcheck:
+      test: rabbitmq-diagnostics -q ping
+      interval: 30s
+      timeout: 30s
+      retries: 3
+
   # Subscription Server (base service, others depend on it)
   subscription-server:
     build:
-      context: ./apps/subscription-server
-      dockerfile: Dockerfile
+      context: .
+      dockerfile: apps/subscription-server/Dockerfile
     container_name: subscription-server
     ports:
       - "3001:3003"
     environment:
-      DATABASE_URL: ${SUBSCRIPTION_DATABASE_URL}
+      DATABASE_URL: postgresql://postgres:postgres@subscription-db:5432/postgres
       PORT: 3003
     networks:
       - notification-network
     restart: unless-stopped
+    depends_on:
+      - subscription-db
 
-  # Consumers (Telegram Bot + API)
+  # Consumers (Telegram Bot + RabbitMQ Consumer)
   consumers:
     build:
-      context: ./apps/consumers
-      dockerfile: Dockerfile
+      context: .
+      dockerfile: apps/consumers/Dockerfile
     container_name: consumers
-    ports:
-      - "3000:3000"
     environment:
       TELEGRAM_BOT_TOKEN: ${TELEGRAM_BOT_TOKEN}
-      ANTICAPTURE_DATABASE_URL: ${ANTICAPTURE_DATABASE_URL}
+      ANTICAPTURE_GRAPHQL_ENDPOINT: ${ANTICAPTURE_GRAPHQL_ENDPOINT}
       SUBSCRIPTION_SERVER_URL: http://subscription-server:3003
-      API_PORT: 3000
+      RABBITMQ_URL: amqp://admin:admin@rabbitmq:5672
     depends_on:
-      - subscription-server
+      subscription-server:
+        condition: service_started
+      rabbitmq:
+        condition: service_healthy
     networks:
       - notification-network
     restart: unless-stopped
@@ -36,18 +68,17 @@ services:
   # Dispatcher
   dispatcher:
     build:
-      context: ./apps/dispatcher
-      dockerfile: Dockerfile
+      context: .
+      dockerfile: apps/dispatcher/Dockerfile
     container_name: dispatcher
-    ports:
-      - "3002:3002"
     environment:
-      PORT: 3002
+      RABBITMQ_URL: amqp://admin:admin@rabbitmq:5672
       SUBSCRIPTION_SERVER_URL: http://subscription-server:3003
-      TELEGRAM_CONSUMER_URL: http://consumers:3000
     depends_on:
-      - subscription-server
-      - consumers
+      subscription-server:
+        condition: service_started
+      rabbitmq:
+        condition: service_healthy
     networks:
       - notification-network
     restart: unless-stopped
@@ -55,20 +86,21 @@ services:
   # Logic System (worker, no ports exposed)
   logic-system:
     build:
-      context: ./apps/logic-system
-      dockerfile: Dockerfile
+      context: .
+      dockerfile: apps/logic-system/Dockerfile
     container_name: logic-system
     environment:
-      DATABASE_URL: ${LOGIC_SYSTEM_DATABASE_URL}
-      DISPATCHER_ENDPOINT: http://dispatcher:3002/messages
-      TRIGGER_INTERVAL: 60000
-      PROPOSAL_STATUS: active
+      ANTICAPTURE_GRAPHQL_ENDPOINT: ${ANTICAPTURE_GRAPHQL_ENDPOINT}
+      RABBITMQ_URL: amqp://admin:admin@rabbitmq:5672
+      TRIGGER_INTERVAL: 10000
+      PROPOSAL_STATUS: pending
     depends_on:
-      - dispatcher
+      rabbitmq:
+        condition: service_healthy
     networks:
       - notification-network
     restart: unless-stopped
 
 networks:
   notification-network:
-    driver: bridge 
+    driver: bridge

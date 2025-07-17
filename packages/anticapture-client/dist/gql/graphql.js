@@ -1,0 +1,220 @@
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.ListProposalsDocument = exports.GetProposalByIdDocument = exports.GetDaOsDocument = exports.QueryInput_TotalAssets_Days = exports.QueryInput_TotalAssets_DaoId = exports.QueryInput_ProposalsActivity_DaoId = exports.QueryInput_HistoricalVotingPower_DaoId = exports.QueryInput_HistoricalTokenData_DaoId = exports.QueryInput_HistoricalBalances_DaoId = exports.QueryInput_CompareVotes_Days = exports.QueryInput_CompareVotes_DaoId = exports.QueryInput_CompareTreasury_Days = exports.QueryInput_CompareTreasury_DaoId = exports.QueryInput_CompareTotalSupply_Days = exports.QueryInput_CompareTotalSupply_DaoId = exports.QueryInput_CompareProposals_Days = exports.QueryInput_CompareProposals_DaoId = exports.QueryInput_CompareLendingSupply_Days = exports.QueryInput_CompareLendingSupply_DaoId = exports.QueryInput_CompareDexSupply_Days = exports.QueryInput_CompareDexSupply_DaoId = exports.QueryInput_CompareDelegatedSupply_Days = exports.QueryInput_CompareDelegatedSupply_DaoId = exports.QueryInput_CompareCirculatingSupply_Days = exports.QueryInput_CompareCirculatingSupply_DaoId = exports.QueryInput_CompareCexSupply_Days = exports.QueryInput_CompareCexSupply_DaoId = exports.QueryInput_CompareAverageTurnout_Days = exports.QueryInput_CompareAverageTurnout_DaoId = exports.QueryInput_CompareActiveSupply_Days = exports.QueryInput_CompareActiveSupply_DaoId = exports.MetricType = exports.HttpMethod = void 0;
+var HttpMethod;
+(function (HttpMethod) {
+    HttpMethod["Connect"] = "CONNECT";
+    HttpMethod["Delete"] = "DELETE";
+    HttpMethod["Get"] = "GET";
+    HttpMethod["Head"] = "HEAD";
+    HttpMethod["Options"] = "OPTIONS";
+    HttpMethod["Patch"] = "PATCH";
+    HttpMethod["Post"] = "POST";
+    HttpMethod["Put"] = "PUT";
+    HttpMethod["Trace"] = "TRACE";
+})(HttpMethod || (exports.HttpMethod = HttpMethod = {}));
+var MetricType;
+(function (MetricType) {
+    MetricType["CexSupply"] = "CEX_SUPPLY";
+    MetricType["CirculatingSupply"] = "CIRCULATING_SUPPLY";
+    MetricType["DelegatedSupply"] = "DELEGATED_SUPPLY";
+    MetricType["DexSupply"] = "DEX_SUPPLY";
+    MetricType["LendingSupply"] = "LENDING_SUPPLY";
+    MetricType["TotalSupply"] = "TOTAL_SUPPLY";
+    MetricType["Treasury"] = "TREASURY";
+})(MetricType || (exports.MetricType = MetricType = {}));
+var QueryInput_CompareActiveSupply_DaoId;
+(function (QueryInput_CompareActiveSupply_DaoId) {
+    QueryInput_CompareActiveSupply_DaoId["Arb"] = "ARB";
+    QueryInput_CompareActiveSupply_DaoId["Ens"] = "ENS";
+    QueryInput_CompareActiveSupply_DaoId["Uni"] = "UNI";
+})(QueryInput_CompareActiveSupply_DaoId || (exports.QueryInput_CompareActiveSupply_DaoId = QueryInput_CompareActiveSupply_DaoId = {}));
+var QueryInput_CompareActiveSupply_Days;
+(function (QueryInput_CompareActiveSupply_Days) {
+    QueryInput_CompareActiveSupply_Days["7d"] = "_7d";
+    QueryInput_CompareActiveSupply_Days["30d"] = "_30d";
+    QueryInput_CompareActiveSupply_Days["90d"] = "_90d";
+    QueryInput_CompareActiveSupply_Days["180d"] = "_180d";
+    QueryInput_CompareActiveSupply_Days["365d"] = "_365d";
+})(QueryInput_CompareActiveSupply_Days || (exports.QueryInput_CompareActiveSupply_Days = QueryInput_CompareActiveSupply_Days = {}));
+var QueryInput_CompareAverageTurnout_DaoId;
+(function (QueryInput_CompareAverageTurnout_DaoId) {
+    QueryInput_CompareAverageTurnout_DaoId["Arb"] = "ARB";
+    QueryInput_CompareAverageTurnout_DaoId["Ens"] = "ENS";
+    QueryInput_CompareAverageTurnout_DaoId["Uni"] = "UNI";
+})(QueryInput_CompareAverageTurnout_DaoId || (exports.QueryInput_CompareAverageTurnout_DaoId = QueryInput_CompareAverageTurnout_DaoId = {}));
+var QueryInput_CompareAverageTurnout_Days;
+(function (QueryInput_CompareAverageTurnout_Days) {
+    QueryInput_CompareAverageTurnout_Days["7d"] = "_7d";
+    QueryInput_CompareAverageTurnout_Days["30d"] = "_30d";
+    QueryInput_CompareAverageTurnout_Days["90d"] = "_90d";
+    QueryInput_CompareAverageTurnout_Days["180d"] = "_180d";
+    QueryInput_CompareAverageTurnout_Days["365d"] = "_365d";
+})(QueryInput_CompareAverageTurnout_Days || (exports.QueryInput_CompareAverageTurnout_Days = QueryInput_CompareAverageTurnout_Days = {}));
+var QueryInput_CompareCexSupply_DaoId;
+(function (QueryInput_CompareCexSupply_DaoId) {
+    QueryInput_CompareCexSupply_DaoId["Arb"] = "ARB";
+    QueryInput_CompareCexSupply_DaoId["Ens"] = "ENS";
+    QueryInput_CompareCexSupply_DaoId["Uni"] = "UNI";
+})(QueryInput_CompareCexSupply_DaoId || (exports.QueryInput_CompareCexSupply_DaoId = QueryInput_CompareCexSupply_DaoId = {}));
+var QueryInput_CompareCexSupply_Days;
+(function (QueryInput_CompareCexSupply_Days) {
+    QueryInput_CompareCexSupply_Days["7d"] = "_7d";
+    QueryInput_CompareCexSupply_Days["30d"] = "_30d";
+    QueryInput_CompareCexSupply_Days["90d"] = "_90d";
+    QueryInput_CompareCexSupply_Days["180d"] = "_180d";
+    QueryInput_CompareCexSupply_Days["365d"] = "_365d";
+})(QueryInput_CompareCexSupply_Days || (exports.QueryInput_CompareCexSupply_Days = QueryInput_CompareCexSupply_Days = {}));
+var QueryInput_CompareCirculatingSupply_DaoId;
+(function (QueryInput_CompareCirculatingSupply_DaoId) {
+    QueryInput_CompareCirculatingSupply_DaoId["Arb"] = "ARB";
+    QueryInput_CompareCirculatingSupply_DaoId["Ens"] = "ENS";
+    QueryInput_CompareCirculatingSupply_DaoId["Uni"] = "UNI";
+})(QueryInput_CompareCirculatingSupply_DaoId || (exports.QueryInput_CompareCirculatingSupply_DaoId = QueryInput_CompareCirculatingSupply_DaoId = {}));
+var QueryInput_CompareCirculatingSupply_Days;
+(function (QueryInput_CompareCirculatingSupply_Days) {
+    QueryInput_CompareCirculatingSupply_Days["7d"] = "_7d";
+    QueryInput_CompareCirculatingSupply_Days["30d"] = "_30d";
+    QueryInput_CompareCirculatingSupply_Days["90d"] = "_90d";
+    QueryInput_CompareCirculatingSupply_Days["180d"] = "_180d";
+    QueryInput_CompareCirculatingSupply_Days["365d"] = "_365d";
+})(QueryInput_CompareCirculatingSupply_Days || (exports.QueryInput_CompareCirculatingSupply_Days = QueryInput_CompareCirculatingSupply_Days = {}));
+var QueryInput_CompareDelegatedSupply_DaoId;
+(function (QueryInput_CompareDelegatedSupply_DaoId) {
+    QueryInput_CompareDelegatedSupply_DaoId["Arb"] = "ARB";
+    QueryInput_CompareDelegatedSupply_DaoId["Ens"] = "ENS";
+    QueryInput_CompareDelegatedSupply_DaoId["Uni"] = "UNI";
+})(QueryInput_CompareDelegatedSupply_DaoId || (exports.QueryInput_CompareDelegatedSupply_DaoId = QueryInput_CompareDelegatedSupply_DaoId = {}));
+var QueryInput_CompareDelegatedSupply_Days;
+(function (QueryInput_CompareDelegatedSupply_Days) {
+    QueryInput_CompareDelegatedSupply_Days["7d"] = "_7d";
+    QueryInput_CompareDelegatedSupply_Days["30d"] = "_30d";
+    QueryInput_CompareDelegatedSupply_Days["90d"] = "_90d";
+    QueryInput_CompareDelegatedSupply_Days["180d"] = "_180d";
+    QueryInput_CompareDelegatedSupply_Days["365d"] = "_365d";
+})(QueryInput_CompareDelegatedSupply_Days || (exports.QueryInput_CompareDelegatedSupply_Days = QueryInput_CompareDelegatedSupply_Days = {}));
+var QueryInput_CompareDexSupply_DaoId;
+(function (QueryInput_CompareDexSupply_DaoId) {
+    QueryInput_CompareDexSupply_DaoId["Arb"] = "ARB";
+    QueryInput_CompareDexSupply_DaoId["Ens"] = "ENS";
+    QueryInput_CompareDexSupply_DaoId["Uni"] = "UNI";
+})(QueryInput_CompareDexSupply_DaoId || (exports.QueryInput_CompareDexSupply_DaoId = QueryInput_CompareDexSupply_DaoId = {}));
+var QueryInput_CompareDexSupply_Days;
+(function (QueryInput_CompareDexSupply_Days) {
+    QueryInput_CompareDexSupply_Days["7d"] = "_7d";
+    QueryInput_CompareDexSupply_Days["30d"] = "_30d";
+    QueryInput_CompareDexSupply_Days["90d"] = "_90d";
+    QueryInput_CompareDexSupply_Days["180d"] = "_180d";
+    QueryInput_CompareDexSupply_Days["365d"] = "_365d";
+})(QueryInput_CompareDexSupply_Days || (exports.QueryInput_CompareDexSupply_Days = QueryInput_CompareDexSupply_Days = {}));
+var QueryInput_CompareLendingSupply_DaoId;
+(function (QueryInput_CompareLendingSupply_DaoId) {
+    QueryInput_CompareLendingSupply_DaoId["Arb"] = "ARB";
+    QueryInput_CompareLendingSupply_DaoId["Ens"] = "ENS";
+    QueryInput_CompareLendingSupply_DaoId["Uni"] = "UNI";
+})(QueryInput_CompareLendingSupply_DaoId || (exports.QueryInput_CompareLendingSupply_DaoId = QueryInput_CompareLendingSupply_DaoId = {}));
+var QueryInput_CompareLendingSupply_Days;
+(function (QueryInput_CompareLendingSupply_Days) {
+    QueryInput_CompareLendingSupply_Days["7d"] = "_7d";
+    QueryInput_CompareLendingSupply_Days["30d"] = "_30d";
+    QueryInput_CompareLendingSupply_Days["90d"] = "_90d";
+    QueryInput_CompareLendingSupply_Days["180d"] = "_180d";
+    QueryInput_CompareLendingSupply_Days["365d"] = "_365d";
+})(QueryInput_CompareLendingSupply_Days || (exports.QueryInput_CompareLendingSupply_Days = QueryInput_CompareLendingSupply_Days = {}));
+var QueryInput_CompareProposals_DaoId;
+(function (QueryInput_CompareProposals_DaoId) {
+    QueryInput_CompareProposals_DaoId["Arb"] = "ARB";
+    QueryInput_CompareProposals_DaoId["Ens"] = "ENS";
+    QueryInput_CompareProposals_DaoId["Uni"] = "UNI";
+})(QueryInput_CompareProposals_DaoId || (exports.QueryInput_CompareProposals_DaoId = QueryInput_CompareProposals_DaoId = {}));
+var QueryInput_CompareProposals_Days;
+(function (QueryInput_CompareProposals_Days) {
+    QueryInput_CompareProposals_Days["7d"] = "_7d";
+    QueryInput_CompareProposals_Days["30d"] = "_30d";
+    QueryInput_CompareProposals_Days["90d"] = "_90d";
+    QueryInput_CompareProposals_Days["180d"] = "_180d";
+    QueryInput_CompareProposals_Days["365d"] = "_365d";
+})(QueryInput_CompareProposals_Days || (exports.QueryInput_CompareProposals_Days = QueryInput_CompareProposals_Days = {}));
+var QueryInput_CompareTotalSupply_DaoId;
+(function (QueryInput_CompareTotalSupply_DaoId) {
+    QueryInput_CompareTotalSupply_DaoId["Arb"] = "ARB";
+    QueryInput_CompareTotalSupply_DaoId["Ens"] = "ENS";
+    QueryInput_CompareTotalSupply_DaoId["Uni"] = "UNI";
+})(QueryInput_CompareTotalSupply_DaoId || (exports.QueryInput_CompareTotalSupply_DaoId = QueryInput_CompareTotalSupply_DaoId = {}));
+var QueryInput_CompareTotalSupply_Days;
+(function (QueryInput_CompareTotalSupply_Days) {
+    QueryInput_CompareTotalSupply_Days["7d"] = "_7d";
+    QueryInput_CompareTotalSupply_Days["30d"] = "_30d";
+    QueryInput_CompareTotalSupply_Days["90d"] = "_90d";
+    QueryInput_CompareTotalSupply_Days["180d"] = "_180d";
+    QueryInput_CompareTotalSupply_Days["365d"] = "_365d";
+})(QueryInput_CompareTotalSupply_Days || (exports.QueryInput_CompareTotalSupply_Days = QueryInput_CompareTotalSupply_Days = {}));
+var QueryInput_CompareTreasury_DaoId;
+(function (QueryInput_CompareTreasury_DaoId) {
+    QueryInput_CompareTreasury_DaoId["Arb"] = "ARB";
+    QueryInput_CompareTreasury_DaoId["Ens"] = "ENS";
+    QueryInput_CompareTreasury_DaoId["Uni"] = "UNI";
+})(QueryInput_CompareTreasury_DaoId || (exports.QueryInput_CompareTreasury_DaoId = QueryInput_CompareTreasury_DaoId = {}));
+var QueryInput_CompareTreasury_Days;
+(function (QueryInput_CompareTreasury_Days) {
+    QueryInput_CompareTreasury_Days["7d"] = "_7d";
+    QueryInput_CompareTreasury_Days["30d"] = "_30d";
+    QueryInput_CompareTreasury_Days["90d"] = "_90d";
+    QueryInput_CompareTreasury_Days["180d"] = "_180d";
+    QueryInput_CompareTreasury_Days["365d"] = "_365d";
+})(QueryInput_CompareTreasury_Days || (exports.QueryInput_CompareTreasury_Days = QueryInput_CompareTreasury_Days = {}));
+var QueryInput_CompareVotes_DaoId;
+(function (QueryInput_CompareVotes_DaoId) {
+    QueryInput_CompareVotes_DaoId["Arb"] = "ARB";
+    QueryInput_CompareVotes_DaoId["Ens"] = "ENS";
+    QueryInput_CompareVotes_DaoId["Uni"] = "UNI";
+})(QueryInput_CompareVotes_DaoId || (exports.QueryInput_CompareVotes_DaoId = QueryInput_CompareVotes_DaoId = {}));
+var QueryInput_CompareVotes_Days;
+(function (QueryInput_CompareVotes_Days) {
+    QueryInput_CompareVotes_Days["7d"] = "_7d";
+    QueryInput_CompareVotes_Days["30d"] = "_30d";
+    QueryInput_CompareVotes_Days["90d"] = "_90d";
+    QueryInput_CompareVotes_Days["180d"] = "_180d";
+    QueryInput_CompareVotes_Days["365d"] = "_365d";
+})(QueryInput_CompareVotes_Days || (exports.QueryInput_CompareVotes_Days = QueryInput_CompareVotes_Days = {}));
+var QueryInput_HistoricalBalances_DaoId;
+(function (QueryInput_HistoricalBalances_DaoId) {
+    QueryInput_HistoricalBalances_DaoId["Arb"] = "ARB";
+    QueryInput_HistoricalBalances_DaoId["Ens"] = "ENS";
+    QueryInput_HistoricalBalances_DaoId["Uni"] = "UNI";
+})(QueryInput_HistoricalBalances_DaoId || (exports.QueryInput_HistoricalBalances_DaoId = QueryInput_HistoricalBalances_DaoId = {}));
+var QueryInput_HistoricalTokenData_DaoId;
+(function (QueryInput_HistoricalTokenData_DaoId) {
+    QueryInput_HistoricalTokenData_DaoId["Arb"] = "ARB";
+    QueryInput_HistoricalTokenData_DaoId["Ens"] = "ENS";
+    QueryInput_HistoricalTokenData_DaoId["Uni"] = "UNI";
+})(QueryInput_HistoricalTokenData_DaoId || (exports.QueryInput_HistoricalTokenData_DaoId = QueryInput_HistoricalTokenData_DaoId = {}));
+var QueryInput_HistoricalVotingPower_DaoId;
+(function (QueryInput_HistoricalVotingPower_DaoId) {
+    QueryInput_HistoricalVotingPower_DaoId["Arb"] = "ARB";
+    QueryInput_HistoricalVotingPower_DaoId["Ens"] = "ENS";
+    QueryInput_HistoricalVotingPower_DaoId["Uni"] = "UNI";
+})(QueryInput_HistoricalVotingPower_DaoId || (exports.QueryInput_HistoricalVotingPower_DaoId = QueryInput_HistoricalVotingPower_DaoId = {}));
+var QueryInput_ProposalsActivity_DaoId;
+(function (QueryInput_ProposalsActivity_DaoId) {
+    QueryInput_ProposalsActivity_DaoId["Arb"] = "ARB";
+    QueryInput_ProposalsActivity_DaoId["Ens"] = "ENS";
+    QueryInput_ProposalsActivity_DaoId["Uni"] = "UNI";
+})(QueryInput_ProposalsActivity_DaoId || (exports.QueryInput_ProposalsActivity_DaoId = QueryInput_ProposalsActivity_DaoId = {}));
+var QueryInput_TotalAssets_DaoId;
+(function (QueryInput_TotalAssets_DaoId) {
+    QueryInput_TotalAssets_DaoId["Arb"] = "ARB";
+    QueryInput_TotalAssets_DaoId["Ens"] = "ENS";
+    QueryInput_TotalAssets_DaoId["Uni"] = "UNI";
+})(QueryInput_TotalAssets_DaoId || (exports.QueryInput_TotalAssets_DaoId = QueryInput_TotalAssets_DaoId = {}));
+var QueryInput_TotalAssets_Days;
+(function (QueryInput_TotalAssets_Days) {
+    QueryInput_TotalAssets_Days["7d"] = "_7d";
+    QueryInput_TotalAssets_Days["30d"] = "_30d";
+    QueryInput_TotalAssets_Days["90d"] = "_90d";
+    QueryInput_TotalAssets_Days["180d"] = "_180d";
+    QueryInput_TotalAssets_Days["365d"] = "_365d";
+})(QueryInput_TotalAssets_Days || (exports.QueryInput_TotalAssets_Days = QueryInput_TotalAssets_Days = {}));
+exports.GetDaOsDocument = { "kind": "Document", "definitions": [{ "kind": "OperationDefinition", "operation": "query", "name": { "kind": "Name", "value": "GetDAOs" }, "selectionSet": { "kind": "SelectionSet", "selections": [{ "kind": "Field", "name": { "kind": "Name", "value": "daos" }, "selectionSet": { "kind": "SelectionSet", "selections": [{ "kind": "Field", "name": { "kind": "Name", "value": "items" }, "selectionSet": { "kind": "SelectionSet", "selections": [{ "kind": "Field", "name": { "kind": "Name", "value": "id" } }] } }] } }] } }] };
+exports.GetProposalByIdDocument = { "kind": "Document", "definitions": [{ "kind": "OperationDefinition", "operation": "query", "name": { "kind": "Name", "value": "GetProposalById" }, "variableDefinitions": [{ "kind": "VariableDefinition", "variable": { "kind": "Variable", "name": { "kind": "Name", "value": "id" } }, "type": { "kind": "NonNullType", "type": { "kind": "NamedType", "name": { "kind": "Name", "value": "String" } } } }], "selectionSet": { "kind": "SelectionSet", "selections": [{ "kind": "Field", "name": { "kind": "Name", "value": "proposalsOnchain" }, "arguments": [{ "kind": "Argument", "name": { "kind": "Name", "value": "id" }, "value": { "kind": "Variable", "name": { "kind": "Name", "value": "id" } } }], "selectionSet": { "kind": "SelectionSet", "selections": [{ "kind": "Field", "name": { "kind": "Name", "value": "id" } }, { "kind": "Field", "name": { "kind": "Name", "value": "daoId" } }, { "kind": "Field", "name": { "kind": "Name", "value": "proposerAccountId" } }, { "kind": "Field", "name": { "kind": "Name", "value": "targets" } }, { "kind": "Field", "name": { "kind": "Name", "value": "values" } }, { "kind": "Field", "name": { "kind": "Name", "value": "signatures" } }, { "kind": "Field", "name": { "kind": "Name", "value": "calldatas" } }, { "kind": "Field", "name": { "kind": "Name", "value": "startBlock" } }, { "kind": "Field", "name": { "kind": "Name", "value": "endBlock" } }, { "kind": "Field", "name": { "kind": "Name", "value": "description" } }, { "kind": "Field", "name": { "kind": "Name", "value": "timestamp" } }, { "kind": "Field", "name": { "kind": "Name", "value": "status" } }, { "kind": "Field", "name": { "kind": "Name", "value": "forVotes" } }, { "kind": "Field", "name": { "kind": "Name", "value": "againstVotes" } }, { "kind": "Field", "name": { "kind": "Name", "value": "abstainVotes" } }] } }] } }] };
+exports.ListProposalsDocument = { "kind": "Document", "definitions": [{ "kind": "OperationDefinition", "operation": "query", "name": { "kind": "Name", "value": "ListProposals" }, "variableDefinitions": [{ "kind": "VariableDefinition", "variable": { "kind": "Variable", "name": { "kind": "Name", "value": "where" } }, "type": { "kind": "NamedType", "name": { "kind": "Name", "value": "proposalsOnchainFilter" } } }, { "kind": "VariableDefinition", "variable": { "kind": "Variable", "name": { "kind": "Name", "value": "limit" } }, "type": { "kind": "NamedType", "name": { "kind": "Name", "value": "Int" } } }], "selectionSet": { "kind": "SelectionSet", "selections": [{ "kind": "Field", "name": { "kind": "Name", "value": "proposalsOnchains" }, "arguments": [{ "kind": "Argument", "name": { "kind": "Name", "value": "where" }, "value": { "kind": "Variable", "name": { "kind": "Name", "value": "where" } } }, { "kind": "Argument", "name": { "kind": "Name", "value": "limit" }, "value": { "kind": "Variable", "name": { "kind": "Name", "value": "limit" } } }], "selectionSet": { "kind": "SelectionSet", "selections": [{ "kind": "Field", "name": { "kind": "Name", "value": "items" }, "selectionSet": { "kind": "SelectionSet", "selections": [{ "kind": "Field", "name": { "kind": "Name", "value": "id" } }, { "kind": "Field", "name": { "kind": "Name", "value": "daoId" } }, { "kind": "Field", "name": { "kind": "Name", "value": "proposerAccountId" } }, { "kind": "Field", "name": { "kind": "Name", "value": "targets" } }, { "kind": "Field", "name": { "kind": "Name", "value": "values" } }, { "kind": "Field", "name": { "kind": "Name", "value": "signatures" } }, { "kind": "Field", "name": { "kind": "Name", "value": "calldatas" } }, { "kind": "Field", "name": { "kind": "Name", "value": "startBlock" } }, { "kind": "Field", "name": { "kind": "Name", "value": "endBlock" } }, { "kind": "Field", "name": { "kind": "Name", "value": "description" } }, { "kind": "Field", "name": { "kind": "Name", "value": "timestamp" } }, { "kind": "Field", "name": { "kind": "Name", "value": "status" } }, { "kind": "Field", "name": { "kind": "Name", "value": "forVotes" } }, { "kind": "Field", "name": { "kind": "Name", "value": "againstVotes" } }, { "kind": "Field", "name": { "kind": "Name", "value": "abstainVotes" } }] } }] } }] } }] };

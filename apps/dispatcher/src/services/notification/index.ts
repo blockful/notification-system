@@ -1,2 +1,2 @@
 export * from './notification-factory.service';
-export * from './telegram-notification.service'; 
+export * from './rabbitmq-notification.service'; 

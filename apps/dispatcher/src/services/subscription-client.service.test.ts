@@ -26,8 +26,8 @@ describe('SubscriptionClient', () => {
   describe('getDaoSubscribers', () => {
     it('should fetch subscribers for a DAO successfully', async () => {
       const mockUsers: User[] = [
-        { id: '1', channel: 'telegram', channel_user_id: '123', is_active: true, created_at: new Date() },
-        { id: '2', channel: 'telegram', channel_user_id: '456', is_active: true, created_at: new Date() }
+        { id: '1', channel: 'telegram', channel_user_id: '123', created_at: new Date() },
+        { id: '2', channel: 'telegram', channel_user_id: '456', created_at: new Date() }
       ];
       mockAxiosInstance.get.mockResolvedValue({ data: mockUsers });
       const result = await client.getDaoSubscribers('dao123');
@@ -49,7 +49,7 @@ describe('SubscriptionClient', () => {
   describe('shouldSend', () => {
     it('should filter subscribers correctly', async () => {
       const mockUsers: User[] = [
-        { id: '1', channel: 'telegram', channel_user_id: '123', is_active: true, created_at: new Date() }
+        { id: '1', channel: 'telegram', channel_user_id: '123', created_at: new Date() }
       ];
       const mockNotifications: Notification[] = [
         { user_id: '1', event_id: 'prop123', dao_id: 'dao123' }

@@ -1,0 +1,27 @@
+{
+  "name": "@notification-system/rabbitmq-client",
+  "version": "1.0.0",
+  "description": "Shared RabbitMQ client for message broker communication",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsc --watch"
+  },
+  "keywords": ["rabbitmq", "message-broker", "amqp", "client"],
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "@types/amqplib": "^0.10.5",
+    "@types/node": "^20.17.46",
+    "@types/uuid": "^10.0.0",
+    "typescript": "^5.8.3"
+  },
+  "dependencies": {
+    "amqplib": "^0.10.4",
+    "uuid": "^10.0.0"
+  }
+}

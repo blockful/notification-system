@@ -1,11 +1,11 @@
 import { describe, it, expect, jest, beforeEach, afterEach } from '@jest/globals';
 import { NewProposalTrigger } from '../src/triggers/new-proposal-trigger';
 import { DispatcherService } from '../src/interfaces/dispatcher.interface';
-import { ProposalOnChain, ProposalStatus, ProposalDB } from '../src/interfaces/proposal.interface';
+import { ProposalOnChain, ProposalStatus, ProposalDataSource } from '../src/interfaces/proposal.interface';
 
 describe('NewProposalTrigger', () => {
   let mockDispatcherService: jest.Mocked<DispatcherService>;
-  let mockProposalDB: jest.Mocked<ProposalDB>;
+  let mockProposalDataSource: jest.Mocked<ProposalDataSource>;
   let trigger: NewProposalTrigger;
   
   const mockProposal: ProposalOnChain = {
@@ -16,11 +16,9 @@ describe('NewProposalTrigger', () => {
     values: ['0'],
     signatures: ['vote()'],
     calldatas: ['0x0'],
-    startBlock: 100,
-    endBlock: 200,
     description: 'Test proposal',
     timestamp: '2023-01-01T00:00:00Z',
-    status: 'active' as ProposalStatus,
+    status: 'pending' as ProposalStatus,
     forVotes: BigInt(100),
     againstVotes: BigInt(50),
     abstainVotes: BigInt(10)
@@ -31,33 +29,33 @@ describe('NewProposalTrigger', () => {
       sendMessage: jest.fn()
     };
     
-    mockProposalDB = {
+    mockProposalDataSource = {
       getById: jest.fn(),
       listAll: jest.fn()
     };
     
     trigger = new NewProposalTrigger(
       mockDispatcherService,
-      mockProposalDB,
+      mockProposalDataSource,
       60000
     );
   });
 
   describe('process', () => {
-    it('should process empty array by sending empty payload', async () => {
+    it('should process empty array by sending empty events', async () => {
       await trigger.process([]);
       
       expect(mockDispatcherService.sendMessage).toHaveBeenCalledTimes(1);
       expect(mockDispatcherService.sendMessage).toHaveBeenCalledWith({
         triggerId: 'new-proposal',
-        payload: []
+        events: []
       });
     });
 
     it('should send proposals directly without transformation', async () => {
       const proposals: ProposalOnChain[] = [
-        { ...mockProposal, status: 'active' },
-        { ...mockProposal, id: '2', status: 'active', description: 'Second proposal\nWith details' }
+        { ...mockProposal, status: 'pending' },
+        { ...mockProposal, id: '2', status: 'pending', description: 'Second proposal\nWith details' }
       ];
       
       await trigger.process(proposals);
@@ -65,7 +63,7 @@ describe('NewProposalTrigger', () => {
       expect(mockDispatcherService.sendMessage).toHaveBeenCalledTimes(1);
       expect(mockDispatcherService.sendMessage).toHaveBeenCalledWith({
         triggerId: 'new-proposal',
-        payload: proposals
+        events: proposals
       });
     });
 
@@ -76,7 +74,7 @@ describe('NewProposalTrigger', () => {
       
       expect(mockDispatcherService.sendMessage).toHaveBeenCalledWith({
         triggerId: 'new-proposal',
-        payload: [proposal]
+        events: [proposal]
       });
     });
 
@@ -91,7 +89,7 @@ describe('NewProposalTrigger', () => {
   describe('start and stop', () => {
     beforeEach(() => {
       jest.useFakeTimers();
-      mockProposalDB.listAll.mockResolvedValue([mockProposal]);
+      mockProposalDataSource.listAll.mockResolvedValue([mockProposal]);
     });
     
     afterEach(() => {
@@ -104,35 +102,35 @@ describe('NewProposalTrigger', () => {
     });
 
     it('should start the interval and fetch proposals with correct status', () => {
-      trigger.start({ status: 'active' });
+      trigger.start({ status: 'pending' });
       jest.advanceTimersByTime(60000);
       
-      expect(mockProposalDB.listAll).toHaveBeenCalledTimes(1);
-      expect(mockProposalDB.listAll).toHaveBeenCalledWith({ status: 'active' });
+      expect(mockProposalDataSource.listAll).toHaveBeenCalledTimes(1);
+      expect(mockProposalDataSource.listAll).toHaveBeenCalledWith({ status: 'pending' });
     });
     
     it('should stop and restart the interval if start is called twice', () => {
       const stopSpy = jest.spyOn(trigger, 'stop');
-      trigger.start({ status: 'active' });
+      trigger.start({ status: 'pending' });
       trigger.start({ status: 'pending' });
       expect(stopSpy).toHaveBeenCalledTimes(1);
       jest.advanceTimersByTime(60000);
       
-      expect(mockProposalDB.listAll).toHaveBeenCalledWith({ status: 'pending' });
+      expect(mockProposalDataSource.listAll).toHaveBeenCalledWith({ status: 'pending' });
     });
     
     it('should stop the interval when stop is called', () => {
       trigger.start({ status: 'active' });
       jest.advanceTimersByTime(60000);
       
-      expect(mockProposalDB.listAll).toHaveBeenCalledTimes(1);
-      expect(mockProposalDB.listAll).toHaveBeenCalledWith({ status: 'active' });
+      expect(mockProposalDataSource.listAll).toHaveBeenCalledTimes(1);
+      expect(mockProposalDataSource.listAll).toHaveBeenCalledWith({ status: 'active' });
       
-      mockProposalDB.listAll.mockClear();
+      mockProposalDataSource.listAll.mockClear();
       trigger.stop();
       
       jest.advanceTimersByTime(60000);
-      expect(mockProposalDB.listAll).not.toHaveBeenCalled();
+      expect(mockProposalDataSource.listAll).not.toHaveBeenCalled();
     });
   });
 }); 

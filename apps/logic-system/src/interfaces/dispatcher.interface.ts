@@ -6,8 +6,8 @@ import { ProposalOnChain } from './proposal.interface';
 export interface DispatcherMessage {
   /** Identifier of the trigger that generated this message */
   triggerId: string;
-  /** Data context to be sent to the Dispatcher */
-  payload: ProposalOnChain[];
+  /** Event data to be sent to the Dispatcher */
+  events: ProposalOnChain[];
 }
 
 /**

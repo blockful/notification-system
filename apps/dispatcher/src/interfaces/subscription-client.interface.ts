@@ -5,7 +5,6 @@ export interface User {
     id: string;
     channel: string;
     channel_user_id: string;
-    is_active: boolean;
     created_at: Date;
   }
 
@@ -26,9 +25,10 @@ export interface ISubscriptionClient {
   /**
    * Fetches all subscribers for a specific DAO
    * @param daoId The ID of the DAO
+   * @param eventTimestamp Optional timestamp to filter subscribers by subscription date
    * @returns List of subscribers
    */
-  getDaoSubscribers(daoId: string): Promise<User[]>;
+  getDaoSubscribers(daoId: string, eventTimestamp?: string): Promise<User[]>;
 
   /**
    * Filters subscribers to return only those who should receive notifications

@@ -1,0 +1,41 @@
+query GetProposalById($id: String!) {
+  proposalsOnchain(id: $id) {
+    id
+    daoId
+    proposerAccountId
+    targets
+    values
+    signatures
+    calldatas
+    startBlock
+    endBlock
+    description
+    timestamp
+    status
+    forVotes
+    againstVotes
+    abstainVotes
+  }
+}
+
+query ListProposals($where: proposalsOnchainFilter, $limit: Int) {
+  proposalsOnchains(where: $where, limit: $limit) {
+    items {
+      id
+      daoId
+      proposerAccountId
+      targets
+      values
+      signatures
+      calldatas
+      startBlock
+      endBlock
+      description
+      timestamp
+      status
+      forVotes
+      againstVotes
+      abstainVotes
+    }
+  }
+}

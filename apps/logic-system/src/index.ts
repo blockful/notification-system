@@ -1,14 +1,12 @@
+import axios from 'axios';
 import { App } from './app';
-import { setupDatabaseConnection } from './config/database';
 import { env } from './config/env';
 
-const db = setupDatabaseConnection('pg', env.DATABASE_URL);
-
 const app = new App(
-  db,
-  env.DISPATCHER_ENDPOINT,
   env.TRIGGER_INTERVAL,
   env.PROPOSAL_STATUS,
+  axios.create({ baseURL: env.ANTICAPTURE_GRAPHQL_ENDPOINT }),
+  env.RABBITMQ_URL
 );
 
 app.start();
