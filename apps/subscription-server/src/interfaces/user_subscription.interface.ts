@@ -10,7 +10,7 @@ export interface User {
   id: string;
   channel: string;
   channel_user_id: string;
-  created_at?: Date;
+  created_at?: string;
 }
 
 /**
@@ -21,8 +21,8 @@ export interface UserPreference {
   user_id: string;
   dao_id: string;
   is_active: boolean;
-  created_at: Date;
-  updated_at: Date;
+  created_at: string;
+  updated_at: string;
 }
 
 /**

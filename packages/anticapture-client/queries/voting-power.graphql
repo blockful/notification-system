@@ -1,0 +1,21 @@
+query ListVotingPowerHistorys($where: votingPowerHistoryFilter, $limit: Int, $orderBy: String, $orderDirection: String) {
+  votingPowerHistorys(where: $where, limit: $limit, orderBy: $orderBy, orderDirection: $orderDirection) {
+    items {
+      accountId
+      timestamp
+      votingPower
+      delta
+      daoId
+      transactionHash
+      delegation {
+        delegatorAccountId
+        delegatedValue
+      }
+      transfer {
+        amount
+        fromAccountId
+        toAccountId
+      }
+    }
+  }
+}

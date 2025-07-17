@@ -39,14 +39,54 @@ export const SafeProposalByIdResponseSchema = z.object({
   return { proposalsOnchain: null };
 });
 
+// Define schema for voting power history item (based on actual API response)
+// Handle real-world scenarios where API might return null values or missing fields
+const VotingPowerHistoryItemSchema = z.object({
+  accountId: z.string(),
+  timestamp: z.string(),
+  votingPower: z.string().nullable(),
+  delta: z.string().nullable(),
+  daoId: z.string().nullable().default(null),
+  transactionHash: z.string(),
+  delegation: z.object({
+    delegatorAccountId: z.string(),
+    delegatedValue: z.string()
+  }).nullable().default(null),
+  transfer: z.object({
+    amount: z.string().nullable(),
+    fromAccountId: z.string(),
+    toAccountId: z.string()
+  }).nullable().default(null)
+});
+
+export const SafeVotingPowerHistoryResponseSchema = z.object({
+  votingPowerHistorys: z.object({
+    items: z.array(VotingPowerHistoryItemSchema)
+  }).nullable()
+}).transform((data) => {
+  // Ensure we always have a valid structure
+  return {
+    votingPowerHistorys: data.votingPowerHistorys || { items: [] }
+  };
+}).catch(() => {
+  console.warn('VotingPowerHistoryResponse validation failed, returning empty data');
+  return { votingPowerHistorys: { items: [] } };
+});
 
 
-// Export inferred types for use in the client
-export type SafeDaosResponse = z.infer<typeof SafeDaosResponseSchema>;
-export type SafeProposalsResponse = z.infer<typeof SafeProposalsResponseSchema>;
-export type SafeProposalByIdResponse = z.infer<typeof SafeProposalByIdResponseSchema>;
 
-// Helper function to process validated proposals
+// Internal types for schema validation
+type SafeProposalsResponse = z.infer<typeof SafeProposalsResponseSchema>;
+type SafeVotingPowerHistoryResponse = z.infer<typeof SafeVotingPowerHistoryResponseSchema>;
+
+// Type for processed voting power history with calculated fields (based on actual API)
+export type ProcessedVotingPowerHistory = z.infer<typeof VotingPowerHistoryItemSchema> & {
+  changeType: 'delegation' | 'transfer' | 'other';
+  sourceAccountId: string;
+  targetAccountId: string;
+};
+
+// Internal helper function to process validated proposals
 export function processProposals(validated: SafeProposalsResponse, daoId: string) {
   return validated.proposalsOnchains.items.reduce((acc, proposal) => {
     if (proposal !== null) {
@@ -57,5 +97,24 @@ export function processProposals(validated: SafeProposalsResponse, daoId: string
     }
     return acc;
   }, [] as typeof validated.proposalsOnchains.items);
+}
+
+// Internal helper function to process validated voting power history
+export function processVotingPowerHistory(validated: SafeVotingPowerHistoryResponse, daoId: string): ProcessedVotingPowerHistory[] {
+  return validated.votingPowerHistorys.items
+    .filter(item => item.accountId)
+    .map((item) => {
+      const processed: ProcessedVotingPowerHistory = {
+        ...item,
+        accountId: item.accountId,
+        daoId: daoId,
+        delta: item.delta,
+        changeType: item.delegation ? 'delegation' : item.transfer ? 'transfer' : 'other',
+        sourceAccountId: item.transfer?.fromAccountId || item.delegation?.delegatorAccountId || '',
+        targetAccountId: item.accountId
+      };
+      
+      return processed;
+    });
 }
 

@@ -4,6 +4,7 @@
  */
 
 import { IUserRepository, IPreferenceRepository, User, UserPreference } from '../interfaces';
+import { IUserAddressRepository, UserAddress } from '../interfaces/user-address.interface';
 
 /**
  * Service class for handling subscription operations
@@ -11,7 +12,8 @@ import { IUserRepository, IPreferenceRepository, User, UserPreference } from '..
 export class SubscriptionService {
   constructor(
     private userRepository: IUserRepository,
-    private preferenceRepository: IPreferenceRepository
+    private preferenceRepository: IPreferenceRepository,
+    private userAddressRepository: IUserAddressRepository
   ) {}
 
   /**
@@ -89,5 +91,117 @@ export class SubscriptionService {
     return {
       subscribers
     };
+  }
+
+  /**
+   * Add a wallet address to a user (create new or reactivate existing)
+   * @param userId - The user ID
+   * @param address - The wallet address to add
+   * @param channel - The channel (defaults to 'telegram')
+   * @returns UserAddress record
+   */
+  async addUserAddress(userId: string, address: string, channel: string = 'telegram'): Promise<UserAddress> {
+    // Basic validation
+    if (!address || address.trim().length === 0) {
+      throw new Error('Address is required');
+    }
+    
+    // Basic Ethereum address validation (starts with 0x and has 42 characters)
+    const cleanAddress = address.trim();
+    if (!/^0x[a-fA-F0-9]{40}$/.test(cleanAddress)) {
+      throw new Error('Invalid Ethereum address format');
+    }
+
+    // Ensure user exists, create if not
+    let user = await this.userRepository.findByChannelAndId(channel, userId);
+    if (!user) {
+      user = await this.userRepository.create({
+        channel,
+        channel_user_id: userId
+      });
+    }
+
+    // Check if the address already exists for this user
+    const existing = await this.userAddressRepository.findByUserAndAddress(user.id, cleanAddress);
+    
+    if (existing) {
+      if (existing.is_active) {
+        return existing;
+      } else {
+        return await this.userAddressRepository.reactivate(user.id, cleanAddress);
+      }
+    } else {
+      // Create new address record
+      return await this.userAddressRepository.create({
+        user_id: user.id,
+        address: cleanAddress,
+        is_active: true
+      });
+    }
+  }
+
+  /**
+   * Remove a wallet address from a user (soft delete)
+   * @param userId - The user ID
+   * @param address - The wallet address to remove
+   * @param channel - The channel (defaults to 'telegram')
+   * @returns Updated UserAddress record
+   */
+  async removeUserAddress(userId: string, address: string, channel: string = 'telegram'): Promise<UserAddress> {
+    if (!address || address.trim().length === 0) {
+      throw new Error('Address is required');
+    }
+
+    // Find the user first
+    const user = await this.userRepository.findByChannelAndId(channel, userId);
+    if (!user) {
+      throw new Error('User not found');
+    }
+
+    return await this.userAddressRepository.deactivate(user.id, address.trim());
+  }
+
+  /**
+   * Get all active wallet addresses for a user
+   * @param userId - The user ID
+   * @param channel - The channel (defaults to 'telegram')
+   * @returns Array of active UserAddress records
+   */
+  async getUserAddresses(userId: string, channel: string = 'telegram'): Promise<UserAddress[]> {
+    // Find the user first
+    const user = await this.userRepository.findByChannelAndId(channel, userId);
+    if (!user) {
+      return [];
+    }
+
+    return await this.userAddressRepository.findByUser(user.id);
+  }
+
+  /**
+   * Get all users who own a specific wallet address
+   * @param address - The wallet address
+   * @returns Array of UserAddress records with user information
+   */
+  async getAddressOwners(address: string): Promise<UserAddress[]> {
+    return await this.userAddressRepository.findByAddress(address);
+  }
+
+  /**
+   * Get full user information for users who own a specific wallet address
+   * @param address - The wallet address
+   * @returns Array of Users who own the address
+   */
+  async getUsersByWalletAddress(address: string): Promise<User[]> {
+    const userAddresses = await this.userAddressRepository.findByAddress(address);
+    const users: User[] = [];
+    
+    for (const userAddress of userAddresses) {
+      const user = await this.userRepository.findById(userAddress.user_id);
+      if (user) {
+        users.push(user);
+      }
+    }
+    
+    return users;
   }
 } 

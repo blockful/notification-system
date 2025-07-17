@@ -7,5 +7,8 @@ import { Context } from 'telegraf';
 export interface ContextWithSession extends Context {
     session: {
         daoSelections: Set<string>;
+        walletAction?: 'add' | 'remove';
+        walletsToRemove?: Set<string>;
+        awaitingWalletInput?: boolean;
     };
 }

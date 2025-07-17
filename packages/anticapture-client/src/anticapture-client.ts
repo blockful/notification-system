@@ -6,11 +6,13 @@ import type {
   GetProposalByIdQuery,
   GetProposalByIdQueryVariables,
   ListProposalsQuery,
-  ListProposalsQueryVariables
+  ListProposalsQueryVariables,
+  ListVotingPowerHistorysQueryVariables
 } from './gql/graphql';
-import { GetDaOsDocument, GetProposalByIdDocument, ListProposalsDocument } from './gql/graphql';
-import { SafeDaosResponseSchema, SafeProposalByIdResponseSchema, SafeProposalsResponseSchema, processProposals } from './schemas';
+import { GetDaOsDocument, GetProposalByIdDocument, ListProposalsDocument, ListVotingPowerHistorysDocument } from './gql/graphql';
+import { SafeDaosResponseSchema, SafeProposalByIdResponseSchema, SafeProposalsResponseSchema, SafeVotingPowerHistoryResponseSchema, processProposals, processVotingPowerHistory, ProcessedVotingPowerHistory } from './schemas';
 type ProposalItems = ListProposalsQuery['proposalsOnchains']['items'];
+type VotingPowerHistoryItems = ProcessedVotingPowerHistory[];
 
 export class AnticaptureClient {
   private readonly httpClient: AxiosInstance;
@@ -85,5 +87,30 @@ export class AnticaptureClient {
 
     const validated = await this.query(ListProposalsDocument, SafeProposalsResponseSchema, variables, daoId);
     return processProposals(validated, daoId!);
+  }
+
+  /**
+   * Lists voting power history with full type safety
+   * @param variables - Query variables for filtering and pagination
+   * @param daoId - Optional specific DAO ID to query. If not provided, queries all DAOs
+   * @returns Array of voting power history items
+   */
+  async listVotingPowerHistory(variables?: ListVotingPowerHistorysQueryVariables, daoId?: string): Promise<VotingPowerHistoryItems> {
+    if (!daoId && !variables?.where?.daoId) {
+      const allDAOs = await this.getDAOs();
+
+      const queryPromises = allDAOs.map(async (currentDaoId) => {
+        const validated = await this.query(ListVotingPowerHistorysDocument, SafeVotingPowerHistoryResponseSchema, variables, currentDaoId);
+        return processVotingPowerHistory(validated, currentDaoId);
+      });
+
+      const results = await Promise.all(queryPromises);
+      return results.flat().sort((a: ProcessedVotingPowerHistory, b: ProcessedVotingPowerHistory) => 
+        parseInt(a.timestamp) - parseInt(b.timestamp)
+      );
+    }
+
+    const validated = await this.query(ListVotingPowerHistorysDocument, SafeVotingPowerHistoryResponseSchema, variables, daoId);
+    return processVotingPowerHistory(validated, daoId!);
   }
 }

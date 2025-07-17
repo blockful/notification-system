@@ -2,12 +2,13 @@ import { DispatcherMessage, MessageProcessingResult } from "./dispatcher-message
 
 /**
  * Interface for trigger handlers
+ * @template T - Type of event data being processed
  */
-export interface TriggerHandler {
+export interface TriggerHandler<T = any> {
   /**
    * Handle a message from a specific trigger
    * @param message The message to process
    * @returns Processing result
    */
-  handleMessage(message: DispatcherMessage): Promise<MessageProcessingResult>;
+  handleMessage(message: DispatcherMessage<T>): Promise<MessageProcessingResult>;
 } 

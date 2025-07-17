@@ -6,5 +6,11 @@ export type {
   GetProposalByIdQuery,
   GetProposalByIdQueryVariables,
   ListProposalsQuery,
-  ListProposalsQueryVariables
+  ListProposalsQueryVariables,
+  VotingPowerHistory,
+  VotingPowerHistoryFilter,
+  ListVotingPowerHistorysQuery,
+  ListVotingPowerHistorysQueryVariables
 } from './gql/graphql';
+
+export type { ProcessedVotingPowerHistory } from './schemas';

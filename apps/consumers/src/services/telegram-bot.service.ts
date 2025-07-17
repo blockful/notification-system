@@ -5,18 +5,21 @@
  */
 
 import { Telegraf, Markup } from 'telegraf';
-import { WELCOME_MESSAGE, HELP_MESSAGE, DAOS_BUTTON_TEXT, LEARN_MORE_BUTTON_TEXT } from '../messages';
+import { WELCOME_MESSAGE, HELP_MESSAGE, DAOS_BUTTON_TEXT, LEARN_MORE_BUTTON_TEXT, MY_WALLETS_BUTTON_TEXT } from '../messages';
 import { DAOService } from '../services/dao.service';
+import { WalletService } from '../services/wallet.service';
 import { ContextWithSession } from '../interfaces/bot.interface';
 import { NotificationPayload } from '../interfaces/notification.interface';
 
 export class TelegramBotService {
   private bot: Telegraf<ContextWithSession>;
   private daoService: DAOService;
+  private walletService: WalletService;
 
-  constructor(bot: Telegraf<ContextWithSession>, daoService: DAOService) {
+  constructor(bot: Telegraf<ContextWithSession>, daoService: DAOService, walletService: WalletService) {
     this.bot = bot;
     this.daoService = daoService;
+    this.walletService = walletService;
     this.setupCommands();
   }
 
@@ -25,7 +28,8 @@ export class TelegramBotService {
    */
   private createPersistentKeyboard() {
     return Markup.keyboard([
-      [DAOS_BUTTON_TEXT, LEARN_MORE_BUTTON_TEXT]
+      [DAOS_BUTTON_TEXT, MY_WALLETS_BUTTON_TEXT],
+      [LEARN_MORE_BUTTON_TEXT]
     ])
     .resize()
     .persistent();
@@ -47,8 +51,16 @@ export class TelegramBotService {
       await this.daoService.initialize(ctx);
     });
 
+    this.bot.command(/^wallets$/i, async (ctx) => {
+      await this.walletService.initialize(ctx);
+    });
+
     this.bot.hears(DAOS_BUTTON_TEXT, async (ctx) => {
       await this.daoService.initialize(ctx);
+    });
+
+    this.bot.hears(MY_WALLETS_BUTTON_TEXT, async (ctx) => {
+      await this.walletService.initialize(ctx);
     });
 
     this.bot.hears(LEARN_MORE_BUTTON_TEXT, async (ctx) => {
@@ -69,8 +81,35 @@ export class TelegramBotService {
       await ctx.answerCbQuery();
     });
 
+    // Wallet action handlers
+    this.bot.action(/^wallet_add$/, async (ctx) => {
+      await this.walletService.addWallet(ctx);
+      await ctx.answerCbQuery();
+    });
+
+    this.bot.action(/^wallet_remove$/, async (ctx) => {
+      await this.walletService.removeWallet(ctx);
+      await ctx.answerCbQuery();
+    });
+
+    this.bot.action(/^wallet_toggle_(.+)$/, async (ctx) => {
+      const address = ctx.match[1];
+      await this.walletService.toggleWalletForRemoval(ctx, address);
+      await ctx.answerCbQuery();
+    });
+
+    this.bot.action(/^wallet_confirm_remove$/, async (ctx) => {
+      await this.walletService.confirmRemoval(ctx);
+      await ctx.answerCbQuery();
+    });
+
     this.bot.on('message', async (ctx, next) => {
       if ('text' in ctx.message && !ctx.message.text.startsWith('/')) {
+        if (ctx.session?.awaitingWalletInput) {
+          await this.walletService.processWalletInput(ctx, ctx.message.text);
+          return;
+        }
+        
         await ctx.reply('Please use the buttons below or type /learn_more for more information.', 
           this.createPersistentKeyboard());
       }
@@ -78,8 +117,8 @@ export class TelegramBotService {
     });
   }
 
-  public launch(): void {
-    this.bot.launch();
+  async launch(): Promise<void> {
+    await this.bot.launch();
     console.log('🤖 Bot is running...');
   }
 

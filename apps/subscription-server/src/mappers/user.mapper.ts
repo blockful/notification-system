@@ -14,7 +14,5 @@ export const toUserResponse = (user: User): UserResponse => ({
   id: user.id,
   channel: user.channel,
   channel_user_id: user.channel_user_id,
-  created_at: user.created_at ? 
-    (typeof user.created_at === 'string' ? user.created_at : user.created_at.toISOString()) 
-    : undefined
+  created_at: user.created_at
 });
