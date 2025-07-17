@@ -2,7 +2,7 @@ name: Deploy
 
 on:
   push:
-    branches: [dev, main]
+    branches: [dev, main, feat/parallel-deploy]
 
 jobs:
   changes:
