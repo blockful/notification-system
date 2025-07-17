@@ -42,6 +42,25 @@ describe('ProposalFinishedTrigger', () => {
       
       expect(mockProposalFinishedRepository.getFinishedProposalsSince).toHaveBeenCalledWith(1625000000);
     });
+
+    it('should use 7-day limit when lastNotifiedProposalTimestamp is 0 (restart)', async () => {
+      mockProposalFinishedRepository.getFinishedProposalsSince.mockResolvedValue([] as never);
+      
+      // Mock Date.now to have a predictable timestamp
+      const mockNow = 1625000000000; // July 1, 2021 in milliseconds
+      const mockDateNow = jest.spyOn(Date, 'now').mockReturnValue(mockNow);
+      
+      // Ensure lastNotifiedProposalTimestamp is 0 (initial state)
+      expect((trigger as any).lastNotifiedProposalTimestamp).toBe(0);
+      
+      await (trigger as any).fetchData();
+      
+      // Should use 7 days ago from current time
+      const expectedTimestamp = Math.floor(mockNow / 1000) - (7 * 24 * 60 * 60); // 7 days ago
+      expect(mockProposalFinishedRepository.getFinishedProposalsSince).toHaveBeenCalledWith(expectedTimestamp);
+      
+      mockDateNow.mockRestore();
+    });
   });
 
   describe('process', () => {

@@ -8,7 +8,7 @@ import { ProposalFinished, ProposalFinishedNotification } from '../interfaces/pr
  * Trigger for detecting finished proposals
  */
 export class ProposalFinishedTrigger extends Trigger<ProposalFinished, void> {
-  private lastNotifiedProposalTimestamp: number = 0;
+  private lastNotifiedProposalTimestamp: number = Math.floor(Date.now() / 1000) - (7 * 24 * 60 * 60);
 
   constructor(
     private readonly proposalFinishedRepository: ProposalFinishedRepository,
