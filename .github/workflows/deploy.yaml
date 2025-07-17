@@ -49,13 +49,13 @@ jobs:
           fi
       - name: Deploy triggers
         if: ${{ needs.changes.outputs.triggers == 'true' }}
-        run: railway up -s logic-system -e ${{ steps.env.outputs.environment }} --ci -d
+        run: railway up -s logic-system -e ${{ steps.env.outputs.environment }} --ci
       - name: Deploy subscriptions
         if: ${{ needs.changes.outputs.subscriptions == 'true' }}
-        run: railway up -s subscription-server -e ${{ steps.env.outputs.environment }} --ci -d
+        run: railway up -s subscription-server -e ${{ steps.env.outputs.environment }} --ci
       - name: Deploy dispatcher
         if: ${{ needs.changes.outputs.dispatcher == 'true' }} || ${{ needs.changes.outputs.subscriptions == 'true' }}
-        run: railway up -s dispatcher -e ${{ steps.env.outputs.environment }} --ci -d
+        run: railway up -s dispatcher -e ${{ steps.env.outputs.environment }} --ci
       - name: Deploy consumers
         if: ${{ needs.changes.outputs.consumers == 'true' }}
-        run: railway up -s consumers -e ${{ steps.env.outputs.environment }} --ci -d
+        run: railway up -s consumer-telegram -e ${{ steps.env.outputs.environment }} --ci
