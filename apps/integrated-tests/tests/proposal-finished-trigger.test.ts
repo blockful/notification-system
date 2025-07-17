@@ -9,6 +9,7 @@ import { HttpClientMockSetup } from '../src/mocks/http-client-mock';
 import { GraphQLMockSetup } from '../src/mocks/graphql-mock-setup';
 import { UserFactory } from '../src/test-data/user-factory';
 import { ProposalFactory } from '../src/test-data/proposal-factory';
+import { ProposalFinishedGraphQLMockHelper } from '../src/mocks/proposal-finished-graphql-mock';
 
 describe('Proposal Finished Trigger - Integration Test', () => {
   let apps: TestApps;
@@ -16,6 +17,8 @@ describe('Proposal Finished Trigger - Integration Test', () => {
   let testDaoId: string;
   let testUserWithSubscription: string;
   let testUserWithoutSubscription: string;
+  let secondDaoId: string;
+  let secondUserAddress: string;
   const blockTime = 12; // 12 seconds per block (Ethereum)
 
   beforeAll(async () => {
@@ -25,8 +28,30 @@ describe('Proposal Finished Trigger - Integration Test', () => {
       fs.unlinkSync(`/tmp/${file}`);
     });
 
+    // Initialize test data variables
+    testDaoId = 'test-dao-proposal-finished';
+    testUserWithSubscription = 'user-with-subscription.eth';
+    testUserWithoutSubscription = 'user-without-subscription.eth';
+    secondDaoId = 'second-finished-dao';
+    secondUserAddress = 'second-dao-user.eth';
+
     await setupDatabase();
-    await createTestData();
+    
+    // Create users with subscription setup
+    const pastTimestamp = new Date(Date.now() - 100000).toISOString(); // 100 seconds ago (before any test proposal)
+    const userSetup = await UserFactory.createUserWithFullSetup(testUserWithSubscription, 'proposal-finished-user', testDaoId, true, pastTimestamp);
+    await UserFactory.createUserAddress(userSetup.user.id, testUserWithSubscription, pastTimestamp);
+    await UserFactory.createUser(testUserWithoutSubscription, 'proposal-finished-user-2');
+    
+    // Create second DAO user setup
+    const secondUser = await UserFactory.createUserWithFullSetup(
+      '888888888',
+      'second-dao-user',
+      secondDaoId,
+      true,
+      pastTimestamp
+    );
+    await UserFactory.createUserAddress(secondUser.user.id, secondUserAddress, pastTimestamp);
     
     // Setup mocks
     httpMockSetup = new HttpClientMockSetup();
@@ -49,149 +74,16 @@ describe('Proposal Finished Trigger - Integration Test', () => {
     await new Promise(resolve => setTimeout(resolve, 1000));
   }, 40000);
 
-  const createTestData = async () => {
-    testDaoId = 'test-dao-proposal-finished';
-    testUserWithSubscription = 'user-with-subscription.eth';
-    testUserWithoutSubscription = 'user-without-subscription.eth';
 
-    // Create users in database with a timestamp from the past to ensure temporal filtering works
-    const pastTimestamp = new Date(Date.now() - 100000).toISOString(); // 100 seconds ago (before any test proposal)
-    
-    const userWithSub = await UserFactory.createUser(testUserWithSubscription, 'proposal-finished-user');
-    const userWithoutSub = await UserFactory.createUser(testUserWithoutSubscription, 'proposal-finished-user-2');
 
-    // Create user preference (subscription equivalent) for proposal finished notifications
-    const preference = await UserFactory.createUserPreference(userWithSub.id, testDaoId, true, pastTimestamp);
-    
-    // Create user address mapping to link user to wallet address
-    await UserFactory.createUserAddress(userWithSub.id, testUserWithSubscription, pastTimestamp);
-  };
 
-  // Helper function to create a proposal that will finish soon
-  const createFinishedProposal = (daoId: string, proposalId: string, secondsUntilEnd: number = 2) => {
-    const now = Math.floor(Date.now() / 1000);
-    const startTimestamp = now - 100; // Started 100 seconds ago
-    const startBlock = 1000;
-    const blocksElapsed = Math.floor(100 / blockTime); // How many blocks passed in 100 seconds
-    const blocksUntilEnd = Math.ceil(secondsUntilEnd / blockTime); // How many blocks until it ends
-    const endBlock = startBlock + blocksElapsed + blocksUntilEnd;
-    
-    return ProposalFactory.createProposal(daoId, proposalId, {
-      timestamp: startTimestamp.toString(),
-      startBlock: startBlock,
-      endBlock: endBlock,
-      status: 'active', // Status doesn't matter for finished check
-      description: '# Test Proposal Title\\n\\nThis is a test proposal that will finish soon.'
-    });
-  };
-
-  // Helper function to create a proposal that already finished
-  const createAlreadyFinishedProposal = (daoId: string, proposalId: string) => {
-    const now = Math.floor(Date.now() / 1000);
-    const startTimestamp = now - 50; // Started 50 seconds ago (after user subscription which is 100s ago)
-    const startBlock = 1000;
-    const endBlock = 1001; // 1 block = 12 seconds with blockTime=12, so it finished 38 seconds ago
-    
-    return ProposalFactory.createProposal(daoId, proposalId, {
-      timestamp: startTimestamp.toString(),
-      startBlock: startBlock,
-      endBlock: endBlock,
-      status: 'executed',
-      description: '# Finished Proposal\\n\\nThis proposal has already finished.'
-    });
-  };
-
-  // Helper function to setup GraphQL mock without warnings
-  const setupCleanGraphQLMock = (proposalsToReturn: any[] = []) => {
-    httpMockSetup.getMockClient().post.mockImplementation((url: string, data: any, config: any) => {
-      if (data.query && data.query.includes('ListProposals')) {
-        const requestedStatus = data.variables?.where?.status;
-        const timestampGt = data.variables?.where?.timestamp_gt;
-        const requestedDaoId = config?.headers?.['anticapture-dao-id'];
-        
-        // If new-proposal trigger is asking for pending proposals, return empty
-        if (requestedStatus === 'pending') {
-          return Promise.resolve({
-            data: {
-              data: {
-                proposalsOnchains: {
-                  items: []
-                }
-              }
-            }
-          });
-        }
-        
-        // If proposal-finished trigger is asking with timestamp filter, return proposals
-        if (timestampGt !== undefined) {
-          let filteredProposals = proposalsToReturn;
-          
-          // Filter by DAO if specified
-          if (requestedDaoId) {
-            filteredProposals = filteredProposals.filter(p => p.daoId === requestedDaoId);
-          }
-          
-          return Promise.resolve({
-            data: {
-              data: {
-                proposalsOnchains: {
-                  items: filteredProposals
-                }
-              }
-            }
-          });
-        }
-        
-        // Default: return empty
-        return Promise.resolve({
-          data: {
-            data: {
-              proposalsOnchains: {
-                items: []
-              }
-            }
-          }
-        });
-      }
-      
-      // Handle voting power queries to avoid warnings
-      if (data.query && data.query.includes('ListVotingPowerHistorys')) {
-        return Promise.resolve({
-          data: {
-            data: {
-              votingPowerHistorys: {
-                items: []
-              }
-            }
-          }
-        });
-      }
-      
-      if (data.query && data.query.includes('GetDAOs')) {
-        const uniqueDaoIds = [...new Set(proposalsToReturn.map(p => p.daoId))];
-        return Promise.resolve({
-          data: {
-            data: {
-              daos: {
-                items: uniqueDaoIds.length > 0 
-                  ? uniqueDaoIds.map(daoId => ({ id: daoId, blockTime: blockTime }))
-                  : [{ id: testDaoId, blockTime: blockTime }]
-              }
-            }
-          }
-        });
-      }
-      
-      return Promise.resolve({ data: { data: {} } });
-    });
-  };
 
   test('should send notification when proposal finishes', async () => {
     // Create a proposal that has already finished
-    const proposal = createAlreadyFinishedProposal(testDaoId, 'finishing-proposal-1');
+    const proposal = ProposalFactory.createTimedProposal(testDaoId, 'finishing-proposal-1', -40, blockTime);
     
     // Setup clean GraphQL mock without warnings
-    setupCleanGraphQLMock([proposal]);
+    ProposalFinishedGraphQLMockHelper.setupCleanGraphQLMock(httpMockSetup, [proposal], testDaoId, blockTime);
 
     // Wait for the logic system to process and the proposal to finish
     await new Promise(resolve => setTimeout(resolve, 8000)); // Wait 8 seconds to ensure proposal finishes
@@ -227,7 +119,7 @@ describe('Proposal Finished Trigger - Integration Test', () => {
     });
 
     // Setup clean GraphQL mock without warnings
-    setupCleanGraphQLMock([futureProposal]);
+    ProposalFinishedGraphQLMockHelper.setupCleanGraphQLMock(httpMockSetup, [futureProposal], testDaoId, blockTime);
 
     const initialCallCount = mockSendMessage.mock.calls.length;
 
@@ -246,13 +138,13 @@ describe('Proposal Finished Trigger - Integration Test', () => {
     
     // Create multiple proposals that have already finished
     const proposals = [
-      createAlreadyFinishedProposal(testDaoId, 'finished-1'),
-      createAlreadyFinishedProposal(testDaoId, 'finished-2'),
-      createAlreadyFinishedProposal(testDaoId, 'finished-3')
+      ProposalFactory.createTimedProposal(testDaoId, 'finished-1', -40, blockTime),
+      ProposalFactory.createTimedProposal(testDaoId, 'finished-2', -40, blockTime),
+      ProposalFactory.createTimedProposal(testDaoId, 'finished-3', -40, blockTime)
     ];
 
     // Setup clean GraphQL mock without warnings
-    setupCleanGraphQLMock(proposals);
+    ProposalFinishedGraphQLMockHelper.setupCleanGraphQLMock(httpMockSetup, proposals, testDaoId, blockTime);
 
     const initialCallCount = mockSendMessage.mock.calls.length;
 
@@ -297,7 +189,7 @@ describe('Proposal Finished Trigger - Integration Test', () => {
     });
 
     // Setup clean GraphQL mock without warnings
-    setupCleanGraphQLMock([proposal]);
+    ProposalFinishedGraphQLMockHelper.setupCleanGraphQLMock(httpMockSetup, [proposal], testDaoId, blockTime);
 
     const initialCallCount = mockSendMessage.mock.calls.length;
 
@@ -311,30 +203,12 @@ describe('Proposal Finished Trigger - Integration Test', () => {
   });
 
   test('should handle proposals from multiple DAOs', async () => {
-    // Create another DAO and user
-    const secondDaoId = 'second-finished-dao';
-    const secondUserAddress = 'second-dao-user.eth';
-    const secondUser = await UserFactory.createUserWithFullSetup(
-      '888888888',
-      'second-dao-user',
-      secondDaoId,
-      true,
-      new Date(Date.now() - 100000).toISOString() // 100 seconds ago, same as first user
-    );
-    
-    // Create user address mapping for the second user
-    await UserFactory.createUserAddress(
-      secondUser.user.id,
-      secondUserAddress,
-      new Date(Date.now() - 100000).toISOString() // 100 seconds ago, same as first user
-    );
-    
-    // Create finished proposals for both DAOs
-    const dao1Proposal = createAlreadyFinishedProposal(testDaoId, 'dao1-finished');
-    const dao2Proposal = createAlreadyFinishedProposal(secondDaoId, 'dao2-finished');
+    // Create finished proposals for both DAOs (users already created in beforeAll)
+    const dao1Proposal = ProposalFactory.createTimedProposal(testDaoId, 'dao1-finished', -40, blockTime);
+    const dao2Proposal = ProposalFactory.createTimedProposal(secondDaoId, 'dao2-finished', -40, blockTime);
 
     // Setup clean GraphQL mock without warnings
-    setupCleanGraphQLMock([dao1Proposal, dao2Proposal]);
+    ProposalFinishedGraphQLMockHelper.setupCleanGraphQLMock(httpMockSetup, [dao1Proposal, dao2Proposal], testDaoId, blockTime);
 
     const initialCallCount = mockSendMessage.mock.calls.length;
 
