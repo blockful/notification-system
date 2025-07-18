@@ -24,7 +24,7 @@ export class ProposalFinishedTriggerHandler extends BaseTriggerHandler<ProposalF
       const subscribers = await this.getSubscribers(
         proposal.daoId,
         eventId,
-        Date.now().toString()
+        undefined
       );
 
       if (subscribers.length === 0) {
