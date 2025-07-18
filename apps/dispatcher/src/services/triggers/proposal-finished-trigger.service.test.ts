@@ -79,7 +79,7 @@ describe('ProposalFinishedTriggerHandler', () => {
         userId: expect.any(String),
         channel: expect.any(String),
         channelUserId: expect.any(String),
-        message: 'The proposal "Test Proposal" has ended.'
+        message: 'The proposal "Test Proposal" has ended on dao dao123.'
       }));
     });
 
@@ -161,7 +161,7 @@ describe('ProposalFinishedTriggerHandler', () => {
       await handler.handleMessage(mockMessage);
       
       expect(mockNotificationClient.sendNotification).toHaveBeenCalledWith(expect.objectContaining({
-        message: 'The proposal "Main Title" has ended.'
+        message: 'The proposal "Main Title" has ended on dao dao123.'
       }));
     });
 
@@ -189,7 +189,7 @@ describe('ProposalFinishedTriggerHandler', () => {
       await handler.handleMessage(mockMessage);
       
       expect(mockNotificationClient.sendNotification).toHaveBeenCalledWith(expect.objectContaining({
-        message: 'The proposal "Markdown Title" has ended.'
+        message: 'The proposal "Markdown Title" has ended on dao dao123.'
       }));
     });
 
@@ -217,7 +217,7 @@ describe('ProposalFinishedTriggerHandler', () => {
       await handler.handleMessage(mockMessage);
       
       expect(mockNotificationClient.sendNotification).toHaveBeenCalledWith(expect.objectContaining({
-        message: 'A proposal has ended on dao dao123'
+        message: 'A proposal has ended on dao dao123.'
       }));
     });
 
