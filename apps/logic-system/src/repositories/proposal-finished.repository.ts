@@ -14,9 +14,8 @@ export class ProposalFinishedRepository {
    * @returns Array of finished proposals
    */
   async getFinishedProposalsSince(lastNotifiedTimestamp: number): Promise<ProposalFinished[]> {
-
-    const enrichedDAOs = await this.anticaptureClient.getEnrichedDAOs();
-    const daoPromises = enrichedDAOs.map(async (dao) => {
+    const daos = await this.anticaptureClient.getDAOs();
+    const daoPromises = daos.map(async (dao) => {
       const proposals = await this.anticaptureClient.listProposals(
         {
           where: {

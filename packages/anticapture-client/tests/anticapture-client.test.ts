@@ -41,13 +41,13 @@ describe('AnticaptureClient - Zod Validation', () => {
       consoleSpy.mockRestore();
     });
 
-    it('should return dao IDs when data is valid', async () => {
+    it('should return dao objects with blockTime when data is valid', async () => {
       // @ts-ignore - valid test case
       mockQuery.mockResolvedValue({
         daos: {
           items: [
-            { id: 'UNISWAP' },
-            { id: 'ENS' },
+            { id: 'UNISWAP', votingDelay: '1000' },
+            { id: 'ENS', votingDelay: '500' },
             { id: 'COMPOUND' }
           ]
         }
@@ -55,7 +55,11 @@ describe('AnticaptureClient - Zod Validation', () => {
 
       const result = await client.getDAOs();
 
-      expect(result).toEqual(['UNISWAP', 'ENS', 'COMPOUND']);
+      expect(result).toEqual([
+        { id: 'UNISWAP', blockTime: 12, votingDelay: '1000' },
+        { id: 'ENS', blockTime: 12, votingDelay: '500' },
+        { id: 'COMPOUND', blockTime: 12, votingDelay: '0' }
+      ]);
     });
   });
 

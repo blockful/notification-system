@@ -28,22 +28,15 @@ class AnticaptureClient {
     }
     /**
      * Fetches all DAOs from the anticapture GraphQL API with full type safety
-     * @returns Array of DAO IDs
+     * @returns Array of DAO objects with blockTime added
      */
     async getDAOs() {
         const validated = await this.query(graphql_2.GetDaOsDocument, schemas_1.SafeDaosResponseSchema, undefined, undefined);
-        return validated.daos.items.map((dao) => dao.id);
-    }
-    /**
-     * Fetches all DAOs with enriched data including blockTime
-     * @returns Array of enriched DAO objects
-     */
-    async getEnrichedDAOs() {
-        const validated = await this.query(graphql_2.GetDaOsDocument, schemas_1.SafeDaosResponseSchema, undefined, undefined);
         return validated.daos.items.map((dao) => ({
             id: dao.id,
-            blockTime: 12, // Hardcoded since API doesn't provide this
-            votingDelay: dao.votingDelay || '0' // Default to 0 if not provided
+            // blockTime: dao.blockTime, // TODO: Uncomment when API supports this field
+            blockTime: 12, // Temporary hardcoded value - Ethereum block time
+            votingDelay: dao.votingDelay || '0'
         }));
     }
     /**
@@ -60,9 +53,9 @@ class AnticaptureClient {
         if (!daoId && !variables?.where?.daoId) {
             const allDAOs = await this.getDAOs();
             const allProposals = [];
-            for (const currentDaoId of allDAOs) {
-                const validated = await this.query(graphql_2.ListProposalsDocument, schemas_1.SafeProposalsResponseSchema, variables, currentDaoId);
-                allProposals.push(...(0, schemas_1.processProposals)(validated, currentDaoId));
+            for (const dao of allDAOs) {
+                const validated = await this.query(graphql_2.ListProposalsDocument, schemas_1.SafeProposalsResponseSchema, variables, dao.id);
+                allProposals.push(...(0, schemas_1.processProposals)(validated, dao.id));
             }
             return allProposals;
         }
@@ -78,9 +71,9 @@ class AnticaptureClient {
     async listVotingPowerHistory(variables, daoId) {
         if (!daoId && !variables?.where?.daoId) {
             const allDAOs = await this.getDAOs();
-            const queryPromises = allDAOs.map(async (currentDaoId) => {
-                const validated = await this.query(graphql_2.ListVotingPowerHistorysDocument, schemas_1.SafeVotingPowerHistoryResponseSchema, variables, currentDaoId);
-                return (0, schemas_1.processVotingPowerHistory)(validated, currentDaoId);
+            const queryPromises = allDAOs.map(async (dao) => {
+                const validated = await this.query(graphql_2.ListVotingPowerHistorysDocument, schemas_1.SafeVotingPowerHistoryResponseSchema, variables, dao.id);
+                return (0, schemas_1.processVotingPowerHistory)(validated, dao.id);
             });
             const results = await Promise.all(queryPromises);
             return results.flat().sort((a, b) => parseInt(a.timestamp) - parseInt(b.timestamp));
