@@ -119,7 +119,8 @@ export const mockProposalFinishedData = [
     forVotes: '1000',
     againstVotes: '500',
     abstainVotes: '100',
-    blockTime: 12
+    blockTime: 12,
+    timestamp: 1625000000
   },
   {
     id: 'prop2',
@@ -134,7 +135,8 @@ export const mockProposalFinishedData = [
     forVotes: '500',
     againstVotes: '1000',
     abstainVotes: '200',
-    blockTime: 12
+    blockTime: 12,
+    timestamp: 1625100000
   }
 ];
 

@@ -31,10 +31,10 @@ export class ProposalFinishedRepository {
       for (const proposal of proposals) {
         if (!proposal.endBlock || !proposal.startBlock || !proposal.timestamp) continue;
 
-        const startTimestamp = parseInt(proposal.timestamp);
-        if (isProposalFinished(startTimestamp, proposal.startBlock, proposal.endBlock, dao.blockTime, dao.votingDelay)) {
+        const creationTimestamp = parseInt(proposal.timestamp);
+        if (isProposalFinished(creationTimestamp, proposal.startBlock, proposal.endBlock, dao.blockTime, dao.votingDelay)) {
           const endTimestamp = calculateProposalEndTimestamp(
-            startTimestamp, 
+            creationTimestamp, 
             proposal.startBlock, 
             proposal.endBlock, 
             dao.blockTime,
@@ -46,14 +46,15 @@ export class ProposalFinishedRepository {
             daoId: dao.id,
             description: proposal.description || '',
             startBlock: proposal.startBlock,
-            startTimestamp,
+            startTimestamp: creationTimestamp,
             endBlock: proposal.endBlock,
             endTimestamp,
             status: proposal.status || 'unknown',
             forVotes: proposal.forVotes || '0',
             againstVotes: proposal.againstVotes || '0',
             abstainVotes: proposal.abstainVotes || '0',
-            blockTime: dao.blockTime
+            blockTime: dao.blockTime,
+            timestamp: creationTimestamp 
           });
         }
       }

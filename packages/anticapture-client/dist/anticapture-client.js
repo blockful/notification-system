@@ -40,7 +40,6 @@ class AnticaptureClient {
      */
     async getEnrichedDAOs() {
         const validated = await this.query(graphql_2.GetDaOsDocument, schemas_1.SafeDaosResponseSchema, undefined, undefined);
-        console.log('[AnticaptureClient] Raw DAO data:', JSON.stringify(validated.daos.items, null, 2));
         return validated.daos.items.map((dao) => ({
             id: dao.id,
             blockTime: 12, // Hardcoded since API doesn't provide this

@@ -110,12 +110,12 @@ describe('ProposalFinishedTrigger', () => {
       });
     });
 
-    it('should update timestamp to the maximum endTimestamp', async () => {
+    it('should update timestamp to the maximum timestamp', async () => {
       await trigger.process(mockProposalFinishedData);
       
-      // Should update to max endTimestamp
+      // Should update to max timestamp
       const lastNotified = (trigger as any).lastNotifiedProposalTimestamp;
-      expect(lastNotified).toBe(1625184000); // Max endTimestamp from mock data
+      expect(lastNotified).toBe(1625100000); // Max timestamp from mock data
     });
 
     it('should handle single item correctly', async () => {
@@ -136,7 +136,7 @@ describe('ProposalFinishedTrigger', () => {
       });
       
       const lastNotified = (trigger as any).lastNotifiedProposalTimestamp;
-      expect(lastNotified).toBe(1625097600);
+      expect(lastNotified).toBe(1625000000); // timestamp of first item
     });
 
     it('should maintain existing timestamp when processing older proposals', async () => {
@@ -171,7 +171,7 @@ describe('ProposalFinishedTrigger', () => {
       
       // Verify the second call used the updated timestamp
       const secondCallArgs = mockProposalFinishedRepository.getFinishedProposalsSince.mock.calls[1][0];
-      expect(secondCallArgs).toBe(1625097600); // Timestamp from first execution
+      expect(secondCallArgs).toBe(1625000000); // timestamp from first execution
     });
 
     it('should not process when no new data available', async () => {

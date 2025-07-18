@@ -66,6 +66,7 @@ export interface ProposalFinished {
     againstVotes: string;
     abstainVotes: string;
     blockTime: number;
+    timestamp: number;
 }
 
 /**
