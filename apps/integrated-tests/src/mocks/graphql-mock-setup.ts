@@ -3,9 +3,6 @@ import { ProposalData } from '../test-data/proposal-factory';
 import { ProcessedVotingPowerHistory } from '@notification-system/anticapture-client';
 
 export class GraphQLMockSetup {
-  /**
-   * Transforms ProcessedVotingPowerHistory to raw GraphQL format
-   */
   private static transformToRawGraphQLFormat(votingPowerData: ProcessedVotingPowerHistory[]): any[] {
     return votingPowerData.map(vp => ({
       accountId: vp.accountId,
@@ -26,9 +23,6 @@ export class GraphQLMockSetup {
     }));
   }
 
-  /**
-   * Creates standard empty GraphQL response structure
-   */
   private static createEmptyGraphQLResponse(): any {
     return {
       data: {
@@ -40,60 +34,149 @@ export class GraphQLMockSetup {
       }
     };
   }
-  static setupProposalMock(mockHttpClient: any, proposals: ProposalData[]): void {
-    mockHttpClient.post.mockImplementation((url: string, data: any, config: any) => {
-      if (data.query && data.query.includes('ListProposals')) {
-        const requestedStatusIn = data.variables?.where?.status_in;
-        const requestedStatus = data.variables?.where?.status;
-        const requestedTimestampGt = data.variables?.where?.timestamp_gt;
-        const requestedDaoId = config?.headers?.['anticapture-dao-id'];
-        let proposalsToReturn = proposals;
-        
-        // Handle new-proposal trigger requests for 'pending' status
-        if (requestedStatus === 'pending') {
-          proposalsToReturn = proposalsToReturn.filter(p => p.status.toLowerCase() === 'pending');
-        }
-        // Handle status_in filter (array of statuses)
-        else if (requestedStatusIn && Array.isArray(requestedStatusIn)) {
-          proposalsToReturn = proposalsToReturn.filter(p => requestedStatusIn.includes(p.status));
-        }
-        
-        // Filter by timestamp for incremental processing (proposal-finished trigger)
-        if (requestedTimestampGt) {
-          proposalsToReturn = proposalsToReturn.filter(p => {
-            const proposalTimestamp = new Date(p.timestamp).getTime() / 1000;
-            return proposalTimestamp > parseInt(requestedTimestampGt);
-          });
-        }
-        
-        // Filter by daoId from header
-        if (requestedDaoId) {
-          proposalsToReturn = proposalsToReturn.filter(p => p.daoId === requestedDaoId);
-        }
-        
-        return Promise.resolve({
-          data: {
-            data: {
-              proposalsOnchains: {
-                items: proposalsToReturn
-              }
-            }
+
+  private static filterProposals(
+    proposals: ProposalData[],
+    variables: any,
+    headers: any,
+    enableTimestampFilter: boolean = true
+  ): ProposalData[] {
+    let filtered = proposals;
+    
+    // Special case: if asking for pending proposals, return empty array
+    // This mimics the behavior of ProposalFinishedGraphQLMockHelper
+    if (variables?.where?.status === 'pending') {
+      return [];
+    }
+    
+    if (variables?.where?.status_in && Array.isArray(variables.where.status_in)) {
+      filtered = filtered.filter(p => variables.where.status_in.includes(p.status));
+    }
+    
+    // Only filter by timestamp if enabled (proposal-finished tests need this disabled)
+    if (enableTimestampFilter && variables?.where?.timestamp_gt) {
+      filtered = filtered.filter(p => {
+        const proposalTimestamp = new Date(p.timestamp).getTime() / 1000;
+        return proposalTimestamp > parseInt(variables.where.timestamp_gt);
+      });
+    }
+    
+    if (headers?.['anticapture-dao-id']) {
+      filtered = filtered.filter(p => p.daoId === headers['anticapture-dao-id']);
+    }
+    
+    return filtered;
+  }
+
+  private static handleProposalQuery(
+    proposals: ProposalData[],
+    variables: any,
+    headers: any,
+    enableTimestampFilter: boolean = true
+  ): any {
+    const filteredProposals = this.filterProposals(proposals, variables, headers, enableTimestampFilter);
+    return {
+      data: {
+        data: {
+          proposalsOnchains: {
+            items: filteredProposals
           }
-        });
+        }
+      }
+    };
+  }
+
+  private static handleVotingPowerQuery(
+    votingPowerData: ProcessedVotingPowerHistory[],
+    variables: any
+  ): any {
+    let filtered = votingPowerData;
+    
+    if (variables?.where?.timestamp_gt) {
+      filtered = filtered.filter(vp => 
+        parseInt(vp.timestamp) > parseInt(variables.where.timestamp_gt)
+      );
+    }
+    
+    return {
+      data: {
+        data: {
+          votingPowerHistorys: {
+            items: this.transformToRawGraphQLFormat(filtered)
+          }
+        }
+      }
+    };
+  }
+
+  private static handleDAOQuery(
+    proposals: ProposalData[],
+    votingPowerData: ProcessedVotingPowerHistory[] = [],
+    blockTime: number = 12,
+    fallbackDaoId?: string
+  ): any {
+    const uniqueDaoIds = [...new Set([
+      ...proposals.map(p => p.daoId),
+      ...votingPowerData.map(vp => vp.daoId)
+    ])];
+    
+    // Use fallback DAO if no proposals and fallback is provided
+    const daoIds = uniqueDaoIds.length > 0 ? uniqueDaoIds : 
+                   fallbackDaoId ? [fallbackDaoId] : [];
+    
+    return {
+      data: {
+        data: {
+          daos: {
+            items: daoIds.map(daoId => ({ id: daoId, blockTime }))
+          }
+        }
+      }
+    };
+  }
+
+  static setupProposalMock(mockHttpClient: any, proposals: ProposalData[], blockTime: number = 12, testDaoId?: string, enableTimestampFilter: boolean = true): void {
+    mockHttpClient.post.mockImplementation((url: string, data: any, config: any) => {
+      if (data.query?.includes('ListProposals')) {
+        return Promise.resolve(this.handleProposalQuery(proposals, data.variables, config?.headers, enableTimestampFilter));
       }
       
-      if (data.query && data.query.includes('GetDAOs')) {
-        // Extract unique DAOs from proposals
-        const uniqueDaoIds = [...new Set(proposals.map(p => p.daoId))];
-        return Promise.resolve({
-          data: {
-            data: {
-              daos: {
-                items: uniqueDaoIds.map(daoId => ({ id: daoId, blockTime: 12 }))
-              }
-            }
-          }
-        });
+      if (data.query?.includes('GetDAOs')) {
+        return Promise.resolve(this.handleDAOQuery(proposals, [], blockTime, testDaoId));
+      }
+      
+      return Promise.resolve(this.createEmptyGraphQLResponse());
+    });
+  }
+
+  static setupVotingPowerMock(mockHttpClient: any, votingPowerData: ProcessedVotingPowerHistory[]): void {
+    mockHttpClient.post.mockImplementation((url: string, data: any) => {
+      if (data.query?.includes('ListVotingPowerHistorys')) {
+        return Promise.resolve(this.handleVotingPowerQuery(votingPowerData, data.variables));
+      }
+      
+      return Promise.resolve(this.createEmptyGraphQLResponse());
+    });
+  }
+
+  static setupCombinedMock(
+    mockHttpClient: any, 
+    proposals: ProposalData[], 
+    votingPowerData: ProcessedVotingPowerHistory[],
+    blockTime: number = 12,
+    testDaoId?: string
+  ): void {
+    mockHttpClient.post.mockImplementation((url: string, data: any, config: any) => {
+      if (data.query?.includes('ListProposals')) {
+        return Promise.resolve(this.handleProposalQuery(proposals, data.variables, config?.headers));
+      }
+
+      if (data.query?.includes('ListVotingPowerHistorys')) {
+        return Promise.resolve(this.handleVotingPowerQuery(votingPowerData, data.variables));
+      }
+
+      if (data.query?.includes('GetDAOs')) {
+        return Promise.resolve(this.handleDAOQuery(proposals, votingPowerData, blockTime, testDaoId));
       }
       
       return Promise.resolve(this.createEmptyGraphQLResponse());
@@ -106,205 +189,8 @@ export class GraphQLMockSetup {
     });
   }
 
-  static setupVotingPowerMock(mockHttpClient: any, votingPowerData: ProcessedVotingPowerHistory[]): void {
-    mockHttpClient.post.mockImplementation((url: string, data: any, config: any) => {
-      if (data.query && data.query.includes('ListVotingPowerHistorys')) {
-        const requestedTimestampGt = data.variables?.where?.timestamp_gt;
-        let votingPowerToReturn = votingPowerData;
-        
-        // Filter by timestamp if provided
-        if (requestedTimestampGt) {
-          votingPowerToReturn = votingPowerToReturn.filter(vp => 
-            parseInt(vp.timestamp) > parseInt(requestedTimestampGt)
-          );
-        }
-        
-        // Convert ProcessedVotingPowerHistory back to raw GraphQL format
-        const rawVotingPowerData = this.transformToRawGraphQLFormat(votingPowerToReturn);
-        
-        return Promise.resolve({
-          data: {
-            data: {
-              votingPowerHistorys: {
-                items: rawVotingPowerData
-              }
-            }
-          }
-        });
-      }
-      
-      return Promise.resolve(this.createEmptyGraphQLResponse());
-    });
-  }
-
-  static setupCombinedMock(
-    mockHttpClient: any, 
-    proposals: ProposalData[], 
-    votingPowerData: ProcessedVotingPowerHistory[]
-  ): void {
-    mockHttpClient.post.mockImplementation((url: string, data: any, config: any) => {
-      // Handle proposal queries
-      if (data.query && data.query.includes('ListProposals')) {
-        const requestedStatusIn = data.variables?.where?.status_in;
-        const requestedStatus = data.variables?.where?.status;
-        const requestedTimestampGt = data.variables?.where?.timestamp_gt;
-        const requestedDaoId = config?.headers?.['anticapture-dao-id'];
-        let proposalsToReturn = proposals;
-        
-        // Handle new-proposal trigger requests for 'pending' status
-        if (requestedStatus === 'pending') {
-          proposalsToReturn = proposalsToReturn.filter(p => p.status.toLowerCase() === 'pending');
-        }
-        // Handle status_in filter (array of statuses)
-        else if (requestedStatusIn && Array.isArray(requestedStatusIn)) {
-          proposalsToReturn = proposalsToReturn.filter(p => requestedStatusIn.includes(p.status));
-        }
-        
-        // Filter by timestamp for incremental processing (proposal-finished trigger)
-        if (requestedTimestampGt) {
-          proposalsToReturn = proposalsToReturn.filter(p => {
-            const proposalTimestamp = new Date(p.timestamp).getTime() / 1000;
-            return proposalTimestamp > parseInt(requestedTimestampGt);
-          });
-        }
-        
-        if (requestedDaoId) {
-          proposalsToReturn = proposalsToReturn.filter(p => p.daoId === requestedDaoId);
-        }
-        
-        return Promise.resolve({
-          data: {
-            data: {
-              proposalsOnchains: {
-                items: proposalsToReturn
-              }
-            }
-          }
-        });
-      }
-
-      // Handle voting power queries
-      if (data.query && data.query.includes('ListVotingPowerHistorys')) {
-        const requestedTimestampGt = data.variables?.where?.timestamp_gt;
-        let votingPowerToReturn = votingPowerData;
-        
-        if (requestedTimestampGt) {
-          votingPowerToReturn = votingPowerToReturn.filter(vp => 
-            parseInt(vp.timestamp) > parseInt(requestedTimestampGt)
-          );
-        }
-        
-        // Convert ProcessedVotingPowerHistory back to raw GraphQL format
-        const rawVotingPowerData = this.transformToRawGraphQLFormat(votingPowerToReturn);
-        
-        return Promise.resolve({
-          data: {
-            data: {
-              votingPowerHistorys: {
-                items: rawVotingPowerData
-              }
-            }
-          }
-        });
-      }
-
-      // Handle DAO queries
-      if (data.query && data.query.includes('GetDAOs')) {
-        const uniqueDaoIds = [...new Set([
-          ...proposals.map(p => p.daoId),
-          ...votingPowerData.map(vp => vp.daoId)
-        ])];
-        return Promise.resolve({
-          data: {
-            data: {
-              daos: {
-                items: uniqueDaoIds.map(daoId => ({ id: daoId, blockTime: 12 }))
-              }
-            }
-          }
-        });
-      }
-      
-      return Promise.resolve(this.createEmptyGraphQLResponse());
-    });
-  }
-
   static resetMock(mockHttpClient: any): void {
     mockHttpClient.post.mockReset();
   }
+
 }
-
-/**
- * Mock proposal data structure for GraphQL responses
- */
-export const createMockProposal = (daoId: string, status: string) => ({
-  id: "test-proposal-1",
-  daoId,
-  status,
-  description: "# Test Proposal\\n\\nThis is a test proposal for integration testing.",
-  abstainVotes: "0",
-  againstVotes: "0", 
-  forVotes: "1000000000000000000000",
-  calldatas: ["0x"],
-  endBlock: "16575874",
-  proposerAccountId: "0xb8c2C29ee19D8307cb7255e1Cd9CbDE883A267d5",
-  startBlock: "16530056",
-  signatures: [""],
-  targets: ["0x2686A8919Df194aA7673244549E68D42C1685d03"],
-  timestamp: "1675207295",
-  values: ["1000000000000000000"]
-});
-
-/**
- * Creates GraphQL response for ListProposals query
- */
-export const createListProposalsResponse = (daoId: string, status: string) => ({
-  data: {
-    data: {
-      proposalsOnchains: {
-        items: status?.toLowerCase() === 'pending' ? [createMockProposal(daoId, status)] : []
-      }
-    }
-  }
-});
-
-/**
- * Creates GraphQL response for GetDAOs query
- */
-export const createGetDAOsResponse = (daoId: string) => ({
-  data: {
-    data: {
-      daos: {
-        items: [{ id: daoId }]
-      }
-    }
-  }
-});
-
-/**
- * Sets up GraphQL mock implementation for HTTP client (Legacy - for complete-notification-flow.test.ts)
- */
-export const setupGraphQLMock = (
-  mockHttpClient: any, 
-  testDaoId: string, 
-  mockProposalStatus: string
-) => {
-  (mockHttpClient.post as jest.Mock).mockImplementation((url: any, body: any) => {
-    if (!body.query) {
-      return Promise.resolve({ data: { success: true } });
-    }
-
-    if (body.query.includes('ListProposals')) {
-      const hasPendingFilter = body.variables?.where?.status?.toLowerCase() === 'pending';
-      const effectiveStatus = hasPendingFilter ? mockProposalStatus : 'PENDING';
-      return Promise.resolve(createListProposalsResponse(testDaoId, effectiveStatus));
-    }
-    
-    if (body.query.includes('GetDAOs')) {
-      return Promise.resolve(createGetDAOsResponse(testDaoId));
-    }
-    
-    // Default response for unknown queries
-    return Promise.resolve({ data: { data: {} } });
-  });
-};

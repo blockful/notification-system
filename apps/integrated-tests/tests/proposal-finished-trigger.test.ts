@@ -9,7 +9,6 @@ import { HttpClientMockSetup } from '../src/mocks/http-client-mock';
 import { GraphQLMockSetup } from '../src/mocks/graphql-mock-setup';
 import { UserFactory } from '../src/test-data/user-factory';
 import { ProposalFactory } from '../src/test-data/proposal-factory';
-import { ProposalFinishedGraphQLMockHelper } from '../src/mocks/proposal-finished-graphql-mock';
 
 describe('Proposal Finished Trigger - Integration Test', () => {
   let apps: TestApps;
@@ -83,7 +82,7 @@ describe('Proposal Finished Trigger - Integration Test', () => {
     const proposal = ProposalFactory.createTimedProposal(testDaoId, 'finishing-proposal-1', -40, blockTime);
     
     // Setup clean GraphQL mock without warnings
-    ProposalFinishedGraphQLMockHelper.setupCleanGraphQLMock(httpMockSetup, [proposal], testDaoId, blockTime);
+    GraphQLMockSetup.setupProposalMock(httpMockSetup.getMockClient(), [proposal], blockTime, testDaoId, false);
 
     // Wait for the logic system to process and the proposal to finish
     await new Promise(resolve => setTimeout(resolve, 8000)); // Wait 8 seconds to ensure proposal finishes
@@ -119,7 +118,7 @@ describe('Proposal Finished Trigger - Integration Test', () => {
     });
 
     // Setup clean GraphQL mock without warnings
-    ProposalFinishedGraphQLMockHelper.setupCleanGraphQLMock(httpMockSetup, [futureProposal], testDaoId, blockTime);
+    GraphQLMockSetup.setupProposalMock(httpMockSetup.getMockClient(), [futureProposal], blockTime, testDaoId, false);
 
     const initialCallCount = mockSendMessage.mock.calls.length;
 
@@ -144,7 +143,7 @@ describe('Proposal Finished Trigger - Integration Test', () => {
     ];
 
     // Setup clean GraphQL mock without warnings
-    ProposalFinishedGraphQLMockHelper.setupCleanGraphQLMock(httpMockSetup, proposals, testDaoId, blockTime);
+    GraphQLMockSetup.setupProposalMock(httpMockSetup.getMockClient(), proposals, blockTime, testDaoId, false);
 
     const initialCallCount = mockSendMessage.mock.calls.length;
 
@@ -189,7 +188,7 @@ describe('Proposal Finished Trigger - Integration Test', () => {
     });
 
     // Setup clean GraphQL mock without warnings
-    ProposalFinishedGraphQLMockHelper.setupCleanGraphQLMock(httpMockSetup, [proposal], testDaoId, blockTime);
+    GraphQLMockSetup.setupProposalMock(httpMockSetup.getMockClient(), [proposal], blockTime, testDaoId, false);
 
     const initialCallCount = mockSendMessage.mock.calls.length;
 
@@ -207,8 +206,8 @@ describe('Proposal Finished Trigger - Integration Test', () => {
     const dao1Proposal = ProposalFactory.createTimedProposal(testDaoId, 'dao1-finished', -40, blockTime);
     const dao2Proposal = ProposalFactory.createTimedProposal(secondDaoId, 'dao2-finished', -40, blockTime);
 
-    // Setup clean GraphQL mock without warnings
-    ProposalFinishedGraphQLMockHelper.setupCleanGraphQLMock(httpMockSetup, [dao1Proposal, dao2Proposal], testDaoId, blockTime);
+    // Setup GraphQL mock
+    GraphQLMockSetup.setupProposalMock(httpMockSetup.getMockClient(), [dao1Proposal, dao2Proposal], blockTime, testDaoId, false);
 
     const initialCallCount = mockSendMessage.mock.calls.length;
 
