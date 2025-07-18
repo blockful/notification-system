@@ -32,13 +32,14 @@ export class ProposalFinishedRepository {
         if (!proposal.endBlock || !proposal.startBlock || !proposal.timestamp) continue;
 
         const startTimestamp = parseInt(proposal.timestamp);
-        if (isProposalFinished(startTimestamp, proposal.startBlock, proposal.endBlock, dao.blockTime)) {
+        if (isProposalFinished(startTimestamp, proposal.startBlock, proposal.endBlock, dao.blockTime, dao.votingDelay)) {
           const endTimestamp = calculateProposalEndTimestamp(
             startTimestamp, 
             proposal.startBlock, 
             proposal.endBlock, 
-            dao.blockTime
-          );
+            dao.blockTime,
+            dao.votingDelay
+          )
           
           finishedProposals.push({
             id: proposal.id,
