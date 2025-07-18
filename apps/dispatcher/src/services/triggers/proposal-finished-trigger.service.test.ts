@@ -28,7 +28,8 @@ describe('ProposalFinishedTriggerHandler', () => {
     mockProposal = {
       id: 'prop456',
       daoId: 'dao123',
-      description: 'Test Proposal\nDetailed description'
+      description: 'Test Proposal\nDetailed description',
+      endTimestamp: 1625086400
     };
   });
   
@@ -71,7 +72,7 @@ describe('ProposalFinishedTriggerHandler', () => {
       
       await handler.handleMessage(mockMessage);
       
-      expect(mockSubscriptionClient.getDaoSubscribers).toHaveBeenCalledWith('dao123', undefined);
+      expect(mockSubscriptionClient.getDaoSubscribers).toHaveBeenCalledWith('dao123', '1625086400');
       expect(mockSubscriptionClient.shouldSend).toHaveBeenCalledWith(mockUsers, 'prop456-finished', 'dao123');
       expect(mockNotificationClient.sendNotification).toHaveBeenCalledTimes(2);
       expect(mockNotificationClient.sendNotification).toHaveBeenCalledWith(expect.objectContaining({
@@ -93,8 +94,8 @@ describe('ProposalFinishedTriggerHandler', () => {
       const mockMessage: DispatcherMessage<any> = {
         triggerId: 'proposal-finished',
         events: [
-          { id: 'prop1', daoId: 'dao123', description: 'First Proposal' },
-          { id: 'prop2', daoId: 'dao456', description: 'Second Proposal' }
+          { id: 'prop1', daoId: 'dao123', description: 'First Proposal', endTimestamp: 1625086401 },
+          { id: 'prop2', daoId: 'dao456', description: 'Second Proposal', endTimestamp: 1625086402 }
         ]
       };
       
@@ -104,8 +105,8 @@ describe('ProposalFinishedTriggerHandler', () => {
       await handler.handleMessage(mockMessage);
       
       expect(mockSubscriptionClient.getDaoSubscribers).toHaveBeenCalledTimes(2);
-      expect(mockSubscriptionClient.getDaoSubscribers).toHaveBeenCalledWith('dao123', undefined);
-      expect(mockSubscriptionClient.getDaoSubscribers).toHaveBeenCalledWith('dao456', undefined);
+      expect(mockSubscriptionClient.getDaoSubscribers).toHaveBeenCalledWith('dao123', '1625086401');
+      expect(mockSubscriptionClient.getDaoSubscribers).toHaveBeenCalledWith('dao456', '1625086402');
       expect(mockNotificationClient.sendNotification).toHaveBeenCalledTimes(2);
     });
 
@@ -132,7 +133,7 @@ describe('ProposalFinishedTriggerHandler', () => {
       
       await handler.handleMessage(mockMessage);
       
-      expect(mockSubscriptionClient.getDaoSubscribers).toHaveBeenCalledWith('dao123', undefined);
+      expect(mockSubscriptionClient.getDaoSubscribers).toHaveBeenCalledWith('dao123', '1625086400');
       expect(mockNotificationClient.sendNotification).not.toHaveBeenCalled();
     });
 
@@ -146,7 +147,8 @@ describe('ProposalFinishedTriggerHandler', () => {
       const proposalWithMultilineDesc = {
         id: 'prop456',
         daoId: 'dao123',
-        description: 'Main Title\nDetailed description\nMore details'
+        description: 'Main Title\nDetailed description\nMore details',
+        endTimestamp: 1625086400
       };
       const mockMessage: DispatcherMessage<any> = {
         triggerId: 'proposal-finished',
@@ -173,7 +175,8 @@ describe('ProposalFinishedTriggerHandler', () => {
       const proposalWithMarkdownDesc = {
         id: 'prop456',
         daoId: 'dao123',
-        description: '# Markdown Title\nDetailed description'
+        description: '# Markdown Title\nDetailed description',
+        endTimestamp: 1625086400
       };
       const mockMessage: DispatcherMessage<any> = {
         triggerId: 'proposal-finished',
@@ -200,7 +203,8 @@ describe('ProposalFinishedTriggerHandler', () => {
       const proposalWithEmptyDesc = {
         id: 'prop456',
         daoId: 'dao123',
-        description: ''
+        description: '',
+        endTimestamp: 1625086400
       };
       const mockMessage: DispatcherMessage<any> = {
         triggerId: 'proposal-finished',

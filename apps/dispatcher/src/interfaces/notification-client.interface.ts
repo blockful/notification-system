@@ -28,4 +28,5 @@ export interface ProposalFinishedNotification {
   id: string;
   daoId: string;
   description: string;
+  endTimestamp: number;
 }

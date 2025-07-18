@@ -8,7 +8,7 @@ import { ProposalFinished, ProposalFinishedNotification } from '../interfaces/pr
  * Trigger for detecting finished proposals
  */
 export class ProposalFinishedTrigger extends Trigger<ProposalFinished, void> {
-  private lastNotifiedProposalTimestamp: number = Math.floor(Date.now() / 1000) - (7 * 24 * 60 * 60);
+  private lastNotifiedProposalTimestamp: number;
 
   constructor(
     private readonly proposalFinishedRepository: ProposalFinishedRepository,
@@ -16,6 +16,8 @@ export class ProposalFinishedTrigger extends Trigger<ProposalFinished, void> {
     interval: number
   ) {
     super('proposal-finished', interval);
+    // Initialize with 7-day lookback on startup
+    this.lastNotifiedProposalTimestamp = Math.floor(Date.now() / 1000) - (7 * 24 * 60 * 60);
   }
 
   protected async fetchData(): Promise<ProposalFinished[]> {
@@ -30,7 +32,8 @@ export class ProposalFinishedTrigger extends Trigger<ProposalFinished, void> {
     const notifications: ProposalFinishedNotification[] = data.map(proposal => ({
       id: proposal.id,
       daoId: proposal.daoId,
-      description: proposal.description
+      description: proposal.description,
+      endTimestamp: proposal.endTimestamp
     }));
 
     // Send all proposals in a single batch message for maximum efficiency

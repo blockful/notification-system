@@ -2,7 +2,7 @@
  * Unit tests for ProposalFinishedTrigger
  */
 
-import { describe, it, expect, jest, beforeEach } from '@jest/globals';
+import { describe, it, expect, jest, beforeEach, afterEach } from '@jest/globals';
 import { ProposalFinishedTrigger } from '../src/triggers/proposal-finished-trigger';
 import { createMockDispatcherService, createMockProposalFinishedRepository, mockProposalFinishedData } from './mocks';
 
@@ -10,9 +10,14 @@ describe('ProposalFinishedTrigger', () => {
   let trigger: ProposalFinishedTrigger;
   let mockDispatcherService: ReturnType<typeof createMockDispatcherService>;
   let mockProposalFinishedRepository: ReturnType<typeof createMockProposalFinishedRepository>;
+  let mockDateNow: jest.SpyInstance;
 
   beforeEach(() => {
     jest.clearAllMocks();
+    // Mock Date.now to have a predictable timestamp for all tests
+    const mockNow = 1625000000000; // July 1, 2021 in milliseconds
+    mockDateNow = jest.spyOn(Date, 'now').mockReturnValue(mockNow);
+    
     mockDispatcherService = createMockDispatcherService();
     mockProposalFinishedRepository = createMockProposalFinishedRepository();
     trigger = new ProposalFinishedTrigger(
@@ -20,14 +25,35 @@ describe('ProposalFinishedTrigger', () => {
       mockDispatcherService as any,
       5000 // 5 second interval for testing
     );
+    
+    // Set the timestamp to a known value for consistent testing
+    (trigger as any).lastNotifiedProposalTimestamp = 1625000000; // July 1, 2021
+  });
+
+  afterEach(() => {
+    mockDateNow.mockRestore();
   });
 
   describe('Initial state', () => {
-    it('should initialize with timestamp 0', () => {
-      // Access private field for testing
-      const lastNotified = (trigger as any).lastNotifiedProposalTimestamp;
+    it('should initialize with 7-day lookback timestamp', () => {
+      // Mock Date.now to have a predictable timestamp
+      const mockNow = 1625000000000; // July 1, 2021 in milliseconds
+      const mockDateNow = jest.spyOn(Date, 'now').mockReturnValue(mockNow);
       
-      expect(lastNotified).toBe(0);
+      // Create a new trigger instance to test initialization
+      const newTrigger = new ProposalFinishedTrigger(
+        mockProposalFinishedRepository as any,
+        mockDispatcherService as any,
+        5000
+      );
+      
+      // Should initialize with 7 days ago from current time
+      const expectedTimestamp = Math.floor(mockNow / 1000) - (7 * 24 * 60 * 60); // 7 days ago
+      const lastNotified = (newTrigger as any).lastNotifiedProposalTimestamp;
+      
+      expect(lastNotified).toBe(expectedTimestamp);
+      
+      mockDateNow.mockRestore();
     });
   });
 
@@ -43,23 +69,15 @@ describe('ProposalFinishedTrigger', () => {
       expect(mockProposalFinishedRepository.getFinishedProposalsSince).toHaveBeenCalledWith(1625000000);
     });
 
-    it('should use 7-day limit when lastNotifiedProposalTimestamp is 0 (restart)', async () => {
+    it('should fetch data using current timestamp', async () => {
       mockProposalFinishedRepository.getFinishedProposalsSince.mockResolvedValue([] as never);
-      
-      // Mock Date.now to have a predictable timestamp
-      const mockNow = 1625000000000; // July 1, 2021 in milliseconds
-      const mockDateNow = jest.spyOn(Date, 'now').mockReturnValue(mockNow);
-      
-      // Ensure lastNotifiedProposalTimestamp is 0 (initial state)
-      expect((trigger as any).lastNotifiedProposalTimestamp).toBe(0);
       
       await (trigger as any).fetchData();
       
-      // Should use 7 days ago from current time
-      const expectedTimestamp = Math.floor(mockNow / 1000) - (7 * 24 * 60 * 60); // 7 days ago
-      expect(mockProposalFinishedRepository.getFinishedProposalsSince).toHaveBeenCalledWith(expectedTimestamp);
-      
-      mockDateNow.mockRestore();
+      // Should use the current lastNotifiedProposalTimestamp value
+      expect(mockProposalFinishedRepository.getFinishedProposalsSince).toHaveBeenCalledWith(
+        (trigger as any).lastNotifiedProposalTimestamp
+      );
     });
   });
 
@@ -79,12 +97,14 @@ describe('ProposalFinishedTrigger', () => {
           {
             id: 'prop1',
             daoId: 'dao1', 
-            description: 'Test proposal 1 description'
+            description: 'Test proposal 1 description',
+            endTimestamp: 1625097600
           },
           {
             id: 'prop2',
             daoId: 'dao1',
-            description: 'Test proposal 2 description'
+            description: 'Test proposal 2 description',
+            endTimestamp: 1625184000
           }
         ]
       });
@@ -109,7 +129,8 @@ describe('ProposalFinishedTrigger', () => {
           {
             id: 'prop1',
             daoId: 'dao1',
-            description: 'Test proposal 1 description'
+            description: 'Test proposal 1 description',
+            endTimestamp: 1625097600
           }
         ]
       });
