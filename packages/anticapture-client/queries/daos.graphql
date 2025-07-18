@@ -2,6 +2,7 @@ query GetDAOs {
   daos {
     items {
       id
+      votingDelay
     }
   }
 }

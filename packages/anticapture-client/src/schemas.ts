@@ -3,7 +3,10 @@ import { z } from 'zod';
 // Schema with built-in transformation and fallbacks
 export const SafeDaosResponseSchema = z.object({
   daos: z.object({
-    items: z.array(z.object({ id: z.string() }))
+    items: z.array(z.object({ 
+      id: z.string(),
+      votingDelay: z.string().optional()
+    }))
   }).nullable()
 }).transform((data, ctx) => {
   if (!data.daos || !data.daos.items) {
