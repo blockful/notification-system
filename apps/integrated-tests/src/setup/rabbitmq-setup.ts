@@ -10,7 +10,7 @@ export class RabbitMQTestSetup {
     if (this.isCreated) return this.container.getAmqpUrl();
 
     this.container = await new RabbitMQContainer()
-      .withStartupTimeout(90000)
+      .withStartupTimeout(180000)
       .start();
     
     const amqpUrl = this.container.getAmqpUrl();
