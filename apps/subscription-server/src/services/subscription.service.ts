@@ -40,10 +40,22 @@ export class SubscriptionService {
     let user = await this.userRepository.findByChannelAndId(channel, channel_user_id);
     
     if (!user) {
-      user = await this.userRepository.create({
-        channel,
-        channel_user_id
-      });
+      try {
+        user = await this.userRepository.create({
+          channel,
+          channel_user_id
+        });
+      } catch (error: any) {
+        // Handle race condition - if user was created by another request
+        if (error.message && error.message.includes('duplicate key value violates unique constraint')) {
+          user = await this.userRepository.findByChannelAndId(channel, channel_user_id);
+          if (!user) {
+            throw new Error('Failed to create or find user after duplicate key error');
+          }
+        } else {
+          throw error;
+        }
+      }
     }
     
     let existingPreference = await this.preferenceRepository.findByUserAndDao(user.id, dao);
@@ -115,10 +127,22 @@ export class SubscriptionService {
     // Ensure user exists, create if not
     let user = await this.userRepository.findByChannelAndId(channel, userId);
     if (!user) {
-      user = await this.userRepository.create({
-        channel,
-        channel_user_id: userId
-      });
+      try {
+        user = await this.userRepository.create({
+          channel,
+          channel_user_id: userId
+        });
+      } catch (error: any) {
+        // Handle race condition - if user was created by another request
+        if (error.message && error.message.includes('duplicate key value violates unique constraint')) {
+          user = await this.userRepository.findByChannelAndId(channel, userId);
+          if (!user) {
+            throw new Error('Failed to create or find user after duplicate key error');
+          }
+        } else {
+          throw error;
+        }
+      }
     }
 
     // Check if the address already exists for this user
