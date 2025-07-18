@@ -3,42 +3,51 @@ export declare const SafeDaosResponseSchema: z.ZodCatch<z.ZodEffects<z.ZodObject
     daos: z.ZodNullable<z.ZodObject<{
         items: z.ZodArray<z.ZodObject<{
             id: z.ZodString;
+            votingDelay: z.ZodOptional<z.ZodString>;
         }, "strip", z.ZodTypeAny, {
             id: string;
+            votingDelay?: string | undefined;
         }, {
             id: string;
+            votingDelay?: string | undefined;
         }>, "many">;
     }, "strip", z.ZodTypeAny, {
         items: {
             id: string;
+            votingDelay?: string | undefined;
         }[];
     }, {
         items: {
             id: string;
+            votingDelay?: string | undefined;
         }[];
     }>>;
 }, "strip", z.ZodTypeAny, {
     daos: {
         items: {
             id: string;
+            votingDelay?: string | undefined;
         }[];
     } | null;
 }, {
     daos: {
         items: {
             id: string;
+            votingDelay?: string | undefined;
         }[];
     } | null;
 }>, {
     daos: {
         items: {
             id: string;
+            votingDelay?: string | undefined;
         }[];
     };
 }, {
     daos: {
         items: {
             id: string;
+            votingDelay?: string | undefined;
         }[];
     } | null;
 }>>;

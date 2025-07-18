@@ -1688,6 +1688,7 @@ export type GetDaOsQuery = {
         items: Array<{
             __typename?: 'dao';
             id: string;
+            votingDelay: string;
         }>;
     };
 };

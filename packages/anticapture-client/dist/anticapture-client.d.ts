@@ -4,6 +4,7 @@ import { ProcessedVotingPowerHistory } from './schemas';
 export type EnrichedDAO = {
     id: string;
     blockTime: number;
+    votingDelay: string;
 };
 type ProposalItems = ListProposalsQuery['proposalsOnchains']['items'];
 type VotingPowerHistoryItems = ProcessedVotingPowerHistory[];

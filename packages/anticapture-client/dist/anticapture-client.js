@@ -40,9 +40,11 @@ class AnticaptureClient {
      */
     async getEnrichedDAOs() {
         const validated = await this.query(graphql_2.GetDaOsDocument, schemas_1.SafeDaosResponseSchema, undefined, undefined);
+        console.log('[AnticaptureClient] Raw DAO data:', JSON.stringify(validated.daos.items, null, 2));
         return validated.daos.items.map((dao) => ({
-            ...dao,
-            blockTime: 12 // Hardcoded for now, will be from API in future
+            id: dao.id,
+            blockTime: 12, // Hardcoded since API doesn't provide this
+            votingDelay: dao.votingDelay || '0' // Default to 0 if not provided
         }));
     }
     /**

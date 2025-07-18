@@ -12,7 +12,7 @@ import type { TypedDocumentNode as DocumentNode } from '@graphql-typed-document-
  * Learn more about it here: https://the-guild.dev/graphql/codegen/plugins/presets/preset-client#reducing-bundle-size
  */
 type Documents = {
-    "query GetDAOs {\n  daos {\n    items {\n      id\n    }\n  }\n}": typeof types.GetDaOsDocument;
+    "query GetDAOs {\n  daos {\n    items {\n      id\n      votingDelay\n    }\n  }\n}": typeof types.GetDaOsDocument;
     "query GetProposalById($id: String!) {\n  proposalsOnchain(id: $id) {\n    id\n    daoId\n    proposerAccountId\n    targets\n    values\n    signatures\n    calldatas\n    startBlock\n    endBlock\n    description\n    timestamp\n    status\n    forVotes\n    againstVotes\n    abstainVotes\n  }\n}\n\nquery ListProposals($where: proposalsOnchainFilter, $limit: Int) {\n  proposalsOnchains(where: $where, limit: $limit) {\n    items {\n      id\n      daoId\n      proposerAccountId\n      targets\n      values\n      signatures\n      calldatas\n      startBlock\n      endBlock\n      description\n      timestamp\n      status\n      forVotes\n      againstVotes\n      abstainVotes\n    }\n  }\n}": typeof types.GetProposalByIdDocument;
     "query ListVotingPowerHistorys($where: votingPowerHistoryFilter, $limit: Int, $orderBy: String, $orderDirection: String) {\n  votingPowerHistorys(\n    where: $where\n    limit: $limit\n    orderBy: $orderBy\n    orderDirection: $orderDirection\n  ) {\n    items {\n      accountId\n      timestamp\n      votingPower\n      delta\n      daoId\n      transactionHash\n      delegation {\n        delegatorAccountId\n        delegatedValue\n      }\n      transfer {\n        amount\n        fromAccountId\n        toAccountId\n      }\n    }\n  }\n}": typeof types.ListVotingPowerHistorysDocument;
 };
@@ -33,7 +33,7 @@ export declare function graphql(source: string): unknown;
 /**
  * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
  */
-export declare function graphql(source: "query GetDAOs {\n  daos {\n    items {\n      id\n    }\n  }\n}"): (typeof documents)["query GetDAOs {\n  daos {\n    items {\n      id\n    }\n  }\n}"];
+export declare function graphql(source: "query GetDAOs {\n  daos {\n    items {\n      id\n      votingDelay\n    }\n  }\n}"): (typeof documents)["query GetDAOs {\n  daos {\n    items {\n      id\n      votingDelay\n    }\n  }\n}"];
 /**
  * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
  */
