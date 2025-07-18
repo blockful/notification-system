@@ -1,207 +1,213 @@
-/**
- * Unit tests for ProposalFinishedTrigger
- */
-
 import { describe, it, expect, jest, beforeEach, afterEach } from '@jest/globals';
 import { ProposalFinishedTrigger } from '../src/triggers/proposal-finished-trigger';
 import { createMockDispatcherService, createMockProposalFinishedRepository, mockProposalFinishedData } from './mocks';
+
+// Test constants
+const MOCK_TIMESTAMP_MS = 1625000000000; // July 1, 2021
+const MOCK_TIMESTAMP_SEC = 1625000000;
+const SEVEN_DAYS_IN_SECONDS = 7 * 24 * 60 * 60;
+const TEST_INTERVAL = 5000;
 
 describe('ProposalFinishedTrigger', () => {
   let trigger: ProposalFinishedTrigger;
   let mockDispatcherService: ReturnType<typeof createMockDispatcherService>;
   let mockProposalFinishedRepository: ReturnType<typeof createMockProposalFinishedRepository>;
-  let mockDateNow: jest.SpyInstance;
+  let mockDateNow: jest.SpiedFunction<typeof Date.now>;
+
+  // Helper functions
+  const getLastNotifiedTimestamp = (trigger: ProposalFinishedTrigger): number => {
+    return (trigger as any).lastNotifiedProposalTimestamp;
+  };
+
+  const setLastNotifiedTimestamp = (trigger: ProposalFinishedTrigger, timestamp: number): void => {
+    (trigger as any).lastNotifiedProposalTimestamp = timestamp;
+  };
 
   beforeEach(() => {
     jest.clearAllMocks();
-    // Mock Date.now to have a predictable timestamp for all tests
-    const mockNow = 1625000000000; // July 1, 2021 in milliseconds
-    mockDateNow = jest.spyOn(Date, 'now').mockReturnValue(mockNow);
+    mockDateNow = jest.spyOn(Date, 'now').mockReturnValue(MOCK_TIMESTAMP_MS);
     
     mockDispatcherService = createMockDispatcherService();
     mockProposalFinishedRepository = createMockProposalFinishedRepository();
     trigger = new ProposalFinishedTrigger(
       mockProposalFinishedRepository as any,
       mockDispatcherService as any,
-      5000 // 5 second interval for testing
+      TEST_INTERVAL
     );
     
-    // Set the timestamp to a known value for consistent testing
-    (trigger as any).lastNotifiedProposalTimestamp = 1625000000; // July 1, 2021
+    setLastNotifiedTimestamp(trigger, MOCK_TIMESTAMP_SEC);
   });
 
   afterEach(() => {
     mockDateNow.mockRestore();
   });
 
-  describe('Initial state', () => {
+  describe('Initialization', () => {
     it('should initialize with 7-day lookback timestamp', () => {
-      // Mock Date.now to have a predictable timestamp
-      const mockNow = 1625000000000; // July 1, 2021 in milliseconds
-      const mockDateNow = jest.spyOn(Date, 'now').mockReturnValue(mockNow);
-      
-      // Create a new trigger instance to test initialization
       const newTrigger = new ProposalFinishedTrigger(
         mockProposalFinishedRepository as any,
         mockDispatcherService as any,
-        5000
+        TEST_INTERVAL
       );
       
-      // Should initialize with 7 days ago from current time
-      const expectedTimestamp = Math.floor(mockNow / 1000) - (7 * 24 * 60 * 60); // 7 days ago
-      const lastNotified = (newTrigger as any).lastNotifiedProposalTimestamp;
+      const expectedTimestamp = MOCK_TIMESTAMP_SEC - SEVEN_DAYS_IN_SECONDS;
       
-      expect(lastNotified).toBe(expectedTimestamp);
-      
-      mockDateNow.mockRestore();
+      expect(getLastNotifiedTimestamp(newTrigger)).toBe(expectedTimestamp);
     });
   });
 
-  describe('fetchData', () => {
-    it('should call getFinishedProposalsSince with lastNotifiedProposalTimestamp', async () => {
-      mockProposalFinishedRepository.getFinishedProposalsSince.mockResolvedValue([] as never);
-      
-      // Set a timestamp to test the timestamp functionality
-      (trigger as any).lastNotifiedProposalTimestamp = 1625000000;
-      
-      await (trigger as any).fetchData();
-      
-      expect(mockProposalFinishedRepository.getFinishedProposalsSince).toHaveBeenCalledWith(1625000000);
-    });
-
-    it('should fetch data using current timestamp', async () => {
+  describe('Data Fetching', () => {
+    it('should fetch proposals since last notified timestamp', async () => {
       mockProposalFinishedRepository.getFinishedProposalsSince.mockResolvedValue([] as never);
       
       await (trigger as any).fetchData();
       
-      // Should use the current lastNotifiedProposalTimestamp value
-      expect(mockProposalFinishedRepository.getFinishedProposalsSince).toHaveBeenCalledWith(
-        (trigger as any).lastNotifiedProposalTimestamp
-      );
+      expect(mockProposalFinishedRepository.getFinishedProposalsSince).toHaveBeenCalledWith(MOCK_TIMESTAMP_SEC);
+    });
+
+    it('should use updated timestamp after processing', async () => {
+      const customTimestamp = 1625100000;
+      setLastNotifiedTimestamp(trigger, customTimestamp);
+      mockProposalFinishedRepository.getFinishedProposalsSince.mockResolvedValue([] as never);
+      
+      await (trigger as any).fetchData();
+      
+      expect(mockProposalFinishedRepository.getFinishedProposalsSince).toHaveBeenCalledWith(customTimestamp);
     });
   });
 
-  describe('process', () => {
-    it('should do nothing when data is empty', async () => {
-      await trigger.process([]);
-      
-      expect(mockDispatcherService.sendMessage).not.toHaveBeenCalled();
-    });
-
-    it('should send message with correct format when data exists', async () => {
-      await trigger.process(mockProposalFinishedData);
-      
-      expect(mockDispatcherService.sendMessage).toHaveBeenCalledWith({
-        triggerId: 'proposal-finished',
-        events: [
-          {
-            id: 'prop1',
-            daoId: 'dao1', 
-            description: 'Test proposal 1 description',
-            endTimestamp: 1625097600
-          },
-          {
-            id: 'prop2',
-            daoId: 'dao1',
-            description: 'Test proposal 2 description',
-            endTimestamp: 1625184000
-          }
-        ]
+  describe('Event Processing', () => {
+    describe('when no proposals exist', () => {
+      it('should not send any messages', async () => {
+        await trigger.process([]);
+        
+        expect(mockDispatcherService.sendMessage).not.toHaveBeenCalled();
       });
     });
 
-    it('should update timestamp to the maximum timestamp', async () => {
-      await trigger.process(mockProposalFinishedData);
-      
-      // Should update to max timestamp
-      const lastNotified = (trigger as any).lastNotifiedProposalTimestamp;
-      expect(lastNotified).toBe(1625100000); // Max timestamp from mock data
-    });
-
-    it('should handle single item correctly', async () => {
-      const singleItem = [mockProposalFinishedData[0]];
-      
-      await trigger.process(singleItem);
-      
-      expect(mockDispatcherService.sendMessage).toHaveBeenCalledWith({
-        triggerId: 'proposal-finished',
-        events: [
-          {
-            id: 'prop1',
-            daoId: 'dao1',
-            description: 'Test proposal 1 description',
-            endTimestamp: 1625097600
-          }
-        ]
+    describe('when proposals exist', () => {
+      it('should send message with correct format', async () => {
+        await trigger.process(mockProposalFinishedData);
+        
+        expect(mockDispatcherService.sendMessage).toHaveBeenCalledWith({
+          triggerId: 'proposal-finished',
+          events: [
+            {
+              id: 'prop1',
+              daoId: 'dao1', 
+              description: 'Test proposal 1 description',
+              endTimestamp: 1625097600
+            },
+            {
+              id: 'prop2',
+              daoId: 'dao1',
+              description: 'Test proposal 2 description',
+              endTimestamp: 1625184000
+            }
+          ]
+        });
       });
-      
-      const lastNotified = (trigger as any).lastNotifiedProposalTimestamp;
-      expect(lastNotified).toBe(1625000000); // timestamp of first item
-    });
 
-    it('should maintain existing timestamp when processing older proposals', async () => {
-      // Set initial timestamp higher than mock data
-      (trigger as any).lastNotifiedProposalTimestamp = 1625200000;
-      
-      await trigger.process(mockProposalFinishedData);
-      
-      // Should maintain higher timestamp
-      const lastNotified = (trigger as any).lastNotifiedProposalTimestamp;
-      expect(lastNotified).toBe(1625200000);
+      it('should handle single proposal', async () => {
+        const singleProposal = [mockProposalFinishedData[0]];
+        
+        await trigger.process(singleProposal);
+        
+        expect(mockDispatcherService.sendMessage).toHaveBeenCalledWith({
+          triggerId: 'proposal-finished',
+          events: [
+            {
+              id: 'prop1',
+              daoId: 'dao1',
+              description: 'Test proposal 1 description',
+              endTimestamp: 1625097600
+            }
+          ]
+        });
+      });
     });
   });
 
-  describe('Incremental Processing Flow', () => {
-    it('should process incrementally across multiple executions', async () => {
+  describe('Timestamp Management', () => {
+    it('should update to the latest proposal timestamp', async () => {
+      const latestTimestamp = Math.max(...mockProposalFinishedData.map(p => p.timestamp));
+      
+      await trigger.process(mockProposalFinishedData);
+      
+      expect(getLastNotifiedTimestamp(trigger)).toBe(latestTimestamp);
+    });
+
+    it('should maintain higher timestamp when processing older proposals', async () => {
+      const higherTimestamp = 1625200000;
+      setLastNotifiedTimestamp(trigger, higherTimestamp);
+      
+      await trigger.process(mockProposalFinishedData);
+      
+      expect(getLastNotifiedTimestamp(trigger)).toBe(higherTimestamp);
+    });
+
+    it('should update timestamp for single proposal', async () => {
+      const singleProposal = [mockProposalFinishedData[0]];
+      
+      await trigger.process(singleProposal);
+      
+      expect(getLastNotifiedTimestamp(trigger)).toBe(singleProposal[0].timestamp);
+    });
+  });
+
+  describe('Incremental Processing', () => {
+    it('should process new proposals incrementally', async () => {
+      const firstProposal = [mockProposalFinishedData[0]];
+      const secondProposal = [mockProposalFinishedData[1]];
+      
       // First execution
-      mockProposalFinishedRepository.getFinishedProposalsSince.mockResolvedValueOnce([mockProposalFinishedData[0]] as never);
+      mockProposalFinishedRepository.getFinishedProposalsSince.mockResolvedValueOnce(firstProposal as never);
       
       let data = await (trigger as any).fetchData();
       await trigger.process(data);
       
       expect(mockDispatcherService.sendMessage).toHaveBeenCalledTimes(1);
+      expect(getLastNotifiedTimestamp(trigger)).toBe(firstProposal[0].timestamp);
       
-      // Second execution - should use updated timestamp
-      mockProposalFinishedRepository.getFinishedProposalsSince.mockResolvedValueOnce([mockProposalFinishedData[1]] as never);
+      // Second execution with new proposal
+      mockProposalFinishedRepository.getFinishedProposalsSince.mockResolvedValueOnce(secondProposal as never);
       
       data = await (trigger as any).fetchData();
       await trigger.process(data);
       
       expect(mockDispatcherService.sendMessage).toHaveBeenCalledTimes(2);
-      
-      // Verify the second call used the updated timestamp
-      const secondCallArgs = mockProposalFinishedRepository.getFinishedProposalsSince.mock.calls[1][0];
-      expect(secondCallArgs).toBe(1625000000); // timestamp from first execution
+      expect(mockProposalFinishedRepository.getFinishedProposalsSince).toHaveBeenLastCalledWith(firstProposal[0].timestamp);
     });
 
-    it('should not process when no new data available', async () => {
-      // First execution with data
-      mockProposalFinishedRepository.getFinishedProposalsSince.mockResolvedValueOnce(mockProposalFinishedData as never);
+    it('should skip processing when no new proposals', async () => {
+      mockProposalFinishedRepository.getFinishedProposalsSince
+        .mockResolvedValueOnce(mockProposalFinishedData as never)
+        .mockResolvedValueOnce([] as never);
       
+      // First execution with data
       let data = await (trigger as any).fetchData();
       await trigger.process(data);
       
-      // Second execution with no new data
-      mockProposalFinishedRepository.getFinishedProposalsSince.mockResolvedValueOnce([] as never);
-      
+      // Second execution without new data
       data = await (trigger as any).fetchData();
       await trigger.process(data);
       
-      // Should have called sendMessage only once (from first execution)
       expect(mockDispatcherService.sendMessage).toHaveBeenCalledTimes(1);
     });
   });
 
-  describe('Error Handling', () => {
-    it('should handle repository errors gracefully', async () => {
-      mockProposalFinishedRepository.getFinishedProposalsSince.mockRejectedValue(new Error('API Error') as never);
+  describe('Error Scenarios', () => {
+    it('should propagate repository errors', async () => {
+      const repositoryError = new Error('API Error');
+      mockProposalFinishedRepository.getFinishedProposalsSince.mockRejectedValue(repositoryError as never);
       
       await expect((trigger as any).fetchData()).rejects.toThrow('API Error');
       expect(mockDispatcherService.sendMessage).not.toHaveBeenCalled();
     });
 
-    it('should handle dispatcher errors gracefully', async () => {
-      mockDispatcherService.sendMessage.mockRejectedValue(new Error('Dispatcher Error'));
+    it('should propagate dispatcher errors', async () => {
+      const dispatcherError = new Error('Dispatcher Error');
+      mockDispatcherService.sendMessage.mockRejectedValue(dispatcherError);
       
       await expect(trigger.process(mockProposalFinishedData)).rejects.toThrow('Dispatcher Error');
     });
