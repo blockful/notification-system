@@ -2,6 +2,7 @@ import { DispatcherMessage, MessageProcessingResult } from "../../interfaces/dis
 import { ISubscriptionClient, User } from "../../interfaces/subscription-client.interface";
 import { NotificationClientFactory } from "../notification/notification-factory.service";
 import { BaseTriggerHandler } from "./base-trigger.service";
+import { formatTokenAmount } from "../../lib/number-formatter";
 import crypto from 'crypto';
 
 /**
@@ -62,23 +63,24 @@ export class VotingPowerTriggerHandler extends BaseTriggerHandler {
       let notificationMessage = '';
       
       const deltaValue = delta ? parseInt(delta) : 0;
+      const formattedDelta = formatTokenAmount(Math.abs(deltaValue));
 
       if (changeType === 'delegation') {
         if (deltaValue >= 0) {
-          notificationMessage = `🥳 You've received a new delegation in ${daoId}!\n${sourceAccountId} delegated to you, increasing your voting power by ${deltaValue}.`;
+          notificationMessage = `🥳 You've received a new delegation in ${daoId}!\n${sourceAccountId} delegated to you, increasing your voting power by ${formattedDelta}.`;
         } else if (deltaValue < 0) {
-          notificationMessage = `🥺 A delegator just undelegated in ${daoId}!\n${sourceAccountId} removed their delegation, reducing your voting power by ${deltaValue}.`;
+          notificationMessage = `🥺 A delegator just undelegated in ${daoId}!\n${sourceAccountId} removed their delegation, reducing your voting power by ${formattedDelta}.`;
         } 
       } else if (changeType === 'transfer') {
         if (deltaValue >= 0) {
-          notificationMessage = `📈 Your voting power increased in ${daoId}!\nYou gained ${deltaValue} voting power from token transfer activity.`;
+          notificationMessage = `📈 Your voting power increased in ${daoId}!\nYou gained ${formattedDelta} voting power from token transfer activity.`;
         } else if (deltaValue < 0) {
-          notificationMessage = `📉 Your voting power decreased in ${daoId}!\nYou lost ${Math.abs(deltaValue)} voting power from token transfer activity.`;
+          notificationMessage = `📉 Your voting power decreased in ${daoId}!\nYou lost ${formattedDelta} voting power from token transfer activity.`;
         } 
       } else {
         // Generic voting power change
         if (deltaValue !== 0) {
-          notificationMessage = `⚡ Your voting power has changed in ${daoId}!\nVoting power updated by ${deltaValue}.`;
+          notificationMessage = `⚡ Your voting power has changed in ${daoId}!\nVoting power updated by ${formattedDelta}.`;
         } else {
           notificationMessage = `⚡ Your voting power has changed in ${daoId}!\nVoting power activity detected.`;
         }
