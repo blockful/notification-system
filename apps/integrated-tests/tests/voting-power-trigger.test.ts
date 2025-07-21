@@ -88,8 +88,8 @@ describe('Voting Power Trigger - Integration Test', () => {
       votingPowerEvents
     );
 
-    // Wait for trigger to execute (triggers run every 5 seconds in test mode)
-    await new Promise(resolve => setTimeout(resolve, 6000));
+    // Wait for trigger to execute (triggers run every 3 seconds in test mode)
+    await new Promise(resolve => setTimeout(resolve, 4500));
 
     // Verify that notification was sent to subscribed user
     expect(mockSendMessage).toHaveBeenCalled();

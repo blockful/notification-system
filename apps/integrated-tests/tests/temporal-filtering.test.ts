@@ -71,7 +71,7 @@ describe('Temporal Filtering - Integration Test', () => {
     const initialCallCount = mockSendMessage.mock.calls.length;
     
     // Wait for the logic system to process
-    await new Promise(resolve => setTimeout(resolve, 5000));
+    await new Promise(resolve => setTimeout(resolve, 4500));
     
     const finalCallCount = mockSendMessage.mock.calls.length;
     const newCallsCount = finalCallCount - initialCallCount;
@@ -104,7 +104,7 @@ describe('Temporal Filtering - Integration Test', () => {
     const initialCallCount = mockSendMessage.mock.calls.length;
     
     // Wait for the logic system to process
-    await new Promise(resolve => setTimeout(resolve, 5000));
+    await new Promise(resolve => setTimeout(resolve, 4500));
     
     const finalCallCount = mockSendMessage.mock.calls.length;
     const newCallsCount = finalCallCount - initialCallCount;

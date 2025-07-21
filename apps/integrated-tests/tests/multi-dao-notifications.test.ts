@@ -78,7 +78,7 @@ describe('Multi-DAO Notification Flow - Integration Test', () => {
     GraphQLMockSetup.setupProposalMock(httpMockSetup.getMockClient(), proposals);
     
     // Wait for the logic system to process
-    await new Promise(resolve => setTimeout(resolve, 5000));
+    await new Promise(resolve => setTimeout(resolve, 4500));
     
     const finalCallCount = mockSendMessage.mock.calls.length;
     const newCallsCount = finalCallCount - initialCallCount;
@@ -104,7 +104,7 @@ describe('Multi-DAO Notification Flow - Integration Test', () => {
     GraphQLMockSetup.setupProposalMock(httpMockSetup.getMockClient(), multipleUniProposals);
     
     // Wait for the logic system to process
-    await new Promise(resolve => setTimeout(resolve, 5000));
+    await new Promise(resolve => setTimeout(resolve, 4500));
     
     const finalCallCount = mockSendMessage.mock.calls.length;
     const newCallsCount = finalCallCount - initialCallCount;
