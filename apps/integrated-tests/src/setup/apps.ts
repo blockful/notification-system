@@ -28,7 +28,7 @@ const TEST_CONFIG = {
     botToken: '7117895712:AAH96CfnDvvfLNl2nJbRKbNYPay4V936mWY',
   },
   logicSystem: {
-    interval: 3500,
+    interval: 500,
     proposalState: 'pending',
   },
   timeouts: {

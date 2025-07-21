@@ -80,7 +80,7 @@ describe('Inactive Preference Handling - Integration Test', () => {
     GraphQLMockSetup.setupProposalMock(httpMockSetup.getMockClient(), proposals);
     
     // Wait for the logic system to process
-    await new Promise(resolve => setTimeout(resolve, 4500));
+    await new Promise(resolve => setTimeout(resolve, 1500));
     
     const finalCallCount = mockSendMessage.mock.calls.length;
     const newCallsCount = finalCallCount - initialCallCount;

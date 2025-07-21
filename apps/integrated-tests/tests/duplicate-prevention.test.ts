@@ -70,7 +70,7 @@ describe('Duplicate Prevention - Integration Test', () => {
     GraphQLMockSetup.setupProposalMock(httpMockSetup.getMockClient(), [persistentProposal]);
     
     // Wait for first round of notifications
-    await new Promise(resolve => setTimeout(resolve, 4500));
+    await new Promise(resolve => setTimeout(resolve, 1500));
     
     const firstRoundCallCount = mockSendMessage.mock.calls.length;
     const firstRoundNewCalls = firstRoundCallCount - initialCallCount;
@@ -79,7 +79,7 @@ describe('Duplicate Prevention - Integration Test', () => {
     expect(firstRoundNewCalls).toBe(2); // UNI follower + both follower
     
     // Wait for second round (logic system triggers again with same proposal)
-    await new Promise(resolve => setTimeout(resolve, 4500));
+    await new Promise(resolve => setTimeout(resolve, 1500));
     
     const secondRoundCallCount = mockSendMessage.mock.calls.length;
     const secondRoundNewCalls = secondRoundCallCount - firstRoundCallCount;
