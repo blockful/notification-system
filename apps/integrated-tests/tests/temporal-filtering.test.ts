@@ -11,14 +11,12 @@ import { UserFactory } from '../src/test-data/user-factory';
 import { ProposalFactory } from '../src/test-data/proposal-factory';
 import { TelegramTestHelper } from '../src/helpers/telegram-test-helper';
 import { DatabaseTestHelper } from '../src/helpers/database-test-helper';
-import { RabbitMQTestHelper } from '../src/helpers/rabbitmq-test-helper';
 
 describe('Temporal Filtering - Integration Test', () => {
   let apps: TestApps;
   let httpMockSetup: HttpClientMockSetup;
   let telegramHelper: TelegramTestHelper;
   let dbHelper: DatabaseTestHelper;
-  let rabbitHelper: RabbitMQTestHelper;
 
   beforeAll(async () => {
     // Clean up any existing test databases
@@ -38,7 +36,6 @@ describe('Temporal Filtering - Integration Test', () => {
     // Initialize test helpers
     telegramHelper = new TelegramTestHelper(mockSendMessage);
     dbHelper = new DatabaseTestHelper(db);
-    rabbitHelper = new RabbitMQTestHelper(apps.rabbitmqSetup);
   });
 
   beforeEach(async () => {

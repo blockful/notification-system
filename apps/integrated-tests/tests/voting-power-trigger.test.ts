@@ -11,7 +11,6 @@ import { UserFactory } from '../src/test-data/user-factory';
 import { VotingPowerFactory } from '../src/test-data/voting-power-factory';
 import { TelegramTestHelper } from '../src/helpers/telegram-test-helper';
 import { DatabaseTestHelper } from '../src/helpers/database-test-helper';
-import { RabbitMQTestHelper } from '../src/helpers/rabbitmq-test-helper';
 
 describe('Voting Power Trigger - Integration Test', () => {
   let apps: TestApps;
@@ -21,7 +20,6 @@ describe('Voting Power Trigger - Integration Test', () => {
   let testUserWithoutSubscription: string;
   let telegramHelper: TelegramTestHelper;
   let dbHelper: DatabaseTestHelper;
-  let rabbitHelper: RabbitMQTestHelper;
 
   beforeAll(async () => {
     // Clean up any existing test databases
@@ -42,13 +40,12 @@ describe('Voting Power Trigger - Integration Test', () => {
     // Initialize test helpers
     telegramHelper = new TelegramTestHelper(mockSendMessage);
     dbHelper = new DatabaseTestHelper(db);
-    rabbitHelper = new RabbitMQTestHelper(apps.rabbitmqSetup);
   }, 60000);
 
   beforeEach(async () => {
     jest.clearAllMocks();
     httpMockSetup.reset();
-    rabbitHelper.clearCollectedMessages();
+    apps.rabbitmqSetup.clearCollectedEvents();
     
     // Clear notifications table between tests
     await db('notifications').delete();
