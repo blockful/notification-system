@@ -26,13 +26,13 @@ describe('formatTokenAmount', () => {
       expect(formatTokenAmount('1000000000000000000000')).toBe('1.0K'); // 1,000 tokens
       expect(formatTokenAmount('1234000000000000000000')).toBe('1.2K'); // 1,234 tokens
       expect(formatTokenAmount('12345000000000000000000')).toBe('12.3K'); // 12,345 tokens
-      expect(formatTokenAmount('999999000000000000000000')).toBe('1000.0K'); // 999,999 tokens
+      expect(formatTokenAmount('999999000000000000000000')).toBe('1.0M'); // 999,999 tokens (rounded up to 1M)
     });
 
     it('should format millions with M suffix', () => {
       expect(formatTokenAmount('1000000000000000000000000')).toBe('1.0M'); // 1 million tokens
       expect(formatTokenAmount('1234567000000000000000000')).toBe('1.2M'); // 1.234567 million tokens
-      expect(formatTokenAmount('999999999000000000000000000')).toBe('1000.0M'); // ~1 billion tokens
+      expect(formatTokenAmount('999999999000000000000000000')).toBe('1.0B'); // ~1 billion tokens (rounded up to 1B)
     });
 
     it('should format billions with B suffix', () => {
@@ -40,13 +40,16 @@ describe('formatTokenAmount', () => {
       expect(formatTokenAmount('1234567890000000000000000000')).toBe('1.2B'); // 1.23... billion tokens
     });
 
-    it('should format trillions with T suffix', () => {
-      expect(formatTokenAmount('1000000000000000000000000000000')).toBe('1.0T'); // 1 trillion tokens
-      expect(formatTokenAmount('5500000000000000000000000000000')).toBe('5.5T'); // 5.5 trillion tokens
+    it('should use exponential notation for very large numbers', () => {
+      expect(formatTokenAmount('1000000000000000000000000000000')).toBe('1.0e+12'); // trillion (uses exponential)
     });
 
-    it('should use exponential notation for very large numbers', () => {
-      expect(formatTokenAmount('1000000000000000000000000000000000')).toBe('1.0e+15'); // quadrillion
+    it('should promote units when rounding results in 1000+', () => {
+      // Test promotion from K to M (999.95K rounds to 1000.0K -> 1.0M)
+      expect(formatTokenAmount('999950000000000000000000')).toBe('1.0M');
+      
+      // Test promotion from M to B (999.95M rounds to 1000.0M -> 1.0B)
+      expect(formatTokenAmount('999950000000000000000000000')).toBe('1.0B');
     });
   });
 

@@ -25,15 +25,25 @@ export function formatTokenAmount(amount: string | number, decimals: number = 18
   }
   
   // For larger amounts, use K, M, B notation
-  const units = ['', 'K', 'M', 'B', 'T'];
-  const unitIndex = Math.floor(Math.log10(actualAmount) / 3);
+  const units = ['', 'K', 'M', 'B'];
+  let unitIndex = Math.floor(Math.log10(actualAmount) / 3);
   
   if (unitIndex >= units.length) {
     return actualAmount.toExponential(1);
   }
   
-  const scaledAmount = actualAmount / Math.pow(1000, unitIndex);
-  const formatted = scaledAmount.toFixed(1);
+  let scaledAmount = actualAmount / Math.pow(1000, unitIndex);
+  let formatted = scaledAmount.toFixed(1);
+  
+  // If rounded result is >= 1000, promote to next unit
+  if (parseFloat(formatted) >= 1000) {
+    unitIndex++;
+    if (unitIndex >= units.length) {
+      return actualAmount.toExponential(1);
+    }
+    scaledAmount = actualAmount / Math.pow(1000, unitIndex);
+    formatted = scaledAmount.toFixed(1);
+  }
   
   return formatted + units[unitIndex];
 }
