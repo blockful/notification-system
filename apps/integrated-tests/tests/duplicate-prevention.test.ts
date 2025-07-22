@@ -9,6 +9,9 @@ import { HttpClientMockSetup } from '../src/mocks/http-client-mock';
 import { GraphQLMockSetup } from '../src/mocks/graphql-mock-setup';
 import { UserFactory } from '../src/test-data/user-factory';
 import { ProposalFactory } from '../src/test-data/proposal-factory';
+import { TelegramTestHelper } from '../src/helpers/telegram-test-helper';
+import { DatabaseTestHelper } from '../src/helpers/database-test-helper';
+import { RabbitMQTestHelper } from '../src/helpers/rabbitmq-test-helper';
 
 describe('Duplicate Prevention - Integration Test', () => {
   let apps: TestApps;
@@ -16,6 +19,9 @@ describe('Duplicate Prevention - Integration Test', () => {
   let uniDaoId: string;
   let uniFollowerUserId: string;
   let bothFollowerUserId: string;
+  let telegramHelper: TelegramTestHelper;
+  let dbHelper: DatabaseTestHelper;
+  let rabbitHelper: RabbitMQTestHelper;
 
   beforeAll(async () => {
     // Clean up any existing test databases
@@ -32,11 +38,20 @@ describe('Duplicate Prevention - Integration Test', () => {
 
     // Start all applications
     apps = await startTestApps(db, httpMockSetup.getMockClient());
+    
+    // Initialize test helpers
+    telegramHelper = new TelegramTestHelper(mockSendMessage);
+    dbHelper = new DatabaseTestHelper(db);
+    rabbitHelper = new RabbitMQTestHelper(apps.rabbitmqSetup);
   });
 
   beforeEach(async () => {
     jest.clearAllMocks();
     httpMockSetup.reset();
+    rabbitHelper.clearCollectedMessages();
+    
+    // Clear notifications table between tests
+    await db('notifications').delete();
   });
 
   afterAll(async () => {
@@ -44,8 +59,6 @@ describe('Duplicate Prevention - Integration Test', () => {
       await stopTestApps(apps);
     }
     closeDatabase();
-    // Give some time for cleanup
-    await new Promise(resolve => setTimeout(resolve, 1000));
   }, 40000);
 
   async function createTestData() {
@@ -63,28 +76,28 @@ describe('Duplicate Prevention - Integration Test', () => {
   }
 
   test('should not send duplicate notifications on repeated logic system triggers', async () => {
-    const initialCallCount = mockSendMessage.mock.calls.length;
-    
     // Setup mock to return the same UNI proposal consistently
     const persistentProposal = ProposalFactory.createProposal('UNISWAP', 'persistent-uni-proposal');
     GraphQLMockSetup.setupProposalMock(httpMockSetup.getMockClient(), [persistentProposal]);
     
-    // Wait for first round of notifications
-    await new Promise(resolve => setTimeout(resolve, 1500));
+    // Wait for first round of notifications (2 users should get notified)
+    await telegramHelper.waitForMessageCount(2, { timeout: 3000 });
     
-    const firstRoundCallCount = mockSendMessage.mock.calls.length;
-    const firstRoundNewCalls = firstRoundCallCount - initialCallCount;
+    // Verify notifications were sent to both users
+    const firstRoundMessages = telegramHelper.getAllMessages();
+    expect(firstRoundMessages).toHaveLength(2);
+    expect(firstRoundMessages.some(msg => msg.chatId === '111111111')).toBe(true);
+    expect(firstRoundMessages.some(msg => msg.chatId === '333333333')).toBe(true);
     
-    // Should have sent notifications in first round
-    expect(firstRoundNewCalls).toBe(2); // UNI follower + both follower
+    // Verify notifications were recorded in database
+    await dbHelper.waitForRecordCount('notifications', 2);
     
-    // Wait for second round (logic system triggers again with same proposal)
-    await new Promise(resolve => setTimeout(resolve, 1500));
+    // Wait a bit to ensure logic system triggers again (500ms interval)
+    // But no new notifications should be sent
+    await telegramHelper.waitForNoMessages(2000);
     
-    const secondRoundCallCount = mockSendMessage.mock.calls.length;
-    const secondRoundNewCalls = secondRoundCallCount - firstRoundCallCount;
-    
-    // Should NOT send duplicate notifications
-    expect(secondRoundNewCalls).toBe(0);
+    // Verify still only 2 notifications in database (no duplicates)
+    const notificationCount = await db('notifications').count('* as count').first();
+    expect(notificationCount?.count).toBe(2);
   });
 });

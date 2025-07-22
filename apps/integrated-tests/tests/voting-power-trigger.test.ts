@@ -9,6 +9,9 @@ import { HttpClientMockSetup } from '../src/mocks/http-client-mock';
 import { GraphQLMockSetup } from '../src/mocks/graphql-mock-setup';
 import { UserFactory } from '../src/test-data/user-factory';
 import { VotingPowerFactory } from '../src/test-data/voting-power-factory';
+import { TelegramTestHelper } from '../src/helpers/telegram-test-helper';
+import { DatabaseTestHelper } from '../src/helpers/database-test-helper';
+import { RabbitMQTestHelper } from '../src/helpers/rabbitmq-test-helper';
 
 describe('Voting Power Trigger - Integration Test', () => {
   let apps: TestApps;
@@ -16,6 +19,9 @@ describe('Voting Power Trigger - Integration Test', () => {
   let testDaoId: string;
   let testUserWithSubscription: string;
   let testUserWithoutSubscription: string;
+  let telegramHelper: TelegramTestHelper;
+  let dbHelper: DatabaseTestHelper;
+  let rabbitHelper: RabbitMQTestHelper;
 
   beforeAll(async () => {
     // Clean up any existing test databases
@@ -32,11 +38,20 @@ describe('Voting Power Trigger - Integration Test', () => {
 
     // Start all applications
     apps = await startTestApps(db, httpMockSetup.getMockClient());
+    
+    // Initialize test helpers
+    telegramHelper = new TelegramTestHelper(mockSendMessage);
+    dbHelper = new DatabaseTestHelper(db);
+    rabbitHelper = new RabbitMQTestHelper(apps.rabbitmqSetup);
   }, 60000);
 
   beforeEach(async () => {
     jest.clearAllMocks();
     httpMockSetup.reset();
+    rabbitHelper.clearCollectedMessages();
+    
+    // Clear notifications table between tests
+    await db('notifications').delete();
   });
 
   afterAll(async () => {
@@ -44,8 +59,6 @@ describe('Voting Power Trigger - Integration Test', () => {
       await stopTestApps(apps);
     }
     closeDatabase();
-    // Give some time for cleanup
-    await new Promise(resolve => setTimeout(resolve, 1000));
   }, 40000);
 
   const createTestData = async () => {
@@ -88,19 +101,23 @@ describe('Voting Power Trigger - Integration Test', () => {
       votingPowerEvents
     );
 
-    // Wait for trigger to execute (triggers run every 3 seconds in test mode)
-    await new Promise(resolve => setTimeout(resolve, 1500));
+    // Wait for the voting power notification to be sent
+    const message = await telegramHelper.waitForMessage(
+      msg => msg.text.includes('voting power') && msg.text.includes(testDaoId),
+      { timeout: 3000 }
+    );
 
-    // Verify that notification was sent to subscribed user
-    expect(mockSendMessage).toHaveBeenCalled();
-
-    // Get the last message sent
-    const lastCall = mockSendMessage.mock.calls[mockSendMessage.mock.calls.length - 1];
-    const sentMessage = lastCall[1];
+    // Verify the message contains the expected content
+    expect(message.text).toContain('voting power');
+    expect(message.text).toContain(testDaoId);
     
-    // Verify notification content contains voting power information
-    expect(sentMessage).toContain('voting power');
-    expect(sentMessage).toContain(testDaoId);
+    // Verify the message was sent to a user (we got a telegram message)
+    expect(message.chatId).toBeDefined();
+    
+    console.log('Voting power notification sent successfully:', {
+      chatId: message.chatId,
+      text: message.text.substring(0, 100) + '...'
+    });
   });
 
   test('should create voting power events with different types', async () => {

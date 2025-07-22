@@ -9,6 +9,9 @@ import { HttpClientMockSetup } from '../src/mocks/http-client-mock';
 import { GraphQLMockSetup } from '../src/mocks/graphql-mock-setup';
 import { UserFactory } from '../src/test-data/user-factory';
 import { ProposalFactory } from '../src/test-data/proposal-factory';
+import { TelegramTestHelper } from '../src/helpers/telegram-test-helper';
+import { DatabaseTestHelper } from '../src/helpers/database-test-helper';
+import { RabbitMQTestHelper } from '../src/helpers/rabbitmq-test-helper';
 
 describe('Multi-DAO Notification Flow - Integration Test', () => {
   let apps: TestApps;
@@ -18,6 +21,9 @@ describe('Multi-DAO Notification Flow - Integration Test', () => {
   let uniFollowerUserId: string;
   let ensFollowerUserId: string;
   let bothFollowerUserId: string;
+  let telegramHelper: TelegramTestHelper;
+  let dbHelper: DatabaseTestHelper;
+  let rabbitHelper: RabbitMQTestHelper;
 
   beforeAll(async () => {
     // Clean up any existing test databases
@@ -34,11 +40,20 @@ describe('Multi-DAO Notification Flow - Integration Test', () => {
 
     // Start all applications
     apps = await startTestApps(db, httpMockSetup.getMockClient());
+    
+    // Initialize test helpers
+    telegramHelper = new TelegramTestHelper(mockSendMessage);
+    dbHelper = new DatabaseTestHelper(db);
+    rabbitHelper = new RabbitMQTestHelper(apps.rabbitmqSetup);
   });
 
   beforeEach(async () => {
     jest.clearAllMocks();
     httpMockSetup.reset();
+    rabbitHelper.clearCollectedMessages();
+    
+    // Clear notifications table between tests
+    await db('notifications').delete();
   });
 
   afterAll(async () => {
@@ -46,8 +61,6 @@ describe('Multi-DAO Notification Flow - Integration Test', () => {
       await stopTestApps(apps);
     }
     closeDatabase();
-    // Give some time for cleanup
-    await new Promise(resolve => setTimeout(resolve, 1000));
   }, 40000);
 
   async function createTestData() {
@@ -71,63 +84,62 @@ describe('Multi-DAO Notification Flow - Integration Test', () => {
   }
 
   test('Both DAOs proposals should notify user following both DAOs twice', async () => {
-    const initialCallCount = mockSendMessage.mock.calls.length;
-    
     // Setup mock to return active proposals from both DAOs
     const proposals = ProposalFactory.createProposalsForMultipleDaos(['UNISWAP', 'ENS'], 'multi-proposal');
     GraphQLMockSetup.setupProposalMock(httpMockSetup.getMockClient(), proposals);
     
-    // Wait for the logic system to process
-    await new Promise(resolve => setTimeout(resolve, 1500));
+    // Wait for all expected messages
+    await telegramHelper.waitForMessageCount(4, { timeout: 3000 });
     
-    const finalCallCount = mockSendMessage.mock.calls.length;
-    const newCallsCount = finalCallCount - initialCallCount;
+    // Get all messages after they arrive
+    const allMessages = telegramHelper.getAllMessages();
     
-    // Should have 4 calls total:
-    // - 1 to UNI follower (UNI proposal)
-    // - 1 to ENS follower (ENS proposal)  
-    // - 2 to both follower (UNI + ENS proposals)
-    expect(newCallsCount).toBe(4);
+    // Verify UNI follower received 1 message
+    const uniFollowerMessages = allMessages.filter(msg => msg.chatId === '111111111');
+    expect(uniFollowerMessages).toHaveLength(1);
+    expect(uniFollowerMessages[0].text).toContain('UNISWAP');
+    
+    // Verify ENS follower received 1 message
+    const ensFollowerMessages = allMessages.filter(msg => msg.chatId === '222222222');
+    expect(ensFollowerMessages).toHaveLength(1);
+    expect(ensFollowerMessages[0].text).toContain('ENS');
     
     // Verify both follower received 2 messages
-    const bothFollowerCalls = mockSendMessage.mock.calls.filter(
-      call => call[0].toString() === '333333333'
-    );
-    expect(bothFollowerCalls.length).toBeGreaterThanOrEqual(2);
+    const bothFollowerMessages = allMessages.filter(msg => msg.chatId === '333333333');
+    expect(bothFollowerMessages).toHaveLength(2);
+    
+    // Verify database records
+    await dbHelper.waitForRecordCount('notifications', 4);
   });
 
   test('should handle multiple simultaneous proposals from same DAO', async () => {
-    const initialCallCount = mockSendMessage.mock.calls.length;
-    
     // Setup multiple UNI proposals simultaneously
     const multipleUniProposals = ProposalFactory.createMultipleProposals('UNISWAP', 3, 'uni-multi');
     GraphQLMockSetup.setupProposalMock(httpMockSetup.getMockClient(), multipleUniProposals);
     
-    // Wait for the logic system to process
-    await new Promise(resolve => setTimeout(resolve, 1500));
+    // Wait for all 6 messages (3 proposals × 2 UNI followers)
+    await telegramHelper.waitForMessageCount(6, { timeout: 3000 });
     
-    const finalCallCount = mockSendMessage.mock.calls.length;
-    const newCallsCount = finalCallCount - initialCallCount;
+    // Get all messages and verify distribution
+    const allMessages = telegramHelper.getAllMessages();
     
-    // Should send 3 proposals × 2 users (UNI followers) = 6 notifications
-    // Users: 111111111 (UNI follower) + 333333333 (both follower)
-    expect(newCallsCount).toBe(6);
+    // Verify UNI follower received 3 messages
+    const uniFollowerMessages = allMessages.filter(msg => msg.chatId === '111111111');
+    expect(uniFollowerMessages).toHaveLength(3);
     
-    // Verify both UNI followers received notifications for all 3 proposals
-    const uniFollowerCalls = mockSendMessage.mock.calls.filter(
-      call => call[0].toString() === '111111111'
-    );
-    const bothFollowerCalls = mockSendMessage.mock.calls.filter(
-      call => call[0].toString() === '333333333'
-    );
+    // Verify both follower received 3 messages
+    const bothFollowerMessages = allMessages.filter(msg => msg.chatId === '333333333');
+    expect(bothFollowerMessages).toHaveLength(3);
     
-    expect(uniFollowerCalls.length).toBe(3); // 3 proposals
-    expect(bothFollowerCalls.length).toBe(3); // 3 proposals
+    // Verify ENS follower did NOT receive any messages
+    const ensFollowerMessages = allMessages.filter(msg => msg.chatId === '222222222');
+    expect(ensFollowerMessages).toHaveLength(0);
     
-    // Verify ENS follower did NOT receive UNI notifications
-    const ensFollowerCalls = mockSendMessage.mock.calls.filter(
-      call => call[0].toString() === '222222222'
-    );
-    expect(ensFollowerCalls.length).toBe(0);
+    // Verify all notifications were sent
+    await dbHelper.waitForRecordCount('notifications', 6);
+    
+    // Verify they are all for UNISWAP
+    const notifications = await db('notifications').where({ dao_id: 'UNISWAP' });
+    expect(notifications).toHaveLength(6);
   });
 });

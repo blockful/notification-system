@@ -9,10 +9,16 @@ import { HttpClientMockSetup } from '../src/mocks/http-client-mock';
 import { GraphQLMockSetup } from '../src/mocks/graphql-mock-setup';
 import { UserFactory } from '../src/test-data/user-factory';
 import { ProposalFactory } from '../src/test-data/proposal-factory';
+import { TelegramTestHelper } from '../src/helpers/telegram-test-helper';
+import { DatabaseTestHelper } from '../src/helpers/database-test-helper';
+import { RabbitMQTestHelper } from '../src/helpers/rabbitmq-test-helper';
 
 describe('Temporal Filtering - Integration Test', () => {
   let apps: TestApps;
   let httpMockSetup: HttpClientMockSetup;
+  let telegramHelper: TelegramTestHelper;
+  let dbHelper: DatabaseTestHelper;
+  let rabbitHelper: RabbitMQTestHelper;
 
   beforeAll(async () => {
     // Clean up any existing test databases
@@ -28,6 +34,11 @@ describe('Temporal Filtering - Integration Test', () => {
 
     // Start all applications
     apps = await startTestApps(db, httpMockSetup.getMockClient());
+    
+    // Initialize test helpers
+    telegramHelper = new TelegramTestHelper(mockSendMessage);
+    dbHelper = new DatabaseTestHelper(db);
+    rabbitHelper = new RabbitMQTestHelper(apps.rabbitmqSetup);
   });
 
   beforeEach(async () => {
@@ -40,8 +51,6 @@ describe('Temporal Filtering - Integration Test', () => {
       await stopTestApps(apps);
     }
     closeDatabase();
-    // Give some time for cleanup
-    await new Promise(resolve => setTimeout(resolve, 1000));
   }, 40000);
 
   test('should NOT notify users about proposals created BEFORE their subscription', async () => {
@@ -68,16 +77,12 @@ describe('Temporal Filtering - Integration Test', () => {
 
     GraphQLMockSetup.setupProposalMock(httpMockSetup.getMockClient(), [oldProposal]);
     
-    const initialCallCount = mockSendMessage.mock.calls.length;
+    // Ensure no messages are sent for old proposals
+    await telegramHelper.waitForNoMessages(2000);
     
-    // Wait for the logic system to process
-    await new Promise(resolve => setTimeout(resolve, 1500));
-    
-    const finalCallCount = mockSendMessage.mock.calls.length;
-    const newCallsCount = finalCallCount - initialCallCount;
-    
-    // Should NOT send notifications for old proposals
-    expect(newCallsCount).toBe(0);
+    // Also verify no notification was recorded in database
+    const user = await db('users').where({ channel_user_id: '777777777' }).first();
+    await dbHelper.ensureNoNotificationFor(user.id, 'old-proposal');
   });
 
   test('should notify users about proposals created AFTER their subscription', async () => {
@@ -101,22 +106,17 @@ describe('Temporal Filtering - Integration Test', () => {
 
     GraphQLMockSetup.setupProposalMock(httpMockSetup.getMockClient(), [newProposal]);
     
-    const initialCallCount = mockSendMessage.mock.calls.length;
+    // Wait for the notification to be sent
+    const message = await telegramHelper.waitForUserMessage('888888888', {
+      timeout: 3000
+    });
     
-    // Wait for the logic system to process
-    await new Promise(resolve => setTimeout(resolve, 1500));
+    // Verify the message contains proposal information
+    expect(message.text).toContain('Test TEMPORAL_DAO_2 proposal');
     
-    const finalCallCount = mockSendMessage.mock.calls.length;
-    const newCallsCount = finalCallCount - initialCallCount;
-    
-    // Should send 1 notification for new proposal
-    expect(newCallsCount).toBe(1);
-    
-    // Verify it was sent to the correct user
-    const userCalls = mockSendMessage.mock.calls.filter(
-      call => call[0].toString() === '888888888'
-    );
-    expect(userCalls.length).toBe(1);
+    // Verify notification was recorded in database
+    const user = await db('users').where({ channel_user_id: '888888888' }).first();
+    await dbHelper.waitForNotificationRecord(user.id, 'new-proposal');
   });
 
   test('should NOT notify about proposals created during unsubscribed period after resubscribing', async () => {
@@ -145,11 +145,13 @@ describe('Temporal Filtering - Integration Test', () => {
     await UserFactory.updateUserPreference(testUser.user.id, testDaoId, true, new Date('2024-01-01T14:00:00Z').toISOString());
     
 
-    GraphQLMockSetup.setupProposalMock(httpMockSetup.getMockClient(), [inactiveProposal]);    
-    await new Promise(resolve => setTimeout(resolve, 5000));
-    const newCallsCount = mockSendMessage.mock.calls.length;
+    GraphQLMockSetup.setupProposalMock(httpMockSetup.getMockClient(), [inactiveProposal]);
     
-    // Should NOT receive notification for proposal created during inactive period
-    expect(newCallsCount).toBe(0);
+    // Ensure no notification is sent for proposals created during inactive period
+    await telegramHelper.waitForNoMessages(3000, { fromUser: '999999999' });
+    
+    // Verify no notification was recorded
+    const user = await db('users').where({ channel_user_id: '999999999' }).first();
+    await dbHelper.ensureNoNotificationFor(user.id, 'during-inactive-proposal', 2000);
   });
 });

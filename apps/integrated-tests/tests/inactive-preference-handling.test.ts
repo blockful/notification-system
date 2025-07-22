@@ -11,6 +11,9 @@ import { HttpClientMockSetup } from '../src/mocks/http-client-mock';
 import { GraphQLMockSetup } from '../src/mocks/graphql-mock-setup';
 import { UserFactory } from '../src/test-data/user-factory';
 import { ProposalFactory } from '../src/test-data/proposal-factory';
+import { TelegramTestHelper } from '../src/helpers/telegram-test-helper';
+import { DatabaseTestHelper } from '../src/helpers/database-test-helper';
+import { RabbitMQTestHelper } from '../src/helpers/rabbitmq-test-helper';
 
 describe('Inactive Preference Handling - Integration Test', () => {
   let apps: TestApps;
@@ -20,6 +23,9 @@ describe('Inactive Preference Handling - Integration Test', () => {
   let activeUserId: string;
   let inactiveUserId: string;
   let userWithInactivePreferenceId: string;
+  let telegramHelper: TelegramTestHelper;
+  let dbHelper: DatabaseTestHelper;
+  let rabbitHelper: RabbitMQTestHelper;
 
   beforeAll(async () => {
     // Clean up any existing test databases
@@ -36,11 +42,20 @@ describe('Inactive Preference Handling - Integration Test', () => {
 
     // Start all applications
     apps = await startTestApps(db, httpMockSetup.getMockClient());
+    
+    // Initialize test helpers
+    telegramHelper = new TelegramTestHelper(mockSendMessage);
+    dbHelper = new DatabaseTestHelper(db);
+    rabbitHelper = new RabbitMQTestHelper(apps.rabbitmqSetup);
   });
 
   beforeEach(async () => {
     jest.clearAllMocks();
     httpMockSetup.reset();
+    rabbitHelper.clearCollectedMessages();
+    
+    // Clear notifications table between tests
+    await db('notifications').delete();
   });
 
   afterAll(async () => {
@@ -48,8 +63,6 @@ describe('Inactive Preference Handling - Integration Test', () => {
       await stopTestApps(apps);
     }
     closeDatabase();
-    // Give some time for cleanup
-    await new Promise(resolve => setTimeout(resolve, 1000));
   }, 40000);
 
   async function createTestData() {
@@ -73,30 +86,33 @@ describe('Inactive Preference Handling - Integration Test', () => {
   }
 
   test('should respect inactive preference states', async () => {
-    const initialCallCount = mockSendMessage.mock.calls.length;
-    
     // Setup proposals for both DAOs
     const proposals = ProposalFactory.createProposalsForMultipleDaos(['UNISWAP', 'ENS'], 'inactive-test');
     GraphQLMockSetup.setupProposalMock(httpMockSetup.getMockClient(), proposals);
     
-    // Wait for the logic system to process
-    await new Promise(resolve => setTimeout(resolve, 1500));
+    // Wait for exactly 1 message (only active user should be notified)
+    await telegramHelper.waitForMessageCount(1, { timeout: 3000 });
     
-    const finalCallCount = mockSendMessage.mock.calls.length;
-    const newCallsCount = finalCallCount - initialCallCount;
+    // Verify the message was sent to the correct user
+    const message = telegramHelper.getAllMessages()[0];
+    expect(message.chatId).toBe('111111111'); // User with active UNI preference
     
-    // Should only notify users with active preferences
-    // Only the user with active UNI preference should be notified (1 notification)
-    expect(newCallsCount).toBe(1);
+    // Ensure no more messages are sent to inactive users
+    await telegramHelper.waitForNoMessages(2000);
+    
+    // Verify total message count is still 1
+    const allMessages = telegramHelper.getAllMessages();
+    expect(allMessages).toHaveLength(1);
     
     // Verify users with inactive preferences were NOT notified
-    const newCalls = mockSendMessage.mock.calls.slice(initialCallCount);
-    const notifiedUsers = newCalls.map(call => call[0].toString());
+    const notifiedUsers = allMessages.map(msg => msg.chatId.toString());
     expect(notifiedUsers).not.toContain('555555555'); // User with inactive UNI preference
     expect(notifiedUsers).not.toContain('666666666'); // User with inactive ENS preference
     
-    // Verify user with active preference was notified
-    expect(notifiedUsers).toContain('111111111'); // User with active UNI preference
+    // Verify notification was only recorded for active user
+    await dbHelper.waitForRecordCount('notifications', 1);
+    const notification = await db('notifications').first();
+    expect(notification.user_id).toBe(activeUserId);
   });
 
 });

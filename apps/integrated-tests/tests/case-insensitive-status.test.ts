@@ -9,12 +9,18 @@ import { HttpClientMockSetup } from '../src/mocks/http-client-mock';
 import { GraphQLMockSetup } from '../src/mocks/graphql-mock-setup';
 import { UserFactory } from '../src/test-data/user-factory';
 import { ProposalFactory } from '../src/test-data/proposal-factory';
+import { TelegramTestHelper } from '../src/helpers/telegram-test-helper';
+import { DatabaseTestHelper } from '../src/helpers/database-test-helper';
+import { RabbitMQTestHelper } from '../src/helpers/rabbitmq-test-helper';
 
 describe('Case Insensitive Status Filtering - Integration Test', () => {
   let apps: TestApps;
   let httpMockSetup: HttpClientMockSetup;
   let testDaoId: string;
   let testUserId: string;
+  let telegramHelper: TelegramTestHelper;
+  let dbHelper: DatabaseTestHelper;
+  let rabbitHelper: RabbitMQTestHelper;
 
   beforeAll(async () => {
     // Clean up any existing test databases
@@ -31,11 +37,20 @@ describe('Case Insensitive Status Filtering - Integration Test', () => {
 
     // Start all applications
     apps = await startTestApps(db, httpMockSetup.getMockClient());
+    
+    // Initialize test helpers
+    telegramHelper = new TelegramTestHelper(mockSendMessage);
+    dbHelper = new DatabaseTestHelper(db);
+    rabbitHelper = new RabbitMQTestHelper(apps.rabbitmqSetup);
   });
 
   beforeEach(async () => {
     jest.clearAllMocks();
     httpMockSetup.reset();
+    rabbitHelper.clearCollectedMessages();
+    
+    // Clear notifications table between tests
+    await db('notifications').delete();
   });
 
   afterAll(async () => {
@@ -43,8 +58,6 @@ describe('Case Insensitive Status Filtering - Integration Test', () => {
       await stopTestApps(apps);
     }
     closeDatabase();
-    // Give some time for cleanup
-    await new Promise(resolve => setTimeout(resolve, 1000));
   }, 40000);
 
   async function createTestData() {
@@ -59,8 +72,6 @@ describe('Case Insensitive Status Filtering - Integration Test', () => {
   }
 
   test('should handle multiple proposals with different case statuses simultaneously', async () => {
-    const initialCallCount = mockSendMessage.mock.calls.length;
-    
     // Setup multiple proposals with different case statuses
     const proposals = [
       ProposalFactory.createProposal(testDaoId, 'multi-pending-1', { status: 'pending' }),
@@ -72,13 +83,15 @@ describe('Case Insensitive Status Filtering - Integration Test', () => {
     
     GraphQLMockSetup.setupProposalMock(httpMockSetup.getMockClient(), proposals);
     
-    // Wait for the logic system to process
-    await new Promise(resolve => setTimeout(resolve, 1500));
+    // Wait for 3 messages (only pending proposals should be notified)
+    await telegramHelper.waitForMessageCount(3, { timeout: 3000 });
     
-    const finalCallCount = mockSendMessage.mock.calls.length;
-    const newCallsCount = finalCallCount - initialCallCount;
+    // Verify all messages are for the test user
+    const messages = telegramHelper.getAllMessages();
+    expect(messages).toHaveLength(3);
+    expect(messages.every(msg => msg.chatId === '555555555')).toBe(true);
     
-    // Should send 3 notifications
-    expect(newCallsCount).toBe(3);
+    // Verify notifications were recorded
+    await dbHelper.waitForRecordCount('notifications', 3);
   });
 });
