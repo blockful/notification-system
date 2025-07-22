@@ -4,14 +4,14 @@
 
 /**
  * Formats token amounts from wei to human-readable format
- * @param weiAmount The amount in wei (as string or number)
+ * @param amount The amount in wei (as string or number)
  * @param decimals The number of decimals for the token (default: 18)
  * @returns Formatted string with appropriate suffix (K, M, B, etc)
  */
-export function formatTokenAmount(weiAmount: string | number, decimals: number = 18): string {
+export function formatTokenAmount(amount: string | number, decimals: number = 18): string {
   // Convert wei string to number, handling 18 decimal places
   const divisor = Math.pow(10, decimals);
-  const actualAmount = Number(weiAmount) / divisor;
+  const actualAmount = Number(amount) / divisor;
   
   // Handle zero
   if (actualAmount === 0) return '0';
