@@ -41,7 +41,7 @@ const TEST_CONFIG = {
  */
 export const startTestApps = async (db: Knex, mockHttpClient: any): Promise<TestApps> => {
   const rabbitmqSetup = new RabbitMQTestSetup();
-  const rabbitmqUrl = await rabbitmqSetup.setup();
+  const rabbitmqUrl = process.env.TEST_RABBITMQ_URL || await rabbitmqSetup.setup();
   
   const subscriptionServerApp = new SubscriptionServerApp(db, TEST_CONFIG.ports.subscriptionServer);
   await subscriptionServerApp.start();
