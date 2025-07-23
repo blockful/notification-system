@@ -1,86 +1,44 @@
-import { describe, test, expect, beforeAll, afterAll, beforeEach, jest } from '@jest/globals';
-import * as fs from 'fs';
-import { setupTelegramMock } from '../src/mocks/telegram-mock-setup';
-const mockSendMessage = setupTelegramMock();
-import { db, closeDatabase } from '../src/setup/database-config';
-import { setupDatabase } from '../src/setup/database';
-import { startTestApps, stopTestApps, TestApps } from '../src/setup/apps';
+import { describe, test, expect, beforeEach, jest } from '@jest/globals';
+import { db } from '../src/setup/database-config';
+import { TestApps } from '../src/setup/apps';
 import { HttpClientMockSetup } from '../src/mocks/http-client-mock';
 import { GraphQLMockSetup } from '../src/mocks/graphql-mock-setup';
 import { UserFactory } from '../src/test-data/user-factory';
 import { ProposalFactory } from '../src/test-data/proposal-factory';
 import { TelegramTestHelper } from '../src/helpers/telegram-test-helper';
 import { DatabaseTestHelper } from '../src/helpers/database-test-helper';
+import { TestCleanup } from '../src/helpers/test-cleanup';
 
 describe('Multi-DAO Notification Flow - Integration Test', () => {
   let apps: TestApps;
   let httpMockSetup: HttpClientMockSetup;
-  let uniDaoId: string;
-  let ensDaoId: string;
-  let uniFollowerUserId: string;
-  let ensFollowerUserId: string;
-  let bothFollowerUserId: string;
   let telegramHelper: TelegramTestHelper;
   let dbHelper: DatabaseTestHelper;
 
   beforeAll(async () => {
-    // Clean up any existing test databases
-    const files = fs.readdirSync('/tmp').filter(f => f.startsWith('test_integration_'));
-    files.forEach(file => {
-      fs.unlinkSync(`/tmp/${file}`);
-    });
-
-    await setupDatabase();
-    await createTestData();
-    
-    // Setup mocks
-    httpMockSetup = new HttpClientMockSetup();
-
-    // Start all applications
-    apps = await startTestApps(db, httpMockSetup.getMockClient());
-    
-    // Initialize test helpers
-    telegramHelper = new TelegramTestHelper(mockSendMessage);
+    apps = TestCleanup.getGlobalApps();
+    httpMockSetup = TestCleanup.getGlobalHttpMockSetup();
+    telegramHelper = new TelegramTestHelper(global.mockSendMessage);
     dbHelper = new DatabaseTestHelper(db);
   });
 
   beforeEach(async () => {
-    jest.clearAllMocks();
-    httpMockSetup.reset();
-    apps.rabbitmqSetup.clearCollectedEvents();
-    
-    // Clear notifications table between tests
-    await db('notifications').delete();
+    await TestCleanup.cleanupBetweenTests();
   });
 
-  afterAll(async () => {
-    if (apps) {
-      await stopTestApps(apps);
-    }
-    closeDatabase();
-  }, 40000);
-
-  async function createTestData() {
-    const now = new Date().toISOString();
-    
+  test('Both DAOs proposals should notify user following both DAOs twice', async () => {
     // Create DAOs
-    uniDaoId = 'UNISWAP';
-    ensDaoId = 'ENS';
+    const uniDaoId = 'UNISWAP';
+    const ensDaoId = 'ENS';
     
     // Create Users with subscriptions
-    const uniFollower = await UserFactory.createUserWithFullSetup('111111111', 'uni_follower', uniDaoId, true, now);
-    const ensFollower = await UserFactory.createUserWithFullSetup('222222222', 'ens_follower', ensDaoId, true, now);
-    const bothFollower = await UserFactory.createUserWithFullSetup('333333333', 'both_follower', uniDaoId, true, now);
-    
-    uniFollowerUserId = uniFollower.user.id;
-    ensFollowerUserId = ensFollower.user.id;
-    bothFollowerUserId = bothFollower.user.id;
+    await UserFactory.createUserWithFullSetup('111111111', 'uni_follower', uniDaoId, true);
+    await UserFactory.createUserWithFullSetup('222222222', 'ens_follower', ensDaoId, true);
+    const bothFollower = await UserFactory.createUserWithFullSetup('333333333', 'both_follower', uniDaoId, true);
     
     // Create second subscription for bothFollower
-    await UserFactory.createUserPreference(bothFollowerUserId, ensDaoId, true, now);
-  }
-
-  test('Both DAOs proposals should notify user following both DAOs twice', async () => {
+    await UserFactory.createUserPreference(bothFollower.user.id, ensDaoId, true);
+    
     // Setup mock to return active proposals from both DAOs
     const proposals = ProposalFactory.createProposalsForMultipleDaos(['UNISWAP', 'ENS'], 'multi-proposal');
     GraphQLMockSetup.setupProposalMock(httpMockSetup.getMockClient(), proposals);
@@ -110,6 +68,18 @@ describe('Multi-DAO Notification Flow - Integration Test', () => {
   });
 
   test('should handle multiple simultaneous proposals from same DAO', async () => {
+    // Create DAOs
+    const uniDaoId = 'UNISWAP';
+    const ensDaoId = 'ENS';
+    
+    // Create Users with subscriptions
+    const uniFollower = await UserFactory.createUserWithFullSetup('111111111', 'uni_follower', uniDaoId, true);
+    const ensFollower = await UserFactory.createUserWithFullSetup('222222222', 'ens_follower', ensDaoId, true);
+    const bothFollower = await UserFactory.createUserWithFullSetup('333333333', 'both_follower', uniDaoId, true);
+    
+    // Create second subscription for bothFollower
+    await UserFactory.createUserPreference(bothFollower.user.id, ensDaoId, true);
+    
     // Setup multiple UNI proposals simultaneously
     const multipleUniProposals = ProposalFactory.createMultipleProposals('UNISWAP', 3, 'uni-multi');
     GraphQLMockSetup.setupProposalMock(httpMockSetup.getMockClient(), multipleUniProposals);

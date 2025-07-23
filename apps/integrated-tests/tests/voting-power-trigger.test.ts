@@ -1,82 +1,46 @@
-import { describe, test, expect, beforeAll, afterAll, beforeEach, jest } from '@jest/globals';
-import * as fs from 'fs';
-import { setupTelegramMock } from '../src/mocks/telegram-mock-setup';
-const mockSendMessage = setupTelegramMock();
-import { db, closeDatabase } from '../src/setup/database-config';
-import { setupDatabase } from '../src/setup/database';
-import { startTestApps, stopTestApps, TestApps } from '../src/setup/apps';
+import { describe, test, expect, beforeEach, jest } from '@jest/globals';
+import { db } from '../src/setup/database-config';
+import { TestApps } from '../src/setup/apps';
 import { HttpClientMockSetup } from '../src/mocks/http-client-mock';
 import { GraphQLMockSetup } from '../src/mocks/graphql-mock-setup';
 import { UserFactory } from '../src/test-data/user-factory';
 import { VotingPowerFactory } from '../src/test-data/voting-power-factory';
 import { TelegramTestHelper } from '../src/helpers/telegram-test-helper';
 import { DatabaseTestHelper } from '../src/helpers/database-test-helper';
+import { TestCleanup } from '../src/helpers/test-cleanup';
 
 describe('Voting Power Trigger - Integration Test', () => {
   let apps: TestApps;
   let httpMockSetup: HttpClientMockSetup;
-  let testDaoId: string;
-  let testUserWithSubscription: string;
-  let testUserWithoutSubscription: string;
   let telegramHelper: TelegramTestHelper;
   let dbHelper: DatabaseTestHelper;
 
   beforeAll(async () => {
-    // Clean up any existing test databases
-    const files = fs.readdirSync('/tmp').filter(f => f.startsWith('test_integration_'));
-    files.forEach(file => {
-      fs.unlinkSync(`/tmp/${file}`);
-    });
-
-    await setupDatabase();
-    await createTestData();
-    
-    // Setup mocks
-    httpMockSetup = new HttpClientMockSetup();
-
-    // Start all applications
-    apps = await startTestApps(db, httpMockSetup.getMockClient());
-    
-    // Initialize test helpers
-    telegramHelper = new TelegramTestHelper(mockSendMessage);
+    apps = TestCleanup.getGlobalApps();
+    httpMockSetup = TestCleanup.getGlobalHttpMockSetup();
+    telegramHelper = new TelegramTestHelper(global.mockSendMessage);
     dbHelper = new DatabaseTestHelper(db);
-  }, 60000);
-
-  beforeEach(async () => {
-    jest.clearAllMocks();
-    httpMockSetup.reset();
-    apps.rabbitmqSetup.clearCollectedEvents();
-    
-    // Clear notifications table between tests
-    await db('notifications').delete();
   });
 
-  afterAll(async () => {
-    if (apps) {
-      await stopTestApps(apps);
-    }
-    closeDatabase();
-  }, 40000);
+  afterEach(async () => {
+    await TestCleanup.cleanupBetweenTests();
+  });
 
-  const createTestData = async () => {
-    testDaoId = 'test-dao-voting-power';
-    testUserWithSubscription = 'user-with-subscription.eth';
-    testUserWithoutSubscription = 'user-without-subscription.eth';
-
+  test('should send voting power change notification to subscribed users', async () => {
+    const testDaoId = 'test-dao-voting-power';
+    const testUserWithSubscription = 'user-with-subscription.eth';
+    
     // Create users in database with a timestamp from the past to ensure temporal filtering works
     const pastTimestamp = new Date(Date.now() - 10000).toISOString(); // 10 seconds ago
     
     const userWithSub = await UserFactory.createUser(testUserWithSubscription, 'voting-power-user');
-    const userWithoutSub = await UserFactory.createUser(testUserWithoutSubscription, 'voting-power-user-2');
 
     // Create user preference (subscription equivalent) for voting power changes with past timestamp
-    const preference = await UserFactory.createUserPreference(userWithSub.id, testDaoId, true, pastTimestamp);
+    await UserFactory.createUserPreference(userWithSub.id, testDaoId, true, pastTimestamp);
     
     // Create user address mapping to link user to wallet address
     await UserFactory.createUserAddress(userWithSub.id, testUserWithSubscription, pastTimestamp);
-  };
-
-  test('should send voting power change notification to subscribed users', async () => {
+    
     // Create voting power data with a timestamp that's after the user subscription
     // Add some buffer time to ensure the event happens after the user subscription
     const eventTimestamp = (Math.floor(Date.now() / 1000) + 2).toString(); // 2 seconds in the future
@@ -118,6 +82,8 @@ describe('Voting Power Trigger - Integration Test', () => {
   });
 
   test('should create voting power events with different types', async () => {
+    const testDaoId = 'test-dao-voting-power';
+    
     // Test delegation event
     const delegationEvent = VotingPowerFactory.createDelegationEvent(
       'delegator.eth',
@@ -144,6 +110,8 @@ describe('Voting Power Trigger - Integration Test', () => {
   });
 
   test('should create multiple voting power events', async () => {
+    const testDaoId = 'test-dao-voting-power';
+    
     const multipleEvents = VotingPowerFactory.createMultipleVotingPowerEvents(3, 'user', testDaoId);
 
     expect(multipleEvents).toHaveLength(3);
@@ -158,6 +126,8 @@ describe('Voting Power Trigger - Integration Test', () => {
   });
 
   test('should create voting power events for multiple DAOs', async () => {
+    const testDaoId = 'test-dao-voting-power';
+    
     const multiDaoEvents = VotingPowerFactory.createVotingPowerEventsForMultipleDaos(
       [testDaoId, 'second-dao'],
       'user.eth'

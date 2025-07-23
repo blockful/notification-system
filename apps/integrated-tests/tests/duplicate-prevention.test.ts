@@ -1,16 +1,13 @@
-import { describe, test, expect, beforeAll, afterAll, beforeEach, jest } from '@jest/globals';
-import * as fs from 'fs';
-import { setupTelegramMock } from '../src/mocks/telegram-mock-setup';
-const mockSendMessage = setupTelegramMock();
-import { db, closeDatabase } from '../src/setup/database-config';
-import { setupDatabase } from '../src/setup/database';
-import { startTestApps, stopTestApps, TestApps } from '../src/setup/apps';
+import { describe, test, expect, beforeAll, beforeEach, jest } from '@jest/globals';
+import { db } from '../src/setup/database-config';
+import { TestApps } from '../src/setup/apps';
 import { HttpClientMockSetup } from '../src/mocks/http-client-mock';
 import { GraphQLMockSetup } from '../src/mocks/graphql-mock-setup';
 import { UserFactory } from '../src/test-data/user-factory';
 import { ProposalFactory } from '../src/test-data/proposal-factory';
 import { TelegramTestHelper } from '../src/helpers/telegram-test-helper';
 import { DatabaseTestHelper } from '../src/helpers/database-test-helper';
+import { TestCleanup } from '../src/helpers/test-cleanup';
 
 describe('Duplicate Prevention - Integration Test', () => {
   let apps: TestApps;
@@ -22,41 +19,16 @@ describe('Duplicate Prevention - Integration Test', () => {
   let dbHelper: DatabaseTestHelper;
 
   beforeAll(async () => {
-    // Clean up any existing test databases
-    const files = fs.readdirSync('/tmp').filter(f => f.startsWith('test_integration_'));
-    files.forEach(file => {
-      fs.unlinkSync(`/tmp/${file}`);
-    });
-
-    await setupDatabase();
-    await createTestData();
-    
-    // Setup mocks
-    httpMockSetup = new HttpClientMockSetup();
-
-    // Start all applications
-    apps = await startTestApps(db, httpMockSetup.getMockClient());
-    
-    // Initialize test helpers
-    telegramHelper = new TelegramTestHelper(mockSendMessage);
+    apps = TestCleanup.getGlobalApps();
+    httpMockSetup = TestCleanup.getGlobalHttpMockSetup();
+    telegramHelper = new TelegramTestHelper(global.mockSendMessage);
     dbHelper = new DatabaseTestHelper(db);
+    await createTestData();
   });
 
-  beforeEach(async () => {
-    jest.clearAllMocks();
-    httpMockSetup.reset();
-    apps.rabbitmqSetup.clearCollectedEvents();
-    
-    // Clear notifications table between tests
-    await db('notifications').delete();
+  afterEach(async () => {
+    await TestCleanup.cleanupBetweenTests();
   });
-
-  afterAll(async () => {
-    if (apps) {
-      await stopTestApps(apps);
-    }
-    closeDatabase();
-  }, 40000);
 
   async function createTestData() {
     const now = new Date().toISOString();
