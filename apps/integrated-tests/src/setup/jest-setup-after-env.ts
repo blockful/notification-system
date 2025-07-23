@@ -1,6 +1,6 @@
 import { beforeAll, afterAll } from '@jest/globals';
 import { mockSendMessage } from '../mocks/telegram-mock-setup';
-import { setupDatabase } from './database';
+import { setupDatabase } from './database-migrations';
 import { startTestApps, stopTestApps, TestApps } from './apps';
 import { db, closeDatabase } from './database-config';
 import { HttpClientMockSetup } from '../mocks/http-client-mock';

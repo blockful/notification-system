@@ -23,14 +23,7 @@ describe('Duplicate Prevention - Integration Test', () => {
     httpMockSetup = TestCleanup.getGlobalHttpMockSetup();
     telegramHelper = new TelegramTestHelper(global.mockSendMessage);
     dbHelper = new DatabaseTestHelper(db);
-    await createTestData();
-  });
-
-  afterEach(async () => {
-    await TestCleanup.cleanupBetweenTests();
-  });
-
-  async function createTestData() {
+    
     const now = new Date().toISOString();
     
     // Create DAO
@@ -42,7 +35,11 @@ describe('Duplicate Prevention - Integration Test', () => {
     
     uniFollowerUserId = uniFollower.user.id;
     bothFollowerUserId = bothFollower.user.id;
-  }
+  });
+
+  afterEach(async () => {
+    await TestCleanup.cleanupBetweenTests();
+  });
 
   test('should not send duplicate notifications on repeated logic system triggers', async () => {
     // Setup mock to return the same UNI proposal consistently
