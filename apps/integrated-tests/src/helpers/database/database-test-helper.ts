@@ -1,5 +1,5 @@
 import { Knex } from 'knex';
-import { waitFor, waitForCondition } from './wait-for';
+import { waitFor, waitForCondition } from '../utilities/wait-for';
 
 /**
  * Helper class for database operations in integration tests

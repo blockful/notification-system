@@ -1,4 +1,4 @@
-import { db } from '../setup/database-config';
+import { db } from '../../setup/database/database-config';
 import { v4 as uuidv4 } from 'uuid';
 
 export interface UserData {

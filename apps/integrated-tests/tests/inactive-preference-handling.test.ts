@@ -1,13 +1,13 @@
 import { describe, test, expect, beforeEach, jest } from '@jest/globals';
-import { db } from '../src/setup/database-config';
-import { TestApps } from '../src/setup/apps';
+import { db } from '../src/setup/database/database-config';
+import { TestApps } from '../src/setup/services/apps';
 import { HttpClientMockSetup } from '../src/mocks/http-client-mock';
 import { GraphQLMockSetup } from '../src/mocks/graphql-mock-setup';
-import { UserFactory } from '../src/test-data/user-factory';
-import { ProposalFactory } from '../src/test-data/proposal-factory';
-import { TelegramTestHelper } from '../src/helpers/telegram-test-helper';
-import { DatabaseTestHelper } from '../src/helpers/database-test-helper';
-import { TestCleanup } from '../src/helpers/test-cleanup';
+import { UserFactory } from '../src/fixtures/factories/user-factory';
+import { ProposalFactory } from '../src/fixtures/factories/proposal-factory';
+import { TelegramTestHelper } from '../src/helpers/messaging/telegram-test-helper';
+import { DatabaseTestHelper } from '../src/helpers/database/database-test-helper';
+import { TestCleanup } from '../src/helpers/utilities/test-cleanup';
 
 describe('Inactive Preference Handling - Integration Test', () => {
   let apps: TestApps;

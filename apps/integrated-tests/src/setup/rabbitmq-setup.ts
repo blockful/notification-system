@@ -1,4 +1,4 @@
-import { EventCollector, CollectedEvent } from '../helpers/event-collector';
+import { EventCollector, CollectedEvent } from '../helpers/messaging/event-collector';
 import { RabbitMQContainerManager } from './rabbitmq/container-manager';
 import { RabbitMQConnectionManager } from './rabbitmq/connection-manager';
 import { RabbitMQQueueManager } from './rabbitmq/queue-manager';

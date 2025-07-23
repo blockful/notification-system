@@ -3,7 +3,7 @@ import { App as LogicSystemApp } from '@notification-system/logic-system';
 import { App as DispatcherApp } from '@notification-system/dispatcher';
 import { App as SubscriptionServerApp } from '@notification-system/subscription-server';
 import { Knex } from 'knex';
-import { RabbitMQTestSetup } from './rabbitmq-setup';
+import { RabbitMQTestSetup } from '../rabbitmq-setup';
 
 export type TestApps = {
   consumerApp: ConsumerApp;

@@ -1,4 +1,4 @@
-import { EventCollector, CollectedEvent } from '../../helpers/event-collector';
+import { EventCollector, CollectedEvent } from '../../helpers/messaging/event-collector';
 
 export interface RabbitMQSetupConfig {
   amqpUrl: string;

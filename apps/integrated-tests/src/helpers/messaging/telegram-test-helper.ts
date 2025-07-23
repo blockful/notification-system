@@ -1,5 +1,5 @@
 import { jest } from '@jest/globals';
-import { waitFor, waitForCondition } from './wait-for';
+import { waitFor, waitForCondition } from '../utilities/wait-for';
 
 /**
  * @notice Represents a Telegram message in test context

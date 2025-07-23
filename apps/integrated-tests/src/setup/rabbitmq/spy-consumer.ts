@@ -1,5 +1,5 @@
 import { SpyConsumerManager, SpyConsumerConfig, ConnectionManager } from '../types/rabbitmq-setup.types';
-import { CollectedEvent } from '../../helpers/event-collector';
+import { CollectedEvent } from '../../helpers/messaging/event-collector';
 import * as amqp from 'amqplib';
 
 export class RabbitMQSpyConsumerManager implements SpyConsumerManager {

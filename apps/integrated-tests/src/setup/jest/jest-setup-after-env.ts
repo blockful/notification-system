@@ -1,11 +1,11 @@
 import { beforeAll, afterAll } from '@jest/globals';
-import { mockSendMessage } from '../mocks/telegram-mock-setup';
-import { setupDatabase } from './database-migrations';
-import { startTestApps, stopTestApps, TestApps } from './apps';
-import { db, closeDatabase } from './database-config';
-import { HttpClientMockSetup } from '../mocks/http-client-mock';
-import { GraphQLMockSetup } from '../mocks/graphql-mock-setup';
-import { RabbitMQTestSetup } from './rabbitmq-setup';
+import { mockSendMessage } from '../../mocks/telegram-mock-setup';
+import { setupDatabase } from '../database/database-migrations';
+import { startTestApps, stopTestApps, TestApps } from '../services/apps';
+import { db, closeDatabase } from '../database/database-config';
+import { HttpClientMockSetup } from '../../mocks/http-client-mock';
+import { GraphQLMockSetup } from '../../mocks/graphql-mock-setup';
+import { RabbitMQTestSetup } from '../rabbitmq-setup';
 import * as fs from 'fs';
 
 // Global state accessible in tests

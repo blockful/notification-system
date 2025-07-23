@@ -1,6 +1,6 @@
-import { DatabaseCleanup } from './database-cleanup';
-import { db } from '../setup/database-config';
-import { GraphQLMockSetup } from '../mocks/graphql-mock-setup';
+import { DatabaseCleanup } from '../database/database-cleanup';
+import { db } from '../../setup/database/database-config';
+import { GraphQLMockSetup } from '../../mocks/graphql-mock-setup';
 
 /**
  * Central cleanup helper for beforeEach in tests
