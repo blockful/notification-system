@@ -1,9 +1,36 @@
 import { Knex } from 'knex';
 import { waitFor, waitForCondition } from './wait-for';
 
+/**
+ * Helper class for database operations in integration tests
+ * 
+ * This class provides utilities to wait for database state changes and verify 
+ * data conditions during integration testing. It's designed to handle asynchronous
+ * database operations where tests need to wait for records to appear or disappear.
+ */
 export class DatabaseTestHelper {
+  /**
+   * Creates a new DatabaseTestHelper instance
+   * 
+   * @param db - The Knex database connection instance
+   */
   constructor(private db: Knex) {}
 
+  /**
+   * Waits for a notification record to appear in the database
+   * 
+   * This method polls the notifications table until a matching record is found.
+   * Useful for testing asynchronous notification creation processes.
+   * 
+   * @param userId - The ID of the user to look for in notifications
+   * @param eventId - Optional event ID to filter notifications by
+   * @param options - Configuration options
+   * @param options.timeout - Maximum time to wait in milliseconds (default: 5000ms)
+   * 
+   * @returns Promise that resolves to the found notification record
+   * 
+   * @throws Will throw an error if the notification is not found within the timeout period
+   */
   async waitForNotificationRecord(
     userId: string,
     eventId?: string,
@@ -29,6 +56,23 @@ export class DatabaseTestHelper {
     );
   }
 
+  /**
+   * Waits for a specific count of records in a table
+   * 
+   * This method polls a database table until it contains exactly the expected
+   * number of records. Useful for verifying bulk operations or deletions.
+   * 
+   * @param tableName - Name of the table to check
+   * @param expectedCount - The exact number of records expected
+   * @param where - Optional WHERE conditions to filter records
+   * @param options - Configuration options
+   * @param options.timeout - Maximum time to wait in milliseconds (default: 5000ms)
+   * 
+   * @returns Promise that resolves when the expected count is reached
+   * 
+   * @throws Will throw an error if the expected count is not reached within the timeout
+   * 
+   */
   async waitForRecordCount(
     tableName: string,
     expectedCount: number,
@@ -51,6 +95,22 @@ export class DatabaseTestHelper {
     );
   }
 
+  /**
+   * Ensures that no notification exists for a specific user and event
+   * 
+   * This method waits for a specified time period and then verifies that no
+   * notification was created. Useful for testing scenarios where notifications
+   * should NOT be triggered.
+   * 
+   * @param userId - The ID of the user to check
+   * @param eventId - The ID of the event to check
+   * @param waitTime - Time to wait before checking in milliseconds (default: 1000ms)
+   * 
+   * @returns Promise that resolves if no notification is found
+   * 
+   * @throws Will throw an error if an unexpected notification is found
+   * 
+   */
   async ensureNoNotificationFor(
     userId: string,
     eventId: string,

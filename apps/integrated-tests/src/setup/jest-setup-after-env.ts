@@ -21,24 +21,17 @@ beforeAll(async () => {
   files.forEach(file => {
     fs.unlinkSync(`/tmp/${file}`);
   });
-  
   await setupDatabase();
-  
   const httpMockSetup = new HttpClientMockSetup();
-
   GraphQLMockSetup.setupEmptyMock(httpMockSetup.getMockClient());
-  
   const rabbitmqUrl = process.env.TEST_RABBITMQ_URL;
   if (!rabbitmqUrl) {
     throw new Error('TEST_RABBITMQ_URL not set. Make sure globalSetup ran correctly.');
   }
-  
   const apps = await startTestApps(db, httpMockSetup.getMockClient());
-  
   const rabbitmqSetup = new RabbitMQTestSetup();
   await rabbitmqSetup.setupWithExistingContainer(rabbitmqUrl);
   apps.rabbitmqSetup = rabbitmqSetup;
-  
   global.testApps = apps;
   global.httpMockSetup = httpMockSetup;
   global.mockSendMessage = mockSendMessage;
