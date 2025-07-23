@@ -223,6 +223,11 @@ export class RabbitMQTestSetup {
   async cleanup(): Promise<void> {
     if (!this.isSetup) return;
     await this.cleanupQueue();
+    if (this.connection) {
+      await this.connection.close();
+      this.connection = null;
+    }
+    this.isSetup = false;
   }
 
   getEventCollector(): EventCollector {
