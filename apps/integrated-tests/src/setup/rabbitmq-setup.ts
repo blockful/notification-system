@@ -31,7 +31,7 @@ class GlobalRabbitMQSetup {
 
     console.log('Starting global RabbitMQ container...');
     this.container = await new RabbitMQContainer()
-      .withStartupTimeout(120000) 
+      .withStartupTimeout(150000) 
       .start();
     
     const amqpUrl = this.container.getAmqpUrl();
@@ -146,6 +146,7 @@ export class RabbitMQTestSetup {
   private cleanupQueue!: () => Promise<void>;
   private reset!: () => void;
   private isSetup = false;
+  private connection: RabbitMQConnection | null = null;
   
   async setup(): Promise<string> {
     if (this.isSetup) return this.amqpUrl;
@@ -159,12 +160,68 @@ export class RabbitMQTestSetup {
     
     return this.amqpUrl;
   }
+  
+  async setupWithExistingContainer(amqpUrl: string): Promise<void> {
+    if (this.isSetup) return;
+    
+    this.amqpUrl = amqpUrl;
+    this.eventCollector = new EventCollector();
+    
+    // Connect to existing RabbitMQ
+    this.connection = new RabbitMQConnection(amqpUrl);
+    await this.connection.connect();
+    
+    // Setup spy consumer for dispatcher queue
+    await this.setupSpyConsumer('dispatcher-queue');
+    
+    this.cleanupQueue = this.clearQueue.bind(this);
+    this.reset = () => this.eventCollector.clear();
+    this.isSetup = true;
+  }
+  
+  private async setupSpyConsumer(queueName: string): Promise<void> {
+    if (!this.connection) return;
+    
+    const channel = await this.connection.createChannel();
+    await channel.assertQueue(queueName, { durable: true });
+    
+    await channel.consume(queueName, (msg) => {
+      if (msg) {
+        const event: CollectedEvent = {
+          type: 'rabbitmq.message',
+          source: queueName,
+          data: JSON.parse(msg.content.toString()),
+          timestamp: new Date(),
+          metadata: {
+            exchange: msg.fields.exchange,
+            routingKey: msg.fields.routingKey,
+            deliveryTag: msg.fields.deliveryTag,
+            redelivered: msg.fields.redelivered
+          }
+        };
+        this.eventCollector.collect(event);
+        
+        // Requeue the message so the actual consumer can process it
+        channel.nack(msg, false, true);
+      }
+    }, { noAck: false });
+  }
+  
+  private async clearQueue(queueName: string = 'dispatcher-queue'): Promise<void> {
+    if (!this.connection) return;
+    
+    try {
+      const channel = await this.connection.createChannel();
+      await channel.assertQueue(queueName, { durable: true });
+      await channel.purgeQueue(queueName);
+      await channel.close();
+    } catch (error) {
+      console.warn(`Failed to clear queue ${queueName}:`, error);
+    }
+  }
 
   async cleanup(): Promise<void> {
     if (!this.isSetup) return;
-    
-    // For global setup, we only clear the queue between tests
-    // The actual container cleanup happens at the end of all tests
     await this.cleanupQueue();
   }
 
