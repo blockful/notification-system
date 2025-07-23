@@ -1,74 +1,38 @@
-import { describe, test, expect, beforeAll, afterAll, beforeEach, jest } from '@jest/globals';
-import * as fs from 'fs';
-import { setupTelegramMock } from '../src/mocks/telegram-mock-setup';
-const mockSendMessage = setupTelegramMock();
-import { db, closeDatabase } from '../src/setup/database-config';
-import { setupDatabase } from '../src/setup/database';
-import { startTestApps, stopTestApps, TestApps } from '../src/setup/apps';
+import { describe, test, expect, beforeEach, jest } from '@jest/globals';
+import { db } from '../src/setup/database-config';
+import { TestApps } from '../src/setup/apps';
 import { HttpClientMockSetup } from '../src/mocks/http-client-mock';
 import { GraphQLMockSetup } from '../src/mocks/graphql-mock-setup';
 import { UserFactory } from '../src/test-data/user-factory';
 import { ProposalFactory } from '../src/test-data/proposal-factory';
 import { TelegramTestHelper } from '../src/helpers/telegram-test-helper';
 import { DatabaseTestHelper } from '../src/helpers/database-test-helper';
+import { TestCleanup } from '../src/helpers/test-cleanup';
 
-describe('Case Insensitive Status Filtering - Integration Test', () => {
+describe('Status Case Variations - Integration Test', () => {
   let apps: TestApps;
   let httpMockSetup: HttpClientMockSetup;
-  let testDaoId: string;
-  let testUserId: string;
   let telegramHelper: TelegramTestHelper;
   let dbHelper: DatabaseTestHelper;
 
   beforeAll(async () => {
-    // Clean up any existing test databases
-    const files = fs.readdirSync('/tmp').filter(f => f.startsWith('test_integration_'));
-    files.forEach(file => {
-      fs.unlinkSync(`/tmp/${file}`);
-    });
-
-    await setupDatabase();
-    await createTestData();
-    
-    // Setup mocks
-    httpMockSetup = new HttpClientMockSetup();
-
-    // Start all applications
-    apps = await startTestApps(db, httpMockSetup.getMockClient());
-    
-    // Initialize test helpers
-    telegramHelper = new TelegramTestHelper(mockSendMessage);
+    apps = TestCleanup.getGlobalApps();
+    httpMockSetup = TestCleanup.getGlobalHttpMockSetup();
+    telegramHelper = new TelegramTestHelper(global.mockSendMessage);
     dbHelper = new DatabaseTestHelper(db);
   });
 
   beforeEach(async () => {
-    jest.clearAllMocks();
-    httpMockSetup.reset();
-    apps.rabbitmqSetup.clearCollectedEvents();
-    
-    // Clear notifications table between tests
-    await db('notifications').delete();
+    await TestCleanup.cleanupBetweenTests();
   });
 
-  afterAll(async () => {
-    if (apps) {
-      await stopTestApps(apps);
-    }
-    closeDatabase();
-  }, 40000);
-
-  async function createTestData() {
-    const now = new Date().toISOString();
-    
-    // Create DAO
-    testDaoId = 'TEST_DAO';
+  test('should handle supported case variations (lowercase, UPPERCASE, Title) and ignore unsupported mixed cases', async () => {
+    // Create DAO for this test
+    const testDaoId = 'TEST_DAO';
     
     // Create User with subscription
-    const testUser = await UserFactory.createUserWithFullSetup('555555555', 'test_user', testDaoId, true, now);
-    testUserId = testUser.user.id;
-  }
-
-  test('should handle multiple proposals with different case statuses simultaneously', async () => {
+    await UserFactory.createUserWithFullSetup('555555555', 'test_user', testDaoId, true);
+    
     // Setup multiple proposals with different case statuses
     const proposals = [
       ProposalFactory.createProposal(testDaoId, 'multi-pending-1', { status: 'pending' }),
@@ -80,7 +44,7 @@ describe('Case Insensitive Status Filtering - Integration Test', () => {
     
     GraphQLMockSetup.setupProposalMock(httpMockSetup.getMockClient(), proposals);
     
-    // Wait for 3 messages (only pending proposals should be notified)
+    // Wait for 3 messages (only supported case variations: pending, Pending, PENDING)
     await telegramHelper.waitForMessageCount(3, { timeout: 3000 });
     
     // Verify all messages are for the test user

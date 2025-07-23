@@ -47,11 +47,10 @@ export class GraphQLMockSetup {
         const requestedDaoId = config?.headers?.['anticapture-dao-id'];
         let proposalsToReturn = proposals;
         
-        // Filter by status (case-insensitive)
+        // Filter by status (exact match - system supports only specific variations)
         if (requestedStatusIn && Array.isArray(requestedStatusIn)) {
-          const normalizedStatusIn = requestedStatusIn.map(s => s.toLowerCase());
           proposalsToReturn = proposalsToReturn.filter(p => 
-            normalizedStatusIn.includes(p.status.toLowerCase())
+            requestedStatusIn.includes(p.status)
           );
         }
         
