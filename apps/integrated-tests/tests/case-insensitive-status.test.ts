@@ -3,6 +3,7 @@ import { db, TestApps } from '../src/setup';
 import { HttpClientMockSetup, GraphQLMockSetup } from '../src/mocks';
 import { UserFactory, ProposalFactory } from '../src/fixtures';
 import { TelegramTestHelper, DatabaseTestHelper, TestCleanup } from '../src/helpers';
+import { testConstants, timeouts } from '../src/config';
 
 describe('Status Case Variations - Integration Test', () => {
   let apps: TestApps;
@@ -26,7 +27,7 @@ describe('Status Case Variations - Integration Test', () => {
     const testDaoId = 'TEST_DAO';
     
     // Create User with subscription
-    await UserFactory.createUserWithFullSetup('555555555', 'test_user', testDaoId, true);
+    await UserFactory.createUserWithFullSetup(testConstants.testUsers.user4, 'test_user', testDaoId, true);
     
     // Setup multiple proposals with different case statuses
     const proposals = [
@@ -40,14 +41,14 @@ describe('Status Case Variations - Integration Test', () => {
     GraphQLMockSetup.setupProposalMock(httpMockSetup.getMockClient(), proposals);
     
     // Wait for 3 messages (only supported case variations: pending, Pending, PENDING)
-    await telegramHelper.waitForMessageCount(3, { timeout: 3000 });
+    await telegramHelper.waitForMessageCount(3, { timeout: timeouts.notification.delivery });
     
     // Verify all messages are for the test user
     const messages = telegramHelper.getAllMessages();
     expect(messages).toHaveLength(3);
-    expect(messages.every(msg => msg.chatId === '555555555')).toBe(true);
+    expect(messages.every(msg => msg.chatId === testConstants.testUsers.user4)).toBe(true);
     
     // Verify notifications were recorded
-    await dbHelper.waitForRecordCount('notifications', 3);
+    await dbHelper.waitForRecordCount(testConstants.tables.notifications, 3);
   });
 });

@@ -1,4 +1,5 @@
 import { Knex } from 'knex';
+import { testConstants } from '../../config';
 
 /**
  * Fast database cleanup for test isolation
@@ -7,9 +8,9 @@ export class DatabaseCleanup {
   private db: Knex;
   private static readonly TABLES_TO_CLEAN = [
     'user_addresses',
-    'notifications',
-    'user_preferences',
-    'users'
+    testConstants.tables.notifications,
+    testConstants.tables.userPreferences,
+    testConstants.tables.users
   ];
 
   constructor(db: Knex) {

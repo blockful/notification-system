@@ -1,4 +1,5 @@
 import { ProcessedVotingPowerHistory } from '@notification-system/anticapture-client';
+import { testConstants } from '../../config';
 
 export class VotingPowerFactory {
   static createVotingPowerEvent(overrides?: Partial<ProcessedVotingPowerHistory>): ProcessedVotingPowerHistory {
@@ -7,18 +8,18 @@ export class VotingPowerFactory {
     return {
       accountId: 'user1.eth',
       timestamp: baseTimestamp,
-      delta: '100',
-      daoId: 'test-dao',
+      delta: testConstants.votingPower.small,
+      daoId: testConstants.daoIds.votingPowerTest,
       transactionHash: `0x${Math.random().toString(16).substr(2, 40)}`,
       delegation: {
         delegatorAccountId: 'delegator.eth',
-        delegatedValue: '100'
+        delegatedValue: testConstants.votingPower.small
       },
       transfer: null,
       changeType: 'delegation',
       sourceAccountId: 'delegator.eth',
       targetAccountId: 'user1.eth',
-      votingPower: '1000',
+      votingPower: testConstants.votingPower.default,
       ...overrides
     };
   }
@@ -26,7 +27,7 @@ export class VotingPowerFactory {
   static createMultipleVotingPowerEvents(
     count: number,
     baseAccountId: string = 'user',
-    daoId: string = 'test-dao'
+    daoId: string = testConstants.daoIds.votingPowerTest
   ): ProcessedVotingPowerHistory[] {
     return Array.from({ length: count }, (_, index) => {
       const timestamp = (Math.floor(Date.now() / 1000) + index).toString(); // 1 second apart
@@ -35,8 +36,8 @@ export class VotingPowerFactory {
         timestamp,
         daoId,
         transactionHash: `0x${Math.random().toString(16).substr(2, 40)}`,
-        delta: (100 + index * 50).toString(),
-        votingPower: (1000 + index * 100).toString()
+        delta: (parseInt(testConstants.votingPower.small) + index * 50).toString(),
+        votingPower: (parseInt(testConstants.votingPower.default) + index * 100).toString()
       });
     });
   }
@@ -52,7 +53,7 @@ export class VotingPowerFactory {
         daoId,
         timestamp,
         transactionHash: `0x${Math.random().toString(16).substr(2, 40)}`,
-        delta: (100 + index * 25).toString()
+        delta: (parseInt(testConstants.votingPower.small) + index * 25).toString()
       });
     });
   }
@@ -61,7 +62,7 @@ export class VotingPowerFactory {
     delegatorAccountId: string,
     targetAccountId: string,
     delegatedValue: string,
-    daoId: string = 'test-dao',
+    daoId: string = testConstants.daoIds.votingPowerTest,
     overrides?: Partial<ProcessedVotingPowerHistory>
   ): ProcessedVotingPowerHistory {
     return this.createVotingPowerEvent({
@@ -84,7 +85,7 @@ export class VotingPowerFactory {
     fromAccountId: string,
     toAccountId: string,
     transferValue: string,
-    daoId: string = 'test-dao',
+    daoId: string = testConstants.daoIds.votingPowerTest,
     overrides?: Partial<ProcessedVotingPowerHistory>
   ): ProcessedVotingPowerHistory {
     return this.createVotingPowerEvent({

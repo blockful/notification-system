@@ -3,6 +3,7 @@ import { mockSendMessage, HttpClientMockSetup, GraphQLMockSetup } from '../../mo
 import { setupDatabase, db, closeDatabase, startTestApps, stopTestApps, TestApps } from '../../setup';
 import { RabbitMQTestSetup } from '../rabbitmq-setup';
 import * as fs from 'fs';
+import { timeouts } from '../../config';
 
 // Global state accessible in tests
 declare global {
@@ -32,7 +33,7 @@ beforeAll(async () => {
   global.httpMockSetup = httpMockSetup;
   global.mockSendMessage = mockSendMessage;
   
-}, 30000);
+}, timeouts.test.short);
 
 afterAll(async () => {
   if (global.testApps) {

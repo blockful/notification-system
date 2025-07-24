@@ -1,3 +1,5 @@
+import { timeouts } from '../../config';
+
 /**
  * @notice Configuration options for wait functions
  * @dev Options to control timing, retries, and error handling for async waiting operations
@@ -30,10 +32,10 @@ export async function waitFor<T>(
   options: WaitForOptions = {}
 ): Promise<T> {
   const {
-    timeout = 10000,
+    timeout = timeouts.wait.long,
     interval = 100,
     backoff = false,
-    maxBackoffInterval = 1000,
+    maxBackoffInterval = timeouts.wait.short,
     onTimeout,
     errorMessage
   } = options;

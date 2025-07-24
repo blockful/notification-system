@@ -3,6 +3,7 @@ import { db, TestApps } from '../src/setup';
 import { HttpClientMockSetup, GraphQLMockSetup } from '../src/mocks';
 import { UserFactory, ProposalFactory } from '../src/fixtures';
 import { TelegramTestHelper, DatabaseTestHelper, TestCleanup } from '../src/helpers';
+import { testConstants, timeouts } from '../src/config';
 
 describe('Duplicate Prevention - Integration Test', () => {
   let apps: TestApps;
@@ -22,11 +23,11 @@ describe('Duplicate Prevention - Integration Test', () => {
     const now = new Date().toISOString();
     
     // Create DAO
-    uniDaoId = 'UNISWAP';
+    uniDaoId = testConstants.daoIds.uniswap;
     
     // Create Users with subscriptions
-    const uniFollower = await UserFactory.createUserWithFullSetup('111111111', 'uni_follower', uniDaoId, true, now);
-    const bothFollower = await UserFactory.createUserWithFullSetup('333333333', 'both_follower', uniDaoId, true, now);
+    const uniFollower = await UserFactory.createUserWithFullSetup(testConstants.testUsers.user1, 'uni_follower', uniDaoId, true, now);
+    const bothFollower = await UserFactory.createUserWithFullSetup(testConstants.testUsers.user3, 'both_follower', uniDaoId, true, now);
     
     uniFollowerUserId = uniFollower.user.id;
     bothFollowerUserId = bothFollower.user.id;
@@ -38,27 +39,27 @@ describe('Duplicate Prevention - Integration Test', () => {
 
   test('should not send duplicate notifications on repeated logic system triggers', async () => {
     // Setup mock to return the same UNI proposal consistently
-    const persistentProposal = ProposalFactory.createProposal('UNISWAP', 'persistent-uni-proposal');
+    const persistentProposal = ProposalFactory.createProposal(testConstants.daoIds.uniswap, 'persistent-uni-proposal');
     GraphQLMockSetup.setupProposalMock(httpMockSetup.getMockClient(), [persistentProposal]);
     
     // Wait for first round of notifications (2 users should get notified)
-    await telegramHelper.waitForMessageCount(2, { timeout: 3000 });
+    await telegramHelper.waitForMessageCount(2, { timeout: timeouts.notification.delivery });
     
     // Verify notifications were sent to both users
     const firstRoundMessages = telegramHelper.getAllMessages();
     expect(firstRoundMessages).toHaveLength(2);
-    expect(firstRoundMessages.some(msg => msg.chatId === '111111111')).toBe(true);
-    expect(firstRoundMessages.some(msg => msg.chatId === '333333333')).toBe(true);
+    expect(firstRoundMessages.some(msg => msg.chatId === testConstants.testUsers.user1)).toBe(true);
+    expect(firstRoundMessages.some(msg => msg.chatId === testConstants.testUsers.user3)).toBe(true);
     
     // Verify notifications were recorded in database
-    await dbHelper.waitForRecordCount('notifications', 2);
+    await dbHelper.waitForRecordCount(testConstants.tables.notifications, 2);
     
     // Wait a bit to ensure logic system triggers again (500ms interval)
     // But no new notifications should be sent
-    await telegramHelper.waitForNoMessages(2000);
+    await telegramHelper.waitForNoMessages(timeouts.notification.processing);
     
     // Verify still only 2 notifications in database (no duplicates)
-    const notificationCount = await db('notifications').count('* as count').first();
+    const notificationCount = await db(testConstants.tables.notifications).count('* as count').first();
     expect(notificationCount?.count).toBe(2);
   });
 });

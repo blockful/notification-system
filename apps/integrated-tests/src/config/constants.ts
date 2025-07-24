@@ -3,46 +3,41 @@
  */
 
 export const testConstants = {
+  // Database table names (only used ones)
+  tables: {
+    notifications: 'notifications',
+    users: 'users',
+    userPreferences: 'user_preferences',
+  },
+  
   // Default test data
   defaults: {
-    daoId: 'test-dao-id',
     channelUserId: '123456789',
     channel: 'telegram' as const,
   },
   
-  // Queue names
-  queues: {
-    notifications: 'notifications',
-    triggers: 'triggers',
+  // Test user IDs
+  testUsers: {
+    user1: '111111111',
+    user2: '222222222',
+    user3: '333333333',
+    user4: '555555555',
+    user5: '666666666',
+    user6: '777777777',
+    user7: '888888888',
+    user8: '999999999',
   },
   
-  // Exchange names
-  exchanges: {
-    notifications: 'notifications',
-    triggers: 'triggers',
+  // Common DAO IDs for tests (only used ones)
+  daoIds: {
+    uniswap: 'UNISWAP',
+    ens: 'ENS',
+    votingPowerTest: 'test-dao-voting-power',
   },
   
-  // Routing keys
-  routingKeys: {
-    newProposal: 'new-proposal',
-    proposalFinished: 'proposal-finished',
-    votingPower: 'voting-power',
-  },
-  
-  // Test proposal statuses
-  proposalStatuses: {
-    pending: 'PENDING',
-    active: 'ACTIVE',
-    succeeded: 'SUCCEEDED',
-    defeated: 'DEFEATED',
-    expired: 'EXPIRED',
-    canceled: 'CANCELED',
-  },
-  
-  // Mock data identifiers
-  mockIds: {
-    proposal: 'test-proposal-1',
-    user: 'test-user-1',
-    event: 'test-event-1',
+  // Voting power test values (only used ones)
+  votingPower: {
+    default: '1000',
+    small: '100',
   }
 };

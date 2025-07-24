@@ -3,6 +3,7 @@ import { db, TestApps } from '../src/setup';
 import { HttpClientMockSetup, GraphQLMockSetup } from '../src/mocks';
 import { UserFactory, ProposalFactory } from '../src/fixtures';
 import { TelegramTestHelper, DatabaseTestHelper, TestCleanup } from '../src/helpers';
+import { testConstants, timeouts } from '../src/config';
 
 describe('Temporal Filtering - Integration Test', () => {
   let apps: TestApps;
@@ -36,7 +37,7 @@ describe('Temporal Filtering - Integration Test', () => {
     // User subscribes AFTER proposal creation
     const subscriptionTime = new Date('2024-01-01T11:00:00Z'); // 11:00 AM
     await UserFactory.createUserWithFullSetup(
-      '777777777', 
+      testConstants.testUsers.user6, 
       'temporal_user', 
       testDaoId, 
       true, 
@@ -46,10 +47,10 @@ describe('Temporal Filtering - Integration Test', () => {
     GraphQLMockSetup.setupProposalMock(httpMockSetup.getMockClient(), [oldProposal]);
     
     // Ensure no messages are sent for old proposals
-    await telegramHelper.waitForNoMessages(2000);
+    await telegramHelper.waitForNoMessages(timeouts.notification.processing);
     
     // Also verify no notification was recorded in database
-    const user = await db('users').where({ channel_user_id: '777777777' }).first();
+    const user = await db(testConstants.tables.users).where({ channel_user_id: testConstants.testUsers.user6 }).first();
     await dbHelper.ensureNoNotificationFor(user.id, 'old-proposal');
   });
 
@@ -60,7 +61,7 @@ describe('Temporal Filtering - Integration Test', () => {
     // User subscribes FIRST
     const subscriptionTime = new Date('2024-01-01T10:00:00Z'); // 10:00 AM
     await UserFactory.createUserWithFullSetup(
-      '888888888', 
+      testConstants.testUsers.user7, 
       'temporal_user_2', 
       testDaoId, 
       true, 
@@ -75,15 +76,15 @@ describe('Temporal Filtering - Integration Test', () => {
     GraphQLMockSetup.setupProposalMock(httpMockSetup.getMockClient(), [newProposal]);
     
     // Wait for the notification to be sent
-    const message = await telegramHelper.waitForUserMessage('888888888', {
-      timeout: 3000
+    const message = await telegramHelper.waitForUserMessage(testConstants.testUsers.user7, {
+      timeout: timeouts.notification.delivery
     });
     
     // Verify the message contains proposal information
     expect(message.text).toContain('Test TEMPORAL_DAO_2 proposal');
     
     // Verify notification was recorded in database
-    const user = await db('users').where({ channel_user_id: '888888888' }).first();
+    const user = await db(testConstants.tables.users).where({ channel_user_id: testConstants.testUsers.user7 }).first();
     await dbHelper.waitForNotificationRecord(user.id, 'new-proposal');
   });
 
@@ -93,7 +94,7 @@ describe('Temporal Filtering - Integration Test', () => {
     // User subscribes initially
     const subscriptionTime = new Date('2024-01-01T10:00:00Z'); // 10:00 AM
     let testUser = await UserFactory.createUserWithFullSetup(
-      '999999999', 
+      testConstants.testUsers.user8, 
       'temporal_user_3', 
       testDaoId, 
       true, 
@@ -116,10 +117,10 @@ describe('Temporal Filtering - Integration Test', () => {
     GraphQLMockSetup.setupProposalMock(httpMockSetup.getMockClient(), [inactiveProposal]);
     
     // Ensure no notification is sent for proposals created during inactive period
-    await telegramHelper.waitForNoMessages(3000, { fromUser: '999999999' });
+    await telegramHelper.waitForNoMessages(timeouts.notification.delivery, { fromUser: testConstants.testUsers.user8 });
     
     // Verify no notification was recorded
-    const user = await db('users').where({ channel_user_id: '999999999' }).first();
-    await dbHelper.ensureNoNotificationFor(user.id, 'during-inactive-proposal', 2000);
+    const user = await db(testConstants.tables.users).where({ channel_user_id: testConstants.testUsers.user8 }).first();
+    await dbHelper.ensureNoNotificationFor(user.id, 'during-inactive-proposal', timeouts.notification.processing);
   });
 });

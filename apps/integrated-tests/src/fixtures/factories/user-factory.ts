@@ -1,5 +1,6 @@
 import { db } from '../../setup';
 import { v4 as uuidv4 } from 'uuid';
+import { testConstants } from '../../config';
 
 export interface UserData {
   id: string;
@@ -25,11 +26,11 @@ export class UserFactory {
   static async createUser(channelUserId: string, name: string): Promise<UserData> {
     const user = {
       id: uuidv4(),
-      channel: 'telegram',
+      channel: testConstants.defaults.channel,
       channel_user_id: channelUserId,
       created_at: new Date().toISOString()
     };
-    await db('users').insert(user);
+    await db(testConstants.tables.users).insert(user);
     return user;
   }
 
@@ -47,7 +48,7 @@ export class UserFactory {
       created_at: timestamp || new Date().toISOString(),
       updated_at: timestamp || new Date().toISOString()
     };
-    await db('user_preferences').insert(preference);
+    await db(testConstants.tables.userPreferences).insert(preference);
     return preference;
   }
 
@@ -70,7 +71,7 @@ export class UserFactory {
     isActive: boolean,
     timestamp: string
   ): Promise<void> {
-    await db('user_preferences')
+    await db(testConstants.tables.userPreferences)
       .where({ user_id: userId, dao_id: daoId })
       .update({
         is_active: isActive,

@@ -1,5 +1,6 @@
 import { Knex } from 'knex';
 import { waitFor, waitForCondition } from '../utilities/wait-for';
+import { testConstants, timeouts } from '../../config';
 
 /**
  * Helper class for database operations in integration tests
@@ -38,7 +39,7 @@ export class DatabaseTestHelper {
   ): Promise<any> {
     return waitFor(
       async () => {
-        let query = this.db('notifications').where({ user_id: userId });
+        let query = this.db(testConstants.tables.notifications).where({ user_id: userId });
         
         if (eventId) {
           query = query.where({ event_id: eventId });
@@ -48,7 +49,7 @@ export class DatabaseTestHelper {
         return result || null;
       },
       {
-        timeout: options?.timeout || 5000,
+        timeout: options?.timeout || timeouts.wait.default,
         errorMessage: eventId 
           ? `Notification for user ${userId} and event ${eventId} not found`
           : `Notification for user ${userId} not found`
@@ -91,7 +92,7 @@ export class DatabaseTestHelper {
         return result?.count === expectedCount;
       },
       `Expected ${expectedCount} records in ${tableName} but count doesn't match`,
-      { timeout: options?.timeout || 5000 }
+      { timeout: options?.timeout || timeouts.wait.default }
     );
   }
 
@@ -114,12 +115,12 @@ export class DatabaseTestHelper {
   async ensureNoNotificationFor(
     userId: string,
     eventId: string,
-    waitTime: number = 1000
+    waitTime: number = timeouts.wait.short
   ): Promise<void> {
     // Wait a bit to ensure no notification is created
     await new Promise(resolve => setTimeout(resolve, waitTime));
     
-    const notification = await this.db('notifications')
+    const notification = await this.db(testConstants.tables.notifications)
       .where({ user_id: userId, event_id: eventId })
       .first();
     

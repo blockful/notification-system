@@ -1,3 +1,5 @@
+import { timeouts } from '../../config';
+
 /**
  * Represents a collected event with metadata
  * 
@@ -115,7 +117,7 @@ export class EventCollector {
     predicate: (event: CollectedEvent<T>) => boolean,
     options: { timeout?: number; includeExisting?: boolean } = {}
   ): Promise<CollectedEvent<T>> {
-    const { timeout = 5000, includeExisting = true } = options;
+    const { timeout = timeouts.wait.default, includeExisting = true } = options;
 
     // Check existing events first
     if (includeExisting) {
@@ -155,7 +157,7 @@ export class EventCollector {
     expectedCount: number,
     options: { timeout?: number; type?: string; source?: string } = {}
   ): Promise<CollectedEvent[]> {
-    const { timeout = 5000, type, source } = options;
+    const { timeout = timeouts.wait.default, type, source } = options;
     
     const getFilteredEvents = () => {
       let events = this.events;

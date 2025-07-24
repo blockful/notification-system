@@ -1,4 +1,5 @@
 import { createMockFunction } from './jest-mock-factory';
+import { testConstants } from '../config';
 
 // Central mock for Telegram's sendMessage used across integration tests
 export const mockSendMessage = createMockFunction();
@@ -8,7 +9,7 @@ if (typeof jest !== 'undefined') {
   mockSendMessage.mockImplementation(() =>
     Promise.resolve({
       message_id: Math.floor(Math.random() * 1_000_000),
-      chat: { id: 123456789 },
+      chat: { id: parseInt(testConstants.defaults.channelUserId) },
       date: Math.floor(Date.now() / 1000),
       text: 'mocked message',
     })

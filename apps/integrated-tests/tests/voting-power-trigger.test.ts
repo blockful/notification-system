@@ -3,6 +3,7 @@ import { db, TestApps } from '../src/setup';
 import { HttpClientMockSetup, GraphQLMockSetup } from '../src/mocks';
 import { UserFactory, VotingPowerFactory } from '../src/fixtures';
 import { TelegramTestHelper, DatabaseTestHelper, TestCleanup } from '../src/helpers';
+import { testConstants, timeouts } from '../src/config';
 
 describe('Voting Power Trigger - Integration Test', () => {
   let apps: TestApps;
@@ -22,11 +23,11 @@ describe('Voting Power Trigger - Integration Test', () => {
   });
 
   test('should send voting power change notification to subscribed users', async () => {
-    const testDaoId = 'test-dao-voting-power';
+    const testDaoId = testConstants.daoIds.votingPowerTest;
     const testUserWithSubscription = 'user-with-subscription.eth';
     
     // Create users in database with a timestamp from the past to ensure temporal filtering works
-    const pastTimestamp = new Date(Date.now() - 10000).toISOString(); // 10 seconds ago
+    const pastTimestamp = new Date(Date.now() - timeouts.wait.long).toISOString(); // 10 seconds ago
     
     const userWithSub = await UserFactory.createUser(testUserWithSubscription, 'voting-power-user');
 
@@ -44,7 +45,7 @@ describe('Voting Power Trigger - Integration Test', () => {
       VotingPowerFactory.createDelegationEvent(
         'delegator1.eth',
         testUserWithSubscription,
-        '1000',
+        testConstants.votingPower.default,
         testDaoId,
         { timestamp: eventTimestamp }
       )
@@ -60,7 +61,7 @@ describe('Voting Power Trigger - Integration Test', () => {
     // Wait for the voting power notification to be sent
     const message = await telegramHelper.waitForMessage(
       msg => msg.text.includes('voting power') && msg.text.includes(testDaoId),
-      { timeout: 3000 }
+      { timeout: timeouts.notification.delivery }
     );
 
     // Verify the message contains the expected content
@@ -77,13 +78,13 @@ describe('Voting Power Trigger - Integration Test', () => {
   });
 
   test('should create voting power events with different types', async () => {
-    const testDaoId = 'test-dao-voting-power';
+    const testDaoId = testConstants.daoIds.votingPowerTest;
     
     // Test delegation event
     const delegationEvent = VotingPowerFactory.createDelegationEvent(
       'delegator.eth',
       'recipient.eth',
-      '2000',
+      testConstants.votingPower.small + '00',
       testDaoId
     );
 
@@ -91,21 +92,21 @@ describe('Voting Power Trigger - Integration Test', () => {
     const transferEvent = VotingPowerFactory.createTransferEvent(
       'sender.eth',
       'recipient.eth',
-      '3000',
+      testConstants.votingPower.default + '00',
       testDaoId
     );
 
     expect(delegationEvent.changeType).toBe('delegation');
-    expect(delegationEvent.delegation?.delegatedValue).toBe('2000');
+    expect(delegationEvent.delegation?.delegatedValue).toBe(testConstants.votingPower.small + '00');
     expect(delegationEvent.transfer).toBeNull();
 
     expect(transferEvent.changeType).toBe('transfer');
-    expect(transferEvent.transfer?.amount).toBe('3000');
+    expect(transferEvent.transfer?.amount).toBe(testConstants.votingPower.default + '00');
     expect(transferEvent.delegation).toBeNull();
   });
 
   test('should create multiple voting power events', async () => {
-    const testDaoId = 'test-dao-voting-power';
+    const testDaoId = testConstants.daoIds.votingPowerTest;
     
     const multipleEvents = VotingPowerFactory.createMultipleVotingPowerEvents(3, 'user', testDaoId);
 
@@ -121,7 +122,7 @@ describe('Voting Power Trigger - Integration Test', () => {
   });
 
   test('should create voting power events for multiple DAOs', async () => {
-    const testDaoId = 'test-dao-voting-power';
+    const testDaoId = testConstants.daoIds.votingPowerTest;
     
     const multiDaoEvents = VotingPowerFactory.createVotingPowerEventsForMultipleDaos(
       [testDaoId, 'second-dao'],

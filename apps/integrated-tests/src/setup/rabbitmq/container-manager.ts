@@ -1,5 +1,6 @@
 import { RabbitMQContainer, StartedRabbitMQContainer } from '@testcontainers/rabbitmq';
 import { ContainerManager } from '../types/rabbitmq-setup.types';
+import { timeouts } from '../../config';
 
 export class RabbitMQContainerManager implements ContainerManager {
   private container: StartedRabbitMQContainer | null = null;
@@ -12,11 +13,11 @@ export class RabbitMQContainerManager implements ContainerManager {
 
     console.log('Starting RabbitMQ container...');
     this.container = await new RabbitMQContainer()
-      .withStartupTimeout(150000)
+      .withStartupTimeout(timeouts.rabbitmq.containerStartup)
       .start();
 
     // Wait for container to fully initialize
-    await new Promise(resolve => setTimeout(resolve, 2000));
+    await new Promise(resolve => setTimeout(resolve, timeouts.notification.processing));
     
     this.isStarted = true;
     console.log('RabbitMQ container started');

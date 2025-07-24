@@ -4,6 +4,7 @@ import { App as DispatcherApp } from '@notification-system/dispatcher';
 import { App as SubscriptionServerApp } from '@notification-system/subscription-server';
 import { Knex } from 'knex';
 import { RabbitMQTestSetup } from '../rabbitmq-setup';
+import { serviceConfig, timeouts } from '../../config';
 
 export type TestApps = {
   consumerApp: ConsumerApp;
@@ -18,21 +19,21 @@ export type TestApps = {
  */
 const TEST_CONFIG = {
   ports: {
-    subscriptionServer: 14001,
+    subscriptionServer: serviceConfig.ports.subscriptionServer,
   },
   urls: {
-    subscriptionServer: 'http://127.0.0.1:14001',
+    subscriptionServer: `http://127.0.0.1:${serviceConfig.ports.subscriptionServer}`,
     mockGraphQL: 'http://mocked-endpoint.com/graphql',
   },
   telegram: {
-    botToken: '7117895712:AAH96CfnDvvfLNl2nJbRKbNYPay4V936mWY',
+    botToken: serviceConfig.bot.token,
   },
   logicSystem: {
-    interval: 500,
+    interval: serviceConfig.logicSystem.pollInterval,
     proposalState: 'pending',
   },
   timeouts: {
-    appStartup: 2000,
+    appStartup: timeouts.notification.processing,
   },
 } as const;
 

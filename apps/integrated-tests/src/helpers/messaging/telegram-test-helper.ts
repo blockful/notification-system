@@ -1,5 +1,6 @@
 import { jest } from '@jest/globals';
 import { waitFor, waitForCondition } from '../utilities/wait-for';
+import { timeouts } from '../../config';
 
 /**
  * @notice Represents a Telegram message in test context
@@ -52,7 +53,7 @@ export class TelegramTestHelper {
         } : null;
       },
       {
-        timeout: options?.timeout || 5000,
+        timeout: options?.timeout || timeouts.wait.default,
         errorMessage: options?.errorMessage || 'Telegram message not received'
       }
     );
@@ -81,7 +82,7 @@ export class TelegramTestHelper {
         return filteredCalls.length >= expectedCount;
       },
       `Expected ${expectedCount} messages but got less`,
-      { timeout: options?.timeout || 5000 }
+      { timeout: options?.timeout || timeouts.wait.default }
     );
     
     const calls = this.getNewCalls(startCount);
@@ -124,7 +125,7 @@ export class TelegramTestHelper {
    * @dev Useful for negative testing - ensuring messages are NOT sent
    */
   async waitForNoMessages(
-    duration: number = 1000,
+    duration: number = timeouts.wait.short,
     options?: { fromUser?: string }
   ): Promise<void> {
     const startCount = this.mockSendMessage.mock.calls.length;
