@@ -1,7 +1,10 @@
 import { createMockFunction } from './jest-mock-factory';
 import { testConstants } from '../config';
 
-// Central mock for Telegram's sendMessage used across integration tests
+/**
+ * @notice Central mock for Telegram's sendMessage used across integration tests
+ * @dev Provides consistent mocking behavior for Telegram API calls
+ */
 export const mockSendMessage = createMockFunction();
 
 // Initialize mock implementation when Jest is available

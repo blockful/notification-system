@@ -12,7 +12,10 @@ declare global {
   var mockSendMessage: any;
 }
 
-// This runs once before all test suites
+/**
+ * @notice Jest setup after environment function executed once before test suites
+ * @dev Initializes database, mocking systems, and starts test applications
+ */
 beforeAll(async () => {
   const files = fs.readdirSync('/tmp').filter(f => f.startsWith('test_integration_'));
   files.forEach(file => {

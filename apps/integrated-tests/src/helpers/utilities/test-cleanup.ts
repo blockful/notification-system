@@ -3,15 +3,16 @@ import { db } from '../../setup/database/database-config';
 import { GraphQLMockSetup } from '../../mocks/graphql-mock-setup';
 
 /**
- * Central cleanup helper for beforeEach in tests
- * Handles all state that needs to be reset between tests
+ * @notice Central cleanup helper for beforeEach in tests
+ * @dev Handles all state that needs to be reset between tests
  */
 export class TestCleanup {
   private static dbCleanup = new DatabaseCleanup(db);
 
   /**
-   * Complete cleanup to be called in beforeEach
-   * Clears all state that could interfere between tests
+   * @notice Complete cleanup to be called in beforeEach
+   * @dev Clears all state that could interfere between tests
+   * @return Promise that resolves when all cleanup is complete
    */
   static async cleanupBetweenTests(): Promise<void> {
     // Clear Jest mocks (Telegram, etc)
@@ -34,7 +35,9 @@ export class TestCleanup {
   }
 
   /**
-   * Get access to global test infrastructure
+   * @notice Get access to global test infrastructure
+   * @dev Throws error if test apps not initialized properly
+   * @return Global test applications object
    */
   static getGlobalApps() {
     if (!global.testApps) {
@@ -43,6 +46,11 @@ export class TestCleanup {
     return global.testApps;
   }
 
+  /**
+   * @notice Get access to global HTTP mock setup
+   * @dev Throws error if mock setup not initialized properly
+   * @return Global HTTP mock setup instance
+   */
   static getGlobalHttpMockSetup() {
     if (!global.httpMockSetup) {
       throw new Error('HTTP mock setup not initialized. Make sure setupFilesAfterEnv ran correctly.');

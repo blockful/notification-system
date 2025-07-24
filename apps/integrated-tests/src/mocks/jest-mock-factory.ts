@@ -1,8 +1,8 @@
 /**
- * Factory to create mock functions using Jest when available
- * This avoids importing @jest/globals in files that might be used outside Jest context
+ * @notice Factory to create mock functions using Jest when available
+ * @dev This avoids importing @jest/globals in files that might be used outside Jest context
+ * @return Mock function compatible with Jest or fallback implementation
  */
-
 export function createMockFunction(): any {
   // When running in Jest, jest.fn() is available globally
   if (typeof jest !== 'undefined' && jest.fn) {

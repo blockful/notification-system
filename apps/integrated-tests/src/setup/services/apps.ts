@@ -6,16 +6,26 @@ import { Knex } from 'knex';
 import { RabbitMQTestSetup } from '../rabbitmq-setup';
 import { serviceConfig, timeouts } from '../../config';
 
+/**
+ * @notice Type definition for test applications container
+ * @dev Contains references to all running test services and their configurations
+ */
 export type TestApps = {
+  /** Consumer application instance */
   consumerApp: ConsumerApp;
+  /** Logic system application instance */
   logicSystemApp: LogicSystemApp;
+  /** Dispatcher application instance */
   dispatcherApp: DispatcherApp;
+  /** Subscription server application instance */
   subscriptionServerApp: SubscriptionServerApp;
+  /** RabbitMQ test setup instance */
   rabbitmqSetup: RabbitMQTestSetup;
 };
 
 /**
- * Configuration for test applications
+ * @notice Configuration object for test application setup
+ * @dev Defines server configurations and external service URLs for testing
  */
 const TEST_CONFIG = {
   ports: {
@@ -38,7 +48,11 @@ const TEST_CONFIG = {
 } as const;
 
 /**
- * Starts all test applications with proper configuration
+ * @notice Starts all test applications required for integration tests  
+ * @dev Sets up RabbitMQ, database, and starts all microservices
+ * @param db Database connection instance
+ * @param mockHttpClient Mocked HTTP client for external API calls
+ * @return Promise resolving to TestApps object containing service references
  */
 export const startTestApps = async (db: Knex, mockHttpClient: any): Promise<TestApps> => {
   const rabbitmqSetup = new RabbitMQTestSetup();
@@ -85,7 +99,10 @@ export const startTestApps = async (db: Knex, mockHttpClient: any): Promise<Test
 };
 
 /**
- * Stops all test applications gracefully
+ * @notice Gracefully stops all test applications
+ * @dev Closes all server connections and cleans up resources
+ * @param apps The TestApps object containing service references to stop
+ * @return Promise that resolves when all services are stopped
  */
 export const stopTestApps = async (apps: TestApps) => {
   const { consumerApp, logicSystemApp, dispatcherApp, subscriptionServerApp, rabbitmqSetup } = apps;

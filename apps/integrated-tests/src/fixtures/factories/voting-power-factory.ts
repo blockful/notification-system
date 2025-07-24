@@ -1,7 +1,16 @@
 import { ProcessedVotingPowerHistory } from '@notification-system/anticapture-client';
 import { testConstants } from '../../config';
 
+/**
+ * @notice Factory class for creating test voting power history data
+ * @dev Provides methods to generate realistic voting power events for testing
+ */
 export class VotingPowerFactory {
+  /**
+   * @notice Creates a single voting power event with default or custom data
+   * @param overrides Optional partial data to override defaults
+   * @return Complete ProcessedVotingPowerHistory object ready for testing
+   */
   static createVotingPowerEvent(overrides?: Partial<ProcessedVotingPowerHistory>): ProcessedVotingPowerHistory {
     const baseTimestamp = Math.floor(Date.now() / 1000).toString();
     
@@ -24,6 +33,13 @@ export class VotingPowerFactory {
     };
   }
 
+  /**
+   * @notice Creates multiple voting power events with sequential timestamps
+   * @param count Number of events to create
+   * @param baseAccountId Base string for account IDs (will append numbers)
+   * @param daoId DAO identifier for all events
+   * @return Array of ProcessedVotingPowerHistory objects with unique data
+   */
   static createMultipleVotingPowerEvents(
     count: number,
     baseAccountId: string = 'user',
@@ -42,6 +58,12 @@ export class VotingPowerFactory {
     });
   }
 
+  /**
+   * @notice Creates one voting power event for each specified DAO
+   * @param daoIds Array of DAO IDs to create events for
+   * @param accountId Account ID for all events
+   * @return Array of ProcessedVotingPowerHistory objects, one per DAO
+   */
   static createVotingPowerEventsForMultipleDaos(
     daoIds: string[], 
     accountId: string = 'user1.eth'
@@ -58,6 +80,15 @@ export class VotingPowerFactory {
     });
   }
 
+  /**
+   * @notice Creates a voting power delegation event
+   * @param delegatorAccountId Account ID of the delegator
+   * @param targetAccountId Account ID receiving the delegation
+   * @param delegatedValue Amount of voting power being delegated
+   * @param daoId DAO identifier for the delegation
+   * @param overrides Optional partial data to override defaults
+   * @return ProcessedVotingPowerHistory object representing delegation
+   */
   static createDelegationEvent(
     delegatorAccountId: string,
     targetAccountId: string,
@@ -81,6 +112,15 @@ export class VotingPowerFactory {
     });
   }
 
+  /**
+   * @notice Creates a voting power transfer event
+   * @param fromAccountId Account ID sending the voting power
+   * @param toAccountId Account ID receiving the voting power
+   * @param transferValue Amount of voting power being transferred
+   * @param daoId DAO identifier for the transfer
+   * @param overrides Optional partial data to override defaults
+   * @return ProcessedVotingPowerHistory object representing transfer
+   */
   static createTransferEvent(
     fromAccountId: string,
     toAccountId: string,

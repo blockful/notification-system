@@ -6,6 +6,11 @@ declare global {
   var __RABBITMQ_CONTAINER__: StartedRabbitMQContainer;
 }
 
+/**
+ * @notice Jest global setup function executed once before all tests
+ * @dev Starts RabbitMQ container and sets up global test environment
+ * @return Promise that resolves when setup is complete
+ */
 export default async function globalSetup() {
   const container = await new RabbitMQContainer()
     .withStartupTimeout(150000)

@@ -1,9 +1,16 @@
 import { ProposalData } from '../fixtures';
 import { ProcessedVotingPowerHistory } from '@notification-system/anticapture-client';
 
+/**
+ * @notice Setup class for GraphQL API mocking in integration tests
+ * @dev Provides methods to mock different GraphQL endpoints with test data
+ */
 export class GraphQLMockSetup {
   /**
-   * Transforms ProcessedVotingPowerHistory to raw GraphQL format
+   * @notice Transforms ProcessedVotingPowerHistory to raw GraphQL format
+   * @dev Converts typed objects back to the raw format expected by GraphQL responses
+   * @param votingPowerData Array of processed voting power history objects
+   * @return Array of objects in raw GraphQL response format
    */
   private static transformToRawGraphQLFormat(votingPowerData: ProcessedVotingPowerHistory[]): any[] {
     return votingPowerData.map(vp => ({
@@ -26,7 +33,9 @@ export class GraphQLMockSetup {
   }
 
   /**
-   * Creates standard empty GraphQL response structure
+   * @notice Creates standard empty GraphQL response structure
+   * @dev Returns the base response format with empty data arrays
+   * @return Empty GraphQL response object with proper structure
    */
   private static createEmptyGraphQLResponse(): any {
     return {
@@ -39,6 +48,11 @@ export class GraphQLMockSetup {
       }
     };
   }
+  /**
+   * @notice Sets up mock for proposal-related GraphQL queries
+   * @param mockHttpClient The mocked HTTP client instance
+   * @param proposals Array of proposal data to return in responses
+   */
   static setupProposalMock(mockHttpClient: any, proposals: ProposalData[]): void {
     mockHttpClient.post.mockImplementation((url: string, data: any, config: any) => {
       if (data.query && data.query.includes('ListProposals')) {
@@ -87,12 +101,21 @@ export class GraphQLMockSetup {
     });
   }
 
+  /**
+   * @notice Sets up mock to return empty responses for all GraphQL queries
+   * @param mockHttpClient The mocked HTTP client instance
+   */
   static setupEmptyMock(mockHttpClient: any): void {
     mockHttpClient.post.mockImplementation(() => {
       return Promise.resolve(this.createEmptyGraphQLResponse());
     });
   }
 
+  /**
+   * @notice Sets up mock for voting power history GraphQL queries
+   * @param mockHttpClient The mocked HTTP client instance
+   * @param votingPowerData Array of voting power history data to return
+   */
   static setupVotingPowerMock(mockHttpClient: any, votingPowerData: ProcessedVotingPowerHistory[]): void {
     mockHttpClient.post.mockImplementation((url: string, data: any, config: any) => {
       if (data.query && data.query.includes('ListVotingPowerHistorys')) {
@@ -124,6 +147,12 @@ export class GraphQLMockSetup {
     });
   }
 
+  /**
+   * @notice Sets up mock for both proposal and voting power GraphQL queries
+   * @param mockHttpClient The mocked HTTP client instance
+   * @param proposals Array of proposal data to return
+   * @param votingPowerData Array of voting power history data to return
+   */
   static setupCombinedMock(
     mockHttpClient: any, 
     proposals: ProposalData[], 
@@ -201,6 +230,10 @@ export class GraphQLMockSetup {
     });
   }
 
+  /**
+   * @notice Resets the HTTP client mock to clean state
+   * @param mockHttpClient The mocked HTTP client instance to reset
+   */
   static resetMock(mockHttpClient: any): void {
     mockHttpClient.post.mockReset();
   }
