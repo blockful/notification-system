@@ -37,7 +37,7 @@ describe('Multi-DAO Notification Flow - Integration Test', () => {
     
     // Setup mock to return active proposals from both DAOs
     const proposals = ProposalFactory.createProposalsForMultipleDaos([testConstants.daoIds.uniswap, testConstants.daoIds.ens], 'multi-proposal');
-    GraphQLMockSetup.setupProposalMock(httpMockSetup.getMockClient(), proposals);
+    GraphQLMockSetup.setupMock(httpMockSetup.getMockClient(), proposals);
     
     // Wait for all expected messages
     await telegramHelper.waitForMessageCount(4, { timeout: timeouts.notification.delivery });
@@ -78,7 +78,7 @@ describe('Multi-DAO Notification Flow - Integration Test', () => {
     
     // Setup multiple UNI proposals simultaneously
     const multipleUniProposals = ProposalFactory.createMultipleProposals(testConstants.daoIds.uniswap, 3, 'uni-multi');
-    GraphQLMockSetup.setupProposalMock(httpMockSetup.getMockClient(), multipleUniProposals);
+    GraphQLMockSetup.setupMock(httpMockSetup.getMockClient(), multipleUniProposals);
     
     // Wait for all 6 messages (3 proposals × 2 UNI followers)
     await telegramHelper.waitForMessageCount(6, { timeout: timeouts.notification.delivery });

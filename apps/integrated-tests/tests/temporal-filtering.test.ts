@@ -44,7 +44,7 @@ describe('Temporal Filtering - Integration Test', () => {
       subscriptionTime.toISOString()
     );
 
-    GraphQLMockSetup.setupProposalMock(httpMockSetup.getMockClient(), [oldProposal]);
+    GraphQLMockSetup.setupMock(httpMockSetup.getMockClient(), [oldProposal]);
     
     // Ensure no messages are sent for old proposals
     await telegramHelper.waitForNoMessages(timeouts.notification.processing);
@@ -73,7 +73,7 @@ describe('Temporal Filtering - Integration Test', () => {
       status: 'pending'
     });
 
-    GraphQLMockSetup.setupProposalMock(httpMockSetup.getMockClient(), [newProposal]);
+    GraphQLMockSetup.setupMock(httpMockSetup.getMockClient(), [newProposal]);
     
     // Wait for the notification to be sent
     const message = await telegramHelper.waitForUserMessage(testConstants.profiles.p7.chatId, {
@@ -114,7 +114,7 @@ describe('Temporal Filtering - Integration Test', () => {
     await UserFactory.updateUserPreference(testUser.user.id, testDaoId, true, new Date('2024-01-01T14:00:00Z').toISOString());
     
 
-    GraphQLMockSetup.setupProposalMock(httpMockSetup.getMockClient(), [inactiveProposal]);
+    GraphQLMockSetup.setupMock(httpMockSetup.getMockClient(), [inactiveProposal]);
     
     // Ensure no notification is sent for proposals created during inactive period
     await telegramHelper.waitForNoMessages(timeouts.notification.delivery, { fromUser: testConstants.profiles.p8.chatId });

@@ -52,7 +52,7 @@ describe('Voting Power Trigger - Integration Test', () => {
     ];
 
     // Setup GraphQL mock to return voting power data (includes DAOs)
-    GraphQLMockSetup.setupCombinedMock(
+    GraphQLMockSetup.setupMock(
       httpMockSetup.getMockClient(),
       [], // No proposals needed
       votingPowerEvents

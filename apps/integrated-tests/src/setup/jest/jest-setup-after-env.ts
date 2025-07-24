@@ -23,7 +23,7 @@ beforeAll(async () => {
   });
   await setupDatabase();
   const httpMockSetup = new HttpClientMockSetup();
-  GraphQLMockSetup.setupEmptyMock(httpMockSetup.getMockClient());
+  GraphQLMockSetup.setupMock(httpMockSetup.getMockClient());
   const rabbitmqUrl = process.env.TEST_RABBITMQ_URL;
   if (!rabbitmqUrl) {
     throw new Error('TEST_RABBITMQ_URL not set. Make sure globalSetup ran correctly.');

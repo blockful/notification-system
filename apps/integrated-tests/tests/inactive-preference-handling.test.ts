@@ -38,7 +38,7 @@ describe('Inactive Preference Handling - Integration Test', () => {
     
     // Setup proposals for both DAOs
     const proposals = ProposalFactory.createProposalsForMultipleDaos([testConstants.daoIds.uniswap, testConstants.daoIds.ens], 'inactive-test');
-    GraphQLMockSetup.setupProposalMock(httpMockSetup.getMockClient(), proposals);
+    GraphQLMockSetup.setupMock(httpMockSetup.getMockClient(), proposals);
     
     // Wait for exactly 1 message (only active user should be notified)
     await telegramHelper.waitForMessageCount(1, { timeout: timeouts.notification.delivery });

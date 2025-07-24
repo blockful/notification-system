@@ -22,7 +22,7 @@ export class TestCleanup {
     // Reset HTTP/GraphQL mocks
     if (global.httpMockSetup) {
       global.httpMockSetup.reset();
-      GraphQLMockSetup.setupEmptyMock(global.httpMockSetup.getMockClient());
+      GraphQLMockSetup.setupMock(global.httpMockSetup.getMockClient());
     }
     
     // Clear RabbitMQ collected events

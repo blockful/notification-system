@@ -38,7 +38,7 @@ describe('Status Case Variations - Integration Test', () => {
       ProposalFactory.createProposal(testDaoId, 'multi-weird-2', { status: 'PeNdInG' }) 
     ];
     
-    GraphQLMockSetup.setupProposalMock(httpMockSetup.getMockClient(), proposals);
+    GraphQLMockSetup.setupMock(httpMockSetup.getMockClient(), proposals);
     
     // Wait for 3 messages (only supported case variations: pending, Pending, PENDING)
     await telegramHelper.waitForMessageCount(3, { timeout: timeouts.notification.delivery });
