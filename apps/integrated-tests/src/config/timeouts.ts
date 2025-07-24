@@ -4,12 +4,12 @@
  */
 
 export const timeouts = {
-  // Test execution timeouts (only used ones)
+  // Test execution timeouts 
   test: {
     short: 30000,         // 30 seconds
   },
   
-  // Waiting for conditions (only used ones)
+  // Waiting for conditions 
   wait: {
     default: 5000,        // 5 seconds
     short: 1000,          // 1 second
@@ -17,12 +17,12 @@ export const timeouts = {
     veryLong: 30000,      // 30 seconds
   },
   
-  // RabbitMQ specific (only used ones)
+  // RabbitMQ specific 
   rabbitmq: {
     containerStartup: 150000,  // 2.5 minutes
   },
   
-  // Notification delays (only used ones)
+  // Notification delays 
   notification: {
     processing: 2000,     // 2 seconds
     delivery: 3000,       // 3 seconds

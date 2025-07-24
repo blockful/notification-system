@@ -3,7 +3,7 @@
  */
 
 export const testConstants = {
-  // Database table names (only used ones)
+  // Database table names 
   tables: {
     notifications: 'notifications',
     users: 'users',
@@ -38,7 +38,7 @@ export const testConstants = {
     userPrefix: 'user',
   },
   
-  // Common DAO IDs for tests (only used ones)
+  // Common DAO IDs for tests 
   daoIds: {
     uniswap: 'UNISWAP',
     ens: 'ENS',
@@ -50,7 +50,7 @@ export const testConstants = {
     secondDao: 'second-dao',
   },
   
-  // Voting power test values (only used ones)
+  // Voting power test values 
   votingPower: {
     default: '1000',
     small: '100',

@@ -3,22 +3,22 @@
  */
 
 export const serviceConfig = {
-  // Service ports (only used ones)
+  // Service ports 
   ports: {
     subscriptionServer: 14001,
   },
   
-  // Service URLs (only used ones)
+  // Service URLs 
   urls: {
     subscriptionServer: 'http://localhost:14001',
   },
   
-  // Logic system configuration (only used ones)
+  // Logic system configuration 
   logicSystem: {
     pollInterval: 500, // milliseconds between polls
   },
   
-  // Bot configuration (only used ones)
+  // Bot configuration 
   bot: {
     token: 'test-bot-token', // Test bot token
   }
