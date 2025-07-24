@@ -1,13 +1,8 @@
 import { describe, test, expect, beforeEach, jest } from '@jest/globals';
-import { db } from '../src/setup/database/database-config';
-import { TestApps } from '../src/setup/services/apps';
-import { HttpClientMockSetup } from '../src/mocks/http-client-mock';
-import { GraphQLMockSetup } from '../src/mocks/graphql-mock-setup';
-import { UserFactory } from '../src/fixtures/factories/user-factory';
-import { VotingPowerFactory } from '../src/fixtures/factories/voting-power-factory';
-import { TelegramTestHelper } from '../src/helpers/messaging/telegram-test-helper';
-import { DatabaseTestHelper } from '../src/helpers/database/database-test-helper';
-import { TestCleanup } from '../src/helpers/utilities/test-cleanup';
+import { db, TestApps } from '../src/setup';
+import { HttpClientMockSetup, GraphQLMockSetup } from '../src/mocks';
+import { UserFactory, VotingPowerFactory } from '../src/fixtures';
+import { TelegramTestHelper, DatabaseTestHelper, TestCleanup } from '../src/helpers';
 
 describe('Voting Power Trigger - Integration Test', () => {
   let apps: TestApps;

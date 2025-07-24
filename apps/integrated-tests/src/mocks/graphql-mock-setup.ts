@@ -1,5 +1,4 @@
-import { jest } from '@jest/globals';
-import { ProposalData } from '../src/fixtures/factories/proposal-factory';
+import { ProposalData } from '../fixtures';
 import { ProcessedVotingPowerHistory } from '@notification-system/anticapture-client';
 
 export class GraphQLMockSetup {

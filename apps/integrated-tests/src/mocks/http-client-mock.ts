@@ -1,14 +1,14 @@
-import { jest } from '@jest/globals';
+import { createMockFunction } from './jest-mock-factory';
 
 export class HttpClientMockSetup {
   private mockHttpClient: any;
 
   constructor() {
     this.mockHttpClient = {
-      post: jest.fn(),
-      get: jest.fn(),
-      put: jest.fn(),
-      delete: jest.fn(),
+      post: createMockFunction(),
+      get: createMockFunction(),
+      put: createMockFunction(),
+      delete: createMockFunction(),
       defaults: {
         baseURL: 'http://mocked-endpoint.com/graphql'
       }

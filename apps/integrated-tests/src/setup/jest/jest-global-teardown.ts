@@ -1,4 +1,4 @@
-import { globalRabbitMQSetup } from './rabbitmq-setup';
+import { globalRabbitMQSetup } from '../rabbitmq-setup';
 
 export default async function globalTeardown() {
   if ((global as any).__RABBITMQ_CONTAINER__) {

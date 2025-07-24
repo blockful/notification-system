@@ -147,9 +147,9 @@ export class TelegramTestHelper {
    */
   getAllMessages(): TelegramMessage[] {
     return this.mockSendMessage.mock.calls.map(call => ({
-      chatId: call[0],
-      text: call[1],
-      ...call[2]
+      chatId: call[0] as string | number,
+      text: call[1] as string,
+      ...(call[2] || {})
     }));
   }
 
