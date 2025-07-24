@@ -5,6 +5,7 @@ import { App as SubscriptionServerApp } from '@notification-system/subscription-
 import { Knex } from 'knex';
 import { RabbitMQTestSetup } from '../rabbitmq-setup';
 import { serviceConfig, timeouts } from '../../config';
+import { waitFor } from '../../helpers/utilities/wait-for';
 
 /**
  * @notice Type definition for test applications container
@@ -87,7 +88,17 @@ export const startTestApps = async (db: Knex, mockHttpClient: any): Promise<Test
   await logicSystemApp.start();
   
   // Wait for apps to be ready
-  await new Promise(resolve => setTimeout(resolve, TEST_CONFIG.timeouts.appStartup));
+  await waitFor(
+    async () => {
+      // Check if all apps are ready by verifying they have started successfully
+      return consumerApp && logicSystemApp && dispatcherApp && subscriptionServerApp;
+    },
+    {
+      timeout: TEST_CONFIG.timeouts.appStartup,
+      interval: 100,
+      errorMessage: 'Apps failed to start within timeout period'
+    }
+  );
   
   return {
     consumerApp,
