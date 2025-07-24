@@ -28,9 +28,9 @@ describe('Multi-DAO Notification Flow - Integration Test', () => {
     const ensDaoId = testConstants.daoIds.ens;
     
     // Create Users with subscriptions
-    await UserFactory.createUserWithFullSetup(testConstants.testUsers.user1, 'uni_follower', uniDaoId, true);
-    await UserFactory.createUserWithFullSetup(testConstants.testUsers.user2, 'ens_follower', ensDaoId, true);
-    const bothFollower = await UserFactory.createUserWithFullSetup(testConstants.testUsers.user3, 'both_follower', uniDaoId, true);
+    await UserFactory.createUserWithFullSetup(testConstants.profiles.p1.chatId, 'uni_follower', uniDaoId, true);
+    await UserFactory.createUserWithFullSetup(testConstants.profiles.p2.chatId, 'ens_follower', ensDaoId, true);
+    const bothFollower = await UserFactory.createUserWithFullSetup(testConstants.profiles.p3.chatId, 'both_follower', uniDaoId, true);
     
     // Create second subscription for bothFollower
     await UserFactory.createUserPreference(bothFollower.user.id, ensDaoId, true);
@@ -46,17 +46,17 @@ describe('Multi-DAO Notification Flow - Integration Test', () => {
     const allMessages = telegramHelper.getAllMessages();
     
     // Verify UNI follower received 1 message
-    const uniFollowerMessages = allMessages.filter(msg => msg.chatId === testConstants.testUsers.user1);
+    const uniFollowerMessages = allMessages.filter(msg => msg.chatId === testConstants.profiles.p1.chatId);
     expect(uniFollowerMessages).toHaveLength(1);
     expect(uniFollowerMessages[0].text).toContain(testConstants.daoIds.uniswap);
     
     // Verify ENS follower received 1 message
-    const ensFollowerMessages = allMessages.filter(msg => msg.chatId === testConstants.testUsers.user2);
+    const ensFollowerMessages = allMessages.filter(msg => msg.chatId === testConstants.profiles.p2.chatId);
     expect(ensFollowerMessages).toHaveLength(1);
     expect(ensFollowerMessages[0].text).toContain(testConstants.daoIds.ens);
     
     // Verify both follower received 2 messages
-    const bothFollowerMessages = allMessages.filter(msg => msg.chatId === testConstants.testUsers.user3);
+    const bothFollowerMessages = allMessages.filter(msg => msg.chatId === testConstants.profiles.p3.chatId);
     expect(bothFollowerMessages).toHaveLength(2);
     
     // Verify database records
@@ -69,9 +69,9 @@ describe('Multi-DAO Notification Flow - Integration Test', () => {
     const ensDaoId = testConstants.daoIds.ens;
     
     // Create Users with subscriptions
-    const uniFollower = await UserFactory.createUserWithFullSetup(testConstants.testUsers.user1, 'uni_follower', uniDaoId, true);
-    const ensFollower = await UserFactory.createUserWithFullSetup(testConstants.testUsers.user2, 'ens_follower', ensDaoId, true);
-    const bothFollower = await UserFactory.createUserWithFullSetup(testConstants.testUsers.user3, 'both_follower', uniDaoId, true);
+    const uniFollower = await UserFactory.createUserWithFullSetup(testConstants.profiles.p1.chatId, 'uni_follower', uniDaoId, true);
+    const ensFollower = await UserFactory.createUserWithFullSetup(testConstants.profiles.p2.chatId, 'ens_follower', ensDaoId, true);
+    const bothFollower = await UserFactory.createUserWithFullSetup(testConstants.profiles.p3.chatId, 'both_follower', uniDaoId, true);
     
     // Create second subscription for bothFollower
     await UserFactory.createUserPreference(bothFollower.user.id, ensDaoId, true);
@@ -87,15 +87,15 @@ describe('Multi-DAO Notification Flow - Integration Test', () => {
     const allMessages = telegramHelper.getAllMessages();
     
     // Verify UNI follower received 3 messages
-    const uniFollowerMessages = allMessages.filter(msg => msg.chatId === testConstants.testUsers.user1);
+    const uniFollowerMessages = allMessages.filter(msg => msg.chatId === testConstants.profiles.p1.chatId);
     expect(uniFollowerMessages).toHaveLength(3);
     
     // Verify both follower received 3 messages
-    const bothFollowerMessages = allMessages.filter(msg => msg.chatId === testConstants.testUsers.user3);
+    const bothFollowerMessages = allMessages.filter(msg => msg.chatId === testConstants.profiles.p3.chatId);
     expect(bothFollowerMessages).toHaveLength(3);
     
     // Verify ENS follower did NOT receive any messages
-    const ensFollowerMessages = allMessages.filter(msg => msg.chatId === testConstants.testUsers.user2);
+    const ensFollowerMessages = allMessages.filter(msg => msg.chatId === testConstants.profiles.p2.chatId);
     expect(ensFollowerMessages).toHaveLength(0);
     
     // Verify all notifications were sent

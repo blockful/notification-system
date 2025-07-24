@@ -26,8 +26,8 @@ describe('Duplicate Prevention - Integration Test', () => {
     uniDaoId = testConstants.daoIds.uniswap;
     
     // Create Users with subscriptions
-    const uniFollower = await UserFactory.createUserWithFullSetup(testConstants.testUsers.user1, 'uni_follower', uniDaoId, true, now);
-    const bothFollower = await UserFactory.createUserWithFullSetup(testConstants.testUsers.user3, 'both_follower', uniDaoId, true, now);
+    const uniFollower = await UserFactory.createUserWithFullSetup(testConstants.profiles.p1.chatId, 'uni_follower', uniDaoId, true, now);
+    const bothFollower = await UserFactory.createUserWithFullSetup(testConstants.profiles.p3.chatId, 'both_follower', uniDaoId, true, now);
     
     uniFollowerUserId = uniFollower.user.id;
     bothFollowerUserId = bothFollower.user.id;
@@ -48,8 +48,8 @@ describe('Duplicate Prevention - Integration Test', () => {
     // Verify notifications were sent to both users
     const firstRoundMessages = telegramHelper.getAllMessages();
     expect(firstRoundMessages).toHaveLength(2);
-    expect(firstRoundMessages.some(msg => msg.chatId === testConstants.testUsers.user1)).toBe(true);
-    expect(firstRoundMessages.some(msg => msg.chatId === testConstants.testUsers.user3)).toBe(true);
+    expect(firstRoundMessages.some(msg => msg.chatId === testConstants.profiles.p1.chatId)).toBe(true);
+    expect(firstRoundMessages.some(msg => msg.chatId === testConstants.profiles.p3.chatId)).toBe(true);
     
     // Verify notifications were recorded in database
     await dbHelper.waitForRecordCount(testConstants.tables.notifications, 2);

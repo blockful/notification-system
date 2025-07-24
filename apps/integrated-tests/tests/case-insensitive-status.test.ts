@@ -24,10 +24,10 @@ describe('Status Case Variations - Integration Test', () => {
 
   test('should handle supported case variations (lowercase, UPPERCASE, Title) and ignore unsupported mixed cases', async () => {
     // Create DAO for this test
-    const testDaoId = 'TEST_DAO';
+    const testDaoId = testConstants.daoIds.caseTest;
     
     // Create User with subscription
-    await UserFactory.createUserWithFullSetup(testConstants.testUsers.user4, 'test_user', testDaoId, true);
+    await UserFactory.createUserWithFullSetup(testConstants.profiles.p4.chatId, 'test_user', testDaoId, true);
     
     // Setup multiple proposals with different case statuses
     const proposals = [
@@ -46,7 +46,7 @@ describe('Status Case Variations - Integration Test', () => {
     // Verify all messages are for the test user
     const messages = telegramHelper.getAllMessages();
     expect(messages).toHaveLength(3);
-    expect(messages.every(msg => msg.chatId === testConstants.testUsers.user4)).toBe(true);
+    expect(messages.every(msg => msg.chatId === testConstants.profiles.p4.chatId)).toBe(true);
     
     // Verify notifications were recorded
     await dbHelper.waitForRecordCount(testConstants.tables.notifications, 3);

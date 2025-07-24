@@ -28,13 +28,13 @@ describe('Inactive Preference Handling - Integration Test', () => {
     const ensDaoId = testConstants.daoIds.ens;
     
     // Create user that follows UNI with active preference
-    const activeUser = await UserFactory.createUserWithFullSetup(testConstants.testUsers.user1, 'active_user', uniDaoId, true);
+    const activeUser = await UserFactory.createUserWithFullSetup(testConstants.profiles.p1.chatId, 'active_user', uniDaoId, true);
     
     // Create user that follows UNI but with INACTIVE preference
-    await UserFactory.createUserWithFullSetup(testConstants.testUsers.user4, 'inactive_pref_user', uniDaoId, false);
+    await UserFactory.createUserWithFullSetup(testConstants.profiles.p4.chatId, 'inactive_pref_user', uniDaoId, false);
     
     // Create user with inactive preference for ENS
-    await UserFactory.createUserWithFullSetup(testConstants.testUsers.user5, 'user_inactive_pref', ensDaoId, false);
+    await UserFactory.createUserWithFullSetup(testConstants.profiles.p5.chatId, 'user_inactive_pref', ensDaoId, false);
     
     // Setup proposals for both DAOs
     const proposals = ProposalFactory.createProposalsForMultipleDaos([testConstants.daoIds.uniswap, testConstants.daoIds.ens], 'inactive-test');
@@ -45,7 +45,7 @@ describe('Inactive Preference Handling - Integration Test', () => {
     
     // Verify the message was sent to the correct user
     const message = telegramHelper.getAllMessages()[0];
-    expect(message.chatId).toBe(testConstants.testUsers.user1); // User with active UNI preference
+    expect(message.chatId).toBe(testConstants.profiles.p1.chatId); // User with active UNI preference
     
     // Ensure no more messages are sent to inactive users
     await telegramHelper.waitForNoMessages(timeouts.notification.processing);
@@ -56,8 +56,8 @@ describe('Inactive Preference Handling - Integration Test', () => {
     
     // Verify users with inactive preferences were NOT notified
     const notifiedUsers = allMessages.map(msg => msg.chatId.toString());
-    expect(notifiedUsers).not.toContain(testConstants.testUsers.user4); // User with inactive UNI preference
-    expect(notifiedUsers).not.toContain(testConstants.testUsers.user5); // User with inactive ENS preference
+    expect(notifiedUsers).not.toContain(testConstants.profiles.p4.chatId); // User with inactive UNI preference
+    expect(notifiedUsers).not.toContain(testConstants.profiles.p5.chatId); // User with inactive ENS preference
     
     // Verify notification was only recorded for active user
     await dbHelper.waitForRecordCount(testConstants.tables.notifications, 1);

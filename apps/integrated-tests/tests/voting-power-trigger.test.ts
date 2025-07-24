@@ -24,7 +24,7 @@ describe('Voting Power Trigger - Integration Test', () => {
 
   test('should send voting power change notification to subscribed users', async () => {
     const testDaoId = testConstants.daoIds.votingPowerTest;
-    const testUserWithSubscription = 'user-with-subscription.eth';
+    const testUserWithSubscription = testConstants.profiles.p9.address;
     
     // Create users in database with a timestamp from the past to ensure temporal filtering works
     const pastTimestamp = new Date(Date.now() - timeouts.wait.long).toISOString(); // 10 seconds ago
@@ -43,7 +43,7 @@ describe('Voting Power Trigger - Integration Test', () => {
     
     const votingPowerEvents = [
       VotingPowerFactory.createDelegationEvent(
-        'delegator1.eth',
+        testConstants.eventActors.delegator1,
         testUserWithSubscription,
         testConstants.votingPower.default,
         testDaoId,
@@ -82,16 +82,16 @@ describe('Voting Power Trigger - Integration Test', () => {
     
     // Test delegation event
     const delegationEvent = VotingPowerFactory.createDelegationEvent(
-      'delegator.eth',
-      'recipient.eth',
+      testConstants.eventActors.delegator,
+      testConstants.eventActors.recipient,
       testConstants.votingPower.small + '00',
       testDaoId
     );
 
     // Test transfer event
     const transferEvent = VotingPowerFactory.createTransferEvent(
-      'sender.eth',
-      'recipient.eth',
+      testConstants.eventActors.sender,
+      testConstants.eventActors.recipient,
       testConstants.votingPower.default + '00',
       testDaoId
     );
@@ -108,12 +108,12 @@ describe('Voting Power Trigger - Integration Test', () => {
   test('should create multiple voting power events', async () => {
     const testDaoId = testConstants.daoIds.votingPowerTest;
     
-    const multipleEvents = VotingPowerFactory.createMultipleVotingPowerEvents(3, 'user', testDaoId);
+    const multipleEvents = VotingPowerFactory.createMultipleVotingPowerEvents(3, testConstants.eventActors.userPrefix, testDaoId);
 
     expect(multipleEvents).toHaveLength(3);
-    expect(multipleEvents[0].accountId).toBe('user1.eth');
-    expect(multipleEvents[1].accountId).toBe('user2.eth');
-    expect(multipleEvents[2].accountId).toBe('user3.eth');
+    expect(multipleEvents[0].accountId).toBe(`${testConstants.eventActors.userPrefix}1.eth`);
+    expect(multipleEvents[1].accountId).toBe(`${testConstants.eventActors.userPrefix}2.eth`);
+    expect(multipleEvents[2].accountId).toBe(`${testConstants.eventActors.userPrefix}3.eth`);
 
     // Verify timestamps are sequential
     const timestamps = multipleEvents.map(e => parseInt(e.timestamp));
@@ -125,14 +125,14 @@ describe('Voting Power Trigger - Integration Test', () => {
     const testDaoId = testConstants.daoIds.votingPowerTest;
     
     const multiDaoEvents = VotingPowerFactory.createVotingPowerEventsForMultipleDaos(
-      [testDaoId, 'second-dao'],
-      'user.eth'
+      [testDaoId, testConstants.daoIds.secondDao],
+      testConstants.profiles.p1.address,
     );
 
     expect(multiDaoEvents).toHaveLength(2);
     expect(multiDaoEvents[0].daoId).toBe(testDaoId);
-    expect(multiDaoEvents[1].daoId).toBe('second-dao');
-    expect(multiDaoEvents[0].accountId).toBe('user.eth');
-    expect(multiDaoEvents[1].accountId).toBe('user.eth');
+    expect(multiDaoEvents[1].daoId).toBe(testConstants.daoIds.secondDao);
+    expect(multiDaoEvents[0].accountId).toBe(testConstants.profiles.p1.address);
+    expect(multiDaoEvents[1].accountId).toBe(testConstants.profiles.p1.address);
   });
 });
