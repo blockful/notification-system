@@ -152,9 +152,9 @@ describe('Proposal Finished Trigger - Integration Test', () => {
       description: '# Future Proposal\\n\\nThis proposal will not finish during the test.'
     });
 
-    GraphQLMockSetup.setupProposalMock(httpMockSetup.getMockClient(), [futureProposal], TEST_CONFIG.BLOCK_TIME, testDaoId, false);
-
     const initialCallCount = getNotificationCount();
+
+    GraphQLMockSetup.setupProposalMock(httpMockSetup.getMockClient(), [futureProposal], TEST_CONFIG.BLOCK_TIME, testDaoId, false);
 
     await waitForProcessing();
 
@@ -172,9 +172,9 @@ describe('Proposal Finished Trigger - Integration Test', () => {
       createFinishedProposal(testDaoId, 'finished-3')
     ];
 
-    GraphQLMockSetup.setupProposalMock(httpMockSetup.getMockClient(), proposals, TEST_CONFIG.BLOCK_TIME, testDaoId, false);
-
     const initialCallCount = getNotificationCount();
+
+    GraphQLMockSetup.setupProposalMock(httpMockSetup.getMockClient(), proposals, TEST_CONFIG.BLOCK_TIME, testDaoId, false);
 
     await waitForProcessing();
 
@@ -207,9 +207,9 @@ describe('Proposal Finished Trigger - Integration Test', () => {
       description: '# Old Proposal\\n\\nThis finished before user subscribed.'
     });
 
-    GraphQLMockSetup.setupProposalMock(httpMockSetup.getMockClient(), [proposal], TEST_CONFIG.BLOCK_TIME, testDaoId, false);
-
     const initialCallCount = getNotificationCount();
+
+    GraphQLMockSetup.setupProposalMock(httpMockSetup.getMockClient(), [proposal], TEST_CONFIG.BLOCK_TIME, testDaoId, false);
 
     await waitForProcessing();
 
@@ -222,9 +222,9 @@ describe('Proposal Finished Trigger - Integration Test', () => {
     const dao1Proposal = createFinishedProposal(testDaoId, 'dao1-finished');
     const dao2Proposal = createFinishedProposal(secondDaoId, 'dao2-finished');
 
-    GraphQLMockSetup.setupProposalMock(httpMockSetup.getMockClient(), [dao1Proposal, dao2Proposal], TEST_CONFIG.BLOCK_TIME, testDaoId, false);
-
     const initialCallCount = getNotificationCount();
+
+    GraphQLMockSetup.setupProposalMock(httpMockSetup.getMockClient(), [dao1Proposal, dao2Proposal], TEST_CONFIG.BLOCK_TIME, testDaoId, false);
 
     await waitForProcessing();
 
