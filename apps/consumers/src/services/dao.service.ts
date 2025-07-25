@@ -17,7 +17,7 @@ export class DAOService {
   private daoEmojis = new Map<string, string>([
     ['UNI', '🦄'],
     ['ENS', '🔷'],
-    ['OP', '🔴']
+    ['OP', '🔴'],
   ]);
   
   constructor(
