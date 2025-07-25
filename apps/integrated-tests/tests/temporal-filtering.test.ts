@@ -66,9 +66,9 @@ describe('Temporal Filtering - Integration Test', () => {
       subscriptionTime.toISOString()
     );
 
-    GraphQLMockSetup.setupProposalMock(httpMockSetup.getMockClient(), [oldProposal]);
-    
     const initialCallCount = mockSendMessage.mock.calls.length;
+    
+    GraphQLMockSetup.setupProposalMock(httpMockSetup.getMockClient(), [oldProposal]);
     
     // Wait for the logic system to process
     await new Promise(resolve => setTimeout(resolve, 5000));

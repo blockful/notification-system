@@ -47,4 +47,35 @@ export interface ProposalDataSource {
      * @returns Array of proposals matching the criteria
      */
     listAll(options?: ListProposalsOptions): Promise<ProposalOnChain[]>;
+}
+
+/**
+ * Interface for finished proposals (internal use in Logic System)
+ * Contains all data needed for processing, sorting, and tracking
+ */
+export interface ProposalFinished {
+    id: string;
+    daoId: string;
+    description: string;
+    startBlock: string;
+    startTimestamp: number;
+    endBlock: string;
+    endTimestamp: number;
+    status: string;
+    forVotes: string;
+    againstVotes: string;
+    abstainVotes: string;
+    blockTime: number;
+    timestamp: number;
+}
+
+/**
+ * Interface for proposal finished notifications (sent to Dispatcher)
+ * Contains only essential data needed for notification generation
+ */
+export interface ProposalFinishedNotification {
+    id: string;
+    daoId: string;
+    description: string;
+    endTimestamp: number;
 } 

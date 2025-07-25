@@ -32,7 +32,7 @@ describe('Duplicate Prevention - Integration Test', () => {
 
     // Start all applications
     apps = await startTestApps(db, httpMockSetup.getMockClient());
-  });
+  }, 120000);
 
   beforeEach(async () => {
     jest.clearAllMocks();
@@ -86,5 +86,5 @@ describe('Duplicate Prevention - Integration Test', () => {
     
     // Should NOT send duplicate notifications
     expect(secondRoundNewCalls).toBe(0);
-  });
+  }, 120000);
 });

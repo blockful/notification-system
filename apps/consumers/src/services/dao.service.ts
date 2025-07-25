@@ -50,7 +50,7 @@ export class DAOService {
         return;
       }
 
-      const userPreferences = await this.subscriptionApi.getUserPreferences(chatId, 'telegram', daos);
+      const userPreferences = await this.subscriptionApi.getUserPreferences(chatId, 'telegram', daos.map(dao => dao.id));
       const currentSelections = new Set<string>(userPreferences);
       this.ensureSession(ctx);
       ctx.session.daoSelections = currentSelections;
@@ -58,8 +58,8 @@ export class DAOService {
       const keyboard = {
         inline_keyboard: [
           daos.map(dao => {
-            const normalizedDao = dao.toUpperCase();
-            const daoWithEmoji = this.getDaoWithEmoji(dao);
+            const normalizedDao = dao.id.toUpperCase();
+            const daoWithEmoji = this.getDaoWithEmoji(dao.id);
             return {
               text: currentSelections.has(normalizedDao) ? `✅ ${daoWithEmoji}` : daoWithEmoji,
               callback_data: `dao_toggle_${normalizedDao}`
@@ -97,9 +97,9 @@ export class DAOService {
       const daos = await this.anticaptureClient.getDAOs();
       const keyboard = {
         inline_keyboard: [
-          daos.map((dao: string) => {
-            const normalizedDao = dao.toUpperCase();
-            const daoWithEmoji = this.getDaoWithEmoji(dao);
+          daos.map(dao => {
+            const normalizedDao = dao.id.toUpperCase();
+            const daoWithEmoji = this.getDaoWithEmoji(dao.id);
             return {
               text: userSelectedDAOs.has(normalizedDao) ? `✅ ${daoWithEmoji}` : daoWithEmoji,
               callback_data: `dao_toggle_${normalizedDao}`
@@ -140,7 +140,7 @@ export class DAOService {
 
   private async updateSubscriptions(chatId: number, selectedDAOs: Set<string>) {
     const daos = await this.anticaptureClient.getDAOs();
-    const currentPreferences = await this.subscriptionApi.getUserPreferences(chatId, 'telegram', daos);
+    const currentPreferences = await this.subscriptionApi.getUserPreferences(chatId, 'telegram', daos.map(dao => dao.id));
     const currentPreferencesSet = new Set(currentPreferences);
     
     const toSubscribe = Array.from(selectedDAOs).filter(dao => !currentPreferencesSet.has(dao));

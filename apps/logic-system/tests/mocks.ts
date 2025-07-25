@@ -101,3 +101,48 @@ export const createMockProposalDataSource = (): jest.Mocked<ProposalDataSource> 
 export const createMockVotingPowerRepository = () => ({
   listVotingPowerHistory: jest.fn()
 });
+
+/**
+ * Sample proposal finished data for testing
+ */
+export const mockProposalFinishedData = [
+  {
+    id: 'prop1',
+    daoId: 'dao1',
+    title: 'Test proposal 1',
+    description: 'Test proposal 1 description',
+    startBlock: '100',
+    startTimestamp: 1625000000,
+    endBlock: '200',
+    endTimestamp: 1625097600,
+    status: 'executed',
+    forVotes: '1000',
+    againstVotes: '500',
+    abstainVotes: '100',
+    blockTime: 12,
+    timestamp: 1625000000
+  },
+  {
+    id: 'prop2',
+    daoId: 'dao1',
+    title: 'Test proposal 2',
+    description: 'Test proposal 2 description',
+    startBlock: '300',
+    startTimestamp: 1625100000,
+    endBlock: '400',
+    endTimestamp: 1625184000,
+    status: 'defeated',
+    forVotes: '500',
+    againstVotes: '1000',
+    abstainVotes: '200',
+    blockTime: 12,
+    timestamp: 1625100000
+  }
+];
+
+/**
+ * Creates a mocked ProposalFinishedRepository
+ */
+export const createMockProposalFinishedRepository = () => ({
+  getFinishedProposalsSince: jest.fn()
+});

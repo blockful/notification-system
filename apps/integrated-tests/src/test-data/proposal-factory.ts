@@ -60,4 +60,32 @@ export class ProposalFactory {
       this.createProposal(daoId, `${daoId.toLowerCase()}-${proposalId}`)
     );
   }
+
+  static createTimedProposal(daoId: string, proposalId: string, secondsFromNow: number, blockTime: number = 12): ProposalData {
+    const now = Math.floor(Date.now() / 1000);
+    const startTimestamp = now - 100; // Started 100 seconds ago
+    const startBlock = 1000;
+    
+    // Calculate end block based on timing
+    // If secondsFromNow is negative (finished), proposal ended abs(secondsFromNow) seconds ago
+    // If secondsFromNow is positive (future), proposal ends in secondsFromNow seconds
+    const endTimestamp = now + secondsFromNow;
+    const totalDurationFromStart = endTimestamp - startTimestamp;
+    const endBlock = startBlock + Math.ceil(totalDurationFromStart / blockTime);
+    
+    // Determine status and description based on timing
+    const isFinished = secondsFromNow < 0;
+    const status = isFinished ? 'executed' : 'active';
+    const description = isFinished 
+      ? '# Finished Proposal\\n\\nThis proposal has already finished.'
+      : '# Test Proposal Title\\n\\nThis is a test proposal that will finish soon.';
+    
+    return this.createProposal(daoId, proposalId, {
+      timestamp: startTimestamp.toString(),
+      startBlock: startBlock,
+      endBlock: endBlock,
+      status: status,
+      description: description
+    });
+  }
 }
