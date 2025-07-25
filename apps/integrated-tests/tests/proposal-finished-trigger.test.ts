@@ -123,10 +123,6 @@ describe('Proposal Finished Trigger - Integration Test', () => {
     await new Promise(resolve => setTimeout(resolve, TIMEOUTS.FINAL_CLEANUP));
   }, TIMEOUTS.CLEANUP);
 
-
-
-
-
   test('should send notification when proposal finishes', async () => {
     const proposal = createFinishedProposal(testDaoId, 'finishing-proposal-1');
     
