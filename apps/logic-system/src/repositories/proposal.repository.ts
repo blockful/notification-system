@@ -35,7 +35,14 @@ export class ProposalRepository implements ProposalDataSource {
     }
     if (options?.limit) {
       variables.limit = options.limit;
+    } else {
+      // Set a higher default limit to ensure we get all proposals
+      variables.limit = 1000;
     }
+    
+    // Add ordering to get newest proposals first
+    variables.orderBy = 'timestamp';
+    variables.orderDirection = 'desc';
     
     return await this.anticaptureClient.listProposals(variables);
   }
