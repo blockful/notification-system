@@ -1,5 +1,5 @@
 import { z } from 'zod';
-export declare const SafeDaosResponseSchema: z.ZodCatch<z.ZodEffects<z.ZodObject<{
+export declare const SafeDaosResponseSchema: z.ZodEffects<z.ZodObject<{
     daos: z.ZodNullable<z.ZodObject<{
         items: z.ZodArray<z.ZodObject<{
             id: z.ZodString;
@@ -41,8 +41,8 @@ export declare const SafeDaosResponseSchema: z.ZodCatch<z.ZodEffects<z.ZodObject
             id: string;
         }[];
     } | null;
-}>>;
-export declare const SafeProposalsResponseSchema: z.ZodCatch<z.ZodEffects<z.ZodObject<{
+}>;
+export declare const SafeProposalsResponseSchema: z.ZodEffects<z.ZodObject<{
     proposalsOnchains: z.ZodNullable<z.ZodObject<{
         items: z.ZodArray<z.ZodAny, "many">;
     }, "strip", z.ZodTypeAny, {
@@ -66,14 +66,14 @@ export declare const SafeProposalsResponseSchema: z.ZodCatch<z.ZodEffects<z.ZodO
     proposalsOnchains: {
         items: any[];
     } | null;
-}>>;
-export declare const SafeProposalByIdResponseSchema: z.ZodCatch<z.ZodObject<{
+}>;
+export declare const SafeProposalByIdResponseSchema: z.ZodObject<{
     proposalsOnchain: z.ZodNullable<z.ZodAny>;
 }, "strip", z.ZodTypeAny, {
     proposalsOnchain?: any;
 }, {
     proposalsOnchain?: any;
-}>>;
+}>;
 declare const VotingPowerHistoryItemSchema: z.ZodObject<{
     accountId: z.ZodString;
     timestamp: z.ZodString;
@@ -137,7 +137,7 @@ declare const VotingPowerHistoryItemSchema: z.ZodObject<{
     } | null | undefined;
     daoId?: string | null | undefined;
 }>;
-export declare const SafeVotingPowerHistoryResponseSchema: z.ZodCatch<z.ZodEffects<z.ZodObject<{
+export declare const SafeVotingPowerHistoryResponseSchema: z.ZodEffects<z.ZodObject<{
     votingPowerHistorys: z.ZodNullable<z.ZodObject<{
         items: z.ZodArray<z.ZodObject<{
             accountId: z.ZodString;
@@ -319,7 +319,7 @@ export declare const SafeVotingPowerHistoryResponseSchema: z.ZodCatch<z.ZodEffec
             daoId?: string | null | undefined;
         }[];
     } | null;
-}>>;
+}>;
 type SafeProposalsResponse = z.infer<typeof SafeProposalsResponseSchema>;
 type SafeVotingPowerHistoryResponse = z.infer<typeof SafeVotingPowerHistoryResponseSchema>;
 export type ProcessedVotingPowerHistory = z.infer<typeof VotingPowerHistoryItemSchema> & {

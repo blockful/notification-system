@@ -24,7 +24,7 @@ class AnticaptureClient {
         // Handle empty or undefined responses
         if (!response || !response.data) {
             console.warn('No data received from GraphQL endpoint, returning empty response');
-            return schema.parse(null);
+            return schema.parse({});
         }
         if (response.data.errors) {
             throw new Error(`GraphQL errors: ${JSON.stringify(response.data.errors)}`);
