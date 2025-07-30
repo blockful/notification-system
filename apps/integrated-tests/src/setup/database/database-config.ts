@@ -19,7 +19,7 @@ export const db = knex({
   useNullAsDefault: true,
   migrations: {
     directory: [
-      path.join(__dirname, '../../../subscription-server/db/migrations')
+      path.resolve(__dirname, '../../../../subscription-server/db/migrations')
     ]
   }
 });

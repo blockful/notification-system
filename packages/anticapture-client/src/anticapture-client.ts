@@ -8,8 +8,8 @@ import type {
   ListProposalsQuery,
   ListProposalsQueryVariables,
   ListVotingPowerHistorysQueryVariables
-} from './gql/graphql';
-import { GetDaOsDocument, GetProposalByIdDocument, ListProposalsDocument, ListVotingPowerHistorysDocument } from './gql/graphql';
+} from '../dist/gql/graphql';
+import { GetDaOsDocument, GetProposalByIdDocument, ListProposalsDocument, ListVotingPowerHistorysDocument } from '../dist/gql/graphql';
 import { SafeDaosResponseSchema, SafeProposalByIdResponseSchema, SafeProposalsResponseSchema, SafeVotingPowerHistoryResponseSchema, processProposals, processVotingPowerHistory, ProcessedVotingPowerHistory } from './schemas';
 
 type ProposalItems = ListProposalsQuery['proposalsOnchains']['items'];
@@ -42,6 +42,12 @@ export class AnticaptureClient {
       query: print(document),
       variables,
     }, { headers });
+
+    // Handle empty or undefined responses
+    if (!response || !response.data) {
+      console.warn('No data received from GraphQL endpoint, returning empty response');
+      return schema.parse({});
+    }
 
     if (response.data.errors) {
       throw new Error(`GraphQL errors: ${JSON.stringify(response.data.errors)}`);
