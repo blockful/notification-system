@@ -41,7 +41,7 @@ export function graphql(source: string): unknown;
 /**
  * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
  */
-export function graphql(source: "query GetDAOs {\n  daos {\n    items {\n      id\n    }\n  }\n}"): (typeof documents)["query GetDAOs {\n  daos {\n    items {\n      id\n    }\n  }\n}"];
+export function graphql(source: "query GetDAOs {\n  daos {\n    items {\n      id\n      votingDelay\n    }\n  }\n}"): (typeof documents)["query GetDAOs {\n  daos {\n    items {\n      id\n      votingDelay\n    }\n  }\n}"];
 /**
  * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
  */

@@ -55,7 +55,9 @@ describe('Voting Power Trigger - Integration Test', () => {
     GraphQLMockSetup.setupMock(
       httpMockSetup.getMockClient(),
       [], // No proposals needed
-      votingPowerEvents
+      votingPowerEvents,
+      12, // blockTime
+      testDaoId // testDaoId
     );
 
     // Wait for the voting power notification to be sent

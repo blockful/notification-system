@@ -9,9 +9,13 @@ export declare class AnticaptureClient {
     private query;
     /**
      * Fetches all DAOs from the anticapture GraphQL API with full type safety
-     * @returns Array of DAO IDs
+     * @returns Array of DAO objects with blockTime added
      */
-    getDAOs(): Promise<string[]>;
+    getDAOs(): Promise<Array<{
+        id: string;
+        blockTime: number;
+        votingDelay: string;
+    }>>;
     /**
      * Fetches a single proposal by ID with full type safety
      */

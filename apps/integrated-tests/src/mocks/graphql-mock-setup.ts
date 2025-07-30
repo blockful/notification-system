@@ -97,5 +97,5 @@ export class GraphQLMockSetup {
   static resetMock(mockHttpClient: any): void {
     mockHttpClient.post.mockReset();
   }
-}
 
+}

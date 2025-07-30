@@ -7,7 +7,10 @@ const zod_1 = require("zod");
 // Schema with built-in transformation and fallbacks
 exports.SafeDaosResponseSchema = zod_1.z.object({
     daos: zod_1.z.object({
-        items: zod_1.z.array(zod_1.z.object({ id: zod_1.z.string() }))
+        items: zod_1.z.array(zod_1.z.object({
+            id: zod_1.z.string(),
+            votingDelay: zod_1.z.string().optional()
+        }))
     }).nullable()
 }).transform((data, ctx) => {
     if (!data.daos || !data.daos.items) {

@@ -20,3 +20,13 @@ export interface INotificationClient {
    */
   sendNotification(payload: NotificationPayload): Promise<void>;
 } 
+
+/**
+ * Data structure for proposal finished notifications
+ */
+export interface ProposalFinishedNotification {
+  id: string;
+  daoId: string;
+  description: string;
+  endTimestamp: number;
+}
