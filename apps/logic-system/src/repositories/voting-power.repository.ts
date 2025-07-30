@@ -13,7 +13,7 @@ export class VotingPowerRepository {
       // Always order by timestamp ascending for chronological processing
       orderBy: 'timestamp',
       orderDirection: 'asc',
-      limit: 1000,
+      limit: 200,
       where: {
         timestamp_gt: timestampGt
       }
