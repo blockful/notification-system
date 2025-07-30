@@ -1,5 +1,5 @@
 import { AxiosInstance } from 'axios';
-import type { GetProposalByIdQuery, ListProposalsQuery, ListProposalsQueryVariables, ListVotingPowerHistorysQueryVariables } from './gql/graphql';
+import type { GetProposalByIdQuery, ListProposalsQuery, ListProposalsQueryVariables, ListVotingPowerHistorysQueryVariables } from '../dist/gql/graphql';
 import { ProcessedVotingPowerHistory } from './schemas';
 type ProposalItems = ListProposalsQuery['proposalsOnchains']['items'];
 type VotingPowerHistoryItems = ProcessedVotingPowerHistory[];

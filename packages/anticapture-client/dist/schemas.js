@@ -12,35 +12,26 @@ exports.SafeDaosResponseSchema = zod_1.z.object({
             votingDelay: zod_1.z.string().optional()
         }))
     }).nullable()
-}).transform((data, ctx) => {
+}).transform((data) => {
     if (!data.daos || !data.daos.items) {
         console.warn('DaosResponse has null daos or items:', data);
         return { daos: { items: [] } };
     }
     return { daos: { items: data.daos.items } };
-}).catch(() => {
-    console.warn('DaosResponse validation failed completely');
-    return { daos: { items: [] } };
 });
 exports.SafeProposalsResponseSchema = zod_1.z.object({
     proposalsOnchains: zod_1.z.object({
         items: zod_1.z.array(zod_1.z.any())
     }).nullable()
-}).transform((data, ctx) => {
+}).transform((data) => {
     if (!data.proposalsOnchains || !data.proposalsOnchains.items) {
         console.warn('ProposalsResponse has null proposalsOnchains or items:', data);
         return { proposalsOnchains: { items: [] } };
     }
     return { proposalsOnchains: { items: data.proposalsOnchains.items } };
-}).catch(() => {
-    console.warn('ProposalsResponse validation failed completely');
-    return { proposalsOnchains: { items: [] } };
 });
 exports.SafeProposalByIdResponseSchema = zod_1.z.object({
     proposalsOnchain: zod_1.z.any().nullable()
-}).catch(() => {
-    console.warn('ProposalByIdResponse validation failed completely');
-    return { proposalsOnchain: null };
 });
 // Define schema for voting power history item (based on actual API response)
 // Handle real-world scenarios where API might return null values or missing fields
@@ -70,9 +61,6 @@ exports.SafeVotingPowerHistoryResponseSchema = zod_1.z.object({
     return {
         votingPowerHistorys: data.votingPowerHistorys || { items: [] }
     };
-}).catch(() => {
-    console.warn('VotingPowerHistoryResponse validation failed, returning empty data');
-    return { votingPowerHistorys: { items: [] } };
 });
 // Internal helper function to process validated proposals
 function processProposals(validated, daoId) {

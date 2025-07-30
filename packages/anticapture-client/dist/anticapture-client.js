@@ -2,7 +2,7 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.AnticaptureClient = void 0;
 const graphql_1 = require("graphql");
-const graphql_2 = require("./gql/graphql");
+const graphql_2 = require("../dist/gql/graphql");
 const schemas_1 = require("./schemas");
 class AnticaptureClient {
     constructor(httpClient) {
@@ -21,6 +21,11 @@ class AnticaptureClient {
             query: (0, graphql_1.print)(document),
             variables,
         }, { headers });
+        // Handle empty or undefined responses
+        if (!response || !response.data) {
+            console.warn('No data received from GraphQL endpoint, returning empty response');
+            return schema.parse({});
+        }
         if (response.data.errors) {
             throw new Error(`GraphQL errors: ${JSON.stringify(response.data.errors)}`);
         }
