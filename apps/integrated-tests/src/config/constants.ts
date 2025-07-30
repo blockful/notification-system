@@ -14,6 +14,7 @@ export const testConstants = {
   defaults: {
     channelUserId: '123456789',
     channel: 'telegram' as const,
+    blockTime: 12,
   },
   
   // Test user profiles, combining chatId and a primary address
@@ -54,5 +55,21 @@ export const testConstants = {
   votingPower: {
     default: '1000',
     small: '100',
+  },
+  
+  // Proposal timing constants
+  proposalTiming: {
+    creationOffset: -60000, // 1 minute ago
+    subscriptionOffset: -120000, // 2 minutes ago
+    defaultStartBlock: 1000,
+    proposalRunDuration: 50, // seconds
+    finishOffset: -10, // seconds ago
+    futureProposalBlocks: 90, // blocks for future proposals
+  },
+  
+  // Fixed test dates for temporal tests
+  testDates: {
+    baseTime: '2024-01-01T12:00:00Z',
+    proposalCreatedAt: '2024-01-01T10:00:00Z',
   },
 };

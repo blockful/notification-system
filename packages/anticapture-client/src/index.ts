@@ -11,6 +11,6 @@ export type {
   VotingPowerHistoryFilter,
   ListVotingPowerHistorysQuery,
   ListVotingPowerHistorysQueryVariables
-} from './gql/graphql';
+} from '../dist/gql/graphql';
 
 export type { ProcessedVotingPowerHistory } from './schemas';

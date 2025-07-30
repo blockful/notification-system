@@ -2,7 +2,7 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.AnticaptureClient = void 0;
 const graphql_1 = require("graphql");
-const graphql_2 = require("./gql/graphql");
+const graphql_2 = require("../dist/gql/graphql");
 const schemas_1 = require("./schemas");
 class AnticaptureClient {
     constructor(httpClient) {

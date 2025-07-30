@@ -1,242 +1,259 @@
-import { describe, test, expect, beforeAll, afterAll, beforeEach, jest } from '@jest/globals';
-import * as fs from 'fs';
-import { setupTelegramMock } from '../src/mocks/telegram-mock-setup';
-const mockSendMessage = setupTelegramMock();
-import { db, closeDatabase } from '../src/setup/database-config';
-import { setupDatabase } from '../src/setup/database';
-import { startTestApps, stopTestApps, TestApps } from '../src/setup/apps';
-import { HttpClientMockSetup } from '../src/mocks/http-client-mock';
-import { GraphQLMockSetup } from '../src/mocks/graphql-mock-setup';
-import { UserFactory } from '../src/test-data/user-factory';
-import { ProposalFactory } from '../src/test-data/proposal-factory';
-
-// Test constants
-const TIMEOUTS = {
-  SETUP: 120000,
-  CLEANUP: 40000,
-  PROCESSING_WAIT: 6000,
-  PROPOSAL_FINISH_WAIT: 8000,
-  FINAL_CLEANUP: 1000
-} as const;
-
-const TEST_CONFIG = {
-  BLOCK_TIME: 12,
-  PROPOSAL_OFFSET_SECONDS: -40,
-  USER_SETUP_OFFSET_MS: -100000,
-  SUBSCRIPTION_OFFSET_SECONDS: -300
-} as const;
-
-const TEST_IDENTIFIERS = {
-  PRIMARY_DAO: 'test-dao-proposal-finished',
-  SECONDARY_DAO: 'second-finished-dao',
-  TEMPORAL_DAO: 'temporal-finished-dao',
-  USER_WITH_SUB: 'user-with-subscription.eth',
-  USER_WITHOUT_SUB: 'user-without-subscription.eth',
-  SECONDARY_USER: 'second-dao-user.eth',
-  TEMPORAL_USER: 'temporal-finished-user.eth',
-  TELEGRAM_USER_1: '888888888',
-  TELEGRAM_USER_2: '999999999'
-} as const;
+import { describe, test, expect, beforeEach, jest } from '@jest/globals';
+import { db, TestApps } from '../src/setup';
+import { HttpClientMockSetup, GraphQLMockSetup } from '../src/mocks';
+import { UserFactory, ProposalFactory } from '../src/fixtures';
+import { TelegramTestHelper, DatabaseTestHelper, TestCleanup } from '../src/helpers';
+import { testConstants, timeouts } from '../src/config';
 
 describe('Proposal Finished Trigger - Integration Test', () => {
   let apps: TestApps;
   let httpMockSetup: HttpClientMockSetup;
-  let testDaoId: string;
-  let testUserWithSubscription: string;
-  let testUserWithoutSubscription: string;
-  let secondDaoId: string;
-  let secondUserAddress: string;
+  let telegramHelper: TelegramTestHelper;
+  let dbHelper: DatabaseTestHelper;
 
-  // Helper functions
-  const waitForProcessing = () => new Promise(resolve => 
-    setTimeout(resolve, TIMEOUTS.PROCESSING_WAIT));
-
-  const waitForProposalFinish = () => new Promise(resolve => 
-    setTimeout(resolve, TIMEOUTS.PROPOSAL_FINISH_WAIT));
-
-  const getNotificationCount = () => mockSendMessage.mock.calls.length;
-
-  const getProposalNotifications = () => 
-    mockSendMessage.mock.calls.filter(call => 
-      call[1].includes('has ended'));
-
-  const getNotificationsForUser = (userId: string) =>
-    mockSendMessage.mock.calls.filter(call => 
-      call[0].toString() === userId);
-
-  const resetMocks = () => {
-    jest.clearAllMocks();
-    httpMockSetup.reset();
-  };
-
-  const createFinishedProposal = (daoId: string, proposalId: string) =>
-    ProposalFactory.createTimedProposal(daoId, proposalId, TEST_CONFIG.PROPOSAL_OFFSET_SECONDS, TEST_CONFIG.BLOCK_TIME);
-
-  beforeAll(async () => {
-    // Clean up any existing test databases
-    const files = fs.readdirSync('/tmp').filter(f => f.startsWith('test_integration_'));
-    files.forEach(file => {
-      fs.unlinkSync(`/tmp/${file}`);
-    });
-
-    // Initialize test data variables
-    testDaoId = TEST_IDENTIFIERS.PRIMARY_DAO;
-    testUserWithSubscription = TEST_IDENTIFIERS.USER_WITH_SUB;
-    testUserWithoutSubscription = TEST_IDENTIFIERS.USER_WITHOUT_SUB;
-    secondDaoId = TEST_IDENTIFIERS.SECONDARY_DAO;
-    secondUserAddress = TEST_IDENTIFIERS.SECONDARY_USER;
-
-    await setupDatabase();
+  // Helper function
+  const createFinishedProposal = (daoId: string, proposalId: string, baseTime?: Date) => {
+    // Use baseTime or create a proposal that finished 10 seconds ago
+    const base = baseTime || new Date();
+    const proposalCreationTime = new Date(base.getTime() + testConstants.proposalTiming.creationOffset);
     
-    // Create users with subscription setup
-    const pastTimestamp = new Date(Date.now() + TEST_CONFIG.USER_SETUP_OFFSET_MS).toISOString();
-    const userSetup = await UserFactory.createUserWithFullSetup(testUserWithSubscription, 'proposal-finished-user', testDaoId, true, pastTimestamp);
-    await UserFactory.createUserAddress(userSetup.user.id, testUserWithSubscription, pastTimestamp);
-    await UserFactory.createUser(testUserWithoutSubscription, 'proposal-finished-user-2');
+    // For a 12-second block time:
+    // Proposal created at block 1000, voting starts immediately (no delay)
+    // Needs to run for 50 seconds to finish 10 seconds ago
+    const startBlock = testConstants.proposalTiming.defaultStartBlock;
+    const blocksToRun = Math.floor(testConstants.proposalTiming.proposalRunDuration / testConstants.defaults.blockTime);
+    const endBlock = startBlock + blocksToRun;
     
-    // Create second DAO user setup
-    const secondUser = await UserFactory.createUserWithFullSetup(
-      TEST_IDENTIFIERS.TELEGRAM_USER_1,
-      'second-dao-user',
-      secondDaoId,
-      true,
-      pastTimestamp
-    );
-    await UserFactory.createUserAddress(secondUser.user.id, secondUserAddress, pastTimestamp);
-    
-    // Setup mocks
-    httpMockSetup = new HttpClientMockSetup();
-
-    // Start all applications
-    apps = await startTestApps(db, httpMockSetup.getMockClient());
-  }, TIMEOUTS.SETUP);
-
-  beforeEach(async () => {
-    resetMocks();
-  });
-
-  afterAll(async () => {
-    if (apps) {
-      await stopTestApps(apps);
-    }
-    closeDatabase();
-    await new Promise(resolve => setTimeout(resolve, TIMEOUTS.FINAL_CLEANUP));
-  }, TIMEOUTS.CLEANUP);
-
-  test('should send notification when proposal finishes', async () => {
-    const proposal = createFinishedProposal(testDaoId, 'finishing-proposal-1');
-    
-    GraphQLMockSetup.setupProposalMock(httpMockSetup.getMockClient(), [proposal], TEST_CONFIG.BLOCK_TIME, testDaoId, false);
-
-    await waitForProposalFinish();
-
-    expect(mockSendMessage).toHaveBeenCalled();
-    
-    const proposalNotifications = getProposalNotifications();
-    expect(proposalNotifications.length).toBeGreaterThan(0);
-  });
-
-  test('should NOT send notification for proposals that have not finished yet', async () => {
-    resetMocks();
-    
-    const now = Math.floor(Date.now() / 1000);
-    const startTimestamp = now - 10;
-    const startBlock = 1000;
-    const endBlock = 1010; // Will finish in ~110 seconds
-    
-    const futureProposal = ProposalFactory.createProposal(testDaoId, 'future-proposal-1', {
-      timestamp: startTimestamp.toString(),
+    return ProposalFactory.createProposal(daoId, proposalId, {
+      timestamp: Math.floor(proposalCreationTime.getTime() / 1000).toString(),
       startBlock: startBlock,
       endBlock: endBlock,
       status: 'active',
-      description: '# Future Proposal\\n\\nThis proposal will not finish during the test.'
+      description: `# Finished Proposal\n\nThis proposal has ended.`
+    });
+  };
+
+  beforeAll(async () => {
+    apps = TestCleanup.getGlobalApps();
+    httpMockSetup = TestCleanup.getGlobalHttpMockSetup();
+    telegramHelper = new TelegramTestHelper(global.mockSendMessage);
+    dbHelper = new DatabaseTestHelper(db);
+  });
+
+  beforeEach(async () => {
+    await TestCleanup.cleanupBetweenTests();
+  });
+
+
+  test('should send notification when proposal finishes', async () => {
+    const testDaoId = testConstants.daoIds.temporalTest1;
+    const testUser = testConstants.profiles.p9;
+    
+    // Create user with subscription before proposal
+    const subscriptionTime = new Date(Date.now() + testConstants.proposalTiming.subscriptionOffset);
+    await UserFactory.createUserWithFullSetup(
+      testUser.chatId,
+      testUser.chatId,
+      testDaoId,
+      true,
+      subscriptionTime.toISOString()
+    );
+    
+    // Create a proposal that has already finished
+    const proposal = createFinishedProposal(testDaoId, 'finishing-proposal-1');
+    
+    // Setup mock to return the finished proposal
+    GraphQLMockSetup.setupMock(httpMockSetup.getMockClient(), [proposal], []);
+
+    // Wait for the notification to be sent
+    const message = await telegramHelper.waitForMessage(
+      msg => msg.text.includes('Finished Proposal') && 
+             msg.text.includes('has ended') &&
+             msg.text.includes(testDaoId),
+      { timeout: timeouts.notification.delivery }
+    );
+
+    // Verify message content
+    expect(message.chatId).toBe(testUser.chatId);
+    expect(message.text).toContain('Finished Proposal');
+    
+    // Verify database record
+    await dbHelper.waitForRecordCount(testConstants.tables.notifications, 1);
+  });
+
+  test('should NOT send notification for proposals that have not finished yet', async () => {
+    const testDaoId = testConstants.daoIds.temporalTest1;
+    const testUser = testConstants.profiles.p8;
+    
+    // Create user with subscription
+    await UserFactory.createUserWithFullSetup(
+      testUser.chatId,
+      testUser.chatId,
+      testDaoId,
+      true
+    );
+    
+    // Create a proposal that will finish in the future
+    const now = Math.floor(Date.now() / 1000);
+    const futureProposal = ProposalFactory.createProposal(testDaoId, 'future-proposal-1', {
+      timestamp: (now - 10).toString(), // Created 10 seconds ago
+      startBlock: testConstants.proposalTiming.defaultStartBlock,
+      endBlock: testConstants.proposalTiming.defaultStartBlock + testConstants.proposalTiming.futureProposalBlocks, // Will finish in ~1080 seconds
+      status: 'active',
+      description: '# Future Proposal\n\nThis proposal will not finish during the test.'
     });
 
-    const initialCallCount = getNotificationCount();
+    // Setup mock
+    GraphQLMockSetup.setupMock(httpMockSetup.getMockClient(), [futureProposal], []);
 
-    GraphQLMockSetup.setupProposalMock(httpMockSetup.getMockClient(), [futureProposal], TEST_CONFIG.BLOCK_TIME, testDaoId, false);
-
-    await waitForProcessing();
-
-    const finalCallCount = getNotificationCount();
+    // Ensure no messages are sent
+    await telegramHelper.waitForNoMessages(timeouts.notification.processing);
     
-    expect(finalCallCount).toBe(initialCallCount);
+    // Verify no notifications in database
+    const notificationCount = await db(testConstants.tables.notifications).count('* as count');
+    expect(notificationCount[0].count).toBe(0);
   });
 
   test('should process multiple finished proposals', async () => {
-    resetMocks();
+    const testDaoId = testConstants.daoIds.temporalTest1;
+    const testUser = testConstants.profiles.p4;
     
+    // Create user with subscription
+    const subscriptionTime = new Date(Date.now() + testConstants.proposalTiming.subscriptionOffset);
+    await UserFactory.createUserWithFullSetup(
+      testUser.chatId,
+      testUser.chatId,
+      testDaoId,
+      true,
+      subscriptionTime.toISOString()
+    );
+    
+    // Create multiple finished proposals
     const proposals = [
       createFinishedProposal(testDaoId, 'finished-1'),
       createFinishedProposal(testDaoId, 'finished-2'),
       createFinishedProposal(testDaoId, 'finished-3')
     ];
 
-    const initialCallCount = getNotificationCount();
+    // Setup mock
+    GraphQLMockSetup.setupMock(httpMockSetup.getMockClient(), proposals, []);
 
-    GraphQLMockSetup.setupProposalMock(httpMockSetup.getMockClient(), proposals, TEST_CONFIG.BLOCK_TIME, testDaoId, false);
-
-    await waitForProcessing();
-
-    const finalCallCount = getNotificationCount();
-    const newNotifications = finalCallCount - initialCallCount;
+    // Wait for all 3 messages
+    await telegramHelper.waitForMessageCount(3, { 
+      timeout: timeouts.notification.delivery,
+      fromUser: testUser.chatId 
+    });
     
-    expect(newNotifications).toBe(3);
+    // Verify messages content
+    const allMessages = telegramHelper.getAllMessages();
+    const userMessages = allMessages.filter(msg => msg.chatId === testUser.chatId);
     
-    const recentCalls = mockSendMessage.mock.calls.slice(-3);
-    expect(recentCalls[0][1]).toContain('Finished Proposal');
-    expect(recentCalls[0][1]).toContain('has ended');
+    expect(userMessages).toHaveLength(3);
+    expect(userMessages[0].text).toContain('Finished Proposal');
+    expect(userMessages[1].text).toContain('Finished Proposal');
+    expect(userMessages[2].text).toContain('Finished Proposal');
+    
+    // Verify all messages are about finished proposals
+    expect(userMessages.every(msg => msg.text.includes('Finished Proposal'))).toBe(true);
+    expect(userMessages.every(msg => msg.text.includes('has ended'))).toBe(true);
+    
+    // Verify database records
+    await dbHelper.waitForRecordCount(testConstants.tables.notifications, 3);
   });
 
   test('should NOT notify about proposals that finished before user subscription', async () => {
-    const subscriptionTime = new Date();
-    const user = await UserFactory.createUserWithFullSetup(
-      TEST_IDENTIFIERS.TELEGRAM_USER_2,
-      'temporal-user',
-      TEST_IDENTIFIERS.TEMPORAL_DAO,
+    const testDaoId = testConstants.daoIds.temporalTest1;
+    const testUser = testConstants.profiles.p2;
+    
+    // Define clear timeline
+    const baseTime = new Date(testConstants.testDates.baseTime);
+    const proposalCreatedAt = new Date(testConstants.testDates.proposalCreatedAt); // 2 hours before
+    const userSubscribedAt = baseTime; // Now
+    
+    // Create user with subscription at specific time
+    await UserFactory.createUserWithFullSetup(
+      testUser.chatId,
+      testUser.chatId,
+      testDaoId,
+      true,
+      userSubscribedAt.toISOString()
+    );
+    
+    // Create proposal that was created and finished before user subscription
+    const oldProposal = ProposalFactory.createProposal(testDaoId, 'old-finished-proposal', {
+      timestamp: Math.floor(proposalCreatedAt.getTime() / 1000).toString(),
+      startBlock: testConstants.proposalTiming.defaultStartBlock,
+      endBlock: testConstants.proposalTiming.defaultStartBlock + 1, // Finished quickly (1 block = 12 seconds)
+      status: 'executed',
+      description: '# Old Proposal\n\nThis finished before user subscribed.'
+    });
+
+    // Setup mock
+    GraphQLMockSetup.setupMock(httpMockSetup.getMockClient(), [oldProposal], []);
+
+    // Ensure no messages are sent
+    await telegramHelper.waitForNoMessages(timeouts.notification.processing);
+    
+    // Verify no notifications in database
+    const notificationCount = await db(testConstants.tables.notifications).count('* as count');
+    expect(notificationCount[0].count).toBe(0);
+  });
+
+  test('should handle proposals from multiple DAOs', async () => {
+    const dao1Id = testConstants.daoIds.temporalTest1;
+    const dao2Id = testConstants.daoIds.temporalTest2;
+    const testUser = testConstants.profiles.p5;
+    
+    // Create user with subscriptions to both DAOs
+    const subscriptionTime = new Date(Date.now() + testConstants.proposalTiming.subscriptionOffset);
+    const userSetup = await UserFactory.createUserWithFullSetup(
+      testUser.chatId,
+      testUser.chatId,
+      dao1Id,
       true,
       subscriptionTime.toISOString()
     );
     
-    const pastTimestamp = Math.floor(subscriptionTime.getTime() / 1000) + TEST_CONFIG.SUBSCRIPTION_OFFSET_SECONDS;
-    const proposal = ProposalFactory.createProposal(TEST_IDENTIFIERS.TEMPORAL_DAO, 'old-finished-proposal', {
-      timestamp: pastTimestamp.toString(),
-      startBlock: 1000,
-      endBlock: 1010,
-      status: 'executed',
-      description: '# Old Proposal\\n\\nThis finished before user subscribed.'
+    // Add second DAO subscription
+    await UserFactory.createUserPreference(
+      userSetup.user.id, 
+      dao2Id, 
+      true, 
+      subscriptionTime.toISOString()
+    );
+    
+    // Create finished proposals for each DAO
+    const dao1Proposal = createFinishedProposal(dao1Id, 'dao1-finished');
+    const dao2Proposal = createFinishedProposal(dao2Id, 'dao2-finished');
+
+    // Setup mock
+    GraphQLMockSetup.setupMock(httpMockSetup.getMockClient(), [dao1Proposal, dao2Proposal], []);
+
+    // Wait for 2 messages (one for each DAO)
+    await telegramHelper.waitForMessageCount(2, { 
+      timeout: timeouts.notification.delivery,
+      fromUser: testUser.chatId
     });
-
-    const initialCallCount = getNotificationCount();
-
-    GraphQLMockSetup.setupProposalMock(httpMockSetup.getMockClient(), [proposal], TEST_CONFIG.BLOCK_TIME, testDaoId, false);
-
-    await waitForProcessing();
-
-    const finalCallCount = getNotificationCount();
     
-    expect(finalCallCount).toBe(initialCallCount);
-  });
-
-  test('should handle proposals from multiple DAOs', async () => {
-    const dao1Proposal = createFinishedProposal(testDaoId, 'dao1-finished');
-    const dao2Proposal = createFinishedProposal(secondDaoId, 'dao2-finished');
-
-    const initialCallCount = getNotificationCount();
-
-    GraphQLMockSetup.setupProposalMock(httpMockSetup.getMockClient(), [dao1Proposal, dao2Proposal], TEST_CONFIG.BLOCK_TIME, testDaoId, false);
-
-    await waitForProcessing();
-
-    const finalCallCount = getNotificationCount();
-    const newNotifications = finalCallCount - initialCallCount;
+    // Verify messages content
+    const allMessages = telegramHelper.getAllMessages();
+    const userMessages = allMessages.filter(msg => msg.chatId === testUser.chatId);
     
-    expect(newNotifications).toBe(2);
+    expect(userMessages).toHaveLength(2);
     
-    const userNotifications = getNotificationsForUser(testUserWithSubscription);
-    const secondUserNotifications = getNotificationsForUser(TEST_IDENTIFIERS.TELEGRAM_USER_1);
+    // Verify each DAO's proposal is mentioned
+    const dao1Message = userMessages.find(msg => msg.text.includes(dao1Id));
+    const dao2Message = userMessages.find(msg => msg.text.includes(dao2Id));
     
-    expect(userNotifications.length).toBeGreaterThan(0);
-    expect(secondUserNotifications.length).toBeGreaterThan(0);
+    expect(dao1Message).toBeDefined();
+    expect(dao1Message?.text).toContain('Finished Proposal');
+    expect(dao1Message?.text).toContain('has ended');
+    
+    expect(dao2Message).toBeDefined();
+    expect(dao2Message?.text).toContain('Finished Proposal');
+    expect(dao2Message?.text).toContain('has ended');
+    
+    // Verify database records
+    await dbHelper.waitForRecordCount(testConstants.tables.notifications, 2);
   });
 });

@@ -155,6 +155,14 @@ export class TelegramTestHelper {
   }
 
   /**
+   * @notice Gets the total number of messages sent
+   * @return Total count of messages sent via the mock
+   */
+  getCallCount(): number {
+    return this.mockSendMessage.mock.calls.length;
+  }
+
+  /**
    * @notice Filters mock calls based on user and text content
    * @param calls Array of mock call data
    * @param options Filtering criteria
