@@ -1,6 +1,5 @@
 import { describe, it, expect, jest, beforeEach } from '@jest/globals';
 import { AnticaptureClient } from '../src/anticapture-client';
-import { TEST_RETRY_OPTIONS } from '../src/retry-config';
 import axios from 'axios';
 
 describe('AnticaptureClient - Zod Validation', () => {
@@ -9,7 +8,7 @@ describe('AnticaptureClient - Zod Validation', () => {
 
   beforeEach(() => {
     const mockAxios = axios.create();
-    client = new AnticaptureClient(mockAxios, TEST_RETRY_OPTIONS);
+    client = new AnticaptureClient(mockAxios);
     
     mockQuery = jest.fn();
     (client as any).query = mockQuery;

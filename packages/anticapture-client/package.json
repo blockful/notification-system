@@ -11,7 +11,7 @@
     "build": "tsc",
     "dev": "tsc --watch",
     "codegen": "dotenv -e .env -- graphql-codegen",
-    "test": "NODE_ENV=test jest"
+    "test": "jest"
   },
   "keywords": [
     "graphql",

@@ -6,7 +6,7 @@ type VotingPowerHistoryItems = ProcessedVotingPowerHistory[];
 export declare class AnticaptureClient {
     private readonly httpClient;
     private readonly retryOptions;
-    constructor(httpClient: AxiosInstance, retryOptions?: any);
+    constructor(httpClient: AxiosInstance);
     private query;
     private buildHeaders;
     /**

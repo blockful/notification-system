@@ -11,16 +11,6 @@ export const RETRY_OPTIONS: Options = {
   }
 };
 
-// Test configuration with no retries to speed up tests
-export const TEST_RETRY_OPTIONS = {
-  retries: 0,
-  minTimeout: 0,
-  maxTimeout: 0,
-  randomize: false,
-  onFailedAttempt: () => {
-    // Silent in tests
-  }
-};
 
 const RETRYABLE_NETWORK_CODES = new Set([
   'ECONNRESET', 'ETIMEDOUT', 'ECONNREFUSED', 'ENOTFOUND', 'ENETUNREACH'

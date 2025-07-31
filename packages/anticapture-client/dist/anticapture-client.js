@@ -5,15 +5,14 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.AnticaptureClient = void 0;
 const graphql_1 = require("graphql");
+const p_retry_1 = __importDefault(require("p-retry"));
+const retry_config_1 = require("./retry-config");
 const graphql_2 = require("../dist/gql/graphql");
 const schemas_1 = require("./schemas");
 class AnticaptureClient {
-    constructor(httpClient, retryOptions) {
+    constructor(httpClient) {
         this.httpClient = httpClient;
-        const isTest = process.env.NODE_ENV === 'test';
-        this.retryOptions = retryOptions ?? (isTest ? retry_config_1.TEST_RETRY_OPTIONS : retry_config_1.RETRY_OPTIONS);
-        // Debug log to verify configuration
-        console.log(`AnticaptureClient initialized: NODE_ENV=${process.env.NODE_ENV}, isTest=${isTest}, retries=${this.retryOptions.retries}`);
+        this.retryOptions = retry_config_1.RETRY_OPTIONS;
     }
     async query(document, schema, variables, daoId) {
         const startTime = Date.now();
@@ -54,19 +53,7 @@ class AnticaptureClient {
         if (daoId) {
             headers["anticapture-dao-id"] = daoId;
         }
-        const response = await this.httpClient.post('', {
-            query: (0, graphql_1.print)(document),
-            variables,
-        }, { headers });
-        // Handle empty or undefined responses
-        if (!response || !response.data) {
-            console.warn('No data received from GraphQL endpoint, returning empty response');
-            return schema.parse({});
-        }
-        if (response.data.errors) {
-            throw new Error(`GraphQL errors: ${JSON.stringify(response.data.errors)}`);
-        }
-        return schema.parse(response.data.data);
+        return headers;
     }
     /**
      * Fetches all DAOs from the anticapture GraphQL API with full type safety

@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.TEST_RETRY_OPTIONS = exports.RETRY_OPTIONS = void 0;
+exports.RETRY_OPTIONS = void 0;
 exports.isRetryableError = isRetryableError;
 exports.RETRY_OPTIONS = {
     retries: 3,
@@ -10,16 +10,6 @@ exports.RETRY_OPTIONS = {
     randomize: true,
     onFailedAttempt: (error) => {
         console.log(`AnticaptureClient retry attempt ${error.attemptNumber} failed. ${error.retriesLeft} retries left. Error: ${error.name}`);
-    }
-};
-// Test configuration with no retries to speed up tests
-exports.TEST_RETRY_OPTIONS = {
-    retries: 0,
-    minTimeout: 0,
-    maxTimeout: 0,
-    randomize: false,
-    onFailedAttempt: () => {
-        // Silent in tests
     }
 };
 const RETRYABLE_NETWORK_CODES = new Set([

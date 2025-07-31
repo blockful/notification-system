@@ -3,7 +3,7 @@ import { print } from 'graphql';
 import type { TypedDocumentNode } from '@graphql-typed-document-node/core';
 import { z } from 'zod';
 import pRetry from 'p-retry';
-import { RETRY_OPTIONS, TEST_RETRY_OPTIONS, isRetryableError } from './retry-config';
+import { RETRY_OPTIONS, isRetryableError } from './retry-config';
 import type {
   GetProposalByIdQuery,
   GetProposalByIdQueryVariables,
@@ -21,13 +21,9 @@ export class AnticaptureClient {
   private readonly httpClient: AxiosInstance;
   private readonly retryOptions: any; // p-retry v4 doesn't export Options type
 
-  constructor(httpClient: AxiosInstance, retryOptions?: any) {
+  constructor(httpClient: AxiosInstance) {
     this.httpClient = httpClient;
-    const isTest = process.env.NODE_ENV === 'test';
-    this.retryOptions = retryOptions ?? (isTest ? TEST_RETRY_OPTIONS : RETRY_OPTIONS);
-    
-    // Debug log to verify configuration
-    console.log(`AnticaptureClient initialized: NODE_ENV=${process.env.NODE_ENV}, isTest=${isTest}, retries=${this.retryOptions.retries}`);
+    this.retryOptions = RETRY_OPTIONS;
   }
 
   private async query<TResult, TVariables, TSchema extends z.ZodSchema<any>>(
