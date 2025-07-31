@@ -7,7 +7,11 @@ exports.AnticaptureClient = void 0;
 const graphql_1 = require("graphql");
 const p_retry_1 = __importDefault(require("p-retry"));
 const retry_config_1 = require("./retry-config");
+<<<<<<< HEAD
 const graphql_2 = require("../dist/gql/graphql");
+=======
+const graphql_2 = require("./gql/graphql");
+>>>>>>> 0d730af457102dc90d8e9f2a3e60de2e99d05b13
 const schemas_1 = require("./schemas");
 class AnticaptureClient {
     constructor(httpClient) {
@@ -15,6 +19,7 @@ class AnticaptureClient {
         this.retryOptions = retry_config_1.RETRY_OPTIONS;
     }
     async query(document, schema, variables, daoId) {
+<<<<<<< HEAD
         const startTime = Date.now();
         console.log(`🔄 AnticaptureClient query starting (retries: ${this.retryOptions.retries})`);
         try {
@@ -44,6 +49,22 @@ class AnticaptureClient {
             console.log(`💥 AnticaptureClient query failed after ${duration}ms: ${error}`);
             throw error;
         }
+=======
+        return (0, p_retry_1.default)(async () => {
+            const headers = this.buildHeaders(daoId);
+            const response = await this.httpClient.post('', {
+                query: (0, graphql_1.print)(document),
+                variables,
+            }, { headers });
+            if (response.data.errors) {
+                throw new Error(`GraphQL errors: ${JSON.stringify(response.data.errors)}`);
+            }
+            return schema.parse(response.data.data);
+        }, {
+            ...this.retryOptions,
+            shouldRetry: retry_config_1.isRetryableError
+        });
+>>>>>>> 0d730af457102dc90d8e9f2a3e60de2e99d05b13
     }
     buildHeaders(daoId) {
         const headers = {

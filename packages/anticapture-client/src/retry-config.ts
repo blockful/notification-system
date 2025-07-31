@@ -6,11 +6,10 @@ export const RETRY_OPTIONS: Options = {
   minTimeout: 1000,
   maxTimeout: 30000,
   randomize: true,
-  onFailedAttempt: (error: any) => {
+  onFailedAttempt: (error) => {
     console.log(`AnticaptureClient retry attempt ${error.attemptNumber} failed. ${error.retriesLeft} retries left. Error: ${error.name}`);
   }
 };
-
 
 const RETRYABLE_NETWORK_CODES = new Set([
   'ECONNRESET', 'ETIMEDOUT', 'ECONNREFUSED', 'ENOTFOUND', 'ENETUNREACH'

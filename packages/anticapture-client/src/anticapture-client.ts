@@ -2,7 +2,7 @@ import { AxiosInstance } from 'axios';
 import { print } from 'graphql';
 import type { TypedDocumentNode } from '@graphql-typed-document-node/core';
 import { z } from 'zod';
-import pRetry from 'p-retry';
+import pRetry, { type Options } from 'p-retry';
 import { RETRY_OPTIONS, isRetryableError } from './retry-config';
 import type {
   GetProposalByIdQuery,
@@ -19,11 +19,11 @@ type VotingPowerHistoryItems = ProcessedVotingPowerHistory[];
 
 export class AnticaptureClient {
   private readonly httpClient: AxiosInstance;
-  private readonly retryOptions: any; // p-retry v4 doesn't export Options type
+  private readonly retryOptions: Options;
 
-  constructor(httpClient: AxiosInstance) {
+  constructor(httpClient: AxiosInstance, retryOptions?: Options) {
     this.httpClient = httpClient;
-    this.retryOptions = RETRY_OPTIONS;
+    this.retryOptions = retryOptions ?? RETRY_OPTIONS;
   }
 
   private async query<TResult, TVariables, TSchema extends z.ZodSchema<any>>(
@@ -32,38 +32,19 @@ export class AnticaptureClient {
     variables?: TVariables,
     daoId?: string
   ): Promise<z.infer<TSchema>> {
-    const startTime = Date.now();
-    console.log(`🔄 AnticaptureClient query starting (retries: ${this.retryOptions.retries})`);
-    
-    try {
-      const result = await pRetry(async () => {
-        const headers = this.buildHeaders(daoId);
-        
-        const response = await this.httpClient.post('', {
-          query: print(document),
-          variables,
-        }, { headers });
-
-        return schema.parse(response.data.data);
-      }, {
-        ...this.retryOptions,
-        shouldRetry: isRetryableError,
-        onFailedAttempt: (error: any) => {
-          console.log(`❌ AnticaptureClient retry attempt ${error.attemptNumber} failed. ${error.retriesLeft} retries left.`);
-          if (this.retryOptions.onFailedAttempt) {
-            this.retryOptions.onFailedAttempt(error);
-          }
-        }
-      });
+    return pRetry(async () => {
+      const headers = this.buildHeaders(daoId);
       
-      const duration = Date.now() - startTime;
-      console.log(`✅ AnticaptureClient query completed in ${duration}ms`);
-      return result;
-    } catch (error) {
-      const duration = Date.now() - startTime;
-      console.log(`💥 AnticaptureClient query failed after ${duration}ms: ${error}`);
-      throw error;
-    }
+      const response = await this.httpClient.post('', {
+        query: print(document),
+        variables,
+      }, { headers });
+
+      return schema.parse(response.data.data);
+    }, {
+      ...this.retryOptions,
+      shouldRetry: isRetryableError
+    });
   }
 
   private buildHeaders(daoId?: string): Record<string, string> {

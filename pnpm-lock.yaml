@@ -292,8 +292,13 @@ importers:
         specifier: ^16.11.0
         version: 16.11.0
       p-retry:
+<<<<<<< HEAD
         specifier: ^4.6.2
         version: 4.6.2
+=======
+        specifier: ^6.2.1
+        version: 6.2.1
+>>>>>>> 0d730af457102dc90d8e9f2a3e60de2e99d05b13
       zod:
         specifier: ^3.22.4
         version: 3.24.3
@@ -1361,11 +1366,16 @@ packages:
   '@types/pg@8.15.2':
     resolution: {integrity: sha512-+BKxo5mM6+/A1soSHBI7ufUglqYXntChLDyTbvcAn1Lawi9J7J9Ok3jt6w7I0+T/UDJ4CyhHk66+GZbwmkYxSg==}
 
+<<<<<<< HEAD
   '@types/pg@8.15.5':
     resolution: {integrity: sha512-LF7lF6zWEKxuT3/OR8wAZGzkg4ENGXFNyiV/JeOt9z5B+0ZVwbql9McqX5c/WStFq1GaGso7H1AzP/qSzmlCKQ==}
 
   '@types/retry@0.12.0':
     resolution: {integrity: sha512-wWKOClTTiizcZhXnPY4wikVAwmdYHp8q6DmC+EJUzAMsycb7HB32Kh9RN4+0gExjmPmZSAQjgURXIGATPegAvA==}
+=======
+  '@types/retry@0.12.2':
+    resolution: {integrity: sha512-XISRgDJ2Tc5q4TRqvgJtzsRkFYNJzZrhTdtMoGVBttwzzQJkPnS3WWTFc7kuDRoPtPakl+T+OfdEUjYJj7Jbow==}
+>>>>>>> 0d730af457102dc90d8e9f2a3e60de2e99d05b13
 
   '@types/semver@7.7.0':
     resolution: {integrity: sha512-k107IF4+Xr7UHjwDc7Cfd6PRQfbdkiRabXGRjo07b4WyPahFBZCZ1sE+BNxYIJPPg73UkfOsVOLwqVc/6ETrIA==}
@@ -2684,6 +2694,10 @@ packages:
   is-lower-case@2.0.2:
     resolution: {integrity: sha512-bVcMJy4X5Og6VZfdOZstSexlEy20Sr0k/p/b2IlQJlfdKAQuMpiv5w2Ccxb8sKdRUNAG1PnHVHjFSdRDVS6NlQ==}
 
+  is-network-error@1.1.0:
+    resolution: {integrity: sha512-tUdRRAnhT+OtCZR/LxZelH/C7QtjtFrTu5tXCA8pl55eTUElUHT+GPYV8MBMBvea/j+NxQqVt3LbWMRir7Gx9g==}
+    engines: {node: '>=16'}
+
   is-number@7.0.0:
     resolution: {integrity: sha512-41Cifkg6e8TylSpdtTpeLVMqvSBEVzTttHvERD741+pnZ8ANv0004MRL43QKPDlK9cGvNp6NZWZUBlbGXYxxng==}
     engines: {node: '>=0.12.0'}
@@ -3351,9 +3365,15 @@ packages:
     resolution: {integrity: sha512-/bjOqmgETBYB5BoEeGVea8dmvHb2m9GLy1E9W43yeyfP6QQCZGFNa+XRceJEuDB6zqr+gKpIAmlLebMpykw/MQ==}
     engines: {node: '>=10'}
 
+<<<<<<< HEAD
   p-retry@4.6.2:
     resolution: {integrity: sha512-312Id396EbJdvRONlngUx0NydfrIQ5lsYu0znKVUzVvArzEIt08V1qhtyESbGVd1FGX7UKtiFp5uwKZdM8wIuQ==}
     engines: {node: '>=8'}
+=======
+  p-retry@6.2.1:
+    resolution: {integrity: sha512-hEt02O4hUct5wtwg4H4KcWgDdm+l1bOaEy/hWzd8xtXB9BqxTWBBhb+2ImAtH4Cv4rPjV76xN3Zumqk3k3AhhQ==}
+    engines: {node: '>=16.17'}
+>>>>>>> 0d730af457102dc90d8e9f2a3e60de2e99d05b13
 
   p-timeout@4.1.0:
     resolution: {integrity: sha512-+/wmHtzJuWii1sXn3HCuH/FTwGhrp4tmJTxSKJbfS+vkipci6osxXM5mY0jUiRzWKMTgUT8l7HFbeSwZAynqHw==}
@@ -5793,6 +5813,7 @@ snapshots:
       pg-protocol: 1.10.0
       pg-types: 4.0.2
 
+<<<<<<< HEAD
   '@types/pg@8.15.5':
     dependencies:
       '@types/node': 24.1.0
@@ -5800,6 +5821,9 @@ snapshots:
       pg-types: 2.2.0
 
   '@types/retry@0.12.0': {}
+=======
+  '@types/retry@0.12.2': {}
+>>>>>>> 0d730af457102dc90d8e9f2a3e60de2e99d05b13
 
   '@types/semver@7.7.0': {}
 
@@ -7321,6 +7345,8 @@ snapshots:
     dependencies:
       tslib: 2.8.1
 
+  is-network-error@1.1.0: {}
+
   is-number@7.0.0: {}
 
   is-path-inside@3.0.3: {}
@@ -8351,9 +8377,16 @@ snapshots:
     dependencies:
       aggregate-error: 3.1.0
 
+<<<<<<< HEAD
   p-retry@4.6.2:
     dependencies:
       '@types/retry': 0.12.0
+=======
+  p-retry@6.2.1:
+    dependencies:
+      '@types/retry': 0.12.2
+      is-network-error: 1.1.0
+>>>>>>> 0d730af457102dc90d8e9f2a3e60de2e99d05b13
       retry: 0.13.1
 
   p-timeout@4.1.0: {}
