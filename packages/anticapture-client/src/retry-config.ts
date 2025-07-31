@@ -1,6 +1,6 @@
 import { type Options } from 'p-retry';
 
-export const DEFAULT_RETRY_OPTIONS: Options = {
+export const RETRY_OPTIONS: Options = {
   retries: 3,
   factor: 2,
   minTimeout: 1000,

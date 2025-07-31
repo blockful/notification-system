@@ -1,8 +1,8 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.DEFAULT_RETRY_OPTIONS = void 0;
+exports.RETRY_OPTIONS = void 0;
 exports.isRetryableError = isRetryableError;
-exports.DEFAULT_RETRY_OPTIONS = {
+exports.RETRY_OPTIONS = {
     retries: 3,
     factor: 2,
     minTimeout: 1000,
