@@ -5,8 +5,10 @@ type ProposalItems = ListProposalsQuery['proposalsOnchains']['items'];
 type VotingPowerHistoryItems = ProcessedVotingPowerHistory[];
 export declare class AnticaptureClient {
     private readonly httpClient;
+    private readonly retryOptions;
     constructor(httpClient: AxiosInstance);
     private query;
+    private buildHeaders;
     /**
      * Fetches all DAOs from the anticapture GraphQL API with full type safety
      * @returns Array of DAO objects with blockTime added

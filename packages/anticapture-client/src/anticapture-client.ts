@@ -2,6 +2,8 @@ import { AxiosInstance } from 'axios';
 import { print } from 'graphql';
 import type { TypedDocumentNode } from '@graphql-typed-document-node/core';
 import { z } from 'zod';
+import pRetry, { type Options } from 'p-retry';
+import { RETRY_OPTIONS, isRetryableError } from './retry-config';
 import type {
   GetProposalByIdQuery,
   GetProposalByIdQueryVariables,
@@ -17,9 +19,11 @@ type VotingPowerHistoryItems = ProcessedVotingPowerHistory[];
 
 export class AnticaptureClient {
   private readonly httpClient: AxiosInstance;
+  private readonly retryOptions: Options;
 
   constructor(httpClient: AxiosInstance) {
     this.httpClient = httpClient;
+    this.retryOptions = RETRY_OPTIONS;
   }
 
   private async query<TResult, TVariables, TSchema extends z.ZodSchema<any>>(
@@ -28,26 +32,32 @@ export class AnticaptureClient {
     variables?: TVariables,
     daoId?: string
   ): Promise<z.infer<TSchema>> {
+    return pRetry(async () => {
+      const headers = this.buildHeaders(daoId);
+      
+      const response = await this.httpClient.post('', {
+        query: print(document),
+        variables,
+      }, { headers });
+
+      return schema.parse(response.data.data);
+    }, {
+      ...this.retryOptions,
+      shouldRetry: isRetryableError
+    });
+  }
+
+  private buildHeaders(daoId?: string): Record<string, string> {
     const headers: Record<string, string> = {
       'Content-Type': 'application/json',
       'Accept': 'application/json'
     };
 
-    // Only add dao-id header if specified
     if (daoId) {
       headers["anticapture-dao-id"] = daoId;
     }
 
-    const response = await this.httpClient.post('', {
-      query: print(document),
-      variables,
-    }, { headers });
-
-    if (response.data.errors) {
-      throw new Error(`GraphQL errors: ${JSON.stringify(response.data.errors)}`);
-    }
-
-    return schema.parse(response.data.data);
+    return headers;
   }
   
 

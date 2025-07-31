@@ -7,4 +7,10 @@ module.exports = {
     'src/**/*.{ts,js}',
     '!src/**/*.d.ts',
   ],
+  transformIgnorePatterns: [
+    'node_modules/(?!(p-retry)/)'
+  ],
+  moduleNameMapper: {
+    '^(\\.{1,2}/.*)\\.js$': '$1',
+  },
 };
