@@ -76,4 +76,15 @@ export abstract class Trigger<TData, TFilterOptions = void> {
             this.timer = null;
         }
     }
+
+    private async handleError(error: unknown): Promise<void> {
+        this.consecutiveFailures++;
+        const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+        if (this.consecutiveFailures >= this.maxConsecutiveFailures) {
+            console.error(`Trigger ${this.id}: Maximum consecutive failures (${this.maxConsecutiveFailures}) reached. Stopping trigger.`);
+            await this.stop();
+            throw new Error(`Trigger ${this.id} stopped after ${this.consecutiveFailures} consecutive failures. Last error: ${errorMessage}`);
+        }
+        console.log(`Trigger ${this.id}: Will retry on next interval. Failures: ${this.consecutiveFailures}/${this.maxConsecutiveFailures}`);
+    }
 } 

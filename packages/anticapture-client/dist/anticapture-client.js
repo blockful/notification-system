@@ -1,19 +1,56 @@
 "use strict";
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.AnticaptureClient = void 0;
 const graphql_1 = require("graphql");
 const graphql_2 = require("../dist/gql/graphql");
 const schemas_1 = require("./schemas");
 class AnticaptureClient {
-    constructor(httpClient) {
+    constructor(httpClient, retryOptions) {
         this.httpClient = httpClient;
+        const isTest = process.env.NODE_ENV === 'test';
+        this.retryOptions = retryOptions ?? (isTest ? retry_config_1.TEST_RETRY_OPTIONS : retry_config_1.RETRY_OPTIONS);
+        // Debug log to verify configuration
+        console.log(`AnticaptureClient initialized: NODE_ENV=${process.env.NODE_ENV}, isTest=${isTest}, retries=${this.retryOptions.retries}`);
     }
     async query(document, schema, variables, daoId) {
+        const startTime = Date.now();
+        console.log(`🔄 AnticaptureClient query starting (retries: ${this.retryOptions.retries})`);
+        try {
+            const result = await (0, p_retry_1.default)(async () => {
+                const headers = this.buildHeaders(daoId);
+                const response = await this.httpClient.post('', {
+                    query: (0, graphql_1.print)(document),
+                    variables,
+                }, { headers });
+                return schema.parse(response.data.data);
+            }, {
+                ...this.retryOptions,
+                shouldRetry: retry_config_1.isRetryableError,
+                onFailedAttempt: (error) => {
+                    console.log(`❌ AnticaptureClient retry attempt ${error.attemptNumber} failed. ${error.retriesLeft} retries left.`);
+                    if (this.retryOptions.onFailedAttempt) {
+                        this.retryOptions.onFailedAttempt(error);
+                    }
+                }
+            });
+            const duration = Date.now() - startTime;
+            console.log(`✅ AnticaptureClient query completed in ${duration}ms`);
+            return result;
+        }
+        catch (error) {
+            const duration = Date.now() - startTime;
+            console.log(`💥 AnticaptureClient query failed after ${duration}ms: ${error}`);
+            throw error;
+        }
+    }
+    buildHeaders(daoId) {
         const headers = {
             'Content-Type': 'application/json',
             'Accept': 'application/json'
         };
-        // Only add dao-id header if specified
         if (daoId) {
             headers["anticapture-dao-id"] = daoId;
         }

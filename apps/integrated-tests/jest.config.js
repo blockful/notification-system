@@ -1,7 +1,9 @@
-export default {
-  preset: 'ts-jest',
+module.exports = {
   testEnvironment: 'node',
   testMatch: ['**/*.test.ts'],
+  transform: {
+    '^.+\\.ts$': 'ts-jest',
+  },
   testTimeout: 120000,
   maxWorkers: 1,
   globalSetup: '<rootDir>/src/setup/jest/jest-global-setup.ts',
