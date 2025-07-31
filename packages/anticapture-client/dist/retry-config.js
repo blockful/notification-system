@@ -2,7 +2,6 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.TEST_RETRY_OPTIONS = exports.RETRY_OPTIONS = void 0;
 exports.isRetryableError = isRetryableError;
-// p-retry v4 options (doesn't export Options type)
 exports.RETRY_OPTIONS = {
     retries: 3,
     factor: 2,

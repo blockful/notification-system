@@ -1,11 +1,5 @@
-export declare const RETRY_OPTIONS: {
-    retries: number;
-    factor: number;
-    minTimeout: number;
-    maxTimeout: number;
-    randomize: boolean;
-    onFailedAttempt: (error: any) => void;
-};
+import { type Options } from 'p-retry';
+export declare const RETRY_OPTIONS: Options;
 export declare const TEST_RETRY_OPTIONS: {
     retries: number;
     minTimeout: number;
