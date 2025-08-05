@@ -59,26 +59,12 @@ class AnticaptureClient {
             const allDAOs = await this.getDAOs();
             const allProposals = [];
             for (const dao of allDAOs) {
-                const variablesWithDao = {
-                    ...variables,
-                    where: {
-                        ...variables?.where,
-                        daoId: dao.id
-                    }
-                };
-                const validated = await this.query(graphql_2.ListProposalsDocument, schemas_1.SafeProposalsResponseSchema, variablesWithDao, dao.id);
+                const validated = await this.query(graphql_2.ListProposalsDocument, schemas_1.SafeProposalsResponseSchema, variables, dao.id);
                 allProposals.push(...(0, schemas_1.processProposals)(validated, dao.id));
             }
             return allProposals;
         }
-        const variablesWithDao = {
-            ...variables,
-            where: {
-                ...variables?.where,
-                daoId: daoId
-            }
-        };
-        const validated = await this.query(graphql_2.ListProposalsDocument, schemas_1.SafeProposalsResponseSchema, variablesWithDao, daoId);
+        const validated = await this.query(graphql_2.ListProposalsDocument, schemas_1.SafeProposalsResponseSchema, variables, daoId);
         return (0, schemas_1.processProposals)(validated, daoId);
     }
     /**
