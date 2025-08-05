@@ -7,8 +7,9 @@ import { INotificationClient } from "../../interfaces/notification-client.interf
 /**
  * Base class for trigger handlers
  * Provides common functionality for all trigger handlers
+ * @template T - Type of event data being processed
  */
-export abstract class BaseTriggerHandler implements TriggerHandler {
+export abstract class BaseTriggerHandler<T = any> implements TriggerHandler<T> {
   /**
    * Creates a new instance of the BaseTriggerHandler
    * @param subscriptionClient Client for subscription server API
@@ -23,7 +24,7 @@ export abstract class BaseTriggerHandler implements TriggerHandler {
    * Handle a trigger message
    * @param message The message to process
    */
-  abstract handleMessage(message: DispatcherMessage): Promise<MessageProcessingResult>;
+  abstract handleMessage(message: DispatcherMessage<T>): Promise<MessageProcessingResult>;
 
   /**
    * Gets subscribers for a specific DAO and event (already filtered)

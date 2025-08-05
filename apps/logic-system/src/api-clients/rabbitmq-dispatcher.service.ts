@@ -12,7 +12,7 @@ export class RabbitMQDispatcherService implements DispatcherService {
    * Sends a message to the Dispatcher via RabbitMQ queue
    * @param message - Message to be dispatched
    */
-  async sendMessage(message: DispatcherMessage): Promise<void> {
+  async sendMessage<T = any>(message: DispatcherMessage<T>): Promise<void> {
     await this.publisher.publish('dispatcher-queue', {
       type: 'TRIGGER_EVENT',
       payload: message

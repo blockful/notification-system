@@ -3,3 +3,7 @@ documents: 'queries/*.graphql'
 generates:
   src/gql/:
     preset: 'client-preset'
+    config:
+      scalars:
+        BigInt: string
+      useTypeImports: true

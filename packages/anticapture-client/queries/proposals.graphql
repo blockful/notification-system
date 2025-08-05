@@ -18,8 +18,8 @@ query GetProposalById($id: String!) {
   }
 }
 
-query ListProposals($where: proposalsOnchainFilter, $limit: Int) {
-  proposalsOnchains(where: $where, limit: $limit) {
+query ListProposals($where: proposalsOnchainFilter, $limit: Int, $orderBy: String, $orderDirection: String) {
+  proposalsOnchains(where: $where, limit: $limit, orderBy: $orderBy, orderDirection: $orderDirection) {
     items {
       id
       daoId

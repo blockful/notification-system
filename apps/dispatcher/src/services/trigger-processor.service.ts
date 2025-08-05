@@ -5,7 +5,7 @@ import { TriggerHandler } from "../interfaces/base-trigger.interface";
  * Service responsible for processing messages for specific triggers
  */
 export class TriggerProcessorService {
-  private triggerHandlers: Map<string, TriggerHandler>;
+  private triggerHandlers: Map<string, TriggerHandler<any>>;
   
   constructor() {
     this.triggerHandlers = new Map();
@@ -16,7 +16,7 @@ export class TriggerProcessorService {
    * @param triggerId Unique identifier for the trigger
    * @param handler The trigger handler implementation
    */
-  addHandler(triggerId: string, handler: TriggerHandler): void {
+  addHandler<T = any>(triggerId: string, handler: TriggerHandler<T>): void {
     this.triggerHandlers.set(triggerId, handler);
   }
 
@@ -26,7 +26,7 @@ export class TriggerProcessorService {
    * @returns Processing result
    * @throws Error if trigger handler not found
    */
-  async processTrigger(message: DispatcherMessage): Promise<MessageProcessingResult> {
+  async processTrigger<T = any>(message: DispatcherMessage<T>): Promise<MessageProcessingResult> {
     const handler = this.triggerHandlers.get(message.triggerId);
     if (!handler) {
       throw new Error(`No handler registered for trigger: ${message.triggerId}`);

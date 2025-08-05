@@ -5,6 +5,8 @@ import { SubscriptionClient } from './services/subscription-client.service';
 import { NotificationClientFactory } from './services/notification/notification-factory.service';
 import { RabbitMQNotificationService } from './services/notification/rabbitmq-notification.service';
 import { NewProposalTriggerHandler } from './services/triggers/new-proposal-trigger.service';
+import { VotingPowerTriggerHandler } from './services/triggers/voting-power-trigger.service';
+import { ProposalFinishedTriggerHandler } from './services/triggers/proposal-finished-trigger.service';
 import { RabbitMQConnection, RabbitMQPublisher } from '@notification-system/rabbitmq-client';
 
 export class App {
@@ -34,6 +36,16 @@ export class App {
     triggerProcessorService.addHandler(
       'new-proposal',
       new NewProposalTriggerHandler(subscriptionClient, notificationFactory)
+    );
+
+    triggerProcessorService.addHandler(
+      'voting-power-changed',
+      new VotingPowerTriggerHandler(subscriptionClient, notificationFactory)
+    );
+
+    triggerProcessorService.addHandler(
+      'proposal-finished',
+      new ProposalFinishedTriggerHandler(subscriptionClient, notificationFactory)
     );
 
     this.rabbitMQConsumerService = new RabbitMQConsumerService(this.rabbitmqUrl, triggerProcessorService);

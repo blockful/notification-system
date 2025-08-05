@@ -1,102 +1,68 @@
-import { describe, test, expect, beforeAll, afterAll, beforeEach, jest } from '@jest/globals';
-import * as fs from 'fs';
-
-// Setup Telegram mock only
-import { setupTelegramMock } from '../src/mocks/telegram-mock-setup';
-const mockSendMessage = setupTelegramMock();
-import { db, closeDatabase } from '../src/setup/database-config';
-import { setupDatabase } from '../src/setup/database';
-import { startTestApps, stopTestApps, TestApps } from '../src/setup/apps';
-import { HttpClientMockSetup } from '../src/mocks/http-client-mock';
-import { GraphQLMockSetup } from '../src/mocks/graphql-mock-setup';
-import { UserFactory } from '../src/test-data/user-factory';
-import { ProposalFactory } from '../src/test-data/proposal-factory';
+import { describe, test, expect, beforeEach, jest } from '@jest/globals';
+import { db, TestApps } from '../src/setup';
+import { HttpClientMockSetup, GraphQLMockSetup } from '../src/mocks';
+import { UserFactory, ProposalFactory } from '../src/fixtures';
+import { TelegramTestHelper, DatabaseTestHelper, TestCleanup } from '../src/helpers';
+import { testConstants, timeouts } from '../src/config';
 
 describe('Inactive Preference Handling - Integration Test', () => {
   let apps: TestApps;
   let httpMockSetup: HttpClientMockSetup;
-  let uniDaoId: string;
-  let ensDaoId: string;
-  let activeUserId: string;
-  let inactiveUserId: string;
-  let userWithInactivePreferenceId: string;
+  let telegramHelper: TelegramTestHelper;
+  let dbHelper: DatabaseTestHelper;
 
   beforeAll(async () => {
-    // Clean up any existing test databases
-    const files = fs.readdirSync('/tmp').filter(f => f.startsWith('test_integration_'));
-    files.forEach(file => {
-      fs.unlinkSync(`/tmp/${file}`);
-    });
-
-    await setupDatabase();
-    await createTestData();
-    
-    // Setup mocks
-    httpMockSetup = new HttpClientMockSetup();
-
-    // Start all applications
-    apps = await startTestApps(db, httpMockSetup.getMockClient());
+    apps = TestCleanup.getGlobalApps();
+    httpMockSetup = TestCleanup.getGlobalHttpMockSetup();
+    telegramHelper = new TelegramTestHelper(global.mockSendMessage);
+    dbHelper = new DatabaseTestHelper(db);
   });
 
   beforeEach(async () => {
-    jest.clearAllMocks();
-    httpMockSetup.reset();
+    await TestCleanup.cleanupBetweenTests();
   });
 
-  afterAll(async () => {
-    if (apps) {
-      await stopTestApps(apps);
-    }
-    closeDatabase();
-    // Give some time for cleanup
-    await new Promise(resolve => setTimeout(resolve, 1000));
-  }, 40000);
-
-  async function createTestData() {
-    const now = new Date().toISOString();
-    
+  test('should respect inactive preference states', async () => {
     // Create DAOs
-    uniDaoId = 'UNISWAP';
-    ensDaoId = 'ENS';
+    const uniDaoId = testConstants.daoIds.uniswap;
+    const ensDaoId = testConstants.daoIds.ens;
     
     // Create user that follows UNI with active preference
-    const activeUser = await UserFactory.createUserWithFullSetup('111111111', 'active_user', uniDaoId, true, now);
-    activeUserId = activeUser.user.id;
+    const activeUser = await UserFactory.createUserWithFullSetup(testConstants.profiles.p1.chatId, 'active_user', uniDaoId, true);
     
     // Create user that follows UNI but with INACTIVE preference
-    const userWithInactiveUniPreference = await UserFactory.createUserWithFullSetup('555555555', 'inactive_pref_user', uniDaoId, false, now);
-    inactiveUserId = userWithInactiveUniPreference.user.id;
+    await UserFactory.createUserWithFullSetup(testConstants.profiles.p4.chatId, 'inactive_pref_user', uniDaoId, false);
     
     // Create user with inactive preference for ENS
-    const userWithInactivePreference = await UserFactory.createUserWithFullSetup('666666666', 'user_inactive_pref', ensDaoId, false, now);
-    userWithInactivePreferenceId = userWithInactivePreference.user.id;
-  }
-
-  test('should respect inactive preference states', async () => {
-    const initialCallCount = mockSendMessage.mock.calls.length;
+    await UserFactory.createUserWithFullSetup(testConstants.profiles.p5.chatId, 'user_inactive_pref', ensDaoId, false);
     
     // Setup proposals for both DAOs
-    const proposals = ProposalFactory.createProposalsForMultipleDaos(['UNISWAP', 'ENS'], 'inactive-test');
-    GraphQLMockSetup.setupProposalMock(httpMockSetup.getMockClient(), proposals);
+    const proposals = ProposalFactory.createProposalsForMultipleDaos([testConstants.daoIds.uniswap, testConstants.daoIds.ens], 'inactive-test');
+    GraphQLMockSetup.setupMock(httpMockSetup.getMockClient(), proposals);
     
-    // Wait for the logic system to process
-    await new Promise(resolve => setTimeout(resolve, 5000));
+    // Wait for exactly 1 message (only active user should be notified)
+    await telegramHelper.waitForMessageCount(1, { timeout: timeouts.notification.delivery });
     
-    const finalCallCount = mockSendMessage.mock.calls.length;
-    const newCallsCount = finalCallCount - initialCallCount;
+    // Verify the message was sent to the correct user
+    const message = telegramHelper.getAllMessages()[0];
+    expect(message.chatId).toBe(testConstants.profiles.p1.chatId); // User with active UNI preference
     
-    // Should only notify users with active preferences
-    // Only the user with active UNI preference should be notified (1 notification)
-    expect(newCallsCount).toBe(1);
+    // Ensure no more messages are sent to inactive users
+    await telegramHelper.waitForNoMessages(timeouts.notification.processing);
+    
+    // Verify total message count is still 1
+    const allMessages = telegramHelper.getAllMessages();
+    expect(allMessages).toHaveLength(1);
     
     // Verify users with inactive preferences were NOT notified
-    const newCalls = mockSendMessage.mock.calls.slice(initialCallCount);
-    const notifiedUsers = newCalls.map(call => call[0].toString());
-    expect(notifiedUsers).not.toContain('555555555'); // User with inactive UNI preference
-    expect(notifiedUsers).not.toContain('666666666'); // User with inactive ENS preference
+    const notifiedUsers = allMessages.map(msg => msg.chatId.toString());
+    expect(notifiedUsers).not.toContain(testConstants.profiles.p4.chatId); // User with inactive UNI preference
+    expect(notifiedUsers).not.toContain(testConstants.profiles.p5.chatId); // User with inactive ENS preference
     
-    // Verify user with active preference was notified
-    expect(notifiedUsers).toContain('111111111'); // User with active UNI preference
+    // Verify notification was only recorded for active user
+    await dbHelper.waitForRecordCount(testConstants.tables.notifications, 1);
+    const notification = await db(testConstants.tables.notifications).first();
+    expect(notification.user_id).toBe(activeUser.user.id);
   });
 
 });

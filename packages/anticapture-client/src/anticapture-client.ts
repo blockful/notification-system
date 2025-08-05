@@ -6,11 +6,14 @@ import type {
   GetProposalByIdQuery,
   GetProposalByIdQueryVariables,
   ListProposalsQuery,
-  ListProposalsQueryVariables
-} from './gql/graphql';
-import { GetDaOsDocument, GetProposalByIdDocument, ListProposalsDocument } from './gql/graphql';
-import { SafeDaosResponseSchema, SafeProposalByIdResponseSchema, SafeProposalsResponseSchema, processProposals } from './schemas';
+  ListProposalsQueryVariables,
+  ListVotingPowerHistorysQueryVariables
+} from '../dist/gql/graphql';
+import { GetDaOsDocument, GetProposalByIdDocument, ListProposalsDocument, ListVotingPowerHistorysDocument } from '../dist/gql/graphql';
+import { SafeDaosResponseSchema, SafeProposalByIdResponseSchema, SafeProposalsResponseSchema, SafeVotingPowerHistoryResponseSchema, processProposals, processVotingPowerHistory, ProcessedVotingPowerHistory } from './schemas';
+
 type ProposalItems = ListProposalsQuery['proposalsOnchains']['items'];
+type VotingPowerHistoryItems = ProcessedVotingPowerHistory[];
 
 export class AnticaptureClient {
   private readonly httpClient: AxiosInstance;
@@ -40,6 +43,12 @@ export class AnticaptureClient {
       variables,
     }, { headers });
 
+    // Handle empty or undefined responses
+    if (!response || !response.data) {
+      console.warn('No data received from GraphQL endpoint, returning empty response');
+      return schema.parse({});
+    }
+
     if (response.data.errors) {
       throw new Error(`GraphQL errors: ${JSON.stringify(response.data.errors)}`);
     }
@@ -50,12 +59,18 @@ export class AnticaptureClient {
 
   /**
    * Fetches all DAOs from the anticapture GraphQL API with full type safety
-   * @returns Array of DAO IDs
+   * @returns Array of DAO objects with blockTime added
    */
-  async getDAOs(): Promise<string[]> {
+  async getDAOs(): Promise<Array<{ id: string; blockTime: number; votingDelay: string }>> {
     const validated = await this.query(GetDaOsDocument, SafeDaosResponseSchema, undefined, undefined);
-    return validated.daos.items.map((dao: { id: string }) => dao.id);
+    return validated.daos.items.map((dao) => ({
+      id: dao.id,
+      // blockTime: dao.blockTime, // TODO: Uncomment when API supports this field
+      blockTime: 12, // Temporary hardcoded value - Ethereum block time
+      votingDelay: dao.votingDelay || '0'
+    }));
   }
+
 
   /**
    * Fetches a single proposal by ID with full type safety
@@ -75,9 +90,9 @@ export class AnticaptureClient {
       const allDAOs = await this.getDAOs();
       const allProposals: ProposalItems = [];
 
-      for (const currentDaoId of allDAOs) {
-        const validated = await this.query(ListProposalsDocument, SafeProposalsResponseSchema, variables, currentDaoId);
-        allProposals.push(...processProposals(validated, currentDaoId));
+      for (const dao of allDAOs) {
+        const validated = await this.query(ListProposalsDocument, SafeProposalsResponseSchema, variables, dao.id);
+        allProposals.push(...processProposals(validated, dao.id));
       }
 
       return allProposals;
@@ -85,5 +100,30 @@ export class AnticaptureClient {
 
     const validated = await this.query(ListProposalsDocument, SafeProposalsResponseSchema, variables, daoId);
     return processProposals(validated, daoId!);
+  }
+
+  /**
+   * Lists voting power history with full type safety
+   * @param variables - Query variables for filtering and pagination
+   * @param daoId - Optional specific DAO ID to query. If not provided, queries all DAOs
+   * @returns Array of voting power history items
+   */
+  async listVotingPowerHistory(variables?: ListVotingPowerHistorysQueryVariables, daoId?: string): Promise<VotingPowerHistoryItems> {
+    if (!daoId && !variables?.where?.daoId) {
+      const allDAOs = await this.getDAOs();
+
+      const queryPromises = allDAOs.map(async (dao) => {
+        const validated = await this.query(ListVotingPowerHistorysDocument, SafeVotingPowerHistoryResponseSchema, variables, dao.id);
+        return processVotingPowerHistory(validated, dao.id);
+      });
+
+      const results = await Promise.all(queryPromises);
+      return results.flat().sort((a: ProcessedVotingPowerHistory, b: ProcessedVotingPowerHistory) => 
+        parseInt(a.timestamp) - parseInt(b.timestamp)
+      );
+    }
+
+    const validated = await this.query(ListVotingPowerHistorysDocument, SafeVotingPowerHistoryResponseSchema, variables, daoId);
+    return processVotingPowerHistory(validated, daoId!);
   }
 }

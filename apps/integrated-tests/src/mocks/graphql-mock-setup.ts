@@ -1,135 +1,101 @@
-import { jest } from '@jest/globals';
-import { ProposalData } from '../test-data/proposal-factory';
+import { ProposalData } from '../fixtures';
+import { ProcessedVotingPowerHistory } from '@notification-system/anticapture-client';
 
+/**
+ * @notice Setup class for GraphQL API mocking in integration tests
+ * @dev Provides methods to mock different GraphQL endpoints with test data
+ */
 export class GraphQLMockSetup {
-  static setupProposalMock(mockHttpClient: any, proposals: ProposalData[]): void {
-    mockHttpClient.post.mockImplementation((url: string, data: any, config: any) => {
-      if (data.query && data.query.includes('ListProposals')) {
-        const requestedStatusIn = data.variables?.where?.status_in;
-        const requestedDaoId = config?.headers?.['anticapture-dao-id'];
-        let proposalsToReturn = proposals;
-        
-        // Filter by status
-        if (requestedStatusIn && Array.isArray(requestedStatusIn)) {
-          proposalsToReturn = proposalsToReturn.filter(p => requestedStatusIn.includes(p.status));
-        }
-        
-        // Filter by daoId from header
-        if (requestedDaoId) {
-          proposalsToReturn = proposalsToReturn.filter(p => p.daoId === requestedDaoId);
-        }
-        
-        return Promise.resolve({
-          data: {
-            data: {
-              proposalsOnchains: {
-                items: proposalsToReturn
-              }
-            }
-          }
-        });
-      }
-      
-      if (data.query && data.query.includes('GetDAOs')) {
-        // Extract unique DAOs from proposals
-        const uniqueDaoIds = [...new Set(proposals.map(p => p.daoId))];
-        return Promise.resolve({
-          data: {
-            data: {
-              daos: {
-                items: uniqueDaoIds.map(daoId => ({ id: daoId }))
-              }
-            }
-          }
-        });
-      }
-      
-      return Promise.resolve({ data: { data: {} } });
-    });
+  /**
+   * @notice Transforms ProcessedVotingPowerHistory to raw GraphQL format
+   */
+  private static transformToRawGraphQLFormat(votingPowerData: ProcessedVotingPowerHistory[]): any[] {
+    return votingPowerData.map(vp => ({
+      accountId: vp.accountId,
+      timestamp: vp.timestamp,
+      votingPower: vp.votingPower,
+      delta: vp.delta || null,
+      daoId: vp.daoId,
+      transactionHash: vp.transactionHash,
+      delegation: vp.delegation ? {
+        delegatorAccountId: vp.delegation.delegatorAccountId,
+        delegatedValue: vp.delegation.delegatedValue
+      } : null,
+      transfer: vp.transfer ? {
+        amount: vp.transfer.amount,
+        fromAccountId: vp.transfer.fromAccountId,
+        toAccountId: vp.transfer.toAccountId
+      } : null
+    }));
   }
 
-  static setupEmptyMock(mockHttpClient: any): void {
-    mockHttpClient.post.mockImplementation(() => {
-      return Promise.resolve({ data: { data: {} } });
-    });
+
+  /**
+   * @notice Generic mock implementation that handles all query types
+   */
+  private static createMockImplementation(proposals: ProposalData[] = [], votingPowerData: ProcessedVotingPowerHistory[] = []) {
+    return (url: string, data: any, config: any) => {
+      // Handle proposals
+      if (data.query?.includes('ListProposals')) {
+        let filtered = proposals;
+        if (data.variables?.where?.status_in) {
+          filtered = filtered.filter(p => data.variables.where.status_in.includes(p.status));
+        }
+        if (config?.headers?.['anticapture-dao-id']) {
+          filtered = filtered.filter(p => p.daoId === config.headers['anticapture-dao-id']);
+        }
+        return Promise.resolve({
+          data: { data: { proposalsOnchains: { items: filtered } } }
+        });
+      }
+
+      // Handle voting power
+      if (data.query?.includes('ListVotingPowerHistorys')) {
+        let filtered = votingPowerData;
+        if (data.variables?.where?.timestamp_gt) {
+          filtered = filtered.filter(vp => parseInt(vp.timestamp) > parseInt(data.variables.where.timestamp_gt));
+        }
+        return Promise.resolve({
+          data: { data: { votingPowerHistorys: { items: this.transformToRawGraphQLFormat(filtered) } } }
+        });
+      }
+
+      // Handle DAOs
+      if (data.query?.includes('GetDAOs')) {
+        const uniqueDaoIds = [...new Set([...proposals.map(p => p.daoId), ...votingPowerData.map(vp => vp.daoId)])];
+        return Promise.resolve({
+          data: { data: { daos: { items: uniqueDaoIds.map(id => ({ id })) } } }
+        });
+      }
+
+      return Promise.resolve({
+        data: {
+          data: {
+            votingPowerHistorys: { items: [] },
+            proposalsOnchains: { items: [] },
+            daos: { items: [] }
+          }
+        }
+      });
+    };
+  }
+  /**
+   * @notice Sets up GraphQL mock with optional data
+   */
+  static setupMock(
+    mockHttpClient: any, 
+    proposals: ProposalData[] = [], 
+    votingPowerData: ProcessedVotingPowerHistory[] = []
+  ): void {
+    mockHttpClient.post.mockImplementation(this.createMockImplementation(proposals, votingPowerData));
   }
 
+  /**
+   * @notice Resets the HTTP client mock to clean state
+   * @param mockHttpClient The mocked HTTP client instance to reset
+   */
   static resetMock(mockHttpClient: any): void {
     mockHttpClient.post.mockReset();
   }
+
 }
-
-/**
- * Mock proposal data structure for GraphQL responses
- */
-export const createMockProposal = (daoId: string, status: string) => ({
-  id: "test-proposal-1",
-  daoId,
-  status,
-  description: "# Test Proposal\\n\\nThis is a test proposal for integration testing.",
-  abstainVotes: "0",
-  againstVotes: "0", 
-  forVotes: "1000000000000000000000",
-  calldatas: ["0x"],
-  endBlock: "16575874",
-  proposerAccountId: "0xb8c2C29ee19D8307cb7255e1Cd9CbDE883A267d5",
-  startBlock: "16530056",
-  signatures: [""],
-  targets: ["0x2686A8919Df194aA7673244549E68D42C1685d03"],
-  timestamp: "1675207295",
-  values: ["1000000000000000000"]
-});
-
-/**
- * Creates GraphQL response for ListProposals query
- */
-export const createListProposalsResponse = (daoId: string, status: string) => ({
-  data: {
-    data: {
-      proposalsOnchains: {
-        items: status?.toLowerCase() === 'pending' ? [createMockProposal(daoId, status)] : []
-      }
-    }
-  }
-});
-
-/**
- * Creates GraphQL response for GetDAOs query
- */
-export const createGetDAOsResponse = (daoId: string) => ({
-  data: {
-    data: {
-      daos: {
-        items: [{ id: daoId }]
-      }
-    }
-  }
-});
-
-/**
- * Sets up GraphQL mock implementation for HTTP client (Legacy - for complete-notification-flow.test.ts)
- */
-export const setupGraphQLMock = (
-  mockHttpClient: any, 
-  testDaoId: string, 
-  mockProposalStatus: string
-) => {
-  (mockHttpClient.post as jest.Mock).mockImplementation((url: any, body: any) => {
-    if (!body.query) {
-      return Promise.resolve({ data: { success: true } });
-    }
-
-    if (body.query.includes('ListProposals')) {
-      const hasPendingFilter = body.variables?.where?.status?.toLowerCase() === 'pending';
-      const effectiveStatus = hasPendingFilter ? mockProposalStatus : 'PENDING';
-      return Promise.resolve(createListProposalsResponse(testDaoId, effectiveStatus));
-    }
-    
-    if (body.query.includes('GetDAOs')) {
-      return Promise.resolve(createGetDAOsResponse(testDaoId));
-    }
-    
-    // Default response for unknown queries
-    return Promise.resolve({ data: { data: {} } });
-  });
-};

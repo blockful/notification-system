@@ -27,7 +27,8 @@ export class RabbitMQConsumer {
         await handler(parsedMessage);
         
         this.channel.ack(msg);
-      } catch {
+      } catch (error) {
+        console.error('[RabbitMQConsumer] Error in message handler:', error);
         this.channel.nack(msg, false, true);
       }
     });

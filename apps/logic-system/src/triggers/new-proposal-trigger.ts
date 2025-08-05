@@ -12,7 +12,7 @@ const triggerId = 'new-proposal';
 export class NewProposalTrigger extends Trigger<ProposalOnChain, ListProposalsOptions> {
   constructor(
     private readonly dispatcherService: DispatcherService,
-    private readonly proposalDB: ProposalDataSource,
+    private readonly proposalRepository: ProposalDataSource,
     interval: number
   ) {
     super(triggerId, interval);
@@ -34,6 +34,6 @@ export class NewProposalTrigger extends Trigger<ProposalOnChain, ListProposalsOp
     if (!options?.status) {
       throw new Error('Status is required in filter options');
     }
-    return await this.proposalDB.listAll({ status: options.status });
+    return await this.proposalRepository.listAll({ status: options.status });
   }
 } 
