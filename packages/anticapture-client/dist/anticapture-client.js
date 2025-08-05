@@ -77,13 +77,27 @@ class AnticaptureClient {
         if (!daoId && !variables?.where?.daoId) {
             const allDAOs = await this.getDAOs();
             const queryPromises = allDAOs.map(async (dao) => {
-                const validated = await this.query(graphql_2.ListVotingPowerHistorysDocument, schemas_1.SafeVotingPowerHistoryResponseSchema, variables, dao.id);
+                const variablesWithDao = {
+                    ...variables,
+                    where: {
+                        ...variables?.where,
+                        daoId: dao.id
+                    }
+                };
+                const validated = await this.query(graphql_2.ListVotingPowerHistorysDocument, schemas_1.SafeVotingPowerHistoryResponseSchema, variablesWithDao, dao.id);
                 return (0, schemas_1.processVotingPowerHistory)(validated, dao.id);
             });
             const results = await Promise.all(queryPromises);
             return results.flat().sort((a, b) => parseInt(a.timestamp) - parseInt(b.timestamp));
         }
-        const validated = await this.query(graphql_2.ListVotingPowerHistorysDocument, schemas_1.SafeVotingPowerHistoryResponseSchema, variables, daoId);
+        const variablesWithDao = {
+            ...variables,
+            where: {
+                ...variables?.where,
+                daoId: daoId
+            }
+        };
+        const validated = await this.query(graphql_2.ListVotingPowerHistorysDocument, schemas_1.SafeVotingPowerHistoryResponseSchema, variablesWithDao, daoId);
         return (0, schemas_1.processVotingPowerHistory)(validated, daoId);
     }
 }

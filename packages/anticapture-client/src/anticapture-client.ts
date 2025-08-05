@@ -113,7 +113,14 @@ export class AnticaptureClient {
       const allDAOs = await this.getDAOs();
 
       const queryPromises = allDAOs.map(async (dao) => {
-        const validated = await this.query(ListVotingPowerHistorysDocument, SafeVotingPowerHistoryResponseSchema, variables, dao.id);
+        const variablesWithDao = {
+          ...variables,
+          where: {
+            ...variables?.where,
+            daoId: dao.id
+          }
+        };
+        const validated = await this.query(ListVotingPowerHistorysDocument, SafeVotingPowerHistoryResponseSchema, variablesWithDao, dao.id);
         return processVotingPowerHistory(validated, dao.id);
       });
 
@@ -123,7 +130,14 @@ export class AnticaptureClient {
       );
     }
 
-    const validated = await this.query(ListVotingPowerHistorysDocument, SafeVotingPowerHistoryResponseSchema, variables, daoId);
+    const variablesWithDao = {
+      ...variables,
+      where: {
+        ...variables?.where,
+        daoId: daoId
+      }
+    };
+    const validated = await this.query(ListVotingPowerHistorysDocument, SafeVotingPowerHistoryResponseSchema, variablesWithDao, daoId);
     return processVotingPowerHistory(validated, daoId!);
   }
 }
