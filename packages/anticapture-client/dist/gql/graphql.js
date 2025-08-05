@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.ListVotingPowerHistorysDocument = exports.ListProposalsDocument = exports.GetProposalByIdDocument = exports.GetDaOsDocument = exports.QueryInput_TotalAssets_Days = exports.QueryInput_Proposals_OrderDirection = exports.QueryInput_ProposalsActivity_UserVoteFilter = exports.QueryInput_ProposalsActivity_OrderDirection = exports.QueryInput_ProposalsActivity_OrderBy = exports.QueryInput_HistoricalVotingPower_Days = exports.QueryInput_HistoricalBalances_Days = exports.QueryInput_CompareVotes_Days = exports.QueryInput_CompareTreasury_Days = exports.QueryInput_CompareTotalSupply_Days = exports.QueryInput_CompareProposals_Days = exports.QueryInput_CompareLendingSupply_Days = exports.QueryInput_CompareDexSupply_Days = exports.QueryInput_CompareDelegatedSupply_Days = exports.QueryInput_CompareCirculatingSupply_Days = exports.QueryInput_CompareCexSupply_Days = exports.QueryInput_CompareAverageTurnout_Days = exports.QueryInput_CompareActiveSupply_Days = exports.MetricType = exports.HttpMethod = void 0;
+exports.ListVotingPowerHistorysDocument = exports.ListProposalsDocument = exports.GetProposalByIdDocument = exports.GetDaOsDocument = exports.QueryInput_TotalAssets_Days = exports.QueryInput_ProposalsActivity_UserVoteFilter = exports.QueryInput_ProposalsActivity_OrderDirection = exports.QueryInput_ProposalsActivity_OrderBy = exports.QueryInput_HistoricalVotingPower_Days = exports.QueryInput_HistoricalBalances_Days = exports.QueryInput_CompareVotes_Days = exports.QueryInput_CompareTreasury_Days = exports.QueryInput_CompareTotalSupply_Days = exports.QueryInput_CompareProposals_Days = exports.QueryInput_CompareLendingSupply_Days = exports.QueryInput_CompareDexSupply_Days = exports.QueryInput_CompareDelegatedSupply_Days = exports.QueryInput_CompareCirculatingSupply_Days = exports.QueryInput_CompareCexSupply_Days = exports.QueryInput_CompareAverageTurnout_Days = exports.QueryInput_CompareActiveSupply_Days = exports.MetricType = exports.HttpMethod = void 0;
 var HttpMethod;
 (function (HttpMethod) {
     HttpMethod["Connect"] = "CONNECT";
@@ -146,11 +146,6 @@ var QueryInput_ProposalsActivity_UserVoteFilter;
     QueryInput_ProposalsActivity_UserVoteFilter["NoVote"] = "no_vote";
     QueryInput_ProposalsActivity_UserVoteFilter["Yes"] = "yes";
 })(QueryInput_ProposalsActivity_UserVoteFilter || (exports.QueryInput_ProposalsActivity_UserVoteFilter = QueryInput_ProposalsActivity_UserVoteFilter = {}));
-var QueryInput_Proposals_OrderDirection;
-(function (QueryInput_Proposals_OrderDirection) {
-    QueryInput_Proposals_OrderDirection["Asc"] = "asc";
-    QueryInput_Proposals_OrderDirection["Desc"] = "desc";
-})(QueryInput_Proposals_OrderDirection || (exports.QueryInput_Proposals_OrderDirection = QueryInput_Proposals_OrderDirection = {}));
 var QueryInput_TotalAssets_Days;
 (function (QueryInput_TotalAssets_Days) {
     QueryInput_TotalAssets_Days["7d"] = "_7d";
