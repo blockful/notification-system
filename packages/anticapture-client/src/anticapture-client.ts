@@ -91,14 +91,28 @@ export class AnticaptureClient {
       const allProposals: ProposalItems = [];
 
       for (const dao of allDAOs) {
-        const validated = await this.query(ListProposalsDocument, SafeProposalsResponseSchema, variables, dao.id);
+        const variablesWithDao = {
+          ...variables,
+          where: {
+            ...variables?.where,
+            daoId: dao.id
+          }
+        };
+        const validated = await this.query(ListProposalsDocument, SafeProposalsResponseSchema, variablesWithDao, dao.id);
         allProposals.push(...processProposals(validated, dao.id));
       }
 
       return allProposals;
     }
 
-    const validated = await this.query(ListProposalsDocument, SafeProposalsResponseSchema, variables, daoId);
+    const variablesWithDao = {
+      ...variables,
+      where: {
+        ...variables?.where,
+        daoId: daoId
+      }
+    };
+    const validated = await this.query(ListProposalsDocument, SafeProposalsResponseSchema, variablesWithDao, daoId);
     return processProposals(validated, daoId!);
   }
 
