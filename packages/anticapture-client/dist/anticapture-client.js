@@ -14,20 +14,8 @@ class AnticaptureClient {
             query: (0, graphql_1.print)(document),
             variables,
         }, { headers });
-        // Handle empty or undefined responses
-        if (!response || !response.data) {
-            console.warn('[AntiCapture] No data received from GraphQL endpoint');
-            throw new Error('No data received from GraphQL endpoint');
-        }
         if (response.data.errors) {
-            // Log detailed error information
-            const errorDetail = response.data.errors[0];
-            console.error(`[AntiCapture] GraphQL Error Details:`, {
-                message: errorDetail?.message,
-                path: errorDetail?.path,
-                daoId: daoId || 'unknown'
-            });
-            throw new Error(`GraphQL errors: ${JSON.stringify(response.data.errors)}`);
+            throw new Error(response.data.errors[0].message);
         }
         return schema.parse(response.data.data);
     }
@@ -56,9 +44,7 @@ class AnticaptureClient {
             }));
         }
         catch (error) {
-            console.error('[AntiCapture] Error fetching DAOs:', error instanceof Error ? error.message : error);
-            // Return empty array if we can't fetch DAOs - better than crashing
-            console.warn('[AntiCapture] Returning empty DAO list due to API error');
+            console.warn('Returning empty DAO list due to API error: ', error instanceof Error ? error.message : error);
             return [];
         }
     }
@@ -74,15 +60,13 @@ class AnticaptureClient {
             return validated.proposalsOnchain;
         }
         catch (error) {
-            console.error(`[AntiCapture] Error fetching proposal ${id}:`, error instanceof Error ? error.message : error);
-            console.warn(`[AntiCapture] Returning null for proposal ${id} due to API error`);
+            console.warn(`Returning null for proposal ${id} due to API error`, error instanceof Error ? error.message : error);
             return null;
         }
     }
     async listProposals(variables, daoId) {
         if (!daoId && !variables?.where?.daoId) {
             const allDAOs = await this.getDAOs();
-            console.log(`[AntiCapture] listProposals: Querying ${allDAOs.length} DAOs:`, allDAOs.map(d => d.id).join(', '));
             const allProposals = [];
             for (const dao of allDAOs) {
                 const variablesWithDao = {
@@ -92,15 +76,12 @@ class AnticaptureClient {
                         daoId: dao.id
                     }
                 };
-                console.log(`[AntiCapture] Querying proposals for ${dao.id}`);
                 try {
                     const validated = await this.query(graphql_2.ListProposalsDocument, schemas_1.SafeProposalsResponseSchema, variablesWithDao, dao.id);
                     allProposals.push(...(0, schemas_1.processProposals)(validated, dao.id));
                 }
                 catch (error) {
-                    console.error(`[AntiCapture] Error querying proposals for ${dao.id}:`, error instanceof Error ? error.message : error);
-                    // Skip DAOs that fail instead of throwing - this allows other DAOs to continue
-                    console.warn(`[AntiCapture] Skipping ${dao.id} due to API error`);
+                    console.warn(`Skipping ${dao.id} due to API error: ${error instanceof Error ? error.message : error}`);
                 }
             }
             return allProposals;
@@ -117,7 +98,6 @@ class AnticaptureClient {
     async listVotingPowerHistory(variables, daoId) {
         if (!daoId && !variables?.where?.daoId) {
             const allDAOs = await this.getDAOs();
-            console.log(`[AntiCapture] listVotingPowerHistory: Querying ${allDAOs.length} DAOs:`, allDAOs.map(d => d.id).join(', '));
             const queryPromises = allDAOs.map(async (dao) => {
                 const variablesWithDao = {
                     ...variables,
@@ -126,15 +106,12 @@ class AnticaptureClient {
                         daoId: dao.id
                     }
                 };
-                console.log(`[AntiCapture] Querying voting power for ${dao.id}`);
                 try {
                     const validated = await this.query(graphql_2.ListVotingPowerHistorysDocument, schemas_1.SafeVotingPowerHistoryResponseSchema, variablesWithDao, dao.id);
                     return (0, schemas_1.processVotingPowerHistory)(validated, dao.id);
                 }
                 catch (error) {
-                    console.error(`[AntiCapture] Error querying voting power for ${dao.id}:`, error instanceof Error ? error.message : error);
-                    // Skip DAOs that fail instead of throwing - this allows other DAOs to continue
-                    console.warn(`[AntiCapture] Skipping ${dao.id} due to API error`);
+                    console.warn(`Skipping ${dao.id} due to API error: ${error instanceof Error ? error.message : error}`);
                     return [];
                 }
             });
