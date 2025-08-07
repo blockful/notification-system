@@ -1,13 +1,11 @@
 import { AxiosInstance } from 'axios';
-import { type Options } from 'p-retry';
 import type { GetProposalByIdQuery, ListProposalsQuery, ListProposalsQueryVariables, ListVotingPowerHistorysQueryVariables } from '../dist/gql/graphql';
 import { ProcessedVotingPowerHistory } from './schemas';
 type ProposalItems = ListProposalsQuery['proposalsOnchains']['items'];
 type VotingPowerHistoryItems = ProcessedVotingPowerHistory[];
 export declare class AnticaptureClient {
     private readonly httpClient;
-    private readonly retryOptions;
-    constructor(httpClient: AxiosInstance, retryOptions?: Options);
+    constructor(httpClient: AxiosInstance);
     private query;
     private buildHeaders;
     /**

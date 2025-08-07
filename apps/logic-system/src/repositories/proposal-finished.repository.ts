@@ -16,15 +16,14 @@ export class ProposalFinishedRepository {
   async getFinishedProposalsSince(lastNotifiedTimestamp: number): Promise<ProposalFinished[]> {
     const daos = await this.anticaptureClient.getDAOs();
     const daoPromises = daos.map(async (dao) => {
-      try {
-        const proposals = await this.anticaptureClient.listProposals(
-          {
-            where: {
-              timestamp_gt: lastNotifiedTimestamp.toString()
-            }
-          },
-          dao.id
-        );
+      const proposals = await this.anticaptureClient.listProposals(
+        {
+          where: {
+            timestamp_gt: lastNotifiedTimestamp.toString()
+          }
+        },
+        dao.id
+      );
 
       // Filter for proposals that have finished
       const finishedProposals: ProposalFinished[] = [];
@@ -60,10 +59,6 @@ export class ProposalFinishedRepository {
       }
       
       return finishedProposals;
-      } catch (error) {
-        console.warn(`[ProposalFinishedRepository] Skipping ${dao.id} due to API error: ${error instanceof Error ? error.message : error}`);
-        return []; // Return empty array for failed DAOs
-      }
     });
 
     const allResults = await Promise.all(daoPromises);    

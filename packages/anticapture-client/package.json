@@ -36,7 +36,6 @@
     "@graphql-typed-document-node/core": "^3.2.0",
     "axios": "^1.7.2",
     "graphql": "^16.11.0",
-    "p-retry": "^6.2.1",
     "zod": "^3.22.4"
   }
 }

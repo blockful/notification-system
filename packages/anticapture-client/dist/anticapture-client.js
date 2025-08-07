@@ -1,38 +1,35 @@
 "use strict";
-var __importDefault = (this && this.__importDefault) || function (mod) {
-    return (mod && mod.__esModule) ? mod : { "default": mod };
-};
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.AnticaptureClient = void 0;
 const graphql_1 = require("graphql");
-const p_retry_1 = __importDefault(require("p-retry"));
-const retry_config_1 = require("./retry-config");
 const graphql_2 = require("../dist/gql/graphql");
 const schemas_1 = require("./schemas");
 class AnticaptureClient {
-    constructor(httpClient, retryOptions) {
+    constructor(httpClient) {
         this.httpClient = httpClient;
-        this.retryOptions = retryOptions ?? retry_config_1.RETRY_OPTIONS;
     }
     async query(document, schema, variables, daoId) {
-        return (0, p_retry_1.default)(async () => {
-            const headers = this.buildHeaders(daoId);
-            const response = await this.httpClient.post('', {
-                query: (0, graphql_1.print)(document),
-                variables,
-            }, { headers });
-            return schema.parse(response.data.data);
-        }, {
-            ...this.retryOptions,
-            onFailedAttempt: (error) => {
-                if (!(0, retry_config_1.isRetryableError)(error)) {
-                    throw error;
-                }
-                if (this.retryOptions.onFailedAttempt) {
-                    this.retryOptions.onFailedAttempt(error);
-                }
-            }
-        });
+        const headers = this.buildHeaders(daoId);
+        const response = await this.httpClient.post('', {
+            query: (0, graphql_1.print)(document),
+            variables,
+        }, { headers });
+        // Handle empty or undefined responses
+        if (!response || !response.data) {
+            console.warn('[AntiCapture] No data received from GraphQL endpoint');
+            throw new Error('No data received from GraphQL endpoint');
+        }
+        if (response.data.errors) {
+            // Log detailed error information
+            const errorDetail = response.data.errors[0];
+            console.error(`[AntiCapture] GraphQL Error Details:`, {
+                message: errorDetail?.message,
+                path: errorDetail?.path,
+                daoId: daoId || 'unknown'
+            });
+            throw new Error(`GraphQL errors: ${JSON.stringify(response.data.errors)}`);
+        }
+        return schema.parse(response.data.data);
     }
     buildHeaders(daoId) {
         const headers = {
