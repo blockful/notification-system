@@ -21,14 +21,10 @@ class MockTrigger extends Trigger<any> {
 
 describe('BaseTrigger - Retry Logic', () => {
   let trigger: MockTrigger;
-  let consoleLogSpy: ReturnType<typeof jest.spyOn>;
-  let consoleErrorSpy: ReturnType<typeof jest.spyOn>;
 
   beforeEach(() => {
-    trigger = new MockTrigger('test-trigger', 100); // Use 100ms interval for faster tests
+    trigger = new MockTrigger('test-trigger', 100);
     jest.useFakeTimers();
-    consoleLogSpy = jest.spyOn(console, 'log').mockImplementation(() => {});
-    consoleErrorSpy = jest.spyOn(console, 'error').mockImplementation(() => {});
   });
 
   afterEach(() => {
@@ -36,8 +32,6 @@ describe('BaseTrigger - Retry Logic', () => {
     jest.clearAllTimers();
     jest.useRealTimers();
     jest.clearAllMocks();
-    consoleLogSpy.mockRestore();
-    consoleErrorSpy.mockRestore();
   });
 
   describe('Retry with consecutive failures', () => {
