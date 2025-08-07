@@ -36,7 +36,7 @@ export class AnticaptureClient {
     }, { headers });
 
     if (response.data.errors) {
-      throw new Error(response.data.errors[0].message);
+      throw new Error(JSON.stringify(response.data.errors));
     }
 
     return schema.parse(response.data.data);
