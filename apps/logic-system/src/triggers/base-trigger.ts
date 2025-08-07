@@ -72,10 +72,7 @@ export abstract class Trigger<TData, TFilterOptions = void> {
             try {
                 const data = await this.fetchData(options);
                 await this.process(data, this.options);
-                // Reset failure count on successful execution
-                if (this.consecutiveFailures > 0) {
-                    this.consecutiveFailures = 0;
-                }
+                if (this.consecutiveFailures > 0) this.resetConsecutiveFailures();
             } catch (error) {
                 await this.handleError(error);
             }
@@ -92,6 +89,12 @@ export abstract class Trigger<TData, TFilterOptions = void> {
         }
     }
 
+    /**
+     * Handles errors from the trigger.
+     * If the error is not recoverable, the trigger will stop.
+     * If the error is recoverable, the trigger will retry on the next interval.
+     * @param error Error object
+     */
     private async handleError(error: unknown): Promise<void> {
         this.consecutiveFailures++;
         const errorMessage = error instanceof Error ? error.message : 'Unknown error';
@@ -101,5 +104,12 @@ export abstract class Trigger<TData, TFilterOptions = void> {
             throw new Error(`Trigger ${this.id} stopped after ${this.consecutiveFailures} consecutive failures. Last error: ${errorMessage}`);
         }
         console.log(`Trigger ${this.id}: Will retry on next interval. Failures: ${this.consecutiveFailures}/${this.maxConsecutiveFailures}`);
+    }
+
+    /**
+     * Resets the consecutive failures counter.
+     */
+    private resetConsecutiveFailures(): void {
+        this.consecutiveFailures = 0;
     }
 } 
