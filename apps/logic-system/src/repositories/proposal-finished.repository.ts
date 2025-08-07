@@ -61,8 +61,7 @@ export class ProposalFinishedRepository {
       
       return finishedProposals;
       } catch (error) {
-        console.error(`[ProposalFinishedRepository] Error fetching proposals for ${dao.id}:`, error instanceof Error ? error.message : error);
-        console.warn(`[ProposalFinishedRepository] Skipping ${dao.id} due to API error`);
+        console.warn(`[ProposalFinishedRepository] Skipping ${dao.id} due to API error: ${error instanceof Error ? error.message : error}`);
         return []; // Return empty array for failed DAOs
       }
     });
