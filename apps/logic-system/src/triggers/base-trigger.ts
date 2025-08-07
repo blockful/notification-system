@@ -1,8 +1,3 @@
-interface TriggerOptions {
-    maxConsecutiveFailures?: number;
-    resetFailureCountAfterSuccess?: boolean;
-}
-  
 /**
  * Base abstract class for all triggers in the system
  */
@@ -39,19 +34,11 @@ export abstract class Trigger<TData, TFilterOptions = void> {
      * Maximum consecutive failures before stopping the trigger
      * @private
      */
-    private readonly maxConsecutiveFailures: number;
+    private readonly maxConsecutiveFailures = 5;
 
-    /**
-     * Whether to reset failure count after successful execution
-     * @private
-     */
-    private readonly resetFailureCountAfterSuccess: boolean;
-
-    constructor(id: string, interval: number, options?: TriggerOptions) {
+    constructor(id: string, interval: number) {
         this.id = id;
         this.interval = interval;
-        this.maxConsecutiveFailures = options?.maxConsecutiveFailures ?? 5;
-        this.resetFailureCountAfterSuccess = options?.resetFailureCountAfterSuccess ?? true;
     }
 
     /**
@@ -86,7 +73,7 @@ export abstract class Trigger<TData, TFilterOptions = void> {
                 const data = await this.fetchData(options);
                 await this.process(data, this.options);
                 // Reset failure count on successful execution
-                if (this.resetFailureCountAfterSuccess && this.consecutiveFailures > 0) {
+                if (this.consecutiveFailures > 0) {
                     this.consecutiveFailures = 0;
                 }
             } catch (error) {
