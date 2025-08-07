@@ -35,19 +35,8 @@ export class AnticaptureClient {
       variables,
     }, { headers });
 
-    // Handle empty or undefined responses
-    if (!response || !response.data) {
-      throw new Error('No data received from GraphQL endpoint');
-    }
-
     if (response.data.errors) {
-      const errorDetail = response.data.errors[0];
-      console.error(`GraphQL Error Details:`, {
-        message: errorDetail?.message,
-        path: errorDetail?.path,
-        daoId: daoId || 'unknown'
-      });
-      throw new Error(`GraphQL errors: ${JSON.stringify(response.data.errors)}`);
+      throw new Error(response.data.errors[0].message);
     }
 
     return schema.parse(response.data.data);
