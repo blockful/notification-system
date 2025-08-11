@@ -100,15 +100,8 @@ export class AnticaptureClient {
       const allProposals: ProposalItems = [];
 
       for (const dao of allDAOs) {
-        const variablesWithDao = {
-          ...variables,
-          where: {
-            ...variables?.where,
-            daoId: dao.id
-          }
-        };
         try {
-          const validated = await this.query(ListProposalsDocument, SafeProposalsResponseSchema, variablesWithDao, dao.id);
+          const validated = await this.query(ListProposalsDocument, SafeProposalsResponseSchema, variables, dao.id);
           allProposals.push(...processProposals(validated, dao.id));
         } catch (error) {
           console.warn(`Skipping ${dao.id} due to API error: ${error instanceof Error ? error.message : error}`);
@@ -137,15 +130,8 @@ export class AnticaptureClient {
     if (!daoId && !variables?.where?.daoId) {
       const allDAOs = await this.getDAOs();
       const queryPromises = allDAOs.map(async (dao) => {
-        const variablesWithDao = {
-          ...variables,
-          where: {
-            ...variables?.where,
-            daoId: dao.id
-          }
-        };
         try {
-          const validated = await this.query(ListVotingPowerHistorysDocument, SafeVotingPowerHistoryResponseSchema, variablesWithDao, dao.id);
+          const validated = await this.query(ListVotingPowerHistorysDocument, SafeVotingPowerHistoryResponseSchema, variables, dao.id);
           return processVotingPowerHistory(validated, dao.id);
         } catch (error) {
           console.warn(`Skipping ${dao.id} due to API error: ${error instanceof Error ? error.message : error}`);
