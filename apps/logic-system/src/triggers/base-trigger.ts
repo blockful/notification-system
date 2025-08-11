@@ -24,6 +24,18 @@ export abstract class Trigger<TData, TFilterOptions = void> {
      */
     protected options?: TFilterOptions;
 
+    /**
+     * Counter for consecutive failures
+     * @private
+     */
+    private consecutiveFailures = 0;
+
+    /**
+     * Maximum consecutive failures before stopping the trigger
+     * @private
+     */
+    private readonly maxConsecutiveFailures = 5;
+
     constructor(id: string, interval: number) {
         this.id = id;
         this.interval = interval;
@@ -47,7 +59,7 @@ export abstract class Trigger<TData, TFilterOptions = void> {
     /**
      * Starts the trigger to run at the specified interval
      * @param options Options for filtering data
-     * @throws {Error} If there's an error during trigger execution
+     * @throws {Error} If maximum consecutive failures are reached
      */
     start(options: TFilterOptions): void {
         if (this.timer) {
@@ -60,9 +72,9 @@ export abstract class Trigger<TData, TFilterOptions = void> {
             try {
                 const data = await this.fetchData(options);
                 await this.process(data, this.options);
+                if (this.consecutiveFailures > 0) this.resetConsecutiveFailures();
             } catch (error) {
-                await this.stop();
-                throw new Error(`Error in trigger execution (${this.id}): ${error instanceof Error ? error.message : 'Unknown error'}`);
+                await this.handleError(error);
             }
         }, this.interval);
     }
@@ -75,5 +87,28 @@ export abstract class Trigger<TData, TFilterOptions = void> {
             clearInterval(this.timer);
             this.timer = null;
         }
+    }
+
+    /**
+     * Handles errors from the trigger.
+     * If the error is not recoverable, the trigger will stop.
+     * If the error is recoverable, the trigger will retry on the next interval.
+     * @param error Error object
+     */
+    private async handleError(error: unknown): Promise<void> {
+        this.consecutiveFailures++;
+        if (this.consecutiveFailures >= this.maxConsecutiveFailures) {
+            console.error(`[Trigger ${this.id}] Stopped after ${this.consecutiveFailures} consecutive failures. Last error: ${error instanceof Error ? error.message : 'Unknown error'}`);
+            await this.stop();
+            return;
+        }
+        console.log(`[Trigger ${this.id}] Will retry on next interval. Failures: ${this.consecutiveFailures}/${this.maxConsecutiveFailures}`);
+    }
+
+    /**
+     * Resets the consecutive failures counter.
+     */
+    private resetConsecutiveFailures(): void {
+        this.consecutiveFailures = 0;
     }
 } 

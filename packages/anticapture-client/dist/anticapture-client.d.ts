@@ -7,6 +7,7 @@ export declare class AnticaptureClient {
     private readonly httpClient;
     constructor(httpClient: AxiosInstance);
     private query;
+    private buildHeaders;
     /**
      * Fetches all DAOs from the anticapture GraphQL API with full type safety
      * @returns Array of DAO objects with blockTime added
