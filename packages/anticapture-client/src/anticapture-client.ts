@@ -118,8 +118,13 @@ export class AnticaptureClient {
       return allProposals;
     }
 
-    const validated = await this.query(ListProposalsDocument, SafeProposalsResponseSchema, variables, daoId);
-    return processProposals(validated, daoId!);
+    try {
+      const validated = await this.query(ListProposalsDocument, SafeProposalsResponseSchema, variables, daoId);
+      return processProposals(validated, daoId!);
+    } catch (error) {
+      console.warn(`Error querying proposals for DAO ${daoId}: ${error instanceof Error ? error.message : error}`);
+      return [];
+    }
   }
 
   /**
@@ -154,7 +159,12 @@ export class AnticaptureClient {
       );
     }
 
-    const validated = await this.query(ListVotingPowerHistorysDocument, SafeVotingPowerHistoryResponseSchema, variables, daoId);
-    return processVotingPowerHistory(validated, daoId!);
+    try {
+      const validated = await this.query(ListVotingPowerHistorysDocument, SafeVotingPowerHistoryResponseSchema, variables, daoId);
+      return processVotingPowerHistory(validated, daoId!);
+    } catch (error) {
+      console.warn(`Error querying voting power history for DAO ${daoId}: ${error instanceof Error ? error.message : error}`);
+      return [];
+    }
   }
 }

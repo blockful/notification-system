@@ -86,8 +86,14 @@ class AnticaptureClient {
             }
             return allProposals;
         }
-        const validated = await this.query(graphql_2.ListProposalsDocument, schemas_1.SafeProposalsResponseSchema, variables, daoId);
-        return (0, schemas_1.processProposals)(validated, daoId);
+        try {
+            const validated = await this.query(graphql_2.ListProposalsDocument, schemas_1.SafeProposalsResponseSchema, variables, daoId);
+            return (0, schemas_1.processProposals)(validated, daoId);
+        }
+        catch (error) {
+            console.warn(`Error querying proposals for DAO ${daoId}: ${error instanceof Error ? error.message : error}`);
+            return [];
+        }
     }
     /**
      * Lists voting power history with full type safety
@@ -118,8 +124,14 @@ class AnticaptureClient {
             const results = await Promise.all(queryPromises);
             return results.flat().sort((a, b) => parseInt(a.timestamp) - parseInt(b.timestamp));
         }
-        const validated = await this.query(graphql_2.ListVotingPowerHistorysDocument, schemas_1.SafeVotingPowerHistoryResponseSchema, variables, daoId);
-        return (0, schemas_1.processVotingPowerHistory)(validated, daoId);
+        try {
+            const validated = await this.query(graphql_2.ListVotingPowerHistorysDocument, schemas_1.SafeVotingPowerHistoryResponseSchema, variables, daoId);
+            return (0, schemas_1.processVotingPowerHistory)(validated, daoId);
+        }
+        catch (error) {
+            console.warn(`Error querying voting power history for DAO ${daoId}: ${error instanceof Error ? error.message : error}`);
+            return [];
+        }
     }
 }
 exports.AnticaptureClient = AnticaptureClient;
