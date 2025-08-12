@@ -18,9 +18,9 @@ export class ProposalRepository implements ProposalDataSource {
     if (options?.status || options?.status_in || options?.daoId) {
       variables.where = {};  
       if (options.status_in && options.status_in.length > 0) {
-        variables.where.status_in = options.status_in.map(s => s.toUpperCase());
+        variables.where.status_in = options.status_in;
       } else if (options.status) {
-        variables.where.status_in = [options.status.toUpperCase()];
+        variables.where.status_in = [options.status];
       }
       
       if (options.daoId) {

@@ -36,8 +36,8 @@ describe('NewProposalTrigger', () => {
 
     it('should send proposals directly without transformation', async () => {
       const proposals: ProposalOnChain[] = [
-        createMockProposal({ status: 'pending' }),
-        createMockProposal({ id: '2', status: 'pending', description: 'Second proposal\nWith details' })
+        createMockProposal({ status: 'ACTIVE' }),
+        createMockProposal({ id: '2', status: 'ACTIVE', description: 'Second proposal\nWith details' })
       ];
       
       await trigger.process(proposals);
@@ -84,29 +84,29 @@ describe('NewProposalTrigger', () => {
     });
 
     it('should start the interval and fetch proposals with correct status', () => {
-      trigger.start({ status: 'pending' });
+      trigger.start({ status: 'ACTIVE' });
       jest.advanceTimersByTime(60000);
       
       expect(mockProposalDataSource.listAll).toHaveBeenCalledTimes(1);
-      expect(mockProposalDataSource.listAll).toHaveBeenCalledWith({ status: 'pending' });
+      expect(mockProposalDataSource.listAll).toHaveBeenCalledWith({ status: 'ACTIVE' });
     });
     
     it('should stop and restart the interval if start is called twice', () => {
       const stopSpy = jest.spyOn(trigger, 'stop');
-      trigger.start({ status: 'pending' });
-      trigger.start({ status: 'pending' });
+      trigger.start({ status: 'ACTIVE' });
+      trigger.start({ status: 'ACTIVE' });
       expect(stopSpy).toHaveBeenCalledTimes(1);
       jest.advanceTimersByTime(60000);
       
-      expect(mockProposalDataSource.listAll).toHaveBeenCalledWith({ status: 'pending' });
+      expect(mockProposalDataSource.listAll).toHaveBeenCalledWith({ status: 'ACTIVE' });
     });
     
     it('should stop the interval when stop is called', () => {
-      trigger.start({ status: 'active' });
+      trigger.start({ status: 'ACTIVE' });
       jest.advanceTimersByTime(60000);
       
       expect(mockProposalDataSource.listAll).toHaveBeenCalledTimes(1);
-      expect(mockProposalDataSource.listAll).toHaveBeenCalledWith({ status: 'active' });
+      expect(mockProposalDataSource.listAll).toHaveBeenCalledWith({ status: 'ACTIVE' });
       
       mockProposalDataSource.listAll.mockClear();
       trigger.stop();

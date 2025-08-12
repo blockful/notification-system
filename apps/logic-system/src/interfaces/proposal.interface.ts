@@ -7,14 +7,14 @@ export type ProposalOrNull = ProposalOnChain | null;
  * Valid status values for a proposal
  */
 export type ProposalStatus = 
-    | 'pending'
-    | 'active'
-    | 'succeeded'
-    | 'defeated'
-    | 'executed'
-    | 'canceled'
-    | 'queued'
-    | 'expired';
+    | 'PENDING'
+    | 'ACTIVE'
+    | 'SUCCEEDED'
+    | 'DEFEATED'
+    | 'EXECUTED'
+    | 'CANCELED'
+    | 'QUEUED'
+    | 'EXPIRED';
 
 /**
  * Options for listing proposals

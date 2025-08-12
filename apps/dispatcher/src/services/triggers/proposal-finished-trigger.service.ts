@@ -52,15 +52,15 @@ export class ProposalFinishedTriggerHandler extends BaseTriggerHandler<ProposalF
     const proposalTitle = proposal.description.split('\n')[0].replace(/^#+\s*/, '').trim();
     
     const statusEmoji: Record<string, string> = {
-      'executed': '✅',
-      'succeeded': '✅',
-      'defeated': '❌',
-      'expired': '⏰',
-      'canceled': '🚫'
+      'EXECUTED': '✅',
+      'SUCCEEDED': '✅',
+      'DEFEATED': '❌',
+      'EXPIRED': '⏰',
+      'CANCELED': '🚫'
     };
     
-    const emoji = statusEmoji[proposal.status.toLowerCase()] || '📊';
-    const statusFormatted = proposal.status.charAt(0).toUpperCase() + proposal.status.slice(1).toLowerCase();
+    const emoji = statusEmoji[proposal.status] || '📊';
+    const statusFormatted = proposal.status.charAt(0) + proposal.status.slice(1).toLowerCase();
     
     const votes = `${formatTokenAmount(proposal.forVotes)} FOR | ${formatTokenAmount(proposal.againstVotes)} AGAINST | ${formatTokenAmount(proposal.abstainVotes)} ABSTAIN`;
     
