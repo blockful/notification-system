@@ -3,7 +3,6 @@ import { VotingPowerChangedTrigger } from './triggers/voting-power-changed-trigg
 import { ProposalFinishedTrigger } from './triggers/proposal-finished-trigger';
 import { ProposalRepository } from './repositories/proposal.repository';
 import { VotingPowerRepository } from './repositories/voting-power.repository';
-import { ProposalFinishedRepository } from './repositories/proposal-finished.repository';
 import { RabbitMQDispatcherService } from './api-clients/rabbitmq-dispatcher.service';
 import { AnticaptureClient } from '@notification-system/anticapture-client';
 import { RabbitMQConnection, RabbitMQPublisher } from '@notification-system/rabbitmq-client';
@@ -30,16 +29,14 @@ export class App {
     const anticaptureClient = new AnticaptureClient(anticaptureHttpClient);
     const proposalRepository = new ProposalRepository(anticaptureClient);
     const votingPowerRepository = new VotingPowerRepository(anticaptureClient);
-    const proposalFinishedRepository = new ProposalFinishedRepository(anticaptureClient);
 
-    this.initPromise = this.initializeRabbitMQ(rabbitmqUrl, proposalRepository, votingPowerRepository, proposalFinishedRepository, triggerInterval);
+    this.initPromise = this.initializeRabbitMQ(rabbitmqUrl, proposalRepository, votingPowerRepository, triggerInterval);
   }
 
   private async initializeRabbitMQ(
     rabbitmqUrl: string, 
     proposalRepository: ProposalRepository,
     votingPowerRepository: VotingPowerRepository,
-    proposalFinishedRepository: ProposalFinishedRepository,
     triggerInterval: number
   ): Promise<void> {
     this.rabbitMQConnection = new RabbitMQConnection(rabbitmqUrl);
@@ -61,7 +58,7 @@ export class App {
     );
 
     this.proposalFinishedTrigger = new ProposalFinishedTrigger(
-      proposalFinishedRepository,
+      proposalRepository,
       dispatcherService,
       triggerInterval
     );
