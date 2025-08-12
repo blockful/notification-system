@@ -1,15 +1,6 @@
 import { ProposalDataSource, ProposalOnChain, ProposalOrNull, ListProposalsOptions } from '../interfaces/proposal.interface';
 import { AnticaptureClient, ListProposalsQueryVariables } from '@notification-system/anticapture-client';
 
-function generateStatusVariations(status: string): string[] {
-  const normalized = status.toLowerCase();
-  return [
-    normalized,                                                    // lowercase: "pending"
-    normalized.toUpperCase(),                                      // uppercase: "PENDING"
-    normalized.charAt(0).toUpperCase() + normalized.slice(1)       // title case: "Pending"
-  ];
-}
-
 export class ProposalRepository implements ProposalDataSource {
   private anticaptureClient: AnticaptureClient;
 
@@ -24,11 +15,14 @@ export class ProposalRepository implements ProposalDataSource {
   async listAll(options?: ListProposalsOptions): Promise<ProposalOnChain[]> {
     const variables: ListProposalsQueryVariables = {};
     
-    if (options?.status || options?.daoId) {
+    if (options?.status || options?.status_in || options?.daoId) {
       variables.where = {};  
-      if (options.status) {
-        variables.where.status_in = generateStatusVariations(options.status);
+      if (options.status_in && options.status_in.length > 0) {
+        variables.where.status_in = options.status_in.map(s => s.toUpperCase());
+      } else if (options.status) {
+        variables.where.status_in = [options.status.toUpperCase()];
       }
+      
       if (options.daoId) {
         variables.where.daoId = options.daoId;
       }
