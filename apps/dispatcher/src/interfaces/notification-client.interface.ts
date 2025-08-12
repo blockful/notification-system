@@ -29,4 +29,8 @@ export interface ProposalFinishedNotification {
   daoId: string;
   description: string;
   endTimestamp: number;
+  status: string;
+  forVotes: string;
+  againstVotes: string;
+  abstainVotes: string;
 }
