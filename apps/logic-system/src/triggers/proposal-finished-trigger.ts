@@ -1,39 +1,45 @@
 import { Trigger } from './base-trigger';
-import { ProposalFinishedRepository } from '../repositories/proposal-finished.repository';
+import { ProposalRepository } from '../repositories/proposal.repository';
 import { RabbitMQDispatcherService } from '../api-clients/rabbitmq-dispatcher.service';
 import { DispatcherMessage } from '../interfaces/dispatcher.interface';
-import { ProposalFinished, ProposalFinishedNotification } from '../interfaces/proposal.interface';
+import { ProposalOnChain, ProposalFinishedNotification } from '../interfaces/proposal.interface';
 
 /**
  * Trigger for detecting finished proposals
  */
-export class ProposalFinishedTrigger extends Trigger<ProposalFinished, void> {
-  private lastNotifiedProposalTimestamp: number;
+export class ProposalFinishedTrigger extends Trigger<ProposalOnChain, void> {
+  private readonly finishedStatuses = ['executed', 'defeated', 'succeeded', 'expired', 'canceled'];
 
   constructor(
-    private readonly proposalFinishedRepository: ProposalFinishedRepository,
+    private readonly proposalRepository: ProposalRepository,
     private readonly rabbitMQDispatcherService: RabbitMQDispatcherService,
     interval: number
   ) {
     super('proposal-finished', interval);
-    // Initialize with 7-day lookback on startup
-    this.lastNotifiedProposalTimestamp = Math.floor(Date.now() / 1000) - (7 * 24 * 60 * 60);
   }
 
-  protected async fetchData(): Promise<ProposalFinished[]> {
-    return await this.proposalFinishedRepository.getFinishedProposalsSince(this.lastNotifiedProposalTimestamp);
+  protected async fetchData(): Promise<ProposalOnChain[]> {
+    return await this.proposalRepository.listAll({
+      status_in: this.finishedStatuses,
+      limit: 100
+    });
   }
 
-  async process(data: ProposalFinished[]): Promise<void> {
+  async process(data: ProposalOnChain[]): Promise<void> {
     if (data.length === 0) {
       return;
     }
 
     const notifications: ProposalFinishedNotification[] = data.map(proposal => ({
-      id: proposal.id,
-      daoId: proposal.daoId,
-      description: proposal.description,
-      endTimestamp: proposal.endTimestamp
+      id: proposal?.id || '',
+      daoId: proposal?.daoId || '',
+      description: proposal?.description || '',
+      // TODO: Use endTimestamp when available in API, using timestamp as fallback for now
+      endTimestamp: proposal?.timestamp ? parseInt(proposal.timestamp) : 0,
+      status: proposal?.status || 'unknown',
+      forVotes: proposal?.forVotes || '0',
+      againstVotes: proposal?.againstVotes || '0',
+      abstainVotes: proposal?.abstainVotes || '0'
     }));
 
     // Send all proposals in a single batch message for maximum efficiency
@@ -43,12 +49,5 @@ export class ProposalFinishedTrigger extends Trigger<ProposalFinished, void> {
     };
     
     await this.rabbitMQDispatcherService.sendMessage(message);
-
-    // Update last notified timestamp to the latest proposal's timestamp (creation time)
-    // this.lastNotifiedProposalTimestamp = Math.max(
-    //   this.lastNotifiedProposalTimestamp,
-    //   ...data.map(proposal => proposal.timestamp)
-    // ); // TODO: Uncomment when API supports the endTimestamp field
-    this.lastNotifiedProposalTimestamp = Math.floor(Date.now() / 1000) - (7 * 24 * 60 * 60);
   }
 }
