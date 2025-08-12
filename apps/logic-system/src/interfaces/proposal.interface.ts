@@ -26,6 +26,8 @@ export interface ListProposalsOptions {
     limit?: number;
     /** Filter by status (using GraphQL string type) */
     status?: string;
+    /** Filter by multiple statuses */
+    status_in?: string[];
     /** Filter by DAO */
     daoId?: string;
 }
@@ -71,11 +73,15 @@ export interface ProposalFinished {
 
 /**
  * Interface for proposal finished notifications (sent to Dispatcher)
- * Contains only essential data needed for notification generation
+ * Contains essential data needed for notification generation including voting results
  */
 export interface ProposalFinishedNotification {
     id: string;
     daoId: string;
     description: string;
     endTimestamp: number;
+    status: string;
+    forVotes: string;
+    againstVotes: string;
+    abstainVotes: string;
 } 
