@@ -24,20 +24,16 @@ describe('NewProposalTrigger', () => {
   });
 
   describe('process', () => {
-    it('should process empty array by sending empty events', async () => {
+    it('should not send message when array is empty', async () => {
       await trigger.process([]);
       
-      expect(mockDispatcherService.sendMessage).toHaveBeenCalledTimes(1);
-      expect(mockDispatcherService.sendMessage).toHaveBeenCalledWith({
-        triggerId: 'new-proposal',
-        events: []
-      });
+      expect(mockDispatcherService.sendMessage).not.toHaveBeenCalled();
     });
 
-    it('should send proposals directly without transformation', async () => {
+    it('should send proposals and update lastFetchedTimestamp', async () => {
       const proposals: ProposalOnChain[] = [
-        createProposal({ status: 'ACTIVE' }),
-        createProposal({ id: '2', status: 'ACTIVE', description: 'Second proposal\nWith details' })
+        createProposal({ status: 'ACTIVE', timestamp: '1000' }),
+        createProposal({ id: '2', status: 'ACTIVE', description: 'Second proposal\nWith details', timestamp: '900' })
       ];
       
       await trigger.process(proposals);
@@ -47,6 +43,9 @@ describe('NewProposalTrigger', () => {
         triggerId: 'new-proposal',
         events: proposals
       });
+      
+      // Should update to the first proposal's timestamp (highest since ordered desc)
+      expect(trigger['lastFetchedTimestamp']).toBe('1000');
     });
 
     it('should send complete proposal objects including all fields', async () => {
@@ -85,30 +84,42 @@ describe('NewProposalTrigger', () => {
       await expect(fetchDataMethod({})).rejects.toThrow('Status is required in filter options');
     });
 
-    it('should start the interval and fetch proposals with correct status', () => {
+    it('should start the interval and fetch proposals with status and timestamp filter', () => {
+      const initialTimestamp = trigger['lastFetchedTimestamp'];
       trigger.start({ status: 'ACTIVE' });
       jest.advanceTimersByTime(60000);
       
       expect(mockProposalDataSource.listAll).toHaveBeenCalledTimes(1);
-      expect(mockProposalDataSource.listAll).toHaveBeenCalledWith({ status: 'ACTIVE' });
+      expect(mockProposalDataSource.listAll).toHaveBeenCalledWith({ 
+        status: 'ACTIVE',
+        timestamp_gt: initialTimestamp 
+      });
     });
     
     it('should stop and restart the interval if start is called twice', () => {
       const stopSpy = jest.spyOn(trigger, 'stop');
+      const initialTimestamp = trigger['lastFetchedTimestamp'];
       trigger.start({ status: 'ACTIVE' });
       trigger.start({ status: 'ACTIVE' });
       expect(stopSpy).toHaveBeenCalledTimes(1);
       jest.advanceTimersByTime(60000);
       
-      expect(mockProposalDataSource.listAll).toHaveBeenCalledWith({ status: 'ACTIVE' });
+      expect(mockProposalDataSource.listAll).toHaveBeenCalledWith({ 
+        status: 'ACTIVE',
+        timestamp_gt: initialTimestamp 
+      });
     });
     
     it('should stop the interval when stop is called', () => {
+      const initialTimestamp = trigger['lastFetchedTimestamp'];
       trigger.start({ status: 'ACTIVE' });
       jest.advanceTimersByTime(60000);
       
       expect(mockProposalDataSource.listAll).toHaveBeenCalledTimes(1);
-      expect(mockProposalDataSource.listAll).toHaveBeenCalledWith({ status: 'ACTIVE' });
+      expect(mockProposalDataSource.listAll).toHaveBeenCalledWith({ 
+        status: 'ACTIVE',
+        timestamp_gt: initialTimestamp 
+      });
       
       mockProposalDataSource.listAll.mockClear();
       trigger.stop();

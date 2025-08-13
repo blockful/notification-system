@@ -31,13 +31,15 @@ describe('ProposalFinishedTrigger', () => {
   });
 
   describe('Data Fetching', () => {
-    it('should fetch proposals with finished statuses', async () => {
+    it('should fetch proposals with finished statuses and temporal filter', async () => {
       mockProposalRepository.listAll.mockResolvedValue([]);
+      const initialTimestamp = trigger['lastProcessedEndTimestamp'];
       
       await (trigger as any).fetchData();
       
       expect(mockProposalRepository.listAll).toHaveBeenCalledWith({
         status_in: ['EXECUTED', 'DEFEATED', 'SUCCEEDED', 'EXPIRED', 'CANCELED'],
+        endTimestamp_gt: initialTimestamp,
         limit: 100
       });
     });
@@ -66,7 +68,7 @@ describe('ProposalFinishedTrigger', () => {
     });
 
     describe('when proposals exist', () => {
-      it('should send message with correct format including voting data', async () => {
+      it('should send message with correct format and update lastProcessedEndTimestamp', async () => {
         const proposals = [
           createFinishedProposal('EXECUTED', {
             id: 'prop1',
@@ -112,6 +114,9 @@ describe('ProposalFinishedTrigger', () => {
             }
           ]
         });
+        
+        // Should update to the max endTimestamp
+        expect(trigger['lastProcessedEndTimestamp']).toBe('1625184000');
       });
 
       it('should handle proposals with missing optional fields', async () => {
