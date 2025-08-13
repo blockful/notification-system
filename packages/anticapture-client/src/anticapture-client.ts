@@ -8,8 +8,8 @@ import type {
   ListProposalsQuery,
   ListProposalsQueryVariables,
   ListVotingPowerHistorysQueryVariables
-} from '../dist/gql/graphql';
-import { GetDaOsDocument, GetProposalByIdDocument, ListProposalsDocument, ListVotingPowerHistorysDocument } from '../dist/gql/graphql';
+} from './gql/graphql';
+import { GetDaOsDocument, GetProposalByIdDocument, ListProposalsDocument, ListVotingPowerHistorysDocument } from './gql/graphql';
 import { SafeDaosResponseSchema, SafeProposalByIdResponseSchema, SafeProposalsResponseSchema, SafeVotingPowerHistoryResponseSchema, processProposals, processVotingPowerHistory, ProcessedVotingPowerHistory } from './schemas';
 
 type ProposalItems = ListProposalsQuery['proposalsOnchains']['items'];

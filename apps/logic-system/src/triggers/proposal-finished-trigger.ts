@@ -41,8 +41,7 @@ export class ProposalFinishedTrigger extends Trigger<ProposalOnChain, void> {
       id: proposal?.id || '',
       daoId: proposal?.daoId || '',
       description: proposal?.description || '',
-      // TODO: Use endTimestamp when available in API, using timestamp as fallback for now
-      endTimestamp: proposal?.timestamp ? parseInt(proposal.timestamp) : 0,
+      endTimestamp: proposal?.endTimestamp ? parseInt(proposal.endTimestamp) : 0,
       status: proposal?.status || 'unknown',
       forVotes: proposal?.forVotes || '0',
       againstVotes: proposal?.againstVotes || '0',

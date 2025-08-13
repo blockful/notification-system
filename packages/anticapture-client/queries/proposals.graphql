@@ -9,6 +9,7 @@ query GetProposalById($id: String!) {
     calldatas
     startBlock
     endBlock
+    endTimestamp
     description
     timestamp
     status
@@ -30,6 +31,7 @@ query ListProposals($where: proposalsOnchainFilter, $limit: Int, $orderBy: Strin
       calldatas
       startBlock
       endBlock
+      endTimestamp
       description
       timestamp
       status
