@@ -41,6 +41,12 @@ export class GraphQLMockSetup {
         if (data.variables?.where?.status_in) {
           filtered = filtered.filter(p => data.variables.where.status_in.includes(p.status));
         }
+        if (data.variables?.where?.timestamp_gt) {
+          filtered = filtered.filter(p => parseInt(p.timestamp) > parseInt(data.variables.where.timestamp_gt));
+        }
+        if (data.variables?.where?.endTimestamp_gt) {
+          filtered = filtered.filter(p => parseInt(p.endTimestamp) > parseInt(data.variables.where.endTimestamp_gt));
+        }
         if (config?.headers?.['anticapture-dao-id']) {
           filtered = filtered.filter(p => p.daoId === config.headers['anticapture-dao-id']);
         }

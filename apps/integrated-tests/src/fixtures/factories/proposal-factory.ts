@@ -23,9 +23,11 @@ export interface ProposalData {
   startBlock: number;
   /** Block number when voting ends */
   endBlock: number;
+  /** Timestamp when proposal ends (in seconds as string) */
+  endTimestamp: string;
   /** Human-readable description of the proposal */
   description: string;
-  /** ISO timestamp when proposal was created */
+  /** Timestamp when proposal was created (in seconds as string) */
   timestamp: string;
   /** Current status of the proposal (PENDING, ACTIVE, etc.) */
   status: string;
@@ -50,6 +52,8 @@ export class ProposalFactory {
    * @return Complete ProposalData object ready for testing
    */
   static createProposal(daoId: string, proposalId: string, overrides?: Partial<ProposalData>): ProposalData {
+    // Use a timestamp 1 second in the future to ensure it's always newer than lastFetchedTimestamp
+    const now = Math.floor(Date.now() / 1000) + 1;
     const baseProposal: ProposalData = {
       id: proposalId,
       daoId: daoId,
@@ -60,9 +64,10 @@ export class ProposalFactory {
       calldatas: ['0xabcdef1234567890'],
       startBlock: 12345678,
       endBlock: 12345978,
+      endTimestamp: (now + 300).toString(), // Ends in 5 minutes
       description: `Test ${daoId} proposal`,
-      timestamp: new Date().toISOString(),
-      status: 'PENDING',
+      timestamp: now.toString(),
+      status: 'ACTIVE',
       forVotes: '1000000000000000000',
       againstVotes: '500000000000000000',
       abstainVotes: '200000000000000000',
