@@ -34,6 +34,10 @@ export interface ListProposalsOptions {
     timestamp_gt?: string;
     /** Filter proposals that ended after this timestamp (in seconds) */
     endTimestamp_gt?: string;
+    /** Field to order by (timestamp or endTimestamp) */
+    orderBy?: string;
+    /** Order direction (asc or desc) */
+    orderDirection?: string;
 }
 
 /**

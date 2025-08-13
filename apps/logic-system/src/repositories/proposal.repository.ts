@@ -42,9 +42,9 @@ export class ProposalRepository implements ProposalDataSource {
       variables.limit = 1000;
     }
     
-    // Add ordering to get newest proposals first
-    variables.orderBy = 'timestamp';
-    variables.orderDirection = 'desc';
+    // Add ordering - default to timestamp desc if not specified
+    variables.orderBy = options?.orderBy || 'timestamp';
+    variables.orderDirection = options?.orderDirection || 'desc';
     
     return await this.anticaptureClient.listProposals(variables);
   }
