@@ -40,6 +40,8 @@ describe('ProposalFinishedTrigger', () => {
       expect(mockProposalRepository.listAll).toHaveBeenCalledWith({
         status_in: ['EXECUTED', 'DEFEATED', 'SUCCEEDED', 'EXPIRED', 'CANCELED'],
         endTimestamp_gt: initialTimestamp,
+        orderBy: 'endTimestamp',
+        orderDirection: 'desc',
         limit: 100
       });
     });
@@ -74,13 +76,15 @@ describe('ProposalFinishedTrigger', () => {
             id: 'prop1',
             daoId: 'dao1',
             description: 'Test proposal 1 description',
-            timestamp: '1625097600'
+            timestamp: '1625097600',
+            endTimestamp: '1625097600'
           }),
           createFinishedProposal('DEFEATED', {
             id: 'prop2',
             daoId: 'dao2',
             description: 'Test proposal 2 description',
             timestamp: '1625184000',
+            endTimestamp: '1625184000',
             forVotes: '200000000000000000000',
             againstVotes: '800000000000000000000',
             abstainVotes: '50000000000000000000'
@@ -115,8 +119,8 @@ describe('ProposalFinishedTrigger', () => {
           ]
         });
         
-        // Should update to the max endTimestamp
-        expect(trigger['lastProcessedEndTimestamp']).toBe('1625184000');
+        // Should update to the first notification's endTimestamp (prop1 is first in array)
+        expect(trigger['lastProcessedEndTimestamp']).toBe('1625097600');
       });
 
       it('should handle proposals with missing optional fields', async () => {

@@ -22,6 +22,9 @@ export const createProposal = (overrides: Partial<ProposalOnChain> = {}): Propos
   values: ['0'],
   signatures: ['vote()'],
   calldatas: ['0x0'],
+  startBlock: 1000,
+  endBlock: 1100,
+  endTimestamp: '1625097600',
   description: 'Test proposal',
   timestamp: '1625097600',
   status: 'ACTIVE',
@@ -45,6 +48,7 @@ export const createFinishedProposal = (
 export const createProposalWithMissingFields = (): ProposalOnChain => createProposal({
   description: null,
   timestamp: null,
+  endTimestamp: null,
   status: null,
   forVotes: undefined,
   againstVotes: undefined,
