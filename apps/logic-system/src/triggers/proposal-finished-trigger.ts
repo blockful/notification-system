@@ -9,6 +9,7 @@ import { ProposalOnChain, ProposalFinishedNotification } from '../interfaces/pro
  */
 export class ProposalFinishedTrigger extends Trigger<ProposalOnChain, void> {
   private readonly finishedStatuses = ['EXECUTED', 'DEFEATED', 'SUCCEEDED', 'EXPIRED', 'CANCELED'];
+  private lastProcessedEndTimestamp: string;
 
   constructor(
     private readonly proposalRepository: ProposalRepository,
@@ -16,11 +17,17 @@ export class ProposalFinishedTrigger extends Trigger<ProposalOnChain, void> {
     interval: number
   ) {
     super('proposal-finished', interval);
+    // Initialize with 24 hours lookback on startup
+    const twentyFourHoursAgo = Math.floor((Date.now() - 24 * 60 * 60 * 1000) / 1000);
+    this.lastProcessedEndTimestamp = twentyFourHoursAgo.toString();
   }
 
   protected async fetchData(): Promise<ProposalOnChain[]> {
     return await this.proposalRepository.listAll({
       status_in: this.finishedStatuses,
+      endTimestamp_gt: this.lastProcessedEndTimestamp,
+      orderBy: 'endTimestamp',
+      orderDirection: 'desc',
       limit: 100
     });
   }
@@ -49,5 +56,11 @@ export class ProposalFinishedTrigger extends Trigger<ProposalOnChain, void> {
     };
     
     await this.rabbitMQDispatcherService.sendMessage(message);
+    
+    // Update timestamp to the most recent proposal's endTimestamp
+    // Since we order by endTimestamp desc, the first one has the highest endTimestamp
+    if (notifications.length > 0 && notifications[0].endTimestamp > 0) {
+      this.lastProcessedEndTimestamp = notifications[0].endTimestamp.toString();
+    }
   }
 }
