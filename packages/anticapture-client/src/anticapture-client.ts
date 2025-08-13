@@ -28,32 +28,31 @@ export class AnticaptureClient {
     variables?: TVariables,
     daoId?: string
   ): Promise<z.infer<TSchema>> {
-    const headers: Record<string, string> = {
-      'Content-Type': 'application/json',
-      'Accept': 'application/json'
-    };
-
-    // Only add dao-id header if specified
-    if (daoId) {
-      headers["anticapture-dao-id"] = daoId;
-    }
-
+    const headers = this.buildHeaders(daoId);
+    
     const response = await this.httpClient.post('', {
       query: print(document),
       variables,
     }, { headers });
 
-    // Handle empty or undefined responses
-    if (!response || !response.data) {
-      console.warn('No data received from GraphQL endpoint, returning empty response');
-      return schema.parse({});
-    }
-
     if (response.data.errors) {
-      throw new Error(`GraphQL errors: ${JSON.stringify(response.data.errors)}`);
+      throw new Error(JSON.stringify(response.data.errors));
     }
 
     return schema.parse(response.data.data);
+  }
+
+  private buildHeaders(daoId?: string): Record<string, string> {
+    const headers: Record<string, string> = {
+      'Content-Type': 'application/json',
+      'Accept': 'application/json'
+    };
+
+    if (daoId) {
+      headers["anticapture-dao-id"] = daoId;
+    }
+
+    return headers;
   }
   
 
@@ -62,13 +61,18 @@ export class AnticaptureClient {
    * @returns Array of DAO objects with blockTime added
    */
   async getDAOs(): Promise<Array<{ id: string; blockTime: number; votingDelay: string }>> {
-    const validated = await this.query(GetDaOsDocument, SafeDaosResponseSchema, undefined, undefined);
-    return validated.daos.items.map((dao) => ({
-      id: dao.id,
-      // blockTime: dao.blockTime, // TODO: Uncomment when API supports this field
-      blockTime: 12, // Temporary hardcoded value - Ethereum block time
-      votingDelay: dao.votingDelay || '0'
-    }));
+    try {
+      const validated = await this.query(GetDaOsDocument, SafeDaosResponseSchema, undefined, undefined);
+      return validated.daos.items.map((dao) => ({
+        id: dao.id,
+        // blockTime: dao.blockTime, // TODO: Uncomment when API supports this field
+        blockTime: 12, // Temporary hardcoded value - Ethereum block time
+        votingDelay: dao.votingDelay || '0'
+      }));
+    } catch (error) {
+      console.warn('Returning empty DAO list due to API error: ',  error instanceof Error ? error.message : error);
+      return [];
+    }
   }
 
 
@@ -76,12 +80,17 @@ export class AnticaptureClient {
    * Fetches a single proposal by ID with full type safety
    */
   async getProposalById(id: string): Promise<GetProposalByIdQuery['proposalsOnchain'] | null> {
-    const variables: GetProposalByIdQueryVariables = {
-      id: id
-    };
+    try {
+      const variables: GetProposalByIdQueryVariables = {
+        id: id
+      };
 
-    const validated = await this.query(GetProposalByIdDocument, SafeProposalByIdResponseSchema, variables, undefined);
-    return validated.proposalsOnchain;
+      const validated = await this.query(GetProposalByIdDocument, SafeProposalByIdResponseSchema, variables, undefined);
+      return validated.proposalsOnchain;
+    } catch (error) {
+      console.warn(`Returning null for proposal ${id} due to API error`, error instanceof Error ? error.message : error);
+      return null;
+    }
   }
 
 
@@ -91,15 +100,24 @@ export class AnticaptureClient {
       const allProposals: ProposalItems = [];
 
       for (const dao of allDAOs) {
-        const validated = await this.query(ListProposalsDocument, SafeProposalsResponseSchema, variables, dao.id);
-        allProposals.push(...processProposals(validated, dao.id));
+        try {
+          const validated = await this.query(ListProposalsDocument, SafeProposalsResponseSchema, variables, dao.id);
+          allProposals.push(...processProposals(validated, dao.id));
+        } catch (error) {
+          console.warn(`Skipping ${dao.id} due to API error: ${error instanceof Error ? error.message : error}`);
+        }
       }
 
       return allProposals;
     }
 
-    const validated = await this.query(ListProposalsDocument, SafeProposalsResponseSchema, variables, daoId);
-    return processProposals(validated, daoId!);
+    try {
+      const validated = await this.query(ListProposalsDocument, SafeProposalsResponseSchema, variables, daoId);
+      return processProposals(validated, daoId!);
+    } catch (error) {
+      console.warn(`Error querying proposals for DAO ${daoId}: ${error instanceof Error ? error.message : error}`);
+      return [];
+    }
   }
 
   /**
@@ -111,10 +129,14 @@ export class AnticaptureClient {
   async listVotingPowerHistory(variables?: ListVotingPowerHistorysQueryVariables, daoId?: string): Promise<VotingPowerHistoryItems> {
     if (!daoId && !variables?.where?.daoId) {
       const allDAOs = await this.getDAOs();
-
       const queryPromises = allDAOs.map(async (dao) => {
-        const validated = await this.query(ListVotingPowerHistorysDocument, SafeVotingPowerHistoryResponseSchema, variables, dao.id);
-        return processVotingPowerHistory(validated, dao.id);
+        try {
+          const validated = await this.query(ListVotingPowerHistorysDocument, SafeVotingPowerHistoryResponseSchema, variables, dao.id);
+          return processVotingPowerHistory(validated, dao.id);
+        } catch (error) {
+          console.warn(`Skipping ${dao.id} due to API error: ${error instanceof Error ? error.message : error}`);
+          return [];
+        }
       });
 
       const results = await Promise.all(queryPromises);
@@ -123,7 +145,12 @@ export class AnticaptureClient {
       );
     }
 
-    const validated = await this.query(ListVotingPowerHistorysDocument, SafeVotingPowerHistoryResponseSchema, variables, daoId);
-    return processVotingPowerHistory(validated, daoId!);
+    try {
+      const validated = await this.query(ListVotingPowerHistorysDocument, SafeVotingPowerHistoryResponseSchema, variables, daoId);
+      return processVotingPowerHistory(validated, daoId!);
+    } catch (error) {
+      console.warn(`Error querying voting power history for DAO ${daoId}: ${error instanceof Error ? error.message : error}`);
+      return [];
+    }
   }
 }
