@@ -5,7 +5,7 @@
 import { describe, it, expect, jest, beforeEach, afterEach } from '@jest/globals';
 import { NewProposalTrigger } from '../src/triggers/new-proposal-trigger';
 import { ProposalOnChain } from '../src/interfaces/proposal.interface';
-import { createMockProposal, createMockDispatcherService, createMockProposalDataSource, mockProposal } from './mocks';
+import { createProposal, createMockDispatcherService, createMockProposalDataSource } from './mocks';
 
 describe('NewProposalTrigger', () => {
   let mockDispatcherService: ReturnType<typeof createMockDispatcherService>;
@@ -36,8 +36,8 @@ describe('NewProposalTrigger', () => {
 
     it('should send proposals directly without transformation', async () => {
       const proposals: ProposalOnChain[] = [
-        createMockProposal({ status: 'ACTIVE' }),
-        createMockProposal({ id: '2', status: 'ACTIVE', description: 'Second proposal\nWith details' })
+        createProposal({ status: 'ACTIVE' }),
+        createProposal({ id: '2', status: 'ACTIVE', description: 'Second proposal\nWith details' })
       ];
       
       await trigger.process(proposals);
@@ -50,7 +50,7 @@ describe('NewProposalTrigger', () => {
     });
 
     it('should send complete proposal objects including all fields', async () => {
-      const proposal = createMockProposal({ description: 'Main Title\nDetailed description' });
+      const proposal = createProposal({ description: 'Main Title\nDetailed description' });
       
       await trigger.process([proposal]);
       
@@ -64,14 +64,16 @@ describe('NewProposalTrigger', () => {
       const errorMessage = 'Connection failed';
       mockDispatcherService.sendMessage.mockRejectedValue(new Error(errorMessage));
       
-      await expect(trigger.process([mockProposal])).rejects.toThrow(errorMessage);
+      const proposal = createProposal();
+      await expect(trigger.process([proposal])).rejects.toThrow(errorMessage);
     });
   });
   
   describe('start and stop', () => {
     beforeEach(() => {
       jest.useFakeTimers();
-      mockProposalDataSource.listAll.mockResolvedValue([mockProposal]);
+      const proposal = createProposal();
+      mockProposalDataSource.listAll.mockResolvedValue([proposal]);
     });
     
     afterEach(() => {
