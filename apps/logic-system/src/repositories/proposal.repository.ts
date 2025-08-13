@@ -15,7 +15,7 @@ export class ProposalRepository implements ProposalDataSource {
   async listAll(options?: ListProposalsOptions): Promise<ProposalOnChain[]> {
     const variables: ListProposalsQueryVariables = {};
     
-    if (options?.status || options?.status_in || options?.daoId) {
+    if (options?.status || options?.status_in || options?.daoId || options?.timestamp_gt || options?.endTimestamp_gt) {
       variables.where = {};  
       if (options.status_in && options.status_in.length > 0) {
         variables.where.status_in = options.status_in;
@@ -25,6 +25,14 @@ export class ProposalRepository implements ProposalDataSource {
       
       if (options.daoId) {
         variables.where.daoId = options.daoId;
+      }
+      
+      if (options.timestamp_gt) {
+        variables.where.timestamp_gt = options.timestamp_gt;
+      }
+      
+      if (options.endTimestamp_gt) {
+        variables.where.endTimestamp_gt = options.endTimestamp_gt;
       }
     }
     if (options?.limit) {

@@ -30,6 +30,10 @@ export interface ListProposalsOptions {
     status_in?: string[];
     /** Filter by DAO */
     daoId?: string;
+    /** Filter proposals created after this timestamp (in seconds) */
+    timestamp_gt?: string;
+    /** Filter proposals that ended after this timestamp (in seconds) */
+    endTimestamp_gt?: string;
 }
 
 /**
