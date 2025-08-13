@@ -17,9 +17,9 @@ export class NewProposalTrigger extends Trigger<ProposalOnChain, ListProposalsOp
     interval: number
   ) {
     super(triggerId, interval);
-    // Initialize with 1 hour lookback on startup
-    const oneHourAgo = Math.floor((Date.now() - 3600000) / 1000);
-    this.lastFetchedTimestamp = oneHourAgo.toString();
+    // Initialize with 24 hours lookback on startup
+    const twentyFourHoursAgo = Math.floor((Date.now() - 24 * 60 * 60 * 1000) / 1000);
+    this.lastFetchedTimestamp = twentyFourHoursAgo.toString();
   }
 
   async process(data: ProposalOnChain[]) {
