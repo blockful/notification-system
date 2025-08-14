@@ -14,12 +14,32 @@ export class NewProposalTrigger extends Trigger<ProposalOnChain, ListProposalsOp
   constructor(
     private readonly dispatcherService: DispatcherService,
     private readonly proposalRepository: ProposalDataSource,
-    interval: number
+    interval: number,
+    initialTimestamp?: string
   ) {
     super(triggerId, interval);
-    // Initialize with 24 hours lookback on startup
-    const twentyFourHoursAgo = Math.floor((Date.now() - 24 * 60 * 60 * 1000) / 1000);
-    this.lastFetchedTimestamp = twentyFourHoursAgo.toString();
+    // Use provided timestamp or default to 24 hours lookback
+    if (initialTimestamp) {
+      this.lastFetchedTimestamp = initialTimestamp;
+    } else {
+      const twentyFourHoursAgo = Math.floor((Date.now() - 24 * 60 * 60 * 1000) / 1000);
+      this.lastFetchedTimestamp = twentyFourHoursAgo.toString();
+    }
+  }
+
+  /**
+   * Resets the trigger state to initial timestamp
+   * @param timestamp Optional timestamp to reset to, defaults to 24 hours ago
+   * @todo This method will be removed when we migrate to Redis for state management,
+   * allowing proper state isolation between tests without manual resets
+   */
+  public reset(timestamp?: string): void {
+    if (timestamp) {
+      this.lastFetchedTimestamp = timestamp;
+    } else {
+      const twentyFourHoursAgo = Math.floor((Date.now() - 24 * 60 * 60 * 1000) / 1000);
+      this.lastFetchedTimestamp = twentyFourHoursAgo.toString();
+    }
   }
 
   async process(data: ProposalOnChain[]) {

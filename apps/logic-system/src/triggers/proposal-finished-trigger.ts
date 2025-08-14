@@ -14,12 +14,32 @@ export class ProposalFinishedTrigger extends Trigger<ProposalOnChain, void> {
   constructor(
     private readonly proposalRepository: ProposalRepository,
     private readonly rabbitMQDispatcherService: RabbitMQDispatcherService,
-    interval: number
+    interval: number,
+    initialTimestamp?: string
   ) {
     super('proposal-finished', interval);
-    // Initialize with 24 hours lookback on startup
-    const twentyFourHoursAgo = Math.floor((Date.now() - 24 * 60 * 60 * 1000) / 1000);
-    this.lastProcessedEndTimestamp = twentyFourHoursAgo.toString();
+    // Use provided timestamp or default to 24 hours lookback
+    if (initialTimestamp) {
+      this.lastProcessedEndTimestamp = initialTimestamp;
+    } else {
+      const twentyFourHoursAgo = Math.floor((Date.now() - 24 * 60 * 60 * 1000) / 1000);
+      this.lastProcessedEndTimestamp = twentyFourHoursAgo.toString();
+    }
+  }
+
+  /**
+   * Resets the trigger state to initial timestamp
+   * @param timestamp Optional timestamp to reset to, defaults to 24 hours ago
+   * @todo This method will be removed when we migrate to Redis for state management,
+   * allowing proper state isolation between tests without manual resets
+   */
+  public reset(timestamp?: string): void {
+    if (timestamp) {
+      this.lastProcessedEndTimestamp = timestamp;
+    } else {
+      const twentyFourHoursAgo = Math.floor((Date.now() - 24 * 60 * 60 * 1000) / 1000);
+      this.lastProcessedEndTimestamp = twentyFourHoursAgo.toString();
+    }
   }
 
   protected async fetchData(): Promise<ProposalOnChain[]> {

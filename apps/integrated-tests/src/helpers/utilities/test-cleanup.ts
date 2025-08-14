@@ -30,6 +30,13 @@ export class TestCleanup {
       global.testApps.rabbitmqSetup.clearCollectedEvents();
     }
     
+    // Reset trigger timestamps to initial state (1 year ago)
+    // This ensures each test starts with a clean trigger state
+    if (global.testApps?.logicSystemApp) {
+      const oneYearAgo = Math.floor((Date.now() - 365 * 24 * 60 * 60 * 1000) / 1000).toString();
+      global.testApps.logicSystemApp.resetTriggers(oneYearAgo);
+    }
+    
     // Clean database tables
     await this.dbCleanup.cleanAllTables();
   }
