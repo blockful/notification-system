@@ -52,7 +52,6 @@ export class ProposalFactory {
    * @return Complete ProposalData object ready for testing
    */
   static createProposal(daoId: string, proposalId: string, overrides?: Partial<ProposalData>): ProposalData {
-    // Use a timestamp 1 second in the future to ensure it's always newer than lastFetchedTimestamp
     const now = Math.floor(Date.now() / 1000) + 1;
     const baseProposal: ProposalData = {
       id: proposalId,
