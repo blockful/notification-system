@@ -128,4 +128,35 @@ describe('NewProposalTrigger', () => {
       expect(mockProposalDataSource.listAll).not.toHaveBeenCalled();
     });
   });
+  
+  describe('initialTimestamp parameter', () => {
+    it('should use provided initial timestamp', () => {
+      const customTimestamp = '1234567890';
+      const customTrigger = new NewProposalTrigger(
+        mockDispatcherService,
+        mockProposalDataSource,
+        60000,
+        customTimestamp
+      );
+      
+      expect(customTrigger['lastFetchedTimestamp']).toBe(customTimestamp);
+    });
+    
+    it('should use default timestamp when not provided', () => {
+      const defaultTrigger = new NewProposalTrigger(
+        mockDispatcherService,
+        mockProposalDataSource,
+        60000
+      );
+      
+      // Should be a timestamp from ~24 hours ago
+      const now = Math.floor(Date.now() / 1000);
+      const triggerTimestamp = parseInt(defaultTrigger['lastFetchedTimestamp']);
+      const difference = now - triggerTimestamp;
+      
+      // Allow 5 seconds tolerance for test execution time
+      expect(difference).toBeGreaterThanOrEqual(86395); // 24 hours - 5 seconds
+      expect(difference).toBeLessThanOrEqual(86405); // 24 hours + 5 seconds
+    });
+  });
 }); 

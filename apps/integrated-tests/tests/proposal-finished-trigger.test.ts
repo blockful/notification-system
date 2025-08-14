@@ -28,7 +28,8 @@ describe('Proposal Finished Trigger - Integration Test', () => {
       timestamp: Math.floor(proposalCreationTime.getTime() / 1000).toString(),
       startBlock: startBlock,
       endBlock: endBlock,
-      status: 'active',
+      endTimestamp: Math.floor(proposalCreationTime.getTime() / 1000 + 300).toString(), // Ended 5 minutes after creation
+      status: 'EXECUTED',
       description: `# Finished Proposal\n\nThis proposal has ended.`
     });
   };
@@ -99,7 +100,7 @@ describe('Proposal Finished Trigger - Integration Test', () => {
       timestamp: (now - 10).toString(), // Created 10 seconds ago
       startBlock: testConstants.proposalTiming.defaultStartBlock,
       endBlock: testConstants.proposalTiming.defaultStartBlock + testConstants.proposalTiming.futureProposalBlocks, // Will finish in ~1080 seconds
-      status: 'active',
+      status: 'ACTIVE',
       description: '# Future Proposal\n\nThis proposal will not finish during the test.'
     });
 
@@ -128,11 +129,12 @@ describe('Proposal Finished Trigger - Integration Test', () => {
       subscriptionTime.toISOString()
     );
     
-    // Create multiple finished proposals
+    // Create multiple finished proposals with incremental timestamps
+    const baseTime = new Date(Date.now() - testConstants.proposalTiming.finishOffset * 1000);
     const proposals = [
-      createFinishedProposal(testDaoId, 'finished-1'),
-      createFinishedProposal(testDaoId, 'finished-2'),
-      createFinishedProposal(testDaoId, 'finished-3')
+      createFinishedProposal(testDaoId, 'finished-1', baseTime),
+      createFinishedProposal(testDaoId, 'finished-2', new Date(baseTime.getTime() + 1000)),
+      createFinishedProposal(testDaoId, 'finished-3', new Date(baseTime.getTime() + 2000))
     ];
 
     // Setup mock
@@ -182,9 +184,10 @@ describe('Proposal Finished Trigger - Integration Test', () => {
     // Create proposal that was created and finished before user subscription
     const oldProposal = ProposalFactory.createProposal(testDaoId, 'old-finished-proposal', {
       timestamp: Math.floor(proposalCreatedAt.getTime() / 1000).toString(),
+      endTimestamp: Math.floor(proposalCreatedAt.getTime() / 1000 + 3600).toString(), // Ended 1 hour after creation, still before subscription
       startBlock: testConstants.proposalTiming.defaultStartBlock,
       endBlock: testConstants.proposalTiming.defaultStartBlock + 1, // Finished quickly (1 block = 12 seconds)
-      status: 'executed',
+      status: 'EXECUTED',
       description: '# Old Proposal\n\nThis finished before user subscribed.'
     });
 
@@ -222,9 +225,10 @@ describe('Proposal Finished Trigger - Integration Test', () => {
       subscriptionTime.toISOString()
     );
     
-    // Create finished proposals for each DAO
-    const dao1Proposal = createFinishedProposal(dao1Id, 'dao1-finished');
-    const dao2Proposal = createFinishedProposal(dao2Id, 'dao2-finished');
+    // Create finished proposals for each DAO with incremental timestamps
+    const baseTime = new Date(Date.now() - testConstants.proposalTiming.finishOffset * 1000);
+    const dao1Proposal = createFinishedProposal(dao1Id, 'dao1-finished', baseTime);
+    const dao2Proposal = createFinishedProposal(dao2Id, 'dao2-finished', new Date(baseTime.getTime() + 1000)); // 1 second later
 
     // Setup mock
     GraphQLMockSetup.setupMock(httpMockSetup.getMockClient(), [dao1Proposal, dao2Proposal], []);
