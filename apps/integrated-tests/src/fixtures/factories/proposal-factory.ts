@@ -89,8 +89,11 @@ export class ProposalFactory {
     count: number, 
     baseId: string = 'proposal'
   ): ProposalData[] {
+    const baseTime = Math.floor(Date.now() / 1000) + 100;
     return Array.from({ length: count }, (_, index) => 
-      this.createProposal(daoId, `${baseId}-${index + 1}`)
+      this.createProposal(daoId, `${baseId}-${index + 1}`, {
+        timestamp: (baseTime + index * 10).toString() // Space out timestamps by 10 seconds each
+      })
     );
   }
 
@@ -104,8 +107,11 @@ export class ProposalFactory {
     daoIds: string[], 
     proposalId: string
   ): ProposalData[] {
-    return daoIds.map(daoId => 
-      this.createProposal(daoId, `${daoId.toLowerCase()}-${proposalId}`)
+    const baseTime = Math.floor(Date.now() / 1000) + 100;
+    return daoIds.map((daoId, index) => 
+      this.createProposal(daoId, `${daoId.toLowerCase()}-${proposalId}`, {
+        timestamp: (baseTime + index * 10).toString() // Space out timestamps by 10 seconds each
+      })
     );
   }
 }
