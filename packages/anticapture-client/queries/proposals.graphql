@@ -1,16 +1,13 @@
 query GetProposalById($id: String!) {
-  proposalsOnchain(id: $id) {
+  proposal(id: $id) {
     id
     daoId
     proposerAccountId
-    targets
-    values
-    signatures
-    calldatas
+    title
+    description
     startBlock
     endBlock
     endTimestamp
-    description
     timestamp
     status
     forVotes
@@ -19,25 +16,20 @@ query GetProposalById($id: String!) {
   }
 }
 
-query ListProposals($where: proposalsOnchainFilter, $limit: Int, $orderBy: String, $orderDirection: String) {
-  proposalsOnchains(where: $where, limit: $limit, orderBy: $orderBy, orderDirection: $orderDirection) {
-    items {
-      id
-      daoId
-      proposerAccountId
-      targets
-      values
-      signatures
-      calldatas
-      startBlock
-      endBlock
-      endTimestamp
-      description
-      timestamp
-      status
-      forVotes
-      againstVotes
-      abstainVotes
-    }
+query ListProposals($skip: NonNegativeInt, $limit: PositiveInt, $orderDirection: queryInput_proposals_orderDirection, $status: String, $fromDate: Float) {
+  proposals(skip: $skip, limit: $limit, orderDirection: $orderDirection, status: $status, fromDate: $fromDate) {
+    id
+    daoId
+    proposerAccountId
+    title
+    description
+    startBlock
+    endBlock
+    endTimestamp
+    timestamp
+    status
+    forVotes
+    againstVotes
+    abstainVotes
   }
 }
