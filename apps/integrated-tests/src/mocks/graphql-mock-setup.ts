@@ -39,7 +39,11 @@ export class GraphQLMockSetup {
       if (data.query?.includes('ListProposals')) {
         let filtered = proposals;
         if (data.variables?.status) {
-          filtered = filtered.filter(p => p.status === data.variables.status);
+          // Status can be string or array (JSON type in GraphQL)
+          const statusFilter = Array.isArray(data.variables.status) 
+            ? data.variables.status 
+            : [data.variables.status];
+          filtered = filtered.filter(p => statusFilter.includes(p.status));
         }
         if (data.variables?.fromDate) {
           filtered = filtered.filter(p => parseInt(p.timestamp) > data.variables.fromDate);

@@ -141,8 +141,6 @@ export type Query = {
     proposalsOnchains: ProposalsOnchainPage;
     token?: Maybe<Token>;
     tokens: TokenPage;
-    /** Get total assets */
-    totalAssets?: Maybe<Array<Maybe<Query_TotalAssets_Items>>>;
     transfer?: Maybe<Transfer>;
     transfers: TransferPage;
     votesOnchain?: Maybe<VotesOnchain>;
@@ -270,7 +268,7 @@ export type QueryProposalsArgs = {
     limit?: InputMaybe<Scalars['PositiveInt']['input']>;
     orderDirection?: InputMaybe<QueryInput_Proposals_OrderDirection>;
     skip?: InputMaybe<Scalars['NonNegativeInt']['input']>;
-    status?: InputMaybe<Scalars['String']['input']>;
+    status?: InputMaybe<Scalars['JSON']['input']>;
 };
 export type QueryProposalsActivityArgs = {
     address: Scalars['String']['input'];
@@ -302,9 +300,6 @@ export type QueryTokensArgs = {
     orderBy?: InputMaybe<Scalars['String']['input']>;
     orderDirection?: InputMaybe<Scalars['String']['input']>;
     where?: InputMaybe<TokenFilter>;
-};
-export type QueryTotalAssetsArgs = {
-    days?: InputMaybe<QueryInput_TotalAssets_Days>;
 };
 export type QueryTransferArgs = {
     fromAccountId: Scalars['String']['input'];
@@ -946,11 +941,6 @@ export type HistoricalTokenData_200_Response = {
     prices: Array<Maybe<Array<Maybe<Scalars['Float']['output']>>>>;
     total_volumes: Array<Maybe<Array<Maybe<Scalars['Float']['output']>>>>;
 };
-export type HistoricalTokenData_400_Response = {
-    __typename?: 'historicalTokenData_400_response';
-    error: Scalars['String']['output'];
-};
-export type HistoricalTokenData_Response = HistoricalTokenData_200_Response | HistoricalTokenData_400_Response;
 export declare enum MetricType {
     CexSupply = "CEX_SUPPLY",
     CirculatingSupply = "CIRCULATING_SUPPLY",
@@ -1255,13 +1245,6 @@ export declare enum QueryInput_Proposals_OrderDirection {
     Asc = "asc",
     Desc = "desc"
 }
-export declare enum QueryInput_TotalAssets_Days {
-    '7d' = "_7d",
-    '30d' = "_30d",
-    '90d' = "_90d",
-    '180d' = "_180d",
-    '365d' = "_365d"
-}
 export type Query_HistoricalBalances_Items = {
     __typename?: 'query_historicalBalances_items';
     address: Scalars['String']['output'];
@@ -1272,8 +1255,6 @@ export type Query_HistoricalBalances_Items = {
 export type Query_HistoricalVotingPower_Items = {
     __typename?: 'query_historicalVotingPower_items';
     address: Scalars['String']['output'];
-    blockNumber: Scalars['Float']['output'];
-    tokenAddress: Scalars['String']['output'];
     votingPower: Scalars['String']['output'];
 };
 export type Query_ProposalsActivity_Proposals_Items = {
@@ -1321,11 +1302,6 @@ export type Query_Proposals_Items = {
     timestamp: Scalars['String']['output'];
     title?: Maybe<Scalars['String']['output']>;
     txHash: Scalars['String']['output'];
-};
-export type Query_TotalAssets_Items = {
-    __typename?: 'query_totalAssets_items';
-    date: Scalars['String']['output'];
-    totalAssets: Scalars['String']['output'];
 };
 export type Token = {
     __typename?: 'token';
@@ -1758,7 +1734,7 @@ export type ListProposalsQueryVariables = Exact<{
     skip?: InputMaybe<Scalars['NonNegativeInt']['input']>;
     limit?: InputMaybe<Scalars['PositiveInt']['input']>;
     orderDirection?: InputMaybe<QueryInput_Proposals_OrderDirection>;
-    status?: InputMaybe<Scalars['String']['input']>;
+    status?: InputMaybe<Scalars['JSON']['input']>;
     fromDate?: InputMaybe<Scalars['Float']['input']>;
 }>;
 export type ListProposalsQuery = {

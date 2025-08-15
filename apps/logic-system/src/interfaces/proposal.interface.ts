@@ -17,26 +17,20 @@ export type ProposalStatus =
     | 'EXPIRED';
 
 /**
- * Options for listing proposals
+ * Options for listing proposals (matches new API parameters)
  */
 export interface ListProposalsOptions {
     /** Number of proposals to skip */
-    offset?: number;
+    skip?: number;
     /** Maximum number of proposals to return */
     limit?: number;
-    /** Filter by status (using GraphQL string type) */
-    status?: string;
-    /** Filter by multiple statuses */
-    status_in?: string[];
-    /** Filter by DAO */
+    /** Filter by status - can be string or array */
+    status?: string | string[];
+    /** Filter by DAO (passed as header, not query param) */
     daoId?: string;
-    /** Filter proposals created after this timestamp (in seconds) */
-    timestamp_gt?: string;
-    /** Filter proposals that ended after this timestamp (in seconds) */
-    endTimestamp_gt?: string;
-    /** Field to order by (timestamp or endTimestamp) */
-    orderBy?: string;
-    /** Order direction (asc or desc) */
+    /** Filter proposals after this date (timestamp in seconds as float) */
+    fromDate?: string;
+    /** Order direction - asc or desc */
     orderDirection?: string;
 }
 

@@ -44,10 +44,9 @@ export class ProposalFinishedTrigger extends Trigger<ProposalOnChain, void> {
 
   protected async fetchData(): Promise<ProposalOnChain[]> {
     return await this.proposalRepository.listAll({
-      status_in: this.finishedStatuses,
-      endTimestamp_gt: this.lastProcessedEndTimestamp,
-      orderBy: 'endTimestamp',
-      orderDirection: 'desc',
+      status: this.finishedStatuses,  // API accepts array
+      fromDate: this.lastProcessedEndTimestamp,
+      orderDirection: 'desc',  // API orders by timestamp by default
       limit: 100
     });
   }

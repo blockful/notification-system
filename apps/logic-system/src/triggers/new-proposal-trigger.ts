@@ -70,7 +70,7 @@ export class NewProposalTrigger extends Trigger<ProposalOnChain, ListProposalsOp
     }
     return await this.proposalRepository.listAll({ 
       status: options.status,
-      timestamp_gt: this.lastFetchedTimestamp 
+      fromDate: this.lastFetchedTimestamp 
     });
   }
 } 
