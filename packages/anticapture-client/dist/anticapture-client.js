@@ -57,7 +57,7 @@ class AnticaptureClient {
                 id: id
             };
             const validated = await this.query(graphql_2.GetProposalByIdDocument, schemas_1.SafeProposalByIdResponseSchema, variables, undefined);
-            return validated.proposalsOnchain;
+            return validated.proposal;
         }
         catch (error) {
             console.warn(`Returning null for proposal ${id} due to API error`, error instanceof Error ? error.message : error);
@@ -65,7 +65,7 @@ class AnticaptureClient {
         }
     }
     async listProposals(variables, daoId) {
-        if (!daoId && !variables?.where?.daoId) {
+        if (!daoId) {
             const allDAOs = await this.getDAOs();
             const allProposals = [];
             for (const dao of allDAOs) {

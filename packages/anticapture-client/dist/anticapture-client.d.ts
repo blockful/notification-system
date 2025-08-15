@@ -1,7 +1,7 @@
 import { AxiosInstance } from 'axios';
 import type { GetProposalByIdQuery, ListProposalsQuery, ListProposalsQueryVariables, ListVotingPowerHistorysQueryVariables } from './gql/graphql';
 import { ProcessedVotingPowerHistory } from './schemas';
-type ProposalItems = ListProposalsQuery['proposalsOnchains']['items'];
+type ProposalItems = NonNullable<ListProposalsQuery['proposals']>;
 type VotingPowerHistoryItems = ProcessedVotingPowerHistory[];
 export declare class AnticaptureClient {
     private readonly httpClient;
@@ -20,7 +20,7 @@ export declare class AnticaptureClient {
     /**
      * Fetches a single proposal by ID with full type safety
      */
-    getProposalById(id: string): Promise<GetProposalByIdQuery['proposalsOnchain'] | null>;
+    getProposalById(id: string): Promise<GetProposalByIdQuery['proposal'] | null>;
     listProposals(variables?: ListProposalsQueryVariables, daoId?: string): Promise<ProposalItems>;
     /**
      * Lists voting power history with full type safety

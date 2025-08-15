@@ -52,36 +52,22 @@ export declare const SafeDaosResponseSchema: z.ZodEffects<z.ZodObject<{
     } | null;
 }>;
 export declare const SafeProposalsResponseSchema: z.ZodEffects<z.ZodObject<{
-    proposalsOnchains: z.ZodNullable<z.ZodObject<{
-        items: z.ZodArray<z.ZodAny, "many">;
-    }, "strip", z.ZodTypeAny, {
-        items: any[];
-    }, {
-        items: any[];
-    }>>;
+    proposals: z.ZodNullable<z.ZodArray<z.ZodAny, "many">>;
 }, "strip", z.ZodTypeAny, {
-    proposalsOnchains: {
-        items: any[];
-    } | null;
+    proposals: any[] | null;
 }, {
-    proposalsOnchains: {
-        items: any[];
-    } | null;
+    proposals: any[] | null;
 }>, {
-    proposalsOnchains: {
-        items: any[];
-    };
+    proposals: any[];
 }, {
-    proposalsOnchains: {
-        items: any[];
-    } | null;
+    proposals: any[] | null;
 }>;
 export declare const SafeProposalByIdResponseSchema: z.ZodObject<{
-    proposalsOnchain: z.ZodNullable<z.ZodAny>;
+    proposal: z.ZodNullable<z.ZodAny>;
 }, "strip", z.ZodTypeAny, {
-    proposalsOnchain?: any;
+    proposal?: any;
 }, {
-    proposalsOnchain?: any;
+    proposal?: any;
 }>;
 declare const VotingPowerHistoryItemSchema: z.ZodObject<{
     accountId: z.ZodString;
