@@ -68,15 +68,15 @@ describe('Proposal Finished Trigger - Integration Test', () => {
 
     // Wait for the notification to be sent
     const message = await telegramHelper.waitForMessage(
-      msg => msg.text.includes('Finished Proposal') && 
-             msg.text.includes('has ended') &&
+      msg => msg.text.includes('has ended') &&
              msg.text.includes(testDaoId),
       { timeout: timeouts.notification.delivery }
     );
 
     // Verify message content
     expect(message.chatId).toBe(testUser.chatId);
-    expect(message.text).toContain('Finished Proposal');
+    expect(message.text).toContain('has ended');
+    expect(message.text).toMatch(/📊 Proposal .* has ended on DAO/);
     
     // Verify database record
     await dbHelper.waitForRecordCount(testConstants.tables.notifications, 1);
@@ -151,13 +151,13 @@ describe('Proposal Finished Trigger - Integration Test', () => {
     const userMessages = allMessages.filter(msg => msg.chatId === testUser.chatId);
     
     expect(userMessages).toHaveLength(3);
-    expect(userMessages[0].text).toContain('Finished Proposal');
-    expect(userMessages[1].text).toContain('Finished Proposal');
-    expect(userMessages[2].text).toContain('Finished Proposal');
+    expect(userMessages[0].text).toContain('has ended');
+    expect(userMessages[1].text).toContain('has ended');
+    expect(userMessages[2].text).toContain('has ended');
     
     // Verify all messages are about finished proposals
-    expect(userMessages.every(msg => msg.text.includes('Finished Proposal'))).toBe(true);
     expect(userMessages.every(msg => msg.text.includes('has ended'))).toBe(true);
+    expect(userMessages.every(msg => msg.text.match(/📊 Proposal .* has ended on DAO/))).toBe(true);
     
     // Verify database records
     await dbHelper.waitForRecordCount(testConstants.tables.notifications, 3);
@@ -250,12 +250,12 @@ describe('Proposal Finished Trigger - Integration Test', () => {
     const dao2Message = userMessages.find(msg => msg.text.includes(dao2Id));
     
     expect(dao1Message).toBeDefined();
-    expect(dao1Message?.text).toContain('Finished Proposal');
     expect(dao1Message?.text).toContain('has ended');
+    expect(dao1Message?.text).toMatch(/📊 Proposal .* has ended on DAO/);
     
     expect(dao2Message).toBeDefined();
-    expect(dao2Message?.text).toContain('Finished Proposal');
     expect(dao2Message?.text).toContain('has ended');
+    expect(dao2Message?.text).toMatch(/📊 Proposal .* has ended on DAO/);
     
     // Verify database records
     await dbHelper.waitForRecordCount(testConstants.tables.notifications, 2);
