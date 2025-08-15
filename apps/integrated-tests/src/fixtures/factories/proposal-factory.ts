@@ -11,6 +11,8 @@ export interface ProposalData {
   daoId: string;
   /** Account ID of the user who created the proposal */
   proposerAccountId: string;
+  /** Title of the proposal (extracted from first line of description) */
+  title?: string;
   /** Array of contract addresses to call */
   targets: string[];
   /** Array of ETH values to send with each call */
@@ -57,6 +59,7 @@ export class ProposalFactory {
       id: proposalId,
       daoId: daoId,
       proposerAccountId: uuidv4(),
+      title: `Test ${daoId} proposal`,
       targets: ['0xtarget1'],
       values: ['0'],
       signatures: ['transfer(address,uint256)'],

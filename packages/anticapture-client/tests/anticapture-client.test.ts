@@ -51,7 +51,7 @@ describe('AnticaptureClient', () => {
 
   describe('listProposals', () => {
     it('returns empty array for empty response', async () => {
-      mockQuery.mockResolvedValue({ proposalsOnchains: { items: [] } });
+      mockQuery.mockResolvedValue({ proposals: [] });
 
       const result = await client.listProposals({}, 'UNISWAP');
 
@@ -60,7 +60,7 @@ describe('AnticaptureClient', () => {
 
     it('adds daoId to each proposal', async () => {
       mockQuery.mockResolvedValue({
-        proposalsOnchains: { items: TEST_FIXTURES.proposals.basic }
+        proposals: TEST_FIXTURES.proposals.basic
       });
 
       const result = await client.listProposals({}, 'UNISWAP');
@@ -89,8 +89,8 @@ describe('AnticaptureClient', () => {
         const result = await client.listProposals();
 
         expect(result).toEqual([
-          { id: 'p1', description: 'Proposal 1', daoId: 'DAO1' },
-          { id: 'p3', description: 'Proposal 3', daoId: 'DAO3' }
+          { id: 'p1', description: 'Proposal 1', title: null, daoId: 'DAO1' },
+          { id: 'p3', description: 'Proposal 3', title: null, daoId: 'DAO3' }
         ]);
       });
     });

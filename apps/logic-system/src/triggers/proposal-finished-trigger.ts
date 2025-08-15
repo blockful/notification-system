@@ -60,6 +60,7 @@ export class ProposalFinishedTrigger extends Trigger<ProposalOnChain, void> {
     const notifications: ProposalFinishedNotification[] = data.map(proposal => ({
       id: proposal?.id || '',
       daoId: proposal?.daoId || '',
+      title: proposal?.title || undefined,
       description: proposal?.description || '',
       endTimestamp: proposal?.endTimestamp ? parseInt(proposal.endTimestamp) : 0,
       status: proposal?.status || 'unknown',

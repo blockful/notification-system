@@ -12,7 +12,7 @@ import type {
 import { GetDaOsDocument, GetProposalByIdDocument, ListProposalsDocument, ListVotingPowerHistorysDocument } from './gql/graphql';
 import { SafeDaosResponseSchema, SafeProposalByIdResponseSchema, SafeProposalsResponseSchema, SafeVotingPowerHistoryResponseSchema, processProposals, processVotingPowerHistory, ProcessedVotingPowerHistory } from './schemas';
 
-type ProposalItems = ListProposalsQuery['proposalsOnchains']['items'];
+type ProposalItems = NonNullable<ListProposalsQuery['proposals']>;
 type VotingPowerHistoryItems = ProcessedVotingPowerHistory[];
 
 export class AnticaptureClient {
@@ -79,14 +79,14 @@ export class AnticaptureClient {
   /**
    * Fetches a single proposal by ID with full type safety
    */
-  async getProposalById(id: string): Promise<GetProposalByIdQuery['proposalsOnchain'] | null> {
+  async getProposalById(id: string): Promise<GetProposalByIdQuery['proposal'] | null> {
     try {
       const variables: GetProposalByIdQueryVariables = {
         id: id
       };
 
       const validated = await this.query(GetProposalByIdDocument, SafeProposalByIdResponseSchema, variables, undefined);
-      return validated.proposalsOnchain;
+      return validated.proposal;
     } catch (error) {
       console.warn(`Returning null for proposal ${id} due to API error`, error instanceof Error ? error.message : error);
       return null;
@@ -95,7 +95,7 @@ export class AnticaptureClient {
 
 
   async listProposals(variables?: ListProposalsQueryVariables, daoId?: string): Promise<ProposalItems> {
-    if (!daoId && !variables?.where?.daoId) {
+    if (!daoId) {
       const allDAOs = await this.getDAOs();
       const allProposals: ProposalItems = [];
 

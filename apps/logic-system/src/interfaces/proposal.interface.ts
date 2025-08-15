@@ -1,6 +1,6 @@
 import type { GetProposalByIdQuery } from '@notification-system/anticapture-client';
 
-export type ProposalOnChain = GetProposalByIdQuery['proposalsOnchain'];
+export type ProposalOnChain = GetProposalByIdQuery['proposal'];
 export type ProposalOrNull = ProposalOnChain | null;
 
 /**
@@ -86,6 +86,7 @@ export interface ProposalFinished {
 export interface ProposalFinishedNotification {
     id: string;
     daoId: string;
+    title?: string;
     description: string;
     endTimestamp: number;
     status: string;
