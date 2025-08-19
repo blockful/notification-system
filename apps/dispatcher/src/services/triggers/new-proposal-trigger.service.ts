@@ -26,8 +26,8 @@ export class NewProposalTriggerHandler extends BaseTriggerHandler {
    */
   async handleMessage(message: DispatcherMessage): Promise<MessageProcessingResult> {
     for (const proposal of message.events) {
-      const { daoId, id: proposalId, description, timestamp } = proposal;
-      const proposalTitle = description.split('\n')[0].replace(/^#+\s*/, '') || 'Unnamed Proposal';
+      const { daoId, id: proposalId, title, description, timestamp } = proposal;
+      const proposalTitle = title || description.split('\n')[0].replace(/^#+\s*/, '') || 'Unnamed Proposal';
       const subscribers = await this.getSubscribers(daoId, proposalId, timestamp);
       const notificationMessage = `🗳️ New governance proposal in ${daoId}: "${proposalTitle}"`;
       await this.sendNotificationsToSubscribers(subscribers, notificationMessage, proposalId, daoId);

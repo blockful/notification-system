@@ -23,6 +23,7 @@ export class App {
     proposalStatus: ProposalStatus,
     anticaptureHttpClient: AxiosInstance,
     rabbitmqUrl: string,
+    initialTimestamp?: string
   ) {
     this.proposalStatus = proposalStatus;
     
@@ -30,14 +31,15 @@ export class App {
     const proposalRepository = new ProposalRepository(anticaptureClient);
     const votingPowerRepository = new VotingPowerRepository(anticaptureClient);
 
-    this.initPromise = this.initializeRabbitMQ(rabbitmqUrl, proposalRepository, votingPowerRepository, triggerInterval);
+    this.initPromise = this.initializeRabbitMQ(rabbitmqUrl, proposalRepository, votingPowerRepository, triggerInterval, initialTimestamp);
   }
 
   private async initializeRabbitMQ(
     rabbitmqUrl: string, 
     proposalRepository: ProposalRepository,
     votingPowerRepository: VotingPowerRepository,
-    triggerInterval: number
+    triggerInterval: number,
+    initialTimestamp?: string
   ): Promise<void> {
     this.rabbitMQConnection = new RabbitMQConnection(rabbitmqUrl);
     await this.rabbitMQConnection.connect();
@@ -48,7 +50,8 @@ export class App {
     this.trigger = new NewProposalTrigger(
       dispatcherService,
       proposalRepository,
-      triggerInterval
+      triggerInterval,
+      initialTimestamp
     );
 
     this.votingPowerTrigger = new VotingPowerChangedTrigger(
@@ -60,7 +63,8 @@ export class App {
     this.proposalFinishedTrigger = new ProposalFinishedTrigger(
       proposalRepository,
       dispatcherService,
-      triggerInterval
+      triggerInterval,
+      initialTimestamp
     );
   }
 
@@ -70,6 +74,24 @@ export class App {
     this.votingPowerTrigger.start();
     this.proposalFinishedTrigger.start();
     console.log('Logic system is running. Press Ctrl+C to stop.');
+  }
+
+  /**
+   * Resets all triggers to their initial state
+   * @param initialTimestamp Optional timestamp to reset to
+   * @todo This method will be removed when we migrate to Redis for state management,
+   * allowing proper state isolation between tests without manual resets
+   */
+  public resetTriggers(initialTimestamp?: string): void {
+    if (this.trigger) {
+      this.trigger.reset(initialTimestamp);
+    }
+    if (this.votingPowerTrigger) {
+      this.votingPowerTrigger.reset(initialTimestamp);
+    }
+    if (this.proposalFinishedTrigger) {
+      this.proposalFinishedTrigger.reset(initialTimestamp);
+    }
   }
 
   async stop(): Promise<void> {

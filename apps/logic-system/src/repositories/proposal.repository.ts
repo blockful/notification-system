@@ -15,30 +15,41 @@ export class ProposalRepository implements ProposalDataSource {
   async listAll(options?: ListProposalsOptions): Promise<ProposalOnChain[]> {
     const variables: ListProposalsQueryVariables = {};
     
-    if (options?.status || options?.status_in || options?.daoId) {
-      variables.where = {};  
-      if (options.status_in && options.status_in.length > 0) {
-        variables.where.status_in = options.status_in;
-      } else if (options.status) {
-        variables.where.status_in = [options.status];
-      }
-      
-      if (options.daoId) {
-        variables.where.daoId = options.daoId;
-      }
+    // Status filtering 
+    if (options?.status) {
+      variables.status = options.status;
     }
+    
+    // Date filtering
+    if (options?.fromDate) {
+      // Convert string timestamp to Float
+      variables.fromDate = parseFloat(options.fromDate);
+    }
+    
+    // Pagination
     if (options?.limit) {
-      variables.limit = options.limit;
+      variables.limit = Math.min(options.limit, 100); // API max is 100
     } else {
-      // Set a higher default limit to ensure we get all proposals
-      variables.limit = 1000;
+      // Set default limit to API maximum
+      variables.limit = 100;
     }
     
-    // Add ordering to get newest proposals first
-    variables.orderBy = 'timestamp';
-    variables.orderDirection = 'desc';
+    if (options?.skip) {
+      variables.skip = options.skip;
+    }
     
-    return await this.anticaptureClient.listProposals(variables);
+    // Ordering - enum requires cast
+    if (options?.orderDirection === 'asc') {
+      variables.orderDirection = 'asc' as any;
+    } else if (options?.orderDirection === 'desc') {
+      variables.orderDirection = 'desc' as any;
+    }
+    
+    const daoId = options?.daoId;
+    const result = await this.anticaptureClient.listProposals(variables, daoId);
+    
+    // Filter out null values and ensure we return ProposalOnChain[]
+    return (result || []).filter(proposal => proposal !== null) as ProposalOnChain[];
   }
 
 } 

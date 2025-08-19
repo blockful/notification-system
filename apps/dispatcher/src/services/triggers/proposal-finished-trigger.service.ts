@@ -49,7 +49,7 @@ export class ProposalFinishedTriggerHandler extends BaseTriggerHandler<ProposalF
   }
 
   private generateNotificationMessage(proposal: ProposalFinishedNotification): string {
-    const proposalTitle = proposal.description.split('\n')[0].replace(/^#+\s*/, '').trim();
+    const proposalTitle = proposal.title || proposal.description.split('\n')[0].replace(/^#+\s*/, '').trim();
     
     const statusEmoji: Record<string, string> = {
       'EXECUTED': '✅',

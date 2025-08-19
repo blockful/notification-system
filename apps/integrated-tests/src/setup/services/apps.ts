@@ -41,7 +41,7 @@ const TEST_CONFIG = {
   },
   logicSystem: {
     interval: serviceConfig.logicSystem.pollInterval,
-    proposalState: 'pending',
+    proposalState: 'ACTIVE',
   },
   timeouts: {
     appStartup: timeouts.notification.processing,
@@ -78,12 +78,13 @@ export const startTestApps = async (db: Knex, mockHttpClient: any): Promise<Test
   );
   await dispatcherApp.start();
   
-  // Start logic system
+  const oneYearAgo = Math.floor((Date.now() - 365 * 24 * 60 * 60 * 1000) / 1000).toString();
   const logicSystemApp = new LogicSystemApp(
     TEST_CONFIG.logicSystem.interval,
     TEST_CONFIG.logicSystem.proposalState,
     mockHttpClient,
-    rabbitmqUrl
+    rabbitmqUrl,
+    oneYearAgo
   );
   await logicSystemApp.start();
   

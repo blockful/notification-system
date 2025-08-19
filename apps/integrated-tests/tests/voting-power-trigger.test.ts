@@ -39,7 +39,7 @@ describe('Voting Power Trigger - Integration Test', () => {
     
     // Create voting power data with a timestamp that's after the user subscription
     // Add some buffer time to ensure the event happens after the user subscription
-    const eventTimestamp = (Math.floor(Date.now() / 1000) + 2).toString(); // 2 seconds in the future
+    const eventTimestamp = (Math.floor(Date.now() / 1000) + 10).toString(); // 10 seconds in the future
     
     const votingPowerEvents = [
       VotingPowerFactory.createDelegationEvent(

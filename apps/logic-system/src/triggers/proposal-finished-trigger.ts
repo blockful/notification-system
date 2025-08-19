@@ -9,18 +9,44 @@ import { ProposalOnChain, ProposalFinishedNotification } from '../interfaces/pro
  */
 export class ProposalFinishedTrigger extends Trigger<ProposalOnChain, void> {
   private readonly finishedStatuses = ['EXECUTED', 'DEFEATED', 'SUCCEEDED', 'EXPIRED', 'CANCELED'];
+  private lastProcessedEndTimestamp: string;
 
   constructor(
     private readonly proposalRepository: ProposalRepository,
     private readonly rabbitMQDispatcherService: RabbitMQDispatcherService,
-    interval: number
+    interval: number,
+    initialTimestamp?: string
   ) {
     super('proposal-finished', interval);
+    // Use provided timestamp or default to 24 hours lookback
+    if (initialTimestamp) {
+      this.lastProcessedEndTimestamp = initialTimestamp;
+    } else {
+      const twentyFourHoursAgo = Math.floor((Date.now() - 24 * 60 * 60 * 1000) / 1000);
+      this.lastProcessedEndTimestamp = twentyFourHoursAgo.toString();
+    }
+  }
+
+  /**
+   * Resets the trigger state to initial timestamp
+   * @param timestamp Optional timestamp to reset to, defaults to 24 hours ago
+   * @todo This method will be removed when we migrate to Redis for state management,
+   * allowing proper state isolation between tests without manual resets
+   */
+  public reset(timestamp?: string): void {
+    if (timestamp) {
+      this.lastProcessedEndTimestamp = timestamp;
+    } else {
+      const twentyFourHoursAgo = Math.floor((Date.now() - 24 * 60 * 60 * 1000) / 1000);
+      this.lastProcessedEndTimestamp = twentyFourHoursAgo.toString();
+    }
   }
 
   protected async fetchData(): Promise<ProposalOnChain[]> {
     return await this.proposalRepository.listAll({
-      status_in: this.finishedStatuses,
+      status: this.finishedStatuses,  // API accepts array
+      fromDate: this.lastProcessedEndTimestamp,
+      orderDirection: 'desc',  // API orders by timestamp by default
       limit: 100
     });
   }
@@ -33,9 +59,9 @@ export class ProposalFinishedTrigger extends Trigger<ProposalOnChain, void> {
     const notifications: ProposalFinishedNotification[] = data.map(proposal => ({
       id: proposal?.id || '',
       daoId: proposal?.daoId || '',
+      title: proposal?.title || undefined,
       description: proposal?.description || '',
-      // TODO: Use endTimestamp when available in API, using timestamp as fallback for now
-      endTimestamp: proposal?.timestamp ? parseInt(proposal.timestamp) : 0,
+      endTimestamp: proposal?.endTimestamp ? parseInt(proposal.endTimestamp) : 0,
       status: proposal?.status || 'unknown',
       forVotes: proposal?.forVotes || '0',
       againstVotes: proposal?.againstVotes || '0',
@@ -49,5 +75,11 @@ export class ProposalFinishedTrigger extends Trigger<ProposalOnChain, void> {
     };
     
     await this.rabbitMQDispatcherService.sendMessage(message);
+    
+    // Update timestamp to the most recent proposal's endTimestamp
+    // Since we order by endTimestamp desc, the first one has the highest endTimestamp
+    if (notifications.length > 0 && notifications[0].endTimestamp > 0) {
+      this.lastProcessedEndTimestamp = notifications[0].endTimestamp.toString();
+    }
   }
 }
