@@ -131,6 +131,8 @@ export type Query = {
     historicalTokenData?: Maybe<HistoricalTokenData_200_Response>;
     /** Fetch historical voting power for multiple addresses at a specific time period using multicall */
     historicalVotingPower?: Maybe<Array<Maybe<Query_HistoricalVotingPower_Items>>>;
+    /** Get the last update time */
+    lastUpdate?: Maybe<LastUpdate_200_Response>;
     /** Returns a single proposal by its ID */
     proposal?: Maybe<Proposal_200_Response>;
     /** Returns a list of proposal */
@@ -141,6 +143,8 @@ export type Query = {
     proposalsOnchains: ProposalsOnchainPage;
     token?: Maybe<Token>;
     tokens: TokenPage;
+    /** Get total assets */
+    totalAssets?: Maybe<Array<Maybe<Query_TotalAssets_Items>>>;
     transfer?: Maybe<Transfer>;
     transfers: TransferPage;
     votesOnchain?: Maybe<VotesOnchain>;
@@ -260,6 +264,9 @@ export type QueryHistoricalVotingPowerArgs = {
     addresses: Scalars['JSON']['input'];
     days?: InputMaybe<QueryInput_HistoricalVotingPower_Days>;
 };
+export type QueryLastUpdateArgs = {
+    chart: QueryInput_LastUpdate_Chart;
+};
 export type QueryProposalArgs = {
     id: Scalars['String']['input'];
 };
@@ -300,6 +307,9 @@ export type QueryTokensArgs = {
     orderBy?: InputMaybe<Scalars['String']['input']>;
     orderDirection?: InputMaybe<Scalars['String']['input']>;
     where?: InputMaybe<TokenFilter>;
+};
+export type QueryTotalAssetsArgs = {
+    days?: InputMaybe<QueryInput_TotalAssets_Days>;
 };
 export type QueryTransferArgs = {
     fromAccountId: Scalars['String']['input'];
@@ -728,6 +738,7 @@ export type DaoMetricsDayBucket = {
     daoId: Scalars['String']['output'];
     date: Scalars['BigInt']['output'];
     high: Scalars['BigInt']['output'];
+    lastUpdate: Scalars['BigInt']['output'];
     low: Scalars['BigInt']['output'];
     metricType: MetricType;
     open: Scalars['BigInt']['output'];
@@ -787,6 +798,14 @@ export type DaoMetricsDayBucketFilter = {
     high_lte?: InputMaybe<Scalars['BigInt']['input']>;
     high_not?: InputMaybe<Scalars['BigInt']['input']>;
     high_not_in?: InputMaybe<Array<InputMaybe<Scalars['BigInt']['input']>>>;
+    lastUpdate?: InputMaybe<Scalars['BigInt']['input']>;
+    lastUpdate_gt?: InputMaybe<Scalars['BigInt']['input']>;
+    lastUpdate_gte?: InputMaybe<Scalars['BigInt']['input']>;
+    lastUpdate_in?: InputMaybe<Array<InputMaybe<Scalars['BigInt']['input']>>>;
+    lastUpdate_lt?: InputMaybe<Scalars['BigInt']['input']>;
+    lastUpdate_lte?: InputMaybe<Scalars['BigInt']['input']>;
+    lastUpdate_not?: InputMaybe<Scalars['BigInt']['input']>;
+    lastUpdate_not_in?: InputMaybe<Array<InputMaybe<Scalars['BigInt']['input']>>>;
     low?: InputMaybe<Scalars['BigInt']['input']>;
     low_gt?: InputMaybe<Scalars['BigInt']['input']>;
     low_gte?: InputMaybe<Scalars['BigInt']['input']>;
@@ -940,6 +959,10 @@ export type HistoricalTokenData_200_Response = {
     market_caps: Array<Maybe<Array<Maybe<Scalars['Float']['output']>>>>;
     prices: Array<Maybe<Array<Maybe<Scalars['Float']['output']>>>>;
     total_volumes: Array<Maybe<Array<Maybe<Scalars['Float']['output']>>>>;
+};
+export type LastUpdate_200_Response = {
+    __typename?: 'lastUpdate_200_response';
+    lastUpdate: Scalars['String']['output'];
 };
 export declare enum MetricType {
     CexSupply = "CEX_SUPPLY",
@@ -1225,6 +1248,11 @@ export declare enum QueryInput_HistoricalVotingPower_Days {
     '180d' = "_180d",
     '365d' = "_365d"
 }
+export declare enum QueryInput_LastUpdate_Chart {
+    AttackProfitability = "attack_profitability",
+    CostComparison = "cost_comparison",
+    TokenDistribution = "token_distribution"
+}
 export declare enum QueryInput_ProposalsActivity_OrderBy {
     Timestamp = "timestamp",
     VoteTiming = "voteTiming",
@@ -1244,6 +1272,13 @@ export declare enum QueryInput_ProposalsActivity_UserVoteFilter {
 export declare enum QueryInput_Proposals_OrderDirection {
     Asc = "asc",
     Desc = "desc"
+}
+export declare enum QueryInput_TotalAssets_Days {
+    '7d' = "_7d",
+    '30d' = "_30d",
+    '90d' = "_90d",
+    '180d' = "_180d",
+    '365d' = "_365d"
 }
 export type Query_HistoricalBalances_Items = {
     __typename?: 'query_historicalBalances_items';
@@ -1302,6 +1337,11 @@ export type Query_Proposals_Items = {
     timestamp: Scalars['String']['output'];
     title?: Maybe<Scalars['String']['output']>;
     txHash: Scalars['String']['output'];
+};
+export type Query_TotalAssets_Items = {
+    __typename?: 'query_totalAssets_items';
+    date: Scalars['String']['output'];
+    totalAssets: Scalars['String']['output'];
 };
 export type Token = {
     __typename?: 'token';

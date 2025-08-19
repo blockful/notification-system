@@ -28,10 +28,10 @@ export class ProposalRepository implements ProposalDataSource {
     
     // Pagination
     if (options?.limit) {
-      variables.limit = options.limit;
+      variables.limit = Math.min(options.limit, 100); // API max is 100
     } else {
-      // Set a higher default limit to ensure we get all proposals
-      variables.limit = 1000;
+      // Set default limit to API maximum
+      variables.limit = 100;
     }
     
     if (options?.skip) {
