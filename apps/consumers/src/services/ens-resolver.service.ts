@@ -13,7 +13,11 @@ export class EnsResolverService {
   constructor() {
     this.client = createPublicClient({
       chain: mainnet,
-      transport: http()
+      transport: http(undefined, {
+        timeout: 5_000,  // 5 seconds timeout
+        retryCount: 2,    // Try 2 times  
+        retryDelay: 500   // Wait 500ms between retries
+      })
     });
   }
 
