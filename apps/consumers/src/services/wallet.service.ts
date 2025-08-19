@@ -178,6 +178,17 @@ export class WalletService {
         return;
       }
       
+      // Check if wallet already exists
+      const existingWallets = await this.subscriptionApi.getUserWallets(userId.toString(), 'telegram');
+      const alreadyExists = existingWallets.some(
+        wallet => wallet.address.toLowerCase() === address.toLowerCase()
+      );
+      
+      if (alreadyExists) {
+        await ctx.reply('⚠️ This wallet has already been added');
+        return;
+      }
+      
       // Add wallet via API
       await this.subscriptionApi.addUserWallet(userId.toString(), address, 'telegram');
       
