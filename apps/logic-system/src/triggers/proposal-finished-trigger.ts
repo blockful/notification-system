@@ -45,10 +45,9 @@ export class ProposalFinishedTrigger extends Trigger<ProposalFinished, void> {
     await this.rabbitMQDispatcherService.sendMessage(message);
 
     // Update last notified timestamp to the latest proposal's timestamp (creation time)
-    // this.lastNotifiedProposalTimestamp = Math.max(
-    //   this.lastNotifiedProposalTimestamp,
-    //   ...data.map(proposal => proposal.timestamp)
-    // ); // TODO: Uncomment when API supports the endTimestamp field
-    this.lastNotifiedProposalTimestamp = Math.floor(Date.now() / 1000) - (7 * 24 * 60 * 60);
+    this.lastNotifiedProposalTimestamp = Math.max(
+      this.lastNotifiedProposalTimestamp,
+      ...data.map(proposal => proposal.timestamp)
+    );
   }
 }
