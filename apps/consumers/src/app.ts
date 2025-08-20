@@ -28,7 +28,7 @@ export class App {
     const walletService = new WalletService(subscriptionApi, ensResolver);
     const bot = new Telegraf<ContextWithSession>(telegramBotToken);
     bot.use(session());
-    this.telegramBotService = new TelegramBotService(bot, daoService, walletService);
+    this.telegramBotService = new TelegramBotService(bot, daoService, walletService, ensResolver);
     this.rabbitmqUrl = rabbitmqUrl;
   }
 
