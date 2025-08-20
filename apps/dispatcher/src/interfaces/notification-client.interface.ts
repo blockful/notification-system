@@ -6,6 +6,9 @@ export interface NotificationPayload {
   channel: string;
   channelUserId: string;
   message: string;
+  metadata?: {
+    addresses?: Record<string, string>; // key: placeholder name, value: ethereum address
+  };
 }
 
 /**
