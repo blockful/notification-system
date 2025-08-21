@@ -101,7 +101,7 @@ class AnticaptureClient {
             const queryPromises = allDAOs.map(async (dao) => {
                 try {
                     const validated = await this.query(graphql_2.ListVotingPowerHistorysDocument, schemas_1.SafeVotingPowerHistoryResponseSchema, variables, dao.id);
-                    return (0, schemas_1.processVotingPowerHistory)(validated, dao.id);
+                    return (0, schemas_1.processVotingPowerHistory)(validated, dao.id, dao.chainId);
                 }
                 catch (error) {
                     console.warn(`Skipping ${dao.id} due to API error: ${error instanceof Error ? error.message : error}`);
