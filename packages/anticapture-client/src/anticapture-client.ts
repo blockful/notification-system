@@ -133,7 +133,7 @@ export class AnticaptureClient {
       const queryPromises = allDAOs.map(async (dao) => {
         try {
           const validated = await this.query(ListVotingPowerHistorysDocument, SafeVotingPowerHistoryResponseSchema, variables, dao.id);
-          return processVotingPowerHistory(validated, dao.id);
+          return processVotingPowerHistory(validated, dao.id, dao.chainId);
         } catch (error) {
           console.warn(`Skipping ${dao.id} due to API error: ${error instanceof Error ? error.message : error}`);
           return [];
