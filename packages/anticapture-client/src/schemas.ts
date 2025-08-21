@@ -5,7 +5,8 @@ export const SafeDaosResponseSchema = z.object({
   daos: z.object({
     items: z.array(z.object({ 
       id: z.string(),
-      votingDelay: z.string().optional()
+      votingDelay: z.string().optional(),
+      chainId: z.number()
     }))
   }).nullable()
 }).transform((data) => {
