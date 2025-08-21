@@ -4,21 +4,26 @@ export declare const SafeDaosResponseSchema: z.ZodEffects<z.ZodObject<{
         items: z.ZodArray<z.ZodObject<{
             id: z.ZodString;
             votingDelay: z.ZodOptional<z.ZodString>;
+            chainId: z.ZodNumber;
         }, "strip", z.ZodTypeAny, {
             id: string;
+            chainId: number;
             votingDelay?: string | undefined;
         }, {
             id: string;
+            chainId: number;
             votingDelay?: string | undefined;
         }>, "many">;
     }, "strip", z.ZodTypeAny, {
         items: {
             id: string;
+            chainId: number;
             votingDelay?: string | undefined;
         }[];
     }, {
         items: {
             id: string;
+            chainId: number;
             votingDelay?: string | undefined;
         }[];
     }>>;
@@ -26,6 +31,7 @@ export declare const SafeDaosResponseSchema: z.ZodEffects<z.ZodObject<{
     daos: {
         items: {
             id: string;
+            chainId: number;
             votingDelay?: string | undefined;
         }[];
     } | null;
@@ -33,6 +39,7 @@ export declare const SafeDaosResponseSchema: z.ZodEffects<z.ZodObject<{
     daos: {
         items: {
             id: string;
+            chainId: number;
             votingDelay?: string | undefined;
         }[];
     } | null;
@@ -40,6 +47,7 @@ export declare const SafeDaosResponseSchema: z.ZodEffects<z.ZodObject<{
     daos: {
         items: {
             id: string;
+            chainId: number;
             votingDelay?: string | undefined;
         }[];
     };
@@ -47,6 +55,7 @@ export declare const SafeDaosResponseSchema: z.ZodEffects<z.ZodObject<{
     daos: {
         items: {
             id: string;
+            chainId: number;
             votingDelay?: string | undefined;
         }[];
     } | null;

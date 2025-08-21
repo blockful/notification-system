@@ -9,7 +9,8 @@ exports.SafeDaosResponseSchema = zod_1.z.object({
     daos: zod_1.z.object({
         items: zod_1.z.array(zod_1.z.object({
             id: zod_1.z.string(),
-            votingDelay: zod_1.z.string().optional()
+            votingDelay: zod_1.z.string().optional(),
+            chainId: zod_1.z.number()
         }))
     }).nullable()
 }).transform((data) => {
