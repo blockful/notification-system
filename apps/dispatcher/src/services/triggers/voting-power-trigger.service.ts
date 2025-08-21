@@ -27,7 +27,7 @@ export class VotingPowerTriggerHandler extends BaseTriggerHandler {
    */
   async handleMessage(message: DispatcherMessage): Promise<MessageProcessingResult> {
     for (const votingPowerEvent of message.events) {
-      const { daoId, accountId, votingPower, timestamp, delta, transactionHash, changeType, sourceAccountId, targetAccountId } = votingPowerEvent;
+      const { daoId, accountId, votingPower, timestamp, delta, transactionHash, changeType, sourceAccountId, targetAccountId, chainId } = votingPowerEvent;
       
       if (!daoId || !accountId || !transactionHash) {
         continue;
@@ -85,10 +85,18 @@ export class VotingPowerTriggerHandler extends BaseTriggerHandler {
           notificationMessage = `⚡ Your voting power has changed in ${daoId}!\nVoting power activity detected.`;
         }
       }
+      // Add transaction link placeholder
+      notificationMessage += '\n\n{{txLink}}';
       
-      if (notificationMessage) {
-        await this.sendNotificationsToSubscribers(subscribers, notificationMessage, transactionHash, daoId);
-      }
+      // Prepare metadata with transaction info
+      const metadata = chainId ? {
+        transaction: {
+          hash: transactionHash,
+          chainId: chainId
+        }
+      } : undefined;
+      
+      await this.sendNotificationsToSubscribers(subscribers, notificationMessage, transactionHash, daoId, metadata);
     }
     
     return {
