@@ -12,7 +12,7 @@ export class ProposalRepository implements ProposalDataSource {
     return await this.anticaptureClient.getProposalById(id);
   }
 
-  async listAll(options?: ListProposalsOptions): Promise<ProposalOnChain[]> {
+  async listAll(options?: ListProposalsOptions, limit: number = 100): Promise<ProposalOnChain[]> {
     const variables: ListProposalsQueryVariables = {};
     
     // Status filtering 
@@ -28,11 +28,8 @@ export class ProposalRepository implements ProposalDataSource {
     
     // Pagination
     if (options?.limit) {
-      variables.limit = Math.min(options.limit, 100); // API max is 100
-    } else {
-      // Set default limit to API maximum
-      variables.limit = 100;
-    }
+      variables.limit = Math.min(options.limit, limit);
+    } 
     
     if (options?.skip) {
       variables.skip = options.skip;
