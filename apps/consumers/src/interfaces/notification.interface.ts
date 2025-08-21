@@ -7,7 +7,14 @@ export interface NotificationPayload {
   userId?: string;
   channelUserId: number;
   message: string;
-  metadata?: Record<string, any>;
+  metadata?: {
+    addresses?: Record<string, string>; // key: placeholder name, value: ethereum address
+    transaction?: {
+      hash: string;
+      chainId: number;
+    };
+    [key: string]: any;
+  };
 }
 
 export interface APIErrorResponse {
