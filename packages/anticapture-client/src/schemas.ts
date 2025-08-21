@@ -18,19 +18,17 @@ export const SafeDaosResponseSchema = z.object({
 
 
 export const SafeProposalsResponseSchema = z.object({
-  proposalsOnchains: z.object({
-    items: z.array(z.any())
-  }).nullable()
+  proposals: z.array(z.any()).nullable()
 }).transform((data) => {
-  if (!data.proposalsOnchains || !data.proposalsOnchains.items) {
-    console.warn('ProposalsResponse has null proposalsOnchains or items:', data);
-    return { proposalsOnchains: { items: [] } };
+  if (!data.proposals) {
+    console.warn('ProposalsResponse has null proposals:', data);
+    return { proposals: [] };
   }
-  return { proposalsOnchains: { items: data.proposalsOnchains.items } };
+  return { proposals: data.proposals };
 });
 
 export const SafeProposalByIdResponseSchema = z.object({
-  proposalsOnchain: z.any().nullable()
+  proposal: z.any().nullable()
 });
 
 // Define schema for voting power history item (based on actual API response)
@@ -79,7 +77,7 @@ export type ProcessedVotingPowerHistory = z.infer<typeof VotingPowerHistoryItemS
 
 // Internal helper function to process validated proposals
 export function processProposals(validated: SafeProposalsResponse, daoId: string) {
-  return validated.proposalsOnchains.items.reduce((acc, proposal) => {
+  return validated.proposals.reduce((acc, proposal) => {
     if (proposal !== null) {
       acc.push({
         ...proposal,
@@ -87,7 +85,7 @@ export function processProposals(validated: SafeProposalsResponse, daoId: string
       });
     }
     return acc;
-  }, [] as typeof validated.proposalsOnchains.items);
+  }, [] as typeof validated.proposals);
 }
 
 // Internal helper function to process validated voting power history

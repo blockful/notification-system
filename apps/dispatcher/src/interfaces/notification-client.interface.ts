@@ -27,6 +27,11 @@ export interface INotificationClient {
 export interface ProposalFinishedNotification {
   id: string;
   daoId: string;
+  title?: string;
   description: string;
   endTimestamp: number;
+  status: string;
+  forVotes: string;
+  againstVotes: string;
+  abstainVotes: string;
 }

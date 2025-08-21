@@ -50,7 +50,7 @@ src/
 ```bash
 ANTICAPTURE_GRAPHQL_ENDPOINT=https://api.anticapture.xyz/graphql
 RABBITMQ_URL=amqp://user:pass@rabbitmq:5672
-PROPOSAL_STATUS=pending
+PROPOSAL_STATUS=active
 TRIGGER_INTERVAL=30000
 ```
 

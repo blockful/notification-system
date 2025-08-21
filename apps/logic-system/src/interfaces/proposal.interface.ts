@@ -1,33 +1,37 @@
 import type { GetProposalByIdQuery } from '@notification-system/anticapture-client';
 
-export type ProposalOnChain = GetProposalByIdQuery['proposalsOnchain'];
+export type ProposalOnChain = GetProposalByIdQuery['proposal'];
 export type ProposalOrNull = ProposalOnChain | null;
 
 /**
  * Valid status values for a proposal
  */
 export type ProposalStatus = 
-    | 'pending'
-    | 'active'
-    | 'succeeded'
-    | 'defeated'
-    | 'executed'
-    | 'canceled'
-    | 'queued'
-    | 'expired';
+    | 'PENDING'
+    | 'ACTIVE'
+    | 'SUCCEEDED'
+    | 'DEFEATED'
+    | 'EXECUTED'
+    | 'CANCELED'
+    | 'QUEUED'
+    | 'EXPIRED';
 
 /**
- * Options for listing proposals
+ * Options for listing proposals (matches new API parameters)
  */
 export interface ListProposalsOptions {
     /** Number of proposals to skip */
-    offset?: number;
+    skip?: number;
     /** Maximum number of proposals to return */
     limit?: number;
-    /** Filter by status (using GraphQL string type) */
-    status?: string;
-    /** Filter by DAO */
+    /** Filter by status - can be string or array */
+    status?: string | string[];
+    /** Filter by DAO (passed as header, not query param) */
     daoId?: string;
+    /** Filter proposals after this date (timestamp in seconds as float) */
+    fromDate?: string;
+    /** Order direction - asc or desc */
+    orderDirection?: string;
 }
 
 /**
@@ -71,11 +75,16 @@ export interface ProposalFinished {
 
 /**
  * Interface for proposal finished notifications (sent to Dispatcher)
- * Contains only essential data needed for notification generation
+ * Contains essential data needed for notification generation including voting results
  */
 export interface ProposalFinishedNotification {
     id: string;
     daoId: string;
+    title?: string;
     description: string;
     endTimestamp: number;
+    status: string;
+    forVotes: string;
+    againstVotes: string;
+    abstainVotes: string;
 } 
