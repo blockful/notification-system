@@ -8,6 +8,7 @@ import { Telegraf, Markup } from 'telegraf';
 import { WELCOME_MESSAGE, HELP_MESSAGE, DAOS_BUTTON_TEXT, LEARN_MORE_BUTTON_TEXT, MY_WALLETS_BUTTON_TEXT } from '../messages';
 import { DAOService } from '../services/dao.service';
 import { WalletService } from '../services/wallet.service';
+import { ExplorerService } from '../services/explorer.service';
 import { ContextWithSession } from '../interfaces/bot.interface';
 import { NotificationPayload } from '../interfaces/notification.interface';
 
@@ -15,11 +16,18 @@ export class TelegramBotService {
   private bot: Telegraf<ContextWithSession>;
   private daoService: DAOService;
   private walletService: WalletService;
+  private explorerService: ExplorerService;
 
-  constructor(bot: Telegraf<ContextWithSession>, daoService: DAOService, walletService: WalletService) {
+  constructor(
+    bot: Telegraf<ContextWithSession>, 
+    daoService: DAOService, 
+    walletService: WalletService,
+    explorerService: ExplorerService
+  ) {
     this.bot = bot;
     this.daoService = daoService;
     this.walletService = walletService;
+    this.explorerService = explorerService;
     this.setupCommands();
   }
 
@@ -133,9 +141,18 @@ export class TelegramBotService {
    * @throws Error if sending fails
    */
   public async sendNotification(payload: NotificationPayload): Promise<string> {
+    let processedMessage = payload.message;
+    
+    // Process transaction link if transaction metadata is provided
+    if (payload.metadata?.transaction) {
+      const { hash, chainId } = payload.metadata.transaction;
+      const txLink = this.explorerService.getTransactionLink(chainId, hash);
+      processedMessage = processedMessage.replace('{{txLink}}', txLink);
+    }
+    
     const sentMessage = await this.bot.telegram.sendMessage(
       payload.channelUserId, 
-      payload.message
+      processedMessage
     );
     return `${sentMessage.message_id}`;
   }
