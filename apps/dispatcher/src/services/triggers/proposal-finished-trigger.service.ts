@@ -3,6 +3,7 @@ import { DispatcherMessage, MessageProcessingResult } from '../../interfaces/dis
 import { ISubscriptionClient } from '../../interfaces/subscription-client.interface';
 import { NotificationClientFactory } from '../notification/notification-factory.service';
 import { ProposalFinishedNotification } from '../../interfaces/notification-client.interface';
+import { formatTokenAmount } from '../../lib/number-formatter';
 
 /**
  * Handler for proposal finished trigger events
@@ -47,21 +48,29 @@ export class ProposalFinishedTriggerHandler extends BaseTriggerHandler<ProposalF
     };
   }
 
-  /**
-   * Generates a notification message for a finished proposal
-   * @param proposal The finished proposal
-   * @returns Formatted notification message
-   */
-  private generateNotificationMessage(proposal: {
-    description: string;
-    daoId: string;
-  }): string {
-    const proposalTitle = proposal.description.split('\n')[0].replace(/^#+\s*/, '').trim();
+  private generateNotificationMessage(proposal: ProposalFinishedNotification): string {
+    const proposalTitle = proposal.title || proposal.description.split('\n')[0].replace(/^#+\s*/, '').trim();
     
-    if (proposalTitle) {
-      return `The proposal "${proposalTitle}" has ended on dao ${proposal.daoId}.`;
-    } else {
-      return `A proposal has ended on dao ${proposal.daoId}.`;
-    }
+    const statusEmoji: Record<string, string> = {
+      'EXECUTED': '✅',
+      'SUCCEEDED': '✅',
+      'DEFEATED': '❌',
+      'EXPIRED': '⏰',
+      'CANCELED': '🚫'
+    };
+    
+    const emoji = statusEmoji[proposal.status] || '📊';
+    const statusFormatted = proposal.status.charAt(0) + proposal.status.slice(1).toLowerCase();
+    
+    const votes = `${formatTokenAmount(proposal.forVotes)} FOR | ${formatTokenAmount(proposal.againstVotes)} AGAINST | ${formatTokenAmount(proposal.abstainVotes)} ABSTAIN`;
+    
+    const header = proposalTitle 
+      ? `📊 Proposal "${proposalTitle}" has ended on DAO ${proposal.daoId.toUpperCase()}`
+      : `📊 A proposal has ended on DAO ${proposal.daoId.toUpperCase()}`;
+    
+    return `${header}
+
+Status: ${statusFormatted} ${emoji}
+Votes: ${votes}`;
   }
 }

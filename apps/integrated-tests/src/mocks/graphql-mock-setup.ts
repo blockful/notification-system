@@ -38,14 +38,30 @@ export class GraphQLMockSetup {
       // Handle proposals
       if (data.query?.includes('ListProposals')) {
         let filtered = proposals;
-        if (data.variables?.where?.status_in) {
-          filtered = filtered.filter(p => data.variables.where.status_in.includes(p.status));
+        if (data.variables?.status) {
+          // Status can be string or array (JSON type in GraphQL)
+          const statusFilter = Array.isArray(data.variables.status) 
+            ? data.variables.status 
+            : [data.variables.status];
+          filtered = filtered.filter(p => statusFilter.includes(p.status));
+        }
+        if (data.variables?.fromDate) {
+          filtered = filtered.filter(p => parseInt(p.timestamp) > data.variables.fromDate);
         }
         if (config?.headers?.['anticapture-dao-id']) {
           filtered = filtered.filter(p => p.daoId === config.headers['anticapture-dao-id']);
         }
         return Promise.resolve({
-          data: { data: { proposalsOnchains: { items: filtered } } }
+          data: { data: { proposals: filtered } }
+        });
+      }
+
+      // Handle single proposal
+      if (data.query?.includes('GetProposalById')) {
+        const proposalId = data.variables?.id;
+        const proposal = proposals.find(p => p.id === proposalId);
+        return Promise.resolve({
+          data: { data: { proposal: proposal || null } }
         });
       }
 
@@ -72,7 +88,8 @@ export class GraphQLMockSetup {
         data: {
           data: {
             votingPowerHistorys: { items: [] },
-            proposalsOnchains: { items: [] },
+            proposals: [],
+            proposal: null,
             daos: { items: [] }
           }
         }

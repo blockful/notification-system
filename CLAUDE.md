@@ -2,6 +2,18 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
+## Recent Changes (2025-08-15)
+
+### Migration from proposalsOnchains to proposals query
+- **GraphQL Queries Updated**: Migrated from `proposalsOnchains` to new `proposals` query endpoint
+- **New Features**: 
+  - Added native `title` field support (no longer extracting from description)
+  - Simplified response structure (direct array instead of `items` wrapper)
+- **API Changes**:
+  - Query parameters: `where` filters replaced with `status`, `fromDate`, `skip`, `limit`
+  - Response format: `proposals` returns array directly, not `{ items: [...] }`
+  - Field `proposalsOnchain` renamed to `proposal` for single queries
+- **Removed Fields**: `targets`, `values`, `signatures`, `calldatas` (not used by notification system)
 
 ## Repository Overview
 

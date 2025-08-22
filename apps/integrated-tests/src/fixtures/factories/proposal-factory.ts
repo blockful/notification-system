@@ -11,6 +11,8 @@ export interface ProposalData {
   daoId: string;
   /** Account ID of the user who created the proposal */
   proposerAccountId: string;
+  /** Title of the proposal (extracted from first line of description) */
+  title?: string;
   /** Array of contract addresses to call */
   targets: string[];
   /** Array of ETH values to send with each call */
@@ -23,9 +25,11 @@ export interface ProposalData {
   startBlock: number;
   /** Block number when voting ends */
   endBlock: number;
+  /** Timestamp when proposal ends (in seconds as string) */
+  endTimestamp: string;
   /** Human-readable description of the proposal */
   description: string;
-  /** ISO timestamp when proposal was created */
+  /** Timestamp when proposal was created (in seconds as string) */
   timestamp: string;
   /** Current status of the proposal (PENDING, ACTIVE, etc.) */
   status: string;
@@ -50,19 +54,22 @@ export class ProposalFactory {
    * @return Complete ProposalData object ready for testing
    */
   static createProposal(daoId: string, proposalId: string, overrides?: Partial<ProposalData>): ProposalData {
+    const now = Math.floor(Date.now() / 1000) + 1;
     const baseProposal: ProposalData = {
       id: proposalId,
       daoId: daoId,
       proposerAccountId: uuidv4(),
+      title: `Test ${daoId} proposal`,
       targets: ['0xtarget1'],
       values: ['0'],
       signatures: ['transfer(address,uint256)'],
       calldatas: ['0xabcdef1234567890'],
       startBlock: 12345678,
       endBlock: 12345978,
+      endTimestamp: (now + 300).toString(), // Ends in 5 minutes
       description: `Test ${daoId} proposal`,
-      timestamp: new Date().toISOString(),
-      status: 'PENDING',
+      timestamp: now.toString(),
+      status: 'ACTIVE',
       forVotes: '1000000000000000000',
       againstVotes: '500000000000000000',
       abstainVotes: '200000000000000000',
@@ -84,8 +91,11 @@ export class ProposalFactory {
     count: number, 
     baseId: string = 'proposal'
   ): ProposalData[] {
+    const baseTime = Math.floor(Date.now() / 1000) + 100;
     return Array.from({ length: count }, (_, index) => 
-      this.createProposal(daoId, `${baseId}-${index + 1}`)
+      this.createProposal(daoId, `${baseId}-${index + 1}`, {
+        timestamp: (baseTime + index * 10).toString() // Space out timestamps by 10 seconds each
+      })
     );
   }
 
@@ -99,8 +109,11 @@ export class ProposalFactory {
     daoIds: string[], 
     proposalId: string
   ): ProposalData[] {
-    return daoIds.map(daoId => 
-      this.createProposal(daoId, `${daoId.toLowerCase()}-${proposalId}`)
+    const baseTime = Math.floor(Date.now() / 1000) + 100;
+    return daoIds.map((daoId, index) => 
+      this.createProposal(daoId, `${daoId.toLowerCase()}-${proposalId}`, {
+        timestamp: (baseTime + index * 10).toString() // Space out timestamps by 10 seconds each
+      })
     );
   }
 }

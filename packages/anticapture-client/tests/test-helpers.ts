@@ -10,11 +10,9 @@ export function createMockClient() {
   return { client, mockQuery };
 }
 
-export function createProposalResponse(id: string, description: string) {
+export function createProposalResponse(id: string, description: string, title?: string) {
   return {
-    proposalsOnchains: {
-      items: [{ id, description }]
-    }
+    proposals: [{ id, description, title: title || null }]
   };
 }
 
