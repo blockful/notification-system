@@ -47,7 +47,11 @@ describe('Voting Power Trigger - Integration Test', () => {
         testUserWithSubscription,
         testConstants.votingPower.default,
         testDaoId,
-        { timestamp: eventTimestamp }
+        { 
+          timestamp: eventTimestamp,
+          chainId: 1, // Ethereum mainnet
+          transactionHash: '0x1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef'
+        }
       )
     ];
 
@@ -56,8 +60,7 @@ describe('Voting Power Trigger - Integration Test', () => {
       httpMockSetup.getMockClient(),
       [], // No proposals needed
       votingPowerEvents,
-      12, // blockTime
-      testDaoId // testDaoId
+      { [testDaoId]: 1 } // Map testDaoId to Ethereum mainnet
     );
 
     // Wait for the voting power notification to be sent
@@ -69,6 +72,8 @@ describe('Voting Power Trigger - Integration Test', () => {
     // Verify the message contains the expected content
     expect(message.text).toContain('voting power');
     expect(message.text).toContain(testDaoId);
+    // Verify transaction link is included
+    expect(message.text).toContain('View transaction: https://etherscan.io/tx/0x1234567890abcdef');
     
     // Verify the message was sent to a user (we got a telegram message)
     expect(message.chatId).toBeDefined();
