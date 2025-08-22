@@ -8,6 +8,9 @@ interface NotificationPayload {
   userId: string;
   channelUserId: number;
   message: string;
+  metadata?: {
+    addresses?: Record<string, string>;
+  };
 }
 
 /**
@@ -56,6 +59,7 @@ export class RabbitMQNotificationConsumerService {
         userId: message.payload.userId,
         channelUserId: message.payload.channelUserId,
         message: message.payload.message,
+        metadata: message.payload.metadata,
       });
     } catch (error: any) {
       if (error?.response?.description === 'Bad Request: chat not found') {

@@ -8,6 +8,7 @@ import { Telegraf, Markup } from 'telegraf';
 import { WELCOME_MESSAGE, HELP_MESSAGE, DAOS_BUTTON_TEXT, LEARN_MORE_BUTTON_TEXT, MY_WALLETS_BUTTON_TEXT } from '../messages';
 import { DAOService } from '../services/dao.service';
 import { WalletService } from '../services/wallet.service';
+import { EnsResolverService } from '../services/ens-resolver.service';
 import { ContextWithSession } from '../interfaces/bot.interface';
 import { NotificationPayload } from '../interfaces/notification.interface';
 
@@ -15,11 +16,18 @@ export class TelegramBotService {
   private bot: Telegraf<ContextWithSession>;
   private daoService: DAOService;
   private walletService: WalletService;
+  private ensResolver: EnsResolverService;
 
-  constructor(bot: Telegraf<ContextWithSession>, daoService: DAOService, walletService: WalletService) {
+  constructor(
+    bot: Telegraf<ContextWithSession>, 
+    daoService: DAOService, 
+    walletService: WalletService,
+    ensResolver: EnsResolverService
+  ) {
     this.bot = bot;
     this.daoService = daoService;
     this.walletService = walletService;
+    this.ensResolver = ensResolver;
     this.setupCommands();
   }
 
@@ -133,9 +141,19 @@ export class TelegramBotService {
    * @throws Error if sending fails
    */
   public async sendNotification(payload: NotificationPayload): Promise<string> {
+    let processedMessage = payload.message;
+    
+    // Process ENS names if addresses are provided in metadata
+    if (payload.metadata?.addresses) {
+      for (const [placeholder, address] of Object.entries(payload.metadata.addresses)) {
+        const displayName = await this.ensResolver.resolveDisplayName(address);
+        processedMessage = processedMessage.replace(`{{${placeholder}}}`, displayName);
+      }
+    }
+    
     const sentMessage = await this.bot.telegram.sendMessage(
       payload.channelUserId, 
-      payload.message
+      processedMessage
     );
     return `${sentMessage.message_id}`;
   }
