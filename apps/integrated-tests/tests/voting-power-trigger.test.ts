@@ -72,8 +72,12 @@ describe('Voting Power Trigger - Integration Test', () => {
     // Verify the message contains the expected content
     expect(message.text).toContain('voting power');
     expect(message.text).toContain(testDaoId);
-    // Verify transaction link is included
-    expect(message.text).toContain('View transaction: https://etherscan.io/tx/0x1234567890abcdef');
+    
+    // Verify that the placeholder was replaced with the actual link
+    expect(message.text).not.toContain('{{txLink}}');
+    
+    // Verify transaction link is included with correct format
+    expect(message.text).toContain('View transaction: https://etherscan.io/tx/0x1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef');
     
     // Verify the message was sent to a user (we got a telegram message)
     expect(message.chatId).toBeDefined();
