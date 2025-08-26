@@ -4,20 +4,10 @@
  */
 
 import * as chains from 'viem/chains';
-import { isHash } from 'viem';
+import { isHash, extractChain } from 'viem';
 import type { Chain } from 'viem';
 
 export class ExplorerService {
-  private readonly chainMap = new Map<number, Chain>();
-  
-  constructor() {
-    // Build a map of chainId -> Chain for efficient lookups
-    Object.values(chains).forEach(chain => {
-      if (typeof chain === 'object' && 'id' in chain) {
-        this.chainMap.set(chain.id, chain);
-      }
-    });
-  }
   
   /**
    * Generate transaction URL for a given chain and transaction hash
@@ -31,8 +21,11 @@ export class ExplorerService {
       return '';
     }
     
-    const chain = this.chainMap.get(chainId);
-      
+    const chain = extractChain({
+      chains: Object.values(chains),
+      id: chainId as any
+    });
+    
     if (chain?.blockExplorers?.default?.url) {
       // Ensure transaction hash is properly formatted with 0x prefix
       const formattedHash = transactionHash.startsWith('0x') 
