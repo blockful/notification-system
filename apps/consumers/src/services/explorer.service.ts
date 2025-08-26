@@ -4,6 +4,7 @@
  */
 
 import * as chains from 'viem/chains';
+import { isHash } from 'viem';
 import type { Chain } from 'viem';
 
 export class ExplorerService {
@@ -22,9 +23,14 @@ export class ExplorerService {
    * Generate transaction URL for a given chain and transaction hash
    * @param chainId The EIP-155 chain ID
    * @param transactionHash The transaction hash
-   * @returns Formatted message with transaction link or just the hash if explorer not found
+   * @returns Formatted message with transaction link or empty string if hash is invalid
    */
   public getTransactionLink(chainId: number, transactionHash: string): string {
+    // Validate hash using viem's isHash utility
+    if (!isHash(transactionHash)) {
+      return '';
+    }
+    
     const chain = this.chainMap.get(chainId);
       
     if (chain?.blockExplorers?.default?.url) {

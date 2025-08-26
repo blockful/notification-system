@@ -146,16 +146,8 @@ export class TelegramBotService {
     // Process transaction link if transaction metadata is provided
     if (payload.metadata?.transaction) {
       const { hash, chainId } = payload.metadata.transaction;
-      
-      // If hash is empty or invalid, remove the placeholder entirely
-      if (!hash || hash === '' || hash === '0x') {
-        processedMessage = processedMessage.replace('\n\n{{txLink}}', '');
-        processedMessage = processedMessage.replace('{{txLink}}', '');
-      } else {
-        // Replace with actual transaction link
-        const txLink = this.explorerService.getTransactionLink(chainId, hash);
-        processedMessage = processedMessage.replace('{{txLink}}', txLink);
-      }
+      const txLink = this.explorerService.getTransactionLink(chainId, hash);
+      processedMessage = processedMessage.replace('{{txLink}}', txLink);
     }
     
     const sentMessage = await this.bot.telegram.sendMessage(

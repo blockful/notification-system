@@ -1,0 +1,87 @@
+import { ExplorerService } from './explorer.service';
+
+describe('ExplorerService', () => {
+  let explorerService: ExplorerService;
+
+  beforeEach(() => {
+    explorerService = new ExplorerService();
+  });
+
+  describe('getTransactionLink', () => {
+    it('should return Etherscan link for Ethereum mainnet (chainId: 1)', () => {
+      const hash = '0x1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef';
+      const result = explorerService.getTransactionLink(1, hash);
+      expect(result).toBe('View transaction: https://etherscan.io/tx/0x1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef');
+    });
+
+    it('should return Polygonscan link for Polygon (chainId: 137)', () => {
+      const hash = '0x1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef';
+      const result = explorerService.getTransactionLink(137, hash);
+      expect(result).toBe('View transaction: https://polygonscan.com/tx/0x1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef');
+    });
+
+    it('should return Arbiscan link for Arbitrum (chainId: 42161)', () => {
+      const hash = '0x1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef';
+      const result = explorerService.getTransactionLink(42161, hash);
+      expect(result).toBe('View transaction: https://arbiscan.io/tx/0x1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef');
+    });
+
+    it('should return Optimistic Etherscan link for Optimism (chainId: 10)', () => {
+      const hash = '0x1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef';
+      const result = explorerService.getTransactionLink(10, hash);
+      expect(result).toBe('View transaction: https://optimistic.etherscan.io/tx/0x1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef');
+    });
+
+    it('should return Basescan link for Base (chainId: 8453)', () => {
+      const hash = '0x1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef';
+      const result = explorerService.getTransactionLink(8453, hash);
+      expect(result).toBe('View transaction: https://basescan.org/tx/0x1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef');
+    });
+
+    it('should return BscScan link for BSC (chainId: 56)', () => {
+      const hash = '0x1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef';
+      const result = explorerService.getTransactionLink(56, hash);
+      expect(result).toBe('View transaction: https://bscscan.com/tx/0x1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef');
+    });
+
+    it('should return Snowtrace link for Avalanche C-Chain (chainId: 43114)', () => {
+      const hash = '0x1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef';
+      const result = explorerService.getTransactionLink(43114, hash);
+      expect(result).toBe('View transaction: https://snowtrace.io/tx/0x1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef');
+    });
+
+    it('should return transaction hash without explorer link for unknown chain', () => {
+      const hash = '0x1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef';
+      const result = explorerService.getTransactionLink(999999, hash);
+      expect(result).toBe('Transaction: 0x1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef');
+    });
+
+    it('should return empty string for invalid hash format', () => {
+      const hash = 'invalid-hash';
+      const result = explorerService.getTransactionLink(1, hash);
+      expect(result).toBe('');
+    });
+
+    it('should return empty string for empty hash', () => {
+      const result = explorerService.getTransactionLink(1, '');
+      expect(result).toBe('');
+    });
+    
+    it('should return empty string for 0x-only hash', () => {
+      const result = explorerService.getTransactionLink(1, '0x');
+      expect(result).toBe('');
+    });
+
+    it('should handle undefined chainId gracefully', () => {
+      const hash = '0x1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef';
+      const result = explorerService.getTransactionLink(undefined as any, hash);
+      expect(result).toBe('Transaction: 0x1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef');
+    });
+
+    it('should handle null chainId gracefully', () => {
+      const hash = '0x1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef';
+      const result = explorerService.getTransactionLink(null as any, hash);
+      expect(result).toBe('Transaction: 0x1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef');
+    });
+  });
+});
