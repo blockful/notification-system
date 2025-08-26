@@ -43,11 +43,6 @@ export class RabbitMQNotificationConsumerService {
     if (message.type !== 'NOTIFICATION_EVENT') {
       return;
     }
-    console.log('[DEBUG] RabbitMQConsumer processNotification:', {
-      hasPayload: !!message.payload,
-      hasMetadata: !!message.payload?.metadata,
-      metadata: message.payload?.metadata
-    });
     try {
       await this.telegramBotService.sendNotification(message.payload);
     } catch (error: any) {
