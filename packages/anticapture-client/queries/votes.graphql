@@ -1,0 +1,23 @@
+query ListVotesOnchains(
+  $daoId: String!
+  $proposalId_in: [String!]
+  $voterAccountId_in: [String!]
+) {
+  votesOnchains(
+    where: {
+      daoId: $daoId
+      proposalId_in: $proposalId_in
+      voterAccountId_in: $voterAccountId_in
+    }
+  ) {
+    items {
+      txHash
+      proposalId
+      voterAccountId
+      support
+      votingPower
+      timestamp
+    }
+    totalCount
+  }
+}
