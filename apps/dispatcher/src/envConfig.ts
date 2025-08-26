@@ -10,6 +10,7 @@ import { z } from 'zod';
 const envSchema = z.object({
   SUBSCRIPTION_SERVER_URL: z.string().url(),
   RABBITMQ_URL: z.string().url(),
+  ANTICAPTURE_GRAPHQL_ENDPOINT: z.string().url(),
 });
 
 export function loadConfig() {
@@ -19,5 +20,6 @@ export function loadConfig() {
   return {
     subscriptionServerUrl: env.SUBSCRIPTION_SERVER_URL,
     rabbitmqUrl: env.RABBITMQ_URL,
+    anticaptureGraphqlEndpoint: env.ANTICAPTURE_GRAPHQL_ENDPOINT,
   } as const;
 } 
