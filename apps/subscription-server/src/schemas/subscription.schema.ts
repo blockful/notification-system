@@ -71,3 +71,11 @@ export const getDaoSubscribersResponseSchema = {
     created_at: z.string().optional()
   }).describe('User DTO'))
 };
+
+/**
+ * Schema for get followed addresses response
+ * Defines the structure and validation for the followed addresses list response
+ */
+export const getFollowedAddressesResponseSchema = {
+  200: z.array(z.string()).describe('List of unique addresses being followed')
+};
