@@ -71,4 +71,14 @@ export class SubscriptionClient implements ISubscriptionClient {
     const response = await this.client.get(`/users/by-address/${encodeURIComponent(address)}`);
     return response.data;
   }
+
+  /**
+   * Get all unique addresses being followed by users in a specific DAO
+   * @param daoId The DAO ID
+   * @returns List of unique addresses being followed
+   */
+  async getFollowedAddresses(daoId: string): Promise<string[]> {
+    const response = await this.client.get(`/dao/${encodeURIComponent(daoId)}/followed-addresses`);
+    return response.data;
+  }
 } 

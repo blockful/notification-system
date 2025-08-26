@@ -51,4 +51,11 @@ export interface ISubscriptionClient {
    * @returns List of users who own the address
    */
   getWalletOwners(address: string): Promise<User[]>;
+
+  /**
+   * Get all unique addresses being followed by users in a specific DAO
+   * @param daoId The DAO ID
+   * @returns List of unique addresses being followed
+   */
+  getFollowedAddresses(daoId: string): Promise<string[]>;
 } 
