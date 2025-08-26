@@ -42,7 +42,8 @@ describe('ProposalFinishedTriggerHandler', () => {
       getDaoSubscribers: jest.fn(),
       shouldSend: jest.fn(),
       markAsSent: jest.fn(),
-      getWalletOwners: jest.fn()
+      getWalletOwners: jest.fn(),
+      getFollowedAddresses: jest.fn()
     } as jest.Mocked<ISubscriptionClient>;
     
     mockNotificationClient = {
