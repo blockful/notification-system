@@ -9,6 +9,7 @@ import { WELCOME_MESSAGE, HELP_MESSAGE, DAOS_BUTTON_TEXT, LEARN_MORE_BUTTON_TEXT
 import { DAOService } from '../services/dao.service';
 import { WalletService } from '../services/wallet.service';
 import { ExplorerService } from '../services/explorer.service';
+import { EnsResolverService } from '../services/ens-resolver.service';
 import { ContextWithSession } from '../interfaces/bot.interface';
 import { NotificationPayload } from '../interfaces/notification.interface';
 
@@ -17,17 +18,20 @@ export class TelegramBotService {
   private daoService: DAOService;
   private walletService: WalletService;
   private explorerService: ExplorerService;
+  private ensResolver: EnsResolverService;
 
   constructor(
     bot: Telegraf<ContextWithSession>, 
     daoService: DAOService, 
     walletService: WalletService,
-    explorerService: ExplorerService
+    explorerService: ExplorerService,
+    ensResolver: EnsResolverService
   ) {
     this.bot = bot;
     this.daoService = daoService;
     this.walletService = walletService;
     this.explorerService = explorerService;
+    this.ensResolver = ensResolver;
     this.setupCommands();
   }
 
@@ -148,6 +152,14 @@ export class TelegramBotService {
       const { hash, chainId } = payload.metadata.transaction;
       const txLink = this.explorerService.getTransactionLink(chainId, hash);
       processedMessage = processedMessage.replace('{{txLink}}', txLink);
+    }
+    
+    // Process ENS names if addresses are provided in metadata
+    if (payload.metadata?.addresses) {
+      for (const [placeholder, address] of Object.entries(payload.metadata.addresses)) {
+        const displayName = await this.ensResolver.resolveDisplayName(address);
+        processedMessage = processedMessage.replace(`{{${placeholder}}}`, displayName);
+      }
     }
     
     const sentMessage = await this.bot.telegram.sendMessage(

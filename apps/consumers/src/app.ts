@@ -5,6 +5,7 @@ import { TelegramBotService } from './services/telegram-bot.service';
 import { DAOService } from './services/dao.service';
 import { WalletService } from './services/wallet.service';
 import { ExplorerService } from './services/explorer.service';
+import { EnsResolverService } from './services/ens-resolver.service';
 import { AnticaptureClient } from '@notification-system/anticapture-client';
 import { SubscriptionAPIService } from './services/subscription-api.service';
 import { ContextWithSession } from './interfaces/bot.interface';
@@ -23,12 +24,13 @@ export class App {
   ) {
     const subscriptionApi = new SubscriptionAPIService(subscriptionServerUrl);
     const anticaptureClient = new AnticaptureClient(httpClient);
+    const ensResolver = new EnsResolverService();
     const daoService = new DAOService(anticaptureClient, subscriptionApi);
-    const walletService = new WalletService(subscriptionApi);
+    const walletService = new WalletService(subscriptionApi, ensResolver);
     const explorerService = new ExplorerService();
     const bot = new Telegraf<ContextWithSession>(telegramBotToken);
     bot.use(session());
-    this.telegramBotService = new TelegramBotService(bot, daoService, walletService, explorerService);
+    this.telegramBotService = new TelegramBotService(bot, daoService, walletService, explorerService, ensResolver);
     this.rabbitmqUrl = rabbitmqUrl;
   }
 

@@ -61,15 +61,18 @@ export class VotingPowerTriggerHandler extends BaseTriggerHandler {
       );
       
       let notificationMessage = '';
+      let metadata: { addresses?: Record<string, string> } | undefined;
       
       const deltaValue = delta ? parseInt(delta) : 0;
       const formattedDelta = formatTokenAmount(Math.abs(deltaValue));
 
       if (changeType === 'delegation') {
         if (deltaValue >= 0) {
-          notificationMessage = `🥳 You've received a new delegation in ${daoId}!\n${sourceAccountId} delegated to you, increasing your voting power by ${formattedDelta}.`;
+          notificationMessage = `🥳 You've received a new delegation in ${daoId}!\n{{delegator}} delegated to you, increasing your voting power by ${formattedDelta}.`;
+          metadata = { addresses: { delegator: sourceAccountId } };
         } else if (deltaValue < 0) {
-          notificationMessage = `🥺 A delegator just undelegated in ${daoId}!\n${sourceAccountId} removed their delegation, reducing your voting power by ${formattedDelta}.`;
+          notificationMessage = `🥺 A delegator just undelegated in ${daoId}!\n{{delegator}} removed their delegation, reducing your voting power by ${formattedDelta}.`;
+          metadata = { addresses: { delegator: sourceAccountId } };
         } 
       } else if (changeType === 'transfer') {
         if (deltaValue >= 0) {
