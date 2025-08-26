@@ -275,4 +275,20 @@ export class KnexUserAddressRepository implements IUserAddressRepository {
     
     return userAddress;
   }
+
+  /**
+   * Get all unique addresses being followed by users in a specific DAO
+   * @param daoId - The DAO ID
+   * @returns Array of unique addresses being followed
+   */
+  async getFollowedAddressByDao(daoId: string): Promise<string[]> {
+    const result = await this.knex('user_addresses')
+      .distinct('address')
+      .join('user_preferences', 'user_addresses.user_id', 'user_preferences.user_id')
+      .where('user_preferences.dao_id', daoId)
+      .where('user_addresses.is_active', true)
+      .where('user_preferences.is_active', true);
+    
+    return result.map(row => row.address);
+  }
 } 

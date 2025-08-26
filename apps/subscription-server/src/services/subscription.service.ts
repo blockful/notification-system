@@ -228,4 +228,13 @@ export class SubscriptionService {
     
     return users;
   }
+
+  /**
+   * Get all unique addresses being followed by users in a specific DAO
+   * @param daoId The DAO ID
+   * @returns List of unique addresses
+   */
+  async getFollowedAddresses(daoId: string): Promise<string[]> {
+    return await this.userAddressRepository.getFollowedAddressByDao(daoId);
+  }
 } 
