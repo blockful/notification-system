@@ -26,6 +26,13 @@ const addAddressBodySchema = z.object({
 });
 
 /**
+ * Schema for batch addresses request body
+ */
+const batchAddressesBodySchema = z.object({
+  addresses: z.array(z.string()).describe('Array of wallet addresses')
+});
+
+/**
  * Schema for user address response
  */
 const userAddressResponseSchema = z.object({
@@ -153,6 +160,33 @@ export class UserAddressController {
           created_at: user.created_at
         }));
         return reply.send(formattedUsers);
+      } catch (error: any) {
+        return reply.status(500).send({ error: error.message });
+      }
+    });
+
+    // Get users who own specific wallet addresses (batch)
+    fastify.post<{
+      Body: z.infer<typeof batchAddressesBodySchema>;
+    }>('/users/by-addresses/batch', {
+      schema: {
+        description: 'Get users who own specific wallet addresses (batch operation)',
+        body: batchAddressesBodySchema,
+        response: {
+          200: z.record(z.string(), z.array(z.object({
+            id: z.string(),
+            channel: z.string(),
+            channel_user_id: z.string(),
+            created_at: z.string()
+          })))
+        }
+      }
+    }, async (request: FastifyRequest, reply: FastifyReply) => {
+      const { addresses } = request.body as { addresses: string[] };
+      
+      try {
+        const result = await this.subscriptionService.getUsersByWalletAddressesBatch(addresses);
+        return reply.send(result);
       } catch (error: any) {
         return reply.status(500).send({ error: error.message });
       }
