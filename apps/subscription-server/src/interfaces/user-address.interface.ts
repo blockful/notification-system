@@ -34,6 +34,13 @@ export interface IUserAddressRepository {
   findByAddress(address: string): Promise<UserAddress[]>;
 
   /**
+   * Find all users who own any of the specified wallet addresses
+   * @param addresses - Array of wallet addresses
+   * @returns Array of UserAddress records for active addresses
+   */
+  findByAddresses(addresses: string[]): Promise<UserAddress[]>;
+
+  /**
    * Find a specific user-address combination
    * @param userId - The user ID
    * @param address - The wallet address

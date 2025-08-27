@@ -51,6 +51,19 @@ export class KnexUserRepository implements IUserRepository {
     
     return user || undefined;
   }
+
+  /**
+   * Gets multiple users by their IDs
+   * @param ids - Array of user IDs
+   */
+  async findByIds(ids: string[]): Promise<User[]> {
+    if (ids.length === 0) return [];
+    
+    const users = await this.knex<User>('users')
+      .whereIn('id', ids);
+    
+    return users;
+  }
 }
 
 /**
@@ -203,6 +216,23 @@ export class KnexUserAddressRepository implements IUserAddressRepository {
       .select('*');
     
     return addresses;
+  }
+
+  /**
+   * Find all users who own any of the specified wallet addresses
+   * @param addresses - Array of wallet addresses (case-insensitive)
+   * @returns Array of UserAddress records for active addresses
+   */
+  async findByAddresses(addresses: string[]): Promise<UserAddress[]> {
+    if (addresses.length === 0) return [];
+    
+    const lowercaseAddresses = addresses.map(addr => addr.toLowerCase());
+    const userAddresses = await this.knex<UserAddress>('user_addresses')
+      .whereIn('address', lowercaseAddresses)
+      .where({ is_active: true })
+      .select('*');
+    
+    return userAddresses;
   }
 
   /**

@@ -228,4 +228,56 @@ export class SubscriptionService {
     
     return users;
   }
+
+  /**
+   * Get users by multiple wallet addresses (batch operation)
+   * @param addresses Array of wallet addresses
+   * @returns Record mapping addresses to arrays of Users who own each address
+   */
+  async getUsersByWalletAddressesBatch(addresses: string[]): Promise<Record<string, User[]>> {
+    if (addresses.length === 0) return {};
+    
+    const userAddresses = await this.userAddressRepository.findByAddresses(addresses);
+    const result: Record<string, User[]> = {};
+    
+    // Initialize all addresses with empty arrays
+    addresses.forEach(address => {
+      result[address] = [];
+    });
+    
+    // Group user addresses by address
+    const addressGroups: Record<string, string[]> = {};
+    userAddresses.forEach(userAddress => {
+      if (!addressGroups[userAddress.address]) {
+        addressGroups[userAddress.address] = [];
+      }
+      addressGroups[userAddress.address].push(userAddress.user_id);
+    });
+    
+    // Get unique user IDs
+    const userIds = [...new Set(userAddresses.map(ua => ua.user_id))];
+    if (userIds.length === 0) return result;
+    
+    // Fetch all users in one batch
+    const users = await this.userRepository.findByIds(userIds);
+    const userMap = new Map(users.map(user => [user.id, user]));
+    
+    // Build result mapping addresses to users
+    Object.entries(addressGroups).forEach(([address, userIdList]) => {
+      result[address] = userIdList
+        .map(userId => userMap.get(userId))
+        .filter((user): user is User => user !== undefined);
+    });
+    
+    return result;
+  }
+
+  /**
+   * Get all unique addresses being followed by users in a specific DAO
+   * @param daoId The DAO ID
+   * @returns List of unique addresses
+   */
+  async getFollowedAddresses(daoId: string): Promise<string[]> {
+    return await this.userAddressRepository.getFollowedAddressByDao(daoId);
+  }
 } 
