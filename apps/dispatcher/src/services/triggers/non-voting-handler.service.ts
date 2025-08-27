@@ -114,13 +114,21 @@ export class NonVotingHandler extends BaseTriggerHandler<ProposalFinishedNotific
     const validAddressFollowers = addressFollowers.filter(af => af.followers.length > 0);
     if (validAddressFollowers.length === 0) return;
 
-    // Batch 2: Check deduplication for all addresses
-    const deduplicationPromises = validAddressFollowers.map(({ address, followers }) => {
-      const eventId = `${address}-non-voting-${lastProposals[0].id}`;
-      return this.subscriptionClient.shouldSend(followers, eventId, daoId)
-        .then(notificationsToSend => ({ address, followers, notificationsToSend }));
-    });
-    const deduplicationResults = await Promise.all(deduplicationPromises);
+    // Batch 2: Check deduplication for all addresses in one request
+    const shouldSendRequests = validAddressFollowers.map(({ address, followers }) => ({
+      subscribers: followers,
+      eventId: `${address}-non-voting-${lastProposals[0].id}`,
+      daoId
+    }));
+    
+    const batchResults = await this.subscriptionClient.shouldSendBatch(shouldSendRequests);
+    
+    // Map results back to the original structure
+    const deduplicationResults = validAddressFollowers.map(({ address, followers }, index) => ({
+      address,
+      followers,
+      notificationsToSend: batchResults[index] || []
+    }));
     
     // Filter out addresses with no notifications to send
     const validNotifications = deduplicationResults.filter(result => result.notificationsToSend.length > 0);
