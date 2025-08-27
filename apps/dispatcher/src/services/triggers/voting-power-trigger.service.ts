@@ -26,22 +26,56 @@ export class VotingPowerTriggerHandler extends BaseTriggerHandler {
    * @param message The message containing voting power history data
    */
   async handleMessage(message: DispatcherMessage): Promise<MessageProcessingResult> {
-    for (const votingPowerEvent of message.events) {
+    // Step 1: Collect all unique account IDs and DAOs upfront
+    const validEvents = message.events.filter(event => 
+      event.daoId && event.accountId && event.transactionHash
+    );
+    
+    if (validEvents.length === 0) {
+      return {
+        messageId: message.triggerId,
+        timestamp: new Date().toISOString()
+      };
+    }
+
+    // Get unique account IDs to batch wallet owners lookup
+    const uniqueAccountIds = [...new Set(validEvents.map(event => event.accountId))];
+    const walletOwnersMap = await this.subscriptionClient.getWalletOwnersBatch(uniqueAccountIds);
+
+    // Group events by DAO to batch DAO subscribers lookup
+    const eventsByDao: Record<string, typeof validEvents> = {};
+    validEvents.forEach(event => {
+      if (!eventsByDao[event.daoId]) {
+        eventsByDao[event.daoId] = [];
+      }
+      eventsByDao[event.daoId].push(event);
+    });
+
+    // Batch get DAO subscribers for all DAOs
+    const daoSubscribersPromises = Object.keys(eventsByDao).map(async daoId => {
+      const daoEvents = eventsByDao[daoId];
+      const timestamp = daoEvents[0]?.timestamp; // Use first event's timestamp
+      const subscribers = await this.subscriptionClient.getDaoSubscribers(daoId, timestamp);
+      return { daoId, subscribers };
+    });
+    const daoSubscriberResults = await Promise.all(daoSubscribersPromises);
+    const daoSubscribersMap = Object.fromEntries(
+      daoSubscriberResults.map(result => [result.daoId, result.subscribers])
+    );
+
+    // Now process each event with cached data
+    for (const votingPowerEvent of validEvents) {
       const { daoId, accountId, votingPower, timestamp, delta, transactionHash, changeType, sourceAccountId, targetAccountId } = votingPowerEvent;
       
-      if (!daoId || !accountId || !transactionHash) {
-        continue;
-      }
-
-      // Get users who own this specific wallet address
-      const walletOwners = await this.subscriptionClient.getWalletOwners(accountId);
+      // Get wallet owners from cache
+      const walletOwners = walletOwnersMap[accountId] || [];
       
       if (walletOwners.length === 0) {
         continue;
       }
       
-      // Get all DAO subscribers once
-      const daoSubscribers = await this.subscriptionClient.getDaoSubscribers(daoId, timestamp);
+      // Get DAO subscribers from cache
+      const daoSubscribers = daoSubscribersMap[daoId] || [];
       
       // Filter wallet owners to only include those subscribed to this DAO
       const subscribedOwners = walletOwners.filter(owner => 
