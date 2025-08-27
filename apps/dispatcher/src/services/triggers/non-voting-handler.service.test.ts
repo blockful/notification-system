@@ -25,6 +25,7 @@ describe('NonVotingHandler', () => {
     mockSubscriptionClient = {
       getDaoSubscribers: jest.fn(),
       shouldSend: jest.fn(),
+      shouldSendBatch: jest.fn(),
       markAsSent: jest.fn(),
       getWalletOwners: jest.fn(),
       getWalletOwnersBatch: jest.fn(),
@@ -86,15 +87,17 @@ describe('NonVotingHandler', () => {
       [TestAddresses.ADDRESS_3]: followers
     });
     
-    // Mock shouldSend to return notifications for all addresses based on eventId
-    mockSubscriptionClient.shouldSend.mockImplementation((followers, eventId, daoId) => {
-      if (eventId.includes(TestAddresses.ADDRESS_2)) {
-        return Promise.resolve([createNotification('user-1', eventId, daoId)]);
-      }
-      if (eventId.includes(TestAddresses.ADDRESS_3)) {
-        return Promise.resolve([createNotification('user-1', eventId, daoId)]);
-      }
-      return Promise.resolve([]);
+    // Mock shouldSendBatch to return notifications for all addresses based on eventId
+    mockSubscriptionClient.shouldSendBatch.mockImplementation((requests) => {
+      return Promise.resolve(requests.map(request => {
+        if (request.eventId.includes(TestAddresses.ADDRESS_2)) {
+          return [createNotification('user-1', request.eventId, request.daoId)];
+        }
+        if (request.eventId.includes(TestAddresses.ADDRESS_3)) {
+          return [createNotification('user-1', request.eventId, request.daoId)];
+        }
+        return [];
+      }));
     });
 
     // Execute
@@ -244,8 +247,8 @@ describe('NonVotingHandler', () => {
     mockSubscriptionClient.getWalletOwnersBatch.mockResolvedValue({
       [TestAddresses.ADDRESS_LONG]: followers
     });
-    mockSubscriptionClient.shouldSend.mockResolvedValue([
-      createNotification('user-1', `${TestAddresses.ADDRESS_LONG}-non-voting-proposal-3`, 'ENS')
+    mockSubscriptionClient.shouldSendBatch.mockResolvedValue([
+      [createNotification('user-1', `${TestAddresses.ADDRESS_LONG}-non-voting-proposal-3`, 'ENS')]
     ]);
 
     await handler.handleMessage(message);
