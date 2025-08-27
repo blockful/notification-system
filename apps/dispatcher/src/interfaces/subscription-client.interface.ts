@@ -40,6 +40,17 @@ export interface ISubscriptionClient {
   shouldSend(subscribers: User[], eventId: string, daoId: string): Promise<Notification[]>;
 
   /**
+   * Filters multiple groups of subscribers in batch
+   * @param requests Array of shouldSend requests
+   * @returns Array of notification arrays corresponding to each request
+   */
+  shouldSendBatch(requests: Array<{
+    subscribers: User[];
+    eventId: string;
+    daoId: string;
+  }>): Promise<Notification[][]>;
+
+  /**
    * Marks notifications as sent for successful deliveries
    * @param notifications List of notifications to mark as sent
    */
@@ -51,6 +62,13 @@ export interface ISubscriptionClient {
    * @returns List of users who own the address
    */
   getWalletOwners(address: string): Promise<User[]>;
+
+  /**
+   * Get users who own specific wallet addresses (batch operation)
+   * @param addresses Array of wallet addresses
+   * @returns Record mapping addresses to arrays of users who own each address
+   */
+  getWalletOwnersBatch(addresses: string[]): Promise<Record<string, User[]>>;
 
   /**
    * Get all unique addresses being followed by users in a specific DAO
