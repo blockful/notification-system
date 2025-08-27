@@ -74,7 +74,8 @@ export const startTestApps = async (db: Knex, mockHttpClient: any): Promise<Test
   // Start dispatcher
   const dispatcherApp = new DispatcherApp(
     TEST_CONFIG.urls.subscriptionServer, 
-    rabbitmqUrl
+    rabbitmqUrl,
+    TEST_CONFIG.urls.mockGraphQL
   );
   await dispatcherApp.start();
   
