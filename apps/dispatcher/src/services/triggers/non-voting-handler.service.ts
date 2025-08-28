@@ -4,6 +4,9 @@ import { ISubscriptionClient } from '../../interfaces/subscription-client.interf
 import { NotificationClientFactory } from '../notification/notification-factory.service';
 import { ProposalFinishedNotification } from '../../interfaces/notification-client.interface';
 import { AnticaptureClient, QueryInput_Proposals_OrderDirection } from '@notification-system/anticapture-client';
+import { BatchNotificationService } from '../batch-notification.service';
+import { FormattingService } from '../formatting.service';
+import { ValidationService } from '../validation.service';
 
 /**
  * Handler for detecting non-voting addresses on proposal finished events
@@ -12,6 +15,7 @@ import { AnticaptureClient, QueryInput_Proposals_OrderDirection } from '@notific
  */
 export class NonVotingHandler extends BaseTriggerHandler<ProposalFinishedNotification> {
   private static readonly PROPOSALS_TO_CHECK = 3;
+  private readonly batchNotificationService: BatchNotificationService;
   
   constructor(
     subscriptionClient: ISubscriptionClient,
@@ -19,6 +23,7 @@ export class NonVotingHandler extends BaseTriggerHandler<ProposalFinishedNotific
     private anticaptureClient: AnticaptureClient
   ) {
     super(subscriptionClient, notificationFactory);
+    this.batchNotificationService = new BatchNotificationService(subscriptionClient, notificationFactory);
   }
 
   async handleMessage(message: DispatcherMessage<ProposalFinishedNotification>): Promise<MessageProcessingResult> {
@@ -39,164 +44,134 @@ export class NonVotingHandler extends BaseTriggerHandler<ProposalFinishedNotific
     };
   }
 
+  /**
+   * Processes non-voting addresses for a finished proposal
+   * Orchestrates the detection and notification flow
+   */
   private async processNonVotingAddresses(currentProposal: ProposalFinishedNotification): Promise<void> {
-    // Step 1: Get last 3 finished proposals (including current one)
     const lastProposals = await this.getLastFinishedProposals(
       currentProposal.daoId, 
       currentProposal.endTimestamp
     );
     
-    if (lastProposals.length < NonVotingHandler.PROPOSALS_TO_CHECK) {
-      console.log(`Not enough proposals for DAO ${currentProposal.daoId}. Found: ${lastProposals.length}`);
+    if (!ValidationService.hasMinimumItems(
+      lastProposals, 
+      NonVotingHandler.PROPOSALS_TO_CHECK, 
+      `proposals for DAO ${currentProposal.daoId}`
+    )) {
       return;
     }
 
-    // Step 2: Get followed addresses for this DAO
     const followedAddresses = await this.subscriptionClient.getFollowedAddresses(currentProposal.daoId);
-    
-    if (followedAddresses.length === 0) {
-      console.log(`No followed addresses for DAO ${currentProposal.daoId}`);
+    if (!ValidationService.hasItems(
+      followedAddresses, 
+      `followed addresses for DAO ${currentProposal.daoId}`
+    )) {
       return;
     }
 
-    // Step 3: Get votes for these addresses in these proposals
-    const proposalIds = lastProposals.map(p => p.id);
-    const votes = await this.anticaptureClient.listVotesOnchains({
-      daoId: currentProposal.daoId,
-      proposalId_in: proposalIds,
-      voterAccountId_in: followedAddresses
-    });
+    const nonVoters = await this.detectNonVoters(
+      followedAddresses, 
+      lastProposals, 
+      currentProposal.daoId
+    );
 
-    // Step 4: Identify non-voters (addresses that haven't voted in ANY of the 3 proposals)
+    if (nonVoters.length > 0) {
+      await this.sendNonVoterNotifications(nonVoters, currentProposal.daoId, lastProposals);
+    }
+  }
+
+  /**
+   * Detects addresses that haven't voted in the last N proposals
+   * @param followedAddresses - List of addresses being followed
+   * @param lastProposals - Recent finished proposals to check
+   * @param daoId - DAO identifier
+   * @returns Array of non-voting addresses
+   */
+  private async detectNonVoters(
+    followedAddresses: string[], 
+    lastProposals: any[], 
+    daoId: string
+  ): Promise<string[]> {
+    const votes = await this.getVotingData(daoId, lastProposals, followedAddresses);
     const voterAddresses = new Set(votes.map(v => v.voterAccountId.toLowerCase()));
     const nonVoters = followedAddresses.filter(
       addr => !voterAddresses.has(addr.toLowerCase())
     );
 
     console.log(`Found ${nonVoters.length} non-voting addresses`);
-
-    // Step 5: Send notifications about non-voters (batch processing)
-    if (nonVoters.length > 0) {
-      await this.notifyAboutNonVotersBatch(
-        nonVoters, 
-        currentProposal.daoId, 
-        lastProposals
-      );
-    }
+    return nonVoters;
   }
 
+  /**
+   * Fetches voting data for specific addresses across multiple proposals
+   * @param daoId - DAO identifier
+   * @param lastProposals - Proposals to check voting data for
+   * @param followedAddresses - Addresses to get voting data for
+   * @returns Array of vote records
+   */
+  private async getVotingData(
+    daoId: string, 
+    lastProposals: any[], 
+    followedAddresses: string[]
+  ): Promise<any[]> {
+    const proposalIds = lastProposals.map(p => p.id);
+    return await this.anticaptureClient.listVotesOnchains({
+      daoId,
+      proposalId_in: proposalIds,
+      voterAccountId_in: followedAddresses
+    });
+  }
+
+  /**
+   * Sends notifications about non-voting addresses using batch processing
+   * @param nonVoters - List of non-voting addresses
+   * @param daoId - DAO identifier
+   * @param lastProposals - Recent proposals for context
+   */
+  private async sendNonVoterNotifications(
+    nonVoters: string[], 
+    daoId: string, 
+    lastProposals: any[]
+  ): Promise<void> {
+    const proposalTitles = FormattingService.formatProposalList(lastProposals);
+    
+    await this.batchNotificationService.sendBatchNotifications(
+      nonVoters,
+      daoId,
+      (address) => `${address}-non-voting-${lastProposals[0].id}`,
+      (address) => FormattingService.createNonVotingAlertMessage(
+        address, 
+        daoId, 
+        NonVotingHandler.PROPOSALS_TO_CHECK,
+        proposalTitles
+      ),
+      (address) => ({
+        addresses: {
+          'nonVoterAddress': address
+        }
+      })
+    );
+  }
+
+
+  /**
+   * Fetches the last N finished proposals for a DAO
+   * @param daoId - DAO identifier
+   * @param currentEndTimestamp - End timestamp of current proposal
+   * @returns Array of finished proposals
+   */
   private async getLastFinishedProposals(
     daoId: string, 
     currentEndTimestamp: number
   ): Promise<any[]> {
-    // Query last 3 proposals that have ended (including current)
     const proposals = await this.anticaptureClient.listProposals({
       status: ['EXECUTED', 'SUCCEEDED', 'DEFEATED', 'EXPIRED', 'CANCELED'],
-      fromDate: currentEndTimestamp, // fromDate acts as "up to" date
+      fromDate: currentEndTimestamp,
       limit: NonVotingHandler.PROPOSALS_TO_CHECK,
       orderDirection: QueryInput_Proposals_OrderDirection.Desc
     }, daoId);
 
     return proposals;
-  }
-
-  private async notifyAboutNonVotersBatch(
-    addresses: string[],
-    daoId: string,
-    lastProposals: any[]
-  ): Promise<void> {
-    // Batch 1: Get all followers for all addresses in a single request
-    const addressFollowersMap = await this.subscriptionClient.getWalletOwnersBatch(addresses);
-    const addressFollowers = addresses
-      .map(address => ({ address, followers: addressFollowersMap[address] || [] }));
-    
-    // Filter out addresses with no followers
-    const validAddressFollowers = addressFollowers.filter(af => af.followers.length > 0);
-    if (validAddressFollowers.length === 0) return;
-
-    // Batch 2: Check deduplication for all addresses in one request
-    const shouldSendRequests = validAddressFollowers.map(({ address, followers }) => ({
-      subscribers: followers,
-      eventId: `${address}-non-voting-${lastProposals[0].id}`,
-      daoId
-    }));
-    
-    const batchResults = await this.subscriptionClient.shouldSendBatch(shouldSendRequests);
-    
-    // Map results back to the original structure
-    const deduplicationResults = validAddressFollowers.map(({ address, followers }, index) => ({
-      address,
-      followers,
-      notificationsToSend: batchResults[index] || []
-    }));
-    
-    // Filter out addresses with no notifications to send
-    const validNotifications = deduplicationResults.filter(result => result.notificationsToSend.length > 0);
-    if (validNotifications.length === 0) return;
-
-    // Generate proposal titles once (shared by all notifications)
-    const proposalTitles = lastProposals
-      .map(p => {
-        const title = p.title || p.description.split('\n')[0].replace(/^#+\s*/, '').trim();
-        return `• ${title}`;
-      })
-      .join('\n');
-
-    // Batch 3: Send all notifications and mark as sent
-    const sendPromises: Promise<void>[] = [];
-    const allNotificationsToMark: any[] = [];
-
-    for (const { address, followers, notificationsToSend } of validNotifications) {
-      // Create follower lookup map for O(1) access
-      const followerMap = new Map(followers.map(f => [f.id, f]));
-      
-      const message = `⚠️ Non-Voting Alert for DAO ${daoId.toUpperCase()}
-
-The address ${this.formatAddress(address)} that you follow hasn't voted in the last ${NonVotingHandler.PROPOSALS_TO_CHECK} proposals:
-
-${proposalTitles}
-
-Consider reaching out to encourage participation!`;
-
-      // Send notifications for this address
-      for (const notification of notificationsToSend) {
-        const follower = followerMap.get(notification.user_id);
-        if (!follower) continue;
-
-        sendPromises.push(
-          this.notificationFactory
-            .getClient(follower.channel)
-            .sendNotification({
-              userId: follower.id,
-              channel: follower.channel,
-              channelUserId: follower.channel_user_id,
-              message,
-              metadata: {
-                addresses: {
-                  'nonVoterAddress': address
-                }
-              }
-            })
-            .catch(error => {
-              console.error(`Failed to send notification to user ${follower.id}:`, error);
-            })
-        );
-      }
-      
-      // Collect notifications to mark as sent
-      allNotificationsToMark.push(...notificationsToSend);
-    }
-
-    // Execute all sends in parallel and mark as sent
-    await Promise.all([
-      Promise.all(sendPromises),
-      this.subscriptionClient.markAsSent(allNotificationsToMark)
-    ]);
-  }
-
-  private formatAddress(address: string): string {
-    // Format as 0x1234...5678
-    if (address.length < 10) return address;
-    return `${address.slice(0, 6)}...${address.slice(-4)}`;
   }
 }
