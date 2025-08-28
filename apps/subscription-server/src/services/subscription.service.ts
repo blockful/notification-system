@@ -3,7 +3,7 @@
  * Handles the business logic for managing user subscriptions to DAOs
  */
 
-import { IUserRepository, IPreferenceRepository, User, UserPreference } from '../interfaces';
+import { IUserRepository, IPreferenceRepository, User } from '../interfaces';
 import { IUserAddressRepository, UserAddress } from '../interfaces/user-address.interface';
 
 /**
@@ -272,12 +272,4 @@ export class SubscriptionService {
     return result;
   }
 
-  /**
-   * Get all unique addresses being followed by users in a specific DAO
-   * @param daoId The DAO ID
-   * @returns List of unique addresses
-   */
-  async getFollowedAddresses(daoId: string): Promise<string[]> {
-    return await this.userAddressRepository.getFollowedAddressByDao(daoId);
-  }
 } 
