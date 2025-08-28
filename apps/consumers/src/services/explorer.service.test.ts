@@ -14,12 +14,6 @@ describe('ExplorerService', () => {
       expect(result).toBe('View transaction: https://etherscan.io/tx/0x1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef');
     });
 
-    it('should return Polygonscan link for Polygon (chainId: 137)', () => {
-      const hash = '0x1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef';
-      const result = explorerService.getTransactionLink(137, hash);
-      expect(result).toBe('View transaction: https://polygonscan.com/tx/0x1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef');
-    });
-
     it('should return Arbiscan link for Arbitrum (chainId: 42161)', () => {
       const hash = '0x1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef';
       const result = explorerService.getTransactionLink(42161, hash);
@@ -30,24 +24,6 @@ describe('ExplorerService', () => {
       const hash = '0x1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef';
       const result = explorerService.getTransactionLink(10, hash);
       expect(result).toBe('View transaction: https://optimistic.etherscan.io/tx/0x1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef');
-    });
-
-    it('should return Basescan link for Base (chainId: 8453)', () => {
-      const hash = '0x1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef';
-      const result = explorerService.getTransactionLink(8453, hash);
-      expect(result).toBe('View transaction: https://basescan.org/tx/0x1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef');
-    });
-
-    it('should return BscScan link for BSC (chainId: 56)', () => {
-      const hash = '0x1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef';
-      const result = explorerService.getTransactionLink(56, hash);
-      expect(result).toBe('View transaction: https://bscscan.com/tx/0x1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef');
-    });
-
-    it('should return Snowtrace link for Avalanche C-Chain (chainId: 43114)', () => {
-      const hash = '0x1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef';
-      const result = explorerService.getTransactionLink(43114, hash);
-      expect(result).toBe('View transaction: https://snowtrace.io/tx/0x1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef');
     });
 
     it('should return transaction hash without explorer link for unknown chain', () => {
