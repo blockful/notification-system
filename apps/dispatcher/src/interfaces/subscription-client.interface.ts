@@ -69,11 +69,4 @@ export interface ISubscriptionClient {
    * @returns Record mapping addresses to arrays of users who own each address
    */
   getWalletOwnersBatch(addresses: string[]): Promise<Record<string, User[]>>;
-
-  /**
-   * Get all unique addresses being followed by users in a specific DAO
-   * @param daoId The DAO ID
-   * @returns List of unique addresses being followed
-   */
-  getFollowedAddresses(daoId: string): Promise<string[]>;
 } 

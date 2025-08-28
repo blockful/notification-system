@@ -119,5 +119,20 @@ class AnticaptureClient {
             return [];
         }
     }
+    /**
+     * Lists votes with full type safety
+     * @param variables - Query variables for filtering and pagination
+     * @returns Array of votes
+     */
+    async listVotesOnchains(variables) {
+        try {
+            const validated = await this.query(graphql_2.ListVotesOnchainsDocument, schemas_1.SafeVotesOnchainsResponseSchema, variables, variables.daoId);
+            return validated.votesOnchains.items;
+        }
+        catch (error) {
+            console.warn('Error fetching votes', error);
+            return [];
+        }
+    }
 }
 exports.AnticaptureClient = AnticaptureClient;
