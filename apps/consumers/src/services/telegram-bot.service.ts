@@ -150,8 +150,9 @@ export class TelegramBotService {
     // Process transaction link if transaction metadata is provided
     if (payload.metadata?.transaction) {
       const { hash, chainId } = payload.metadata.transaction;
-      const txLink = this.explorerService.getTransactionLink(chainId, hash);
-      processedMessage = processedMessage.replace('{{txLink}}', txLink);
+      const txUrl = this.explorerService.getTransactionLink(chainId, hash);
+      const markdownLink = `[Transaction details](${txUrl})`;
+      processedMessage = processedMessage.replace('{{txLink}}', markdownLink);
     }
     
     // Process ENS names if addresses are provided in metadata
@@ -164,7 +165,8 @@ export class TelegramBotService {
     
     const sentMessage = await this.bot.telegram.sendMessage(
       payload.channelUserId, 
-      processedMessage
+      processedMessage,
+      { parse_mode: 'Markdown' }
     );
     return `${sentMessage.message_id}`;
   }

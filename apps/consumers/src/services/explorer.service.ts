@@ -13,7 +13,7 @@ export class ExplorerService {
    * Generate transaction URL for a given chain and transaction hash
    * @param chainId The EIP-155 chain ID
    * @param transactionHash The transaction hash
-   * @returns Formatted message with transaction link or empty string if hash is invalid
+   * @returns Clean transaction URL or empty string if hash is invalid
    */
   public getTransactionLink(chainId: number, transactionHash: string): string {
     // Validate hash using viem's isHash utility
@@ -32,11 +32,11 @@ export class ExplorerService {
         ? transactionHash 
         : `0x${transactionHash}`;
       
-      const explorerUrl = `${chain.blockExplorers.default.url}/tx/${formattedHash}`;
-      return `View transaction: ${explorerUrl}`;
+      return `${chain.blockExplorers.default.url}/tx/${formattedHash}`;
     }
     
     // Fallback when explorer is not available or chain not found
-    return `Transaction: ${transactionHash}`;
+    return '';
   }
+
 }
