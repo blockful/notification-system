@@ -46,7 +46,7 @@ export class GraphQLMockSetup {
           filtered = filtered.filter(p => statusFilter.includes(p.status));
         }
         if (data.variables?.fromDate) {
-          filtered = filtered.filter(p => parseInt(p.timestamp) > data.variables.fromDate);
+          filtered = filtered.filter(p => parseInt(p.endTimestamp) >= data.variables.fromDate);
         }
         if (config?.headers?.['anticapture-dao-id']) {
           filtered = filtered.filter(p => p.daoId === config.headers['anticapture-dao-id']);

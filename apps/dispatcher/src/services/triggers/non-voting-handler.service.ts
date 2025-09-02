@@ -15,6 +15,7 @@ import { ValidationService } from '../validation.service';
  */
 export class NonVotingHandler extends BaseTriggerHandler<ProposalFinishedNotification> {
   private static readonly PROPOSALS_TO_CHECK = 3;
+  private static readonly FETCH_MARGIN_MULTIPLIER = 5;
   private readonly batchNotificationService: BatchNotificationService;
   
   constructor(
@@ -167,11 +168,20 @@ export class NonVotingHandler extends BaseTriggerHandler<ProposalFinishedNotific
   ): Promise<any[]> {
     const proposals = await this.anticaptureClient.listProposals({
       status: ['EXECUTED', 'SUCCEEDED', 'DEFEATED', 'EXPIRED', 'CANCELED'],
-      fromDate: currentEndTimestamp,
-      limit: NonVotingHandler.PROPOSALS_TO_CHECK,
+      limit: NonVotingHandler.PROPOSALS_TO_CHECK * NonVotingHandler.FETCH_MARGIN_MULTIPLIER,
       orderDirection: QueryInput_Proposals_OrderDirection.Desc
     }, daoId);
 
-    return proposals;
+    // Sort by endTimestamp (most recent first)
+    const sortedByEndTime = proposals.sort((a, b) => {
+      if (!a || !b) return 0;
+      return parseInt(b.endTimestamp) - parseInt(a.endTimestamp);
+    });
+    
+    // Filter proposals that ended up to the current moment (includes current)
+    // and get the most recent PROPOSALS_TO_CHECK proposals
+    return sortedByEndTime
+      .filter(p => p && parseInt(p.endTimestamp) <= currentEndTimestamp)
+      .slice(0, NonVotingHandler.PROPOSALS_TO_CHECK);
   }
 }
