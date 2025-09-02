@@ -8,6 +8,11 @@ export interface NotificationPayload {
   message: string;
   metadata?: {
     addresses?: Record<string, string>; // key: placeholder name, value: ethereum address
+    transaction?: {
+      hash: string;
+      chainId: number;
+    };
+    [key: string]: any;
   };
 }
 
