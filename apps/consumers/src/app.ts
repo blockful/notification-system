@@ -20,11 +20,11 @@ export class App {
     telegramBotToken: string, 
     subscriptionServerUrl: string, 
     httpClient: AxiosInstance,
-    rabbitmqUrl: string
+    rabbitmqUrl: string,
+    ensResolver: EnsResolverService
   ) {
     const subscriptionApi = new SubscriptionAPIService(subscriptionServerUrl);
     const anticaptureClient = new AnticaptureClient(httpClient);
-    const ensResolver = new EnsResolverService();
     const daoService = new DAOService(anticaptureClient, subscriptionApi);
     const walletService = new WalletService(subscriptionApi, ensResolver);
     const explorerService = new ExplorerService();
