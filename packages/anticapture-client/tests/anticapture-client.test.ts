@@ -75,7 +75,8 @@ describe('AnticaptureClient', () => {
         const mockDAOs = ['DAO1', 'DAO2', 'DAO3'].map(id => ({
           id,
           blockTime: 12,
-          votingDelay: '0'
+          votingDelay: '0',
+          chainId: 1
         }));
         jest.spyOn(client, 'getDAOs').mockResolvedValue(mockDAOs);
       });
@@ -112,7 +113,8 @@ describe('AnticaptureClient', () => {
         const mockDAOs = ['VALID_DAO', 'ERROR_DAO', 'ANOTHER_VALID'].map(id => ({
           id,
           blockTime: 12,
-          votingDelay: '0'
+          votingDelay: '0',
+          chainId: 1
         }));
         jest.spyOn(client, 'getDAOs').mockResolvedValue(mockDAOs);
       });
@@ -142,7 +144,8 @@ describe('AnticaptureClient', () => {
         const mockDAOs = ['DAO1', 'DAO2'].map(id => ({
           id,
           blockTime: 12,
-          votingDelay: '0'
+          votingDelay: '0',
+          chainId: 1
         }));
         jest.spyOn(client, 'getDAOs').mockResolvedValue(mockDAOs);
 

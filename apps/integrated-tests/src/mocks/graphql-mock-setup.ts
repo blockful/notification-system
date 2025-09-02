@@ -33,7 +33,7 @@ export class GraphQLMockSetup {
   /**
    * @notice Generic mock implementation that handles all query types
    */
-  private static createMockImplementation(proposals: ProposalData[] = [], votingPowerData: ProcessedVotingPowerHistory[] = []) {
+  private static createMockImplementation(proposals: ProposalData[] = [], votingPowerData: ProcessedVotingPowerHistory[] = [], daoChainMapping: Record<string, number> = {}) {
     return (url: string, data: any, config: any) => {
       // Handle proposals
       if (data.query?.includes('ListProposals')) {
@@ -78,9 +78,16 @@ export class GraphQLMockSetup {
 
       // Handle DAOs
       if (data.query?.includes('GetDAOs')) {
-        const uniqueDaoIds = [...new Set([...proposals.map(p => p.daoId), ...votingPowerData.map(vp => vp.daoId)])];
+        const uniqueDaoIds = [...new Set([
+          ...proposals.map(p => p.daoId).filter(Boolean),
+          ...votingPowerData.map(vp => vp.daoId).filter(Boolean)
+        ])];
         return Promise.resolve({
-          data: { data: { daos: { items: uniqueDaoIds.map(id => ({ id })) } } }
+          data: { data: { daos: { items: uniqueDaoIds.map(id => ({ 
+            id,
+            votingDelay: '0',
+            chainId: (id && daoChainMapping[id]) || 1 // Default to Ethereum mainnet
+          })) } } }
         });
       }
 
@@ -98,13 +105,18 @@ export class GraphQLMockSetup {
   }
   /**
    * @notice Sets up GraphQL mock with optional data
+   * @param mockHttpClient The HTTP client to mock
+   * @param proposals Array of proposal data
+   * @param votingPowerData Array of voting power history data  
+   * @param daoChainMapping Optional mapping of DAO IDs to chain IDs
    */
   static setupMock(
     mockHttpClient: any, 
     proposals: ProposalData[] = [], 
-    votingPowerData: ProcessedVotingPowerHistory[] = []
+    votingPowerData: ProcessedVotingPowerHistory[] = [],
+    daoChainMapping: Record<string, number> = {}
   ): void {
-    mockHttpClient.post.mockImplementation(this.createMockImplementation(proposals, votingPowerData));
+    mockHttpClient.post.mockImplementation(this.createMockImplementation(proposals, votingPowerData, daoChainMapping));
   }
 
   /**

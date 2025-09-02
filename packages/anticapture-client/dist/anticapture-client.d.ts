@@ -17,6 +17,7 @@ export declare class AnticaptureClient {
         id: string;
         blockTime: number;
         votingDelay: string;
+        chainId: number;
     }>>;
     /**
      * Fetches a single proposal by ID with full type safety

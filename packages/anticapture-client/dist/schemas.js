@@ -9,7 +9,8 @@ exports.SafeDaosResponseSchema = zod_1.z.object({
     daos: zod_1.z.object({
         items: zod_1.z.array(zod_1.z.object({
             id: zod_1.z.string(),
-            votingDelay: zod_1.z.string().optional()
+            votingDelay: zod_1.z.string().optional(),
+            chainId: zod_1.z.number()
         }))
     }).nullable()
 }).transform((data) => {
@@ -86,7 +87,7 @@ function processProposals(validated, daoId) {
     }, []);
 }
 // Internal helper function to process validated voting power history
-function processVotingPowerHistory(validated, daoId) {
+function processVotingPowerHistory(validated, daoId, chainId) {
     return validated.votingPowerHistorys.items
         .filter(item => item.accountId)
         .map((item) => {
@@ -97,7 +98,8 @@ function processVotingPowerHistory(validated, daoId) {
             delta: item.delta,
             changeType: item.delegation ? 'delegation' : item.transfer ? 'transfer' : 'other',
             sourceAccountId: item.transfer?.fromAccountId || item.delegation?.delegatorAccountId || '',
-            targetAccountId: item.accountId
+            targetAccountId: item.accountId,
+            ...(chainId !== undefined && { chainId })
         };
         return processed;
     });

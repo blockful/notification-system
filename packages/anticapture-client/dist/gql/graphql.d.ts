@@ -127,8 +127,6 @@ export type Query = {
     delegations: DelegationPage;
     /** Fetch historical token balances for multiple addresses at a specific time period using multicall */
     historicalBalances?: Maybe<Array<Maybe<Query_HistoricalBalances_Items>>>;
-    /** Get historical market data for a specific token */
-    historicalTokenData?: Maybe<HistoricalTokenData_200_Response>;
     /** Fetch historical voting power for multiple addresses at a specific time period using multicall */
     historicalVotingPower?: Maybe<Array<Maybe<Query_HistoricalVotingPower_Items>>>;
     /** Get the last update time */
@@ -143,8 +141,6 @@ export type Query = {
     proposalsOnchains: ProposalsOnchainPage;
     token?: Maybe<Token>;
     tokens: TokenPage;
-    /** Get total assets */
-    totalAssets?: Maybe<Array<Maybe<Query_TotalAssets_Items>>>;
     transfer?: Maybe<Transfer>;
     transfers: TransferPage;
     votesOnchain?: Maybe<VotesOnchain>;
@@ -307,9 +303,6 @@ export type QueryTokensArgs = {
     orderBy?: InputMaybe<Scalars['String']['input']>;
     orderDirection?: InputMaybe<Scalars['String']['input']>;
     where?: InputMaybe<TokenFilter>;
-};
-export type QueryTotalAssetsArgs = {
-    days?: InputMaybe<QueryInput_TotalAssets_Days>;
 };
 export type QueryTransferArgs = {
     fromAccountId: Scalars['String']['input'];
@@ -669,6 +662,7 @@ export type CompareVotes_200_Response = {
 };
 export type Dao = {
     __typename?: 'dao';
+    chainId: Scalars['Int']['output'];
     id: Scalars['String']['output'];
     proposalThreshold: Scalars['BigInt']['output'];
     quorum: Scalars['BigInt']['output'];
@@ -679,6 +673,14 @@ export type Dao = {
 export type DaoFilter = {
     AND?: InputMaybe<Array<InputMaybe<DaoFilter>>>;
     OR?: InputMaybe<Array<InputMaybe<DaoFilter>>>;
+    chainId?: InputMaybe<Scalars['Int']['input']>;
+    chainId_gt?: InputMaybe<Scalars['Int']['input']>;
+    chainId_gte?: InputMaybe<Scalars['Int']['input']>;
+    chainId_in?: InputMaybe<Array<InputMaybe<Scalars['Int']['input']>>>;
+    chainId_lt?: InputMaybe<Scalars['Int']['input']>;
+    chainId_lte?: InputMaybe<Scalars['Int']['input']>;
+    chainId_not?: InputMaybe<Scalars['Int']['input']>;
+    chainId_not_in?: InputMaybe<Array<InputMaybe<Scalars['Int']['input']>>>;
     id?: InputMaybe<Scalars['String']['input']>;
     id_contains?: InputMaybe<Scalars['String']['input']>;
     id_ends_with?: InputMaybe<Scalars['String']['input']>;
@@ -953,12 +955,6 @@ export type DelegationPage = {
     items: Array<Delegation>;
     pageInfo: PageInfo;
     totalCount: Scalars['Int']['output'];
-};
-export type HistoricalTokenData_200_Response = {
-    __typename?: 'historicalTokenData_200_response';
-    market_caps: Array<Maybe<Array<Maybe<Scalars['Float']['output']>>>>;
-    prices: Array<Maybe<Array<Maybe<Scalars['Float']['output']>>>>;
-    total_volumes: Array<Maybe<Array<Maybe<Scalars['Float']['output']>>>>;
 };
 export type LastUpdate_200_Response = {
     __typename?: 'lastUpdate_200_response';
@@ -1275,13 +1271,6 @@ export declare enum QueryInput_Proposals_OrderDirection {
     Asc = "asc",
     Desc = "desc"
 }
-export declare enum QueryInput_TotalAssets_Days {
-    '7d' = "_7d",
-    '30d' = "_30d",
-    '90d' = "_90d",
-    '180d' = "_180d",
-    '365d' = "_365d"
-}
 export type Query_HistoricalBalances_Items = {
     __typename?: 'query_historicalBalances_items';
     address: Scalars['String']['output'];
@@ -1341,11 +1330,6 @@ export type Query_Proposals_Items = {
     timestamp: Scalars['String']['output'];
     title?: Maybe<Scalars['String']['output']>;
     txHash: Scalars['String']['output'];
-};
-export type Query_TotalAssets_Items = {
-    __typename?: 'query_totalAssets_items';
-    date: Scalars['String']['output'];
-    totalAssets: Scalars['String']['output'];
 };
 export type Token = {
     __typename?: 'token';
@@ -1749,6 +1733,7 @@ export type GetDaOsQuery = {
             __typename?: 'dao';
             id: string;
             votingDelay: string;
+            chainId: number;
         }>;
     };
 };

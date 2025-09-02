@@ -63,14 +63,15 @@ export class AnticaptureClient {
    * Fetches all DAOs from the anticapture GraphQL API with full type safety
    * @returns Array of DAO objects with blockTime added
    */
-  async getDAOs(): Promise<Array<{ id: string; blockTime: number; votingDelay: string }>> {
+  async getDAOs(): Promise<Array<{ id: string; blockTime: number; votingDelay: string; chainId: number }>> {
     try {
       const validated = await this.query(GetDaOsDocument, SafeDaosResponseSchema, undefined, undefined);
       return validated.daos.items.map((dao) => ({
         id: dao.id,
         // blockTime: dao.blockTime, // TODO: Uncomment when API supports this field
         blockTime: 12, // Temporary hardcoded value - Ethereum block time
-        votingDelay: dao.votingDelay || '0'
+        votingDelay: dao.votingDelay || '0',
+        chainId: dao.chainId
       }));
     } catch (error) {
       console.warn('Returning empty DAO list due to API error: ',  error instanceof Error ? error.message : error);
@@ -135,7 +136,7 @@ export class AnticaptureClient {
       const queryPromises = allDAOs.map(async (dao) => {
         try {
           const validated = await this.query(ListVotingPowerHistorysDocument, SafeVotingPowerHistoryResponseSchema, variables, dao.id);
-          return processVotingPowerHistory(validated, dao.id);
+          return processVotingPowerHistory(validated, dao.id, dao.chainId);
         } catch (error) {
           console.warn(`Skipping ${dao.id} due to API error: ${error instanceof Error ? error.message : error}`);
           return [];

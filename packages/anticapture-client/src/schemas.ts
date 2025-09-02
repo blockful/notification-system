@@ -5,7 +5,8 @@ export const SafeDaosResponseSchema = z.object({
   daos: z.object({
     items: z.array(z.object({ 
       id: z.string(),
-      votingDelay: z.string().optional()
+      votingDelay: z.string().optional(),
+      chainId: z.number()
     }))
   }).nullable()
 }).transform((data) => {
@@ -87,6 +88,7 @@ export type ProcessedVotingPowerHistory = z.infer<typeof VotingPowerHistoryItemS
   changeType: 'delegation' | 'transfer' | 'other';
   sourceAccountId: string;
   targetAccountId: string;
+  chainId?: number;
 };
 
 // Internal helper function to process validated proposals
@@ -103,7 +105,7 @@ export function processProposals(validated: SafeProposalsResponse, daoId: string
 }
 
 // Internal helper function to process validated voting power history
-export function processVotingPowerHistory(validated: SafeVotingPowerHistoryResponse, daoId: string): ProcessedVotingPowerHistory[] {
+export function processVotingPowerHistory(validated: SafeVotingPowerHistoryResponse, daoId: string, chainId?: number): ProcessedVotingPowerHistory[] {
   return validated.votingPowerHistorys.items
     .filter(item => item.accountId)
     .map((item) => {
@@ -114,7 +116,8 @@ export function processVotingPowerHistory(validated: SafeVotingPowerHistoryRespo
         delta: item.delta,
         changeType: item.delegation ? 'delegation' : item.transfer ? 'transfer' : 'other',
         sourceAccountId: item.transfer?.fromAccountId || item.delegation?.delegatorAccountId || '',
-        targetAccountId: item.accountId
+        targetAccountId: item.accountId,
+        ...(chainId !== undefined && { chainId })
       };
       
       return processed;
