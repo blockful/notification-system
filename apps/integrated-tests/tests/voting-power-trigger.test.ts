@@ -73,7 +73,7 @@ describe('Voting Power Trigger - Integration Test', () => {
 
     // Wait for the voting power notification to be sent
     const message = await telegramHelper.waitForMessage(
-      msg => msg.text.includes('voting power') || msg.text.includes('delegat'),
+      msg => msg.text.includes('voting power') && msg.text.includes(testDaoId),
       { timeout: timeouts.notification.delivery }
     );
 
