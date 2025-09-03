@@ -1,6 +1,4 @@
-// Import mock setup first to apply mocks conditionally before other imports
 import '../../mocks/telegram-mock-setup';
-
 import { beforeAll, afterAll } from '@jest/globals';
 import { mockSendMessage, HttpClientMockSetup, GraphQLMockSetup } from '../../mocks';
 import { setupDatabase, db, closeDatabase, startTestApps, stopTestApps, TestApps } from '../../setup';
