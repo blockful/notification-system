@@ -6,6 +6,7 @@ import { Knex } from 'knex';
 import { RabbitMQTestSetup } from '../rabbitmq-setup';
 import { serviceConfig, timeouts } from '../../config';
 import { waitFor } from '../../helpers/utilities/wait-for';
+import { MockEnsResolverService } from '../../mocks/ens-resolver-mock';
 
 /**
  * @notice Type definition for test applications container
@@ -41,7 +42,7 @@ const TEST_CONFIG = {
   },
   logicSystem: {
     interval: serviceConfig.logicSystem.pollInterval,
-    proposalState: 'pending',
+    proposalState: 'ACTIVE',
   },
   timeouts: {
     appStartup: timeouts.notification.processing,
@@ -62,28 +63,35 @@ export const startTestApps = async (db: Knex, mockHttpClient: any): Promise<Test
   const subscriptionServerApp = new SubscriptionServerApp(db, TEST_CONFIG.ports.subscriptionServer);
   await subscriptionServerApp.start();
   
-  // Start consumer
+  // Create mock ENS resolver for tests
+  const mockEnsResolver = new MockEnsResolverService() as any;
+  
+  // Start consumer with mock ENS resolver
   const consumerApp = new ConsumerApp(
     TEST_CONFIG.telegram.botToken,
     TEST_CONFIG.urls.subscriptionServer,
     mockHttpClient,
-    rabbitmqUrl
+    rabbitmqUrl,
+    mockEnsResolver
   );
   await consumerApp.start();
   
-  // Start dispatcher
+  // Start dispatcher with mocked HTTP client
   const dispatcherApp = new DispatcherApp(
     TEST_CONFIG.urls.subscriptionServer, 
-    rabbitmqUrl
+    rabbitmqUrl,
+    TEST_CONFIG.urls.mockGraphQL,
+    mockHttpClient
   );
   await dispatcherApp.start();
   
-  // Start logic system
+  const oneYearAgo = Math.floor((Date.now() - 365 * 24 * 60 * 60 * 1000) / 1000).toString();
   const logicSystemApp = new LogicSystemApp(
     TEST_CONFIG.logicSystem.interval,
     TEST_CONFIG.logicSystem.proposalState,
     mockHttpClient,
-    rabbitmqUrl
+    rabbitmqUrl,
+    oneYearAgo
   );
   await logicSystemApp.start();
   

@@ -6,8 +6,8 @@ dotenv.config();
 
 // Define valid proposal statuses
 const validProposalStatuses = [
-  'pending', 'active', 'succeeded', 'defeated', 
-  'executed', 'canceled', 'queued', 'expired'
+  'PENDING', 'ACTIVE', 'SUCCEEDED', 'DEFEATED', 
+  'EXECUTED', 'CANCELED', 'QUEUED', 'EXPIRED'
 ] as const;
 
 // Define environment variables schema with validation

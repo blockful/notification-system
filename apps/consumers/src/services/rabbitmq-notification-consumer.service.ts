@@ -1,14 +1,6 @@
 import { RabbitMQConnection, RabbitMQConsumer, RabbitMQMessage } from '@notification-system/rabbitmq-client';
 import { TelegramBotService } from './telegram-bot.service';
-
-/**
- * Interface for the notification payload received from RabbitMQ
- */
-interface NotificationPayload {
-  userId: string;
-  channelUserId: number;
-  message: string;
-}
+import { NotificationPayload } from '../interfaces/notification.interface';
 
 /**
  * Service to consume notification messages from RabbitMQ and process them through TelegramBotService
@@ -52,11 +44,7 @@ export class RabbitMQNotificationConsumerService {
       return;
     }
     try {
-      await this.telegramBotService.sendNotification({
-        userId: message.payload.userId,
-        channelUserId: message.payload.channelUserId,
-        message: message.payload.message,
-      });
+      await this.telegramBotService.sendNotification(message.payload);
     } catch (error: any) {
       if (error?.response?.description === 'Bad Request: chat not found') {
         console.log('⚠️  Unable to send message to user:', message.payload.userId);

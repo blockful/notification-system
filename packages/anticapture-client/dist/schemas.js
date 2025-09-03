@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.SafeVotingPowerHistoryResponseSchema = exports.SafeProposalByIdResponseSchema = exports.SafeProposalsResponseSchema = exports.SafeDaosResponseSchema = void 0;
+exports.SafeVotesOnchainsResponseSchema = exports.SafeVotingPowerHistoryResponseSchema = exports.SafeProposalByIdResponseSchema = exports.SafeProposalsResponseSchema = exports.SafeDaosResponseSchema = void 0;
 exports.processProposals = processProposals;
 exports.processVotingPowerHistory = processVotingPowerHistory;
 const zod_1 = require("zod");
@@ -9,7 +9,8 @@ exports.SafeDaosResponseSchema = zod_1.z.object({
     daos: zod_1.z.object({
         items: zod_1.z.array(zod_1.z.object({
             id: zod_1.z.string(),
-            votingDelay: zod_1.z.string().optional()
+            votingDelay: zod_1.z.string().optional(),
+            chainId: zod_1.z.number()
         }))
     }).nullable()
 }).transform((data) => {
@@ -20,18 +21,16 @@ exports.SafeDaosResponseSchema = zod_1.z.object({
     return { daos: { items: data.daos.items } };
 });
 exports.SafeProposalsResponseSchema = zod_1.z.object({
-    proposalsOnchains: zod_1.z.object({
-        items: zod_1.z.array(zod_1.z.any())
-    }).nullable()
+    proposals: zod_1.z.array(zod_1.z.any()).nullable()
 }).transform((data) => {
-    if (!data.proposalsOnchains || !data.proposalsOnchains.items) {
-        console.warn('ProposalsResponse has null proposalsOnchains or items:', data);
-        return { proposalsOnchains: { items: [] } };
+    if (!data.proposals) {
+        console.warn('ProposalsResponse has null proposals:', data);
+        return { proposals: [] };
     }
-    return { proposalsOnchains: { items: data.proposalsOnchains.items } };
+    return { proposals: data.proposals };
 });
 exports.SafeProposalByIdResponseSchema = zod_1.z.object({
-    proposalsOnchain: zod_1.z.any().nullable()
+    proposal: zod_1.z.any().nullable()
 });
 // Define schema for voting power history item (based on actual API response)
 // Handle real-world scenarios where API might return null values or missing fields
@@ -62,9 +61,22 @@ exports.SafeVotingPowerHistoryResponseSchema = zod_1.z.object({
         votingPowerHistorys: data.votingPowerHistorys || { items: [] }
     };
 });
+exports.SafeVotesOnchainsResponseSchema = zod_1.z.object({
+    votesOnchains: zod_1.z.object({
+        items: zod_1.z.array(zod_1.z.object({
+            txHash: zod_1.z.string().optional(),
+            proposalId: zod_1.z.string(),
+            voterAccountId: zod_1.z.string(),
+            support: zod_1.z.string().optional(),
+            votingPower: zod_1.z.string().optional(),
+            timestamp: zod_1.z.string().optional()
+        })),
+        totalCount: zod_1.z.number()
+    })
+});
 // Internal helper function to process validated proposals
 function processProposals(validated, daoId) {
-    return validated.proposalsOnchains.items.reduce((acc, proposal) => {
+    return validated.proposals.reduce((acc, proposal) => {
         if (proposal !== null) {
             acc.push({
                 ...proposal,
@@ -75,7 +87,7 @@ function processProposals(validated, daoId) {
     }, []);
 }
 // Internal helper function to process validated voting power history
-function processVotingPowerHistory(validated, daoId) {
+function processVotingPowerHistory(validated, daoId, chainId) {
     return validated.votingPowerHistorys.items
         .filter(item => item.accountId)
         .map((item) => {
@@ -86,7 +98,8 @@ function processVotingPowerHistory(validated, daoId) {
             delta: item.delta,
             changeType: item.delegation ? 'delegation' : item.transfer ? 'transfer' : 'other',
             sourceAccountId: item.transfer?.fromAccountId || item.delegation?.delegatorAccountId || '',
-            targetAccountId: item.accountId
+            targetAccountId: item.accountId,
+            ...(chainId !== undefined && { chainId })
         };
         return processed;
     });

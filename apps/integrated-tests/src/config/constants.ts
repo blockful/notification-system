@@ -48,6 +48,12 @@ export const testConstants = {
     temporalTest1: 'TEMPORAL_DAO_1',
     temporalTest2: 'TEMPORAL_DAO_2',
     temporalTest3: 'TEMPORAL_DAO_3',
+    temporalTest4: 'TEMPORAL_DAO_4',
+    temporalTest5: 'TEMPORAL_DAO_5',
+    temporalTest6: 'TEMPORAL_DAO_6',
+    temporalTest7: 'TEMPORAL_DAO_7',
+    temporalTest8: 'TEMPORAL_DAO_8',
+    temporalTest9: 'TEMPORAL_DAO_9',
     secondDao: 'second-dao',
   },
   

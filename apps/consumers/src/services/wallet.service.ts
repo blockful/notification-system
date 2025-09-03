@@ -19,12 +19,14 @@ import {
   NO_WALLETS_MESSAGE
 } from '../messages';
 import { SubscriptionAPIService } from './subscription-api.service';
+import { EnsResolverService } from './ens-resolver.service';
 import { ContextWithSession } from '../interfaces/bot.interface';
 
 export class WalletService {
   
   constructor(
-    private subscriptionApi: SubscriptionAPIService
+    private subscriptionApi: SubscriptionAPIService,
+    private ensResolver: EnsResolverService
   ) {}
 
   private ensureSession(ctx: ContextWithSession): void {
@@ -56,13 +58,15 @@ export class WalletService {
       if (wallets.length === 0) {
         message = NO_WALLETS_MESSAGE;
       } else {
-        // Show current wallets
-        const walletList = wallets.map((wallet, index) => {
-          const shortAddress = `${wallet.address.substring(0, 6)}...${wallet.address.substring(wallet.address.length - 4)}`;
-          return `${index + 1}. ${shortAddress}`;
-        }).join('\n');
+        // Show current wallets with ENS names when available
+        const walletList = await Promise.all(
+          wallets.map(async (wallet, index) => {
+            const displayName = await this.ensResolver.resolveDisplayName(wallet.address);
+            return `${index + 1}. ${displayName}`;
+          })
+        );
         
-        message = `${WALLET_SELECTION_MESSAGE}\n\n${walletList}`;
+        message = `${WALLET_SELECTION_MESSAGE}\n\n${walletList.join('\n')}`;
       }
 
       const keyboard = {
@@ -115,14 +119,14 @@ export class WalletService {
 
       const keyboard = {
         inline_keyboard: [
-          // Create checkboxes for each wallet
-          ...wallets.map(wallet => {
-            const shortAddress = `${wallet.address.substring(0, 6)}...${wallet.address.substring(wallet.address.length - 4)}`;
+          // Create checkboxes for each wallet with ENS names when available
+          ...(await Promise.all(wallets.map(async wallet => {
+            const displayName = await this.ensResolver.resolveDisplayName(wallet.address);
             return [{
-              text: `☐ ${shortAddress}`,
+              text: `☐ ${displayName}`,
               callback_data: `wallet_toggle_${wallet.address}`
             }];
-          }),
+          }))),
           [
             { text: WALLET_REMOVE_CONFIRM_BUTTON_TEXT, callback_data: 'wallet_confirm_remove' }
           ]
@@ -139,7 +143,7 @@ export class WalletService {
   /**
    * Process wallet input from user
    */
-  async processWalletInput(ctx: ContextWithSession, address: string): Promise<void> {
+  async processWalletInput(ctx: ContextWithSession, input: string): Promise<void> {
     const userId = ctx.from?.id;
     if (!userId) return;
 
@@ -151,6 +155,39 @@ export class WalletService {
 
     try {
       await ctx.reply(WALLET_PROCESSING_MESSAGE);
+      
+      const normalized = input.trim();
+      let address: string;
+      
+      // 1. Check if it's a valid address
+      if (/^0x[a-fA-F0-9]{40}$/i.test(normalized)) {
+        address = normalized;
+      }
+      // 2. Has dot? Try ENS resolution
+      else if (normalized.includes('.')) {
+        const resolved = await this.ensResolver.resolveToAddress(normalized);
+        if (!resolved) {
+          await ctx.reply('❌ ENS invalid or not found');
+          return;
+        }
+        address = resolved;
+      }
+      // 3. Invalid input
+      else {
+        await ctx.reply('❌ Invalid input. Please enter a valid address or ENS name');
+        return;
+      }
+      
+      // Check if wallet already exists
+      const existingWallets = await this.subscriptionApi.getUserWallets(userId.toString(), 'telegram');
+      const alreadyExists = existingWallets.some(
+        wallet => wallet.address.toLowerCase() === address.toLowerCase()
+      );
+      
+      if (alreadyExists) {
+        await ctx.reply('⚠️ This wallet has already been added');
+        return;
+      }
       
       // Add wallet via API
       await this.subscriptionApi.addUserWallet(userId.toString(), address, 'telegram');
@@ -194,14 +231,14 @@ export class WalletService {
       
       const keyboard = {
         inline_keyboard: [
-          ...wallets.map(wallet => {
-            const shortAddress = `${wallet.address.substring(0, 6)}...${wallet.address.substring(wallet.address.length - 4)}`;
+          ...(await Promise.all(wallets.map(async wallet => {
+            const displayName = await this.ensResolver.resolveDisplayName(wallet.address);
             const isSelected = ctx.session.walletsToRemove?.has(wallet.address);
             return [{
-              text: `${isSelected ? '☑️' : '☐'} ${shortAddress}`,
+              text: `${isSelected ? '☑️' : '☐'} ${displayName}`,
               callback_data: `wallet_toggle_${wallet.address}`
             }];
-          }),
+          }))),
           [
             { text: WALLET_REMOVE_CONFIRM_BUTTON_TEXT, callback_data: 'wallet_confirm_remove' }
           ]

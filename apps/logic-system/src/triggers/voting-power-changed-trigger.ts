@@ -21,6 +21,20 @@ export class VotingPowerChangedTrigger extends Trigger<ProcessedVotingPowerHisto
     super(triggerId, interval);
   }
 
+  /**
+   * Resets the trigger state to initial timestamp
+   * @param timestamp Optional timestamp to reset to, defaults to current time
+   * @todo This method will be removed when we migrate to Redis for state management,
+   * allowing proper state isolation between tests without manual resets
+   */
+  public reset(timestamp?: string): void {
+    if (timestamp) {
+      this.lastProcessedTimestamp = timestamp;
+    } else {
+      this.lastProcessedTimestamp = Math.floor(Date.now() / 1000).toString();
+    }
+  }
+
   async process(data: ProcessedVotingPowerHistory[]) {
     if (data.length === 0) {
       return;

@@ -7,14 +7,21 @@ import { RabbitMQNotificationService } from './services/notification/rabbitmq-no
 import { NewProposalTriggerHandler } from './services/triggers/new-proposal-trigger.service';
 import { VotingPowerTriggerHandler } from './services/triggers/voting-power-trigger.service';
 import { ProposalFinishedTriggerHandler } from './services/triggers/proposal-finished-trigger.service';
+import { NonVotingHandler } from './services/triggers/non-voting-handler.service';
 import { RabbitMQConnection, RabbitMQPublisher } from '@notification-system/rabbitmq-client';
+import { AnticaptureClient } from '@notification-system/anticapture-client';
 
 export class App {
   private rabbitMQConsumerService!: RabbitMQConsumerService;
   private rabbitmqConnection!: RabbitMQConnection;
   private isCreated = false;
 
-  constructor(private subscriptionServerUrl: string, private rabbitmqUrl: string) {}
+  constructor(
+    private subscriptionServerUrl: string, 
+    private rabbitmqUrl: string,
+    private anticaptureGraphqlEndpoint: string,
+    private anticaptureHttpClient?: any
+  ) {}
 
   private async setupServices(): Promise<void> {
     if (this.isCreated) return;
@@ -26,6 +33,16 @@ export class App {
       },
     });
     const subscriptionClient = new SubscriptionClient(subscriptionAxiosClient);
+    
+    // Setup AnticaptureClient - use provided client or create new one
+    const anticaptureAxiosClient = this.anticaptureHttpClient || axios.create({
+      baseURL: this.anticaptureGraphqlEndpoint,
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    });
+    const anticaptureClient = new AnticaptureClient(anticaptureAxiosClient);
+    
     this.rabbitmqConnection = new RabbitMQConnection(this.rabbitmqUrl);
     await this.rabbitmqConnection.connect();
     const publisher = await RabbitMQPublisher.create(this.rabbitmqConnection);
@@ -46,6 +63,12 @@ export class App {
     triggerProcessorService.addHandler(
       'proposal-finished',
       new ProposalFinishedTriggerHandler(subscriptionClient, notificationFactory)
+    );
+
+    // Add second handler for proposal-finished to process non-voting addresses
+    triggerProcessorService.addHandler(
+      'proposal-finished',
+      new NonVotingHandler(subscriptionClient, notificationFactory, anticaptureClient)
     );
 
     this.rabbitMQConsumerService = new RabbitMQConsumerService(this.rabbitmqUrl, triggerProcessorService);

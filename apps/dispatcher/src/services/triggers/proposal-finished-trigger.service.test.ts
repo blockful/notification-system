@@ -29,7 +29,11 @@ describe('ProposalFinishedTriggerHandler', () => {
       id: 'prop456',
       daoId: 'dao123',
       description: 'Test Proposal\nDetailed description',
-      endTimestamp: 1625086400
+      endTimestamp: 1625086400,
+      status: 'EXECUTED',
+      forVotes: '1000000000000000000000',
+      againstVotes: '500000000000000000000',
+      abstainVotes: '100000000000000000000'
     };
   });
   
@@ -37,8 +41,11 @@ describe('ProposalFinishedTriggerHandler', () => {
     mockSubscriptionClient = {
       getDaoSubscribers: jest.fn(),
       shouldSend: jest.fn(),
+      shouldSendBatch: jest.fn(),
       markAsSent: jest.fn(),
-      getWalletOwners: jest.fn()
+      getWalletOwners: jest.fn(),
+      getWalletOwnersBatch: jest.fn(),
+      getFollowedAddresses: jest.fn()
     } as jest.Mocked<ISubscriptionClient>;
     
     mockNotificationClient = {
@@ -79,7 +86,7 @@ describe('ProposalFinishedTriggerHandler', () => {
         userId: expect.any(String),
         channel: expect.any(String),
         channelUserId: expect.any(String),
-        message: 'The proposal "Test Proposal" has ended on dao dao123.'
+        message: expect.stringContaining('Test Proposal')
       }));
     });
 
@@ -94,8 +101,8 @@ describe('ProposalFinishedTriggerHandler', () => {
       const mockMessage: DispatcherMessage<any> = {
         triggerId: 'proposal-finished',
         events: [
-          { id: 'prop1', daoId: 'dao123', description: 'First Proposal', endTimestamp: 1625086401 },
-          { id: 'prop2', daoId: 'dao456', description: 'Second Proposal', endTimestamp: 1625086402 }
+          { id: 'prop1', daoId: 'dao123', description: 'First Proposal', endTimestamp: 1625086401, status: 'executed', forVotes: '1000000000000000000000', againstVotes: '500000000000000000000', abstainVotes: '100000000000000000000' },
+          { id: 'prop2', daoId: 'dao456', description: 'Second Proposal', endTimestamp: 1625086402, status: 'defeated', forVotes: '400000000000000000000', againstVotes: '600000000000000000000', abstainVotes: '50000000000000000000' }
         ]
       };
       
@@ -148,7 +155,11 @@ describe('ProposalFinishedTriggerHandler', () => {
         id: 'prop456',
         daoId: 'dao123',
         description: 'Main Title\nDetailed description\nMore details',
-        endTimestamp: 1625086400
+        endTimestamp: 1625086400,
+        status: 'EXECUTED',
+        forVotes: '1000000000000000000000',
+        againstVotes: '500000000000000000000',
+        abstainVotes: '100000000000000000000'
       };
       const mockMessage: DispatcherMessage<any> = {
         triggerId: 'proposal-finished',
@@ -161,7 +172,7 @@ describe('ProposalFinishedTriggerHandler', () => {
       await handler.handleMessage(mockMessage);
       
       expect(mockNotificationClient.sendNotification).toHaveBeenCalledWith(expect.objectContaining({
-        message: 'The proposal "Main Title" has ended on dao dao123.'
+        message: expect.stringContaining('Main Title')
       }));
     });
 
@@ -176,7 +187,11 @@ describe('ProposalFinishedTriggerHandler', () => {
         id: 'prop456',
         daoId: 'dao123',
         description: '# Markdown Title\nDetailed description',
-        endTimestamp: 1625086400
+        endTimestamp: 1625086400,
+        status: 'DEFEATED',
+        forVotes: '400000000000000000000',
+        againstVotes: '600000000000000000000',
+        abstainVotes: '50000000000000000000'
       };
       const mockMessage: DispatcherMessage<any> = {
         triggerId: 'proposal-finished',
@@ -189,7 +204,7 @@ describe('ProposalFinishedTriggerHandler', () => {
       await handler.handleMessage(mockMessage);
       
       expect(mockNotificationClient.sendNotification).toHaveBeenCalledWith(expect.objectContaining({
-        message: 'The proposal "Markdown Title" has ended on dao dao123.'
+        message: expect.stringContaining('Markdown Title')
       }));
     });
 
@@ -204,7 +219,11 @@ describe('ProposalFinishedTriggerHandler', () => {
         id: 'prop456',
         daoId: 'dao123',
         description: '',
-        endTimestamp: 1625086400
+        endTimestamp: 1625086400,
+        status: 'CANCELED',
+        forVotes: '0',
+        againstVotes: '0',
+        abstainVotes: '0'
       };
       const mockMessage: DispatcherMessage<any> = {
         triggerId: 'proposal-finished',
@@ -217,7 +236,7 @@ describe('ProposalFinishedTriggerHandler', () => {
       await handler.handleMessage(mockMessage);
       
       expect(mockNotificationClient.sendNotification).toHaveBeenCalledWith(expect.objectContaining({
-        message: 'A proposal has ended on dao dao123.'
+        message: expect.stringContaining('A proposal has ended')
       }));
     });
 

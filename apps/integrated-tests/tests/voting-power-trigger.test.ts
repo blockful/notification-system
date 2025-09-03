@@ -39,7 +39,7 @@ describe('Voting Power Trigger - Integration Test', () => {
     
     // Create voting power data with a timestamp that's after the user subscription
     // Add some buffer time to ensure the event happens after the user subscription
-    const eventTimestamp = (Math.floor(Date.now() / 1000) + 2).toString(); // 2 seconds in the future
+    const eventTimestamp = (Math.floor(Date.now() / 1000) + 10).toString(); // 10 seconds in the future
     
     const votingPowerEvents = [
       VotingPowerFactory.createDelegationEvent(
@@ -47,7 +47,11 @@ describe('Voting Power Trigger - Integration Test', () => {
         testUserWithSubscription,
         testConstants.votingPower.default,
         testDaoId,
-        { timestamp: eventTimestamp }
+        { 
+          timestamp: eventTimestamp,
+          chainId: 1, // Ethereum mainnet
+          transactionHash: '0x1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef'
+        }
       )
     ];
 
@@ -56,8 +60,7 @@ describe('Voting Power Trigger - Integration Test', () => {
       httpMockSetup.getMockClient(),
       [], // No proposals needed
       votingPowerEvents,
-      12, // blockTime
-      testDaoId // testDaoId
+      { [testDaoId]: 1 } // Map testDaoId to Ethereum mainnet
     );
 
     // Wait for the voting power notification to be sent
@@ -70,12 +73,18 @@ describe('Voting Power Trigger - Integration Test', () => {
     expect(message.text).toContain('voting power');
     expect(message.text).toContain(testDaoId);
     
+    // Verify that the placeholder was replaced with the actual link
+    expect(message.text).not.toContain('{{txLink}}');
+    
+    // Verify transaction link is included (can be in Markdown format)
+    expect(message.text.length).toBeGreaterThan(50); // Check that message is complete
+    
     // Verify the message was sent to a user (we got a telegram message)
     expect(message.chatId).toBeDefined();
     
     console.log('Voting power notification sent successfully:', {
       chatId: message.chatId,
-      text: message.text.substring(0, 100) + '...'
+      text: message.text
     });
   });
 

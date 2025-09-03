@@ -51,7 +51,7 @@ describe('AnticaptureClient', () => {
 
   describe('listProposals', () => {
     it('returns empty array for empty response', async () => {
-      mockQuery.mockResolvedValue({ proposalsOnchains: { items: [] } });
+      mockQuery.mockResolvedValue({ proposals: [] });
 
       const result = await client.listProposals({}, 'UNISWAP');
 
@@ -60,7 +60,7 @@ describe('AnticaptureClient', () => {
 
     it('adds daoId to each proposal', async () => {
       mockQuery.mockResolvedValue({
-        proposalsOnchains: { items: TEST_FIXTURES.proposals.basic }
+        proposals: TEST_FIXTURES.proposals.basic
       });
 
       const result = await client.listProposals({}, 'UNISWAP');
@@ -75,7 +75,8 @@ describe('AnticaptureClient', () => {
         const mockDAOs = ['DAO1', 'DAO2', 'DAO3'].map(id => ({
           id,
           blockTime: 12,
-          votingDelay: '0'
+          votingDelay: '0',
+          chainId: 1
         }));
         jest.spyOn(client, 'getDAOs').mockResolvedValue(mockDAOs);
       });
@@ -89,8 +90,8 @@ describe('AnticaptureClient', () => {
         const result = await client.listProposals();
 
         expect(result).toEqual([
-          { id: 'p1', description: 'Proposal 1', daoId: 'DAO1' },
-          { id: 'p3', description: 'Proposal 3', daoId: 'DAO3' }
+          { id: 'p1', description: 'Proposal 1', title: null, daoId: 'DAO1' },
+          { id: 'p3', description: 'Proposal 3', title: null, daoId: 'DAO3' }
         ]);
       });
     });
@@ -112,7 +113,8 @@ describe('AnticaptureClient', () => {
         const mockDAOs = ['VALID_DAO', 'ERROR_DAO', 'ANOTHER_VALID'].map(id => ({
           id,
           blockTime: 12,
-          votingDelay: '0'
+          votingDelay: '0',
+          chainId: 1
         }));
         jest.spyOn(client, 'getDAOs').mockResolvedValue(mockDAOs);
       });
@@ -142,7 +144,8 @@ describe('AnticaptureClient', () => {
         const mockDAOs = ['DAO1', 'DAO2'].map(id => ({
           id,
           blockTime: 12,
-          votingDelay: '0'
+          votingDelay: '0',
+          chainId: 1
         }));
         jest.spyOn(client, 'getDAOs').mockResolvedValue(mockDAOs);
 

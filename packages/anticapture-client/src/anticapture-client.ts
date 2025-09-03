@@ -7,13 +7,16 @@ import type {
   GetProposalByIdQueryVariables,
   ListProposalsQuery,
   ListProposalsQueryVariables,
-  ListVotingPowerHistorysQueryVariables
-} from '../dist/gql/graphql';
-import { GetDaOsDocument, GetProposalByIdDocument, ListProposalsDocument, ListVotingPowerHistorysDocument } from '../dist/gql/graphql';
-import { SafeDaosResponseSchema, SafeProposalByIdResponseSchema, SafeProposalsResponseSchema, SafeVotingPowerHistoryResponseSchema, processProposals, processVotingPowerHistory, ProcessedVotingPowerHistory } from './schemas';
+  ListVotingPowerHistorysQueryVariables,
+  ListVotesOnchainsQuery,
+  ListVotesOnchainsQueryVariables
+} from './gql/graphql';
+import { GetDaOsDocument, GetProposalByIdDocument, ListProposalsDocument, ListVotingPowerHistorysDocument, ListVotesOnchainsDocument } from './gql/graphql';
+import { SafeDaosResponseSchema, SafeProposalByIdResponseSchema, SafeProposalsResponseSchema, SafeVotingPowerHistoryResponseSchema, SafeVotesOnchainsResponseSchema, processProposals, processVotingPowerHistory, ProcessedVotingPowerHistory } from './schemas';
 
-type ProposalItems = ListProposalsQuery['proposalsOnchains']['items'];
+type ProposalItems = NonNullable<ListProposalsQuery['proposals']>;
 type VotingPowerHistoryItems = ProcessedVotingPowerHistory[];
+type VotesOnchain = NonNullable<ListVotesOnchainsQuery['votesOnchains']['items'][0]>;
 
 export class AnticaptureClient {
   private readonly httpClient: AxiosInstance;
@@ -60,14 +63,15 @@ export class AnticaptureClient {
    * Fetches all DAOs from the anticapture GraphQL API with full type safety
    * @returns Array of DAO objects with blockTime added
    */
-  async getDAOs(): Promise<Array<{ id: string; blockTime: number; votingDelay: string }>> {
+  async getDAOs(): Promise<Array<{ id: string; blockTime: number; votingDelay: string; chainId: number }>> {
     try {
       const validated = await this.query(GetDaOsDocument, SafeDaosResponseSchema, undefined, undefined);
       return validated.daos.items.map((dao) => ({
         id: dao.id,
         // blockTime: dao.blockTime, // TODO: Uncomment when API supports this field
         blockTime: 12, // Temporary hardcoded value - Ethereum block time
-        votingDelay: dao.votingDelay || '0'
+        votingDelay: dao.votingDelay || '0',
+        chainId: dao.chainId
       }));
     } catch (error) {
       console.warn('Returning empty DAO list due to API error: ',  error instanceof Error ? error.message : error);
@@ -79,14 +83,14 @@ export class AnticaptureClient {
   /**
    * Fetches a single proposal by ID with full type safety
    */
-  async getProposalById(id: string): Promise<GetProposalByIdQuery['proposalsOnchain'] | null> {
+  async getProposalById(id: string): Promise<GetProposalByIdQuery['proposal'] | null> {
     try {
       const variables: GetProposalByIdQueryVariables = {
         id: id
       };
 
       const validated = await this.query(GetProposalByIdDocument, SafeProposalByIdResponseSchema, variables, undefined);
-      return validated.proposalsOnchain;
+      return validated.proposal;
     } catch (error) {
       console.warn(`Returning null for proposal ${id} due to API error`, error instanceof Error ? error.message : error);
       return null;
@@ -95,7 +99,7 @@ export class AnticaptureClient {
 
 
   async listProposals(variables?: ListProposalsQueryVariables, daoId?: string): Promise<ProposalItems> {
-    if (!daoId && !variables?.where?.daoId) {
+    if (!daoId) {
       const allDAOs = await this.getDAOs();
       const allProposals: ProposalItems = [];
 
@@ -132,7 +136,7 @@ export class AnticaptureClient {
       const queryPromises = allDAOs.map(async (dao) => {
         try {
           const validated = await this.query(ListVotingPowerHistorysDocument, SafeVotingPowerHistoryResponseSchema, variables, dao.id);
-          return processVotingPowerHistory(validated, dao.id);
+          return processVotingPowerHistory(validated, dao.id, dao.chainId);
         } catch (error) {
           console.warn(`Skipping ${dao.id} due to API error: ${error instanceof Error ? error.message : error}`);
           return [];
@@ -150,6 +154,26 @@ export class AnticaptureClient {
       return processVotingPowerHistory(validated, daoId!);
     } catch (error) {
       console.warn(`Error querying voting power history for DAO ${daoId}: ${error instanceof Error ? error.message : error}`);
+      return [];
+    }
+  }
+
+  /**
+   * Fetches votes for specific proposals and voter addresses
+   * @param variables Query variables including daoId, proposalId_in, voterAccountId_in
+   * @returns List of votes matching the criteria
+   */
+  async listVotesOnchains(variables: ListVotesOnchainsQueryVariables): Promise<VotesOnchain[]> {
+    try {
+      const validated = await this.query(
+        ListVotesOnchainsDocument, 
+        SafeVotesOnchainsResponseSchema, 
+        variables,
+        variables.daoId
+      );
+      return validated.votesOnchains.items;
+    } catch (error) {
+      console.warn('Error fetching votes', error);
       return [];
     }
   }

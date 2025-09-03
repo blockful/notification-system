@@ -1,8 +1,9 @@
 import { AxiosInstance } from 'axios';
-import type { GetProposalByIdQuery, ListProposalsQuery, ListProposalsQueryVariables, ListVotingPowerHistorysQueryVariables } from '../dist/gql/graphql';
+import type { GetProposalByIdQuery, ListProposalsQuery, ListProposalsQueryVariables, ListVotingPowerHistorysQueryVariables, ListVotesOnchainsQuery, ListVotesOnchainsQueryVariables } from './gql/graphql';
 import { ProcessedVotingPowerHistory } from './schemas';
-type ProposalItems = ListProposalsQuery['proposalsOnchains']['items'];
+type ProposalItems = NonNullable<ListProposalsQuery['proposals']>;
 type VotingPowerHistoryItems = ProcessedVotingPowerHistory[];
+type VotesOnchain = NonNullable<ListVotesOnchainsQuery['votesOnchains']['items'][0]>;
 export declare class AnticaptureClient {
     private readonly httpClient;
     constructor(httpClient: AxiosInstance);
@@ -16,11 +17,12 @@ export declare class AnticaptureClient {
         id: string;
         blockTime: number;
         votingDelay: string;
+        chainId: number;
     }>>;
     /**
      * Fetches a single proposal by ID with full type safety
      */
-    getProposalById(id: string): Promise<GetProposalByIdQuery['proposalsOnchain'] | null>;
+    getProposalById(id: string): Promise<GetProposalByIdQuery['proposal'] | null>;
     listProposals(variables?: ListProposalsQueryVariables, daoId?: string): Promise<ProposalItems>;
     /**
      * Lists voting power history with full type safety
@@ -29,5 +31,11 @@ export declare class AnticaptureClient {
      * @returns Array of voting power history items
      */
     listVotingPowerHistory(variables?: ListVotingPowerHistorysQueryVariables, daoId?: string): Promise<VotingPowerHistoryItems>;
+    /**
+     * Fetches votes for specific proposals and voter addresses
+     * @param variables Query variables including daoId, proposalId_in, voterAccountId_in
+     * @returns List of votes matching the criteria
+     */
+    listVotesOnchains(variables: ListVotesOnchainsQueryVariables): Promise<VotesOnchain[]>;
 }
 export {};

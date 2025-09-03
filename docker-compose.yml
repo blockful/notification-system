@@ -93,7 +93,7 @@ services:
       ANTICAPTURE_GRAPHQL_ENDPOINT: ${ANTICAPTURE_GRAPHQL_ENDPOINT}
       RABBITMQ_URL: amqp://admin:admin@rabbitmq:5672
       TRIGGER_INTERVAL: 10000
-      PROPOSAL_STATUS: pending
+      PROPOSAL_STATUS: ACTIVE
     depends_on:
       rabbitmq:
         condition: service_healthy

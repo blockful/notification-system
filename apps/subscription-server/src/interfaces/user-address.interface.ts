@@ -34,6 +34,13 @@ export interface IUserAddressRepository {
   findByAddress(address: string): Promise<UserAddress[]>;
 
   /**
+   * Find all users who own any of the specified wallet addresses
+   * @param addresses - Array of wallet addresses
+   * @returns Array of UserAddress records for active addresses
+   */
+  findByAddresses(addresses: string[]): Promise<UserAddress[]>;
+
+  /**
    * Find a specific user-address combination
    * @param userId - The user ID
    * @param address - The wallet address
@@ -63,4 +70,11 @@ export interface IUserAddressRepository {
    * @returns Updated UserAddress record
    */
   reactivate(userId: string, address: string): Promise<UserAddress>;
+
+  /**
+   * Get all unique addresses being followed by users in a specific DAO
+   * @param daoId - The DAO ID
+   * @returns Array of unique addresses being followed
+   */
+  getFollowedAddressByDao(daoId: string): Promise<string[]>;
 }

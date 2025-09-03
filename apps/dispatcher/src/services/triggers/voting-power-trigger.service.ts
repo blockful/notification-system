@@ -26,22 +26,56 @@ export class VotingPowerTriggerHandler extends BaseTriggerHandler {
    * @param message The message containing voting power history data
    */
   async handleMessage(message: DispatcherMessage): Promise<MessageProcessingResult> {
-    for (const votingPowerEvent of message.events) {
-      const { daoId, accountId, votingPower, timestamp, delta, transactionHash, changeType, sourceAccountId, targetAccountId } = votingPowerEvent;
-      
-      if (!daoId || !accountId || !transactionHash) {
-        continue;
-      }
+    // Step 1: Collect all unique account IDs and DAOs upfront
+    const validEvents = message.events.filter(event => 
+      event.daoId && event.accountId && event.transactionHash
+    );
+    
+    if (validEvents.length === 0) {
+      return {
+        messageId: message.triggerId,
+        timestamp: new Date().toISOString()
+      };
+    }
 
-      // Get users who own this specific wallet address
-      const walletOwners = await this.subscriptionClient.getWalletOwners(accountId);
+    // Get unique account IDs to batch wallet owners lookup
+    const uniqueAccountIds = [...new Set(validEvents.map(event => event.accountId))];
+    const walletOwnersMap = await this.subscriptionClient.getWalletOwnersBatch(uniqueAccountIds);
+
+    // Group events by DAO to batch DAO subscribers lookup
+    const eventsByDao: Record<string, typeof validEvents> = {};
+    validEvents.forEach(event => {
+      if (!eventsByDao[event.daoId]) {
+        eventsByDao[event.daoId] = [];
+      }
+      eventsByDao[event.daoId].push(event);
+    });
+
+    // Batch get DAO subscribers for all DAOs
+    const daoSubscribersPromises = Object.keys(eventsByDao).map(async daoId => {
+      const daoEvents = eventsByDao[daoId];
+      const timestamp = daoEvents[0]?.timestamp; // Use first event's timestamp
+      const subscribers = await this.subscriptionClient.getDaoSubscribers(daoId, timestamp);
+      return { daoId, subscribers };
+    });
+    const daoSubscriberResults = await Promise.all(daoSubscribersPromises);
+    const daoSubscribersMap = Object.fromEntries(
+      daoSubscriberResults.map(result => [result.daoId, result.subscribers])
+    );
+
+    // Now process each event with cached data
+    for (const votingPowerEvent of validEvents) {
+      const { daoId, accountId, votingPower, timestamp, delta, transactionHash, changeType, sourceAccountId, targetAccountId, chainId } = votingPowerEvent;
+      
+      // Get wallet owners from cache
+      const walletOwners = walletOwnersMap[accountId] || [];
       
       if (walletOwners.length === 0) {
         continue;
       }
       
-      // Get all DAO subscribers once
-      const daoSubscribers = await this.subscriptionClient.getDaoSubscribers(daoId, timestamp);
+      // Get DAO subscribers from cache
+      const daoSubscribers = daoSubscribersMap[daoId] || [];
       
       // Filter wallet owners to only include those subscribed to this DAO
       const subscribedOwners = walletOwners.filter(owner => 
@@ -61,15 +95,18 @@ export class VotingPowerTriggerHandler extends BaseTriggerHandler {
       );
       
       let notificationMessage = '';
+      let addressMetadata: { addresses?: Record<string, string> } | undefined;
       
       const deltaValue = delta ? parseInt(delta) : 0;
       const formattedDelta = formatTokenAmount(Math.abs(deltaValue));
 
       if (changeType === 'delegation') {
         if (deltaValue >= 0) {
-          notificationMessage = `🥳 You've received a new delegation in ${daoId}!\n${sourceAccountId} delegated to you, increasing your voting power by ${formattedDelta}.`;
+          notificationMessage = `🥳 You've received a new delegation in ${daoId}!\n{{delegator}} delegated to you, increasing your voting power by ${formattedDelta}.`;
+          addressMetadata = { addresses: { delegator: sourceAccountId } };
         } else if (deltaValue < 0) {
-          notificationMessage = `🥺 A delegator just undelegated in ${daoId}!\n${sourceAccountId} removed their delegation, reducing your voting power by ${formattedDelta}.`;
+          notificationMessage = `🥺 A delegator just undelegated in ${daoId}!\n{{delegator}} removed their delegation, reducing your voting power by ${formattedDelta}.`;
+          addressMetadata = { addresses: { delegator: sourceAccountId } };
         } 
       } else if (changeType === 'transfer') {
         if (deltaValue >= 0) {
@@ -85,10 +122,21 @@ export class VotingPowerTriggerHandler extends BaseTriggerHandler {
           notificationMessage = `⚡ Your voting power has changed in ${daoId}!\nVoting power activity detected.`;
         }
       }
+      // Add transaction link placeholder
+      notificationMessage += '\n\n{{txLink}}';
       
-      if (notificationMessage) {
-        await this.sendNotificationsToSubscribers(subscribers, notificationMessage, transactionHash, daoId);
-      }
+      // Prepare metadata with transaction info and addresses
+      const metadata = {
+        ...(chainId && {
+          transaction: {
+            hash: transactionHash,
+            chainId: chainId
+          }
+        }),
+        ...addressMetadata
+      };
+      
+      await this.sendNotificationsToSubscribers(subscribers, notificationMessage, transactionHash, daoId, metadata);
     }
     
     return {

@@ -5,7 +5,8 @@ export const SafeDaosResponseSchema = z.object({
   daos: z.object({
     items: z.array(z.object({ 
       id: z.string(),
-      votingDelay: z.string().optional()
+      votingDelay: z.string().optional(),
+      chainId: z.number()
     }))
   }).nullable()
 }).transform((data) => {
@@ -18,19 +19,17 @@ export const SafeDaosResponseSchema = z.object({
 
 
 export const SafeProposalsResponseSchema = z.object({
-  proposalsOnchains: z.object({
-    items: z.array(z.any())
-  }).nullable()
+  proposals: z.array(z.any()).nullable()
 }).transform((data) => {
-  if (!data.proposalsOnchains || !data.proposalsOnchains.items) {
-    console.warn('ProposalsResponse has null proposalsOnchains or items:', data);
-    return { proposalsOnchains: { items: [] } };
+  if (!data.proposals) {
+    console.warn('ProposalsResponse has null proposals:', data);
+    return { proposals: [] };
   }
-  return { proposalsOnchains: { items: data.proposalsOnchains.items } };
+  return { proposals: data.proposals };
 });
 
 export const SafeProposalByIdResponseSchema = z.object({
-  proposalsOnchain: z.any().nullable()
+  proposal: z.any().nullable()
 });
 
 // Define schema for voting power history item (based on actual API response)
@@ -64,6 +63,20 @@ export const SafeVotingPowerHistoryResponseSchema = z.object({
   };
 });
 
+export const SafeVotesOnchainsResponseSchema = z.object({
+  votesOnchains: z.object({
+    items: z.array(z.object({
+      txHash: z.string().optional(),
+      proposalId: z.string(),
+      voterAccountId: z.string(),
+      support: z.string().optional(),
+      votingPower: z.string().optional(),
+      timestamp: z.string().optional()
+    })),
+    totalCount: z.number()
+  })
+});
+
 
 
 // Internal types for schema validation
@@ -75,11 +88,12 @@ export type ProcessedVotingPowerHistory = z.infer<typeof VotingPowerHistoryItemS
   changeType: 'delegation' | 'transfer' | 'other';
   sourceAccountId: string;
   targetAccountId: string;
+  chainId?: number;
 };
 
 // Internal helper function to process validated proposals
 export function processProposals(validated: SafeProposalsResponse, daoId: string) {
-  return validated.proposalsOnchains.items.reduce((acc, proposal) => {
+  return validated.proposals.reduce((acc, proposal) => {
     if (proposal !== null) {
       acc.push({
         ...proposal,
@@ -87,11 +101,11 @@ export function processProposals(validated: SafeProposalsResponse, daoId: string
       });
     }
     return acc;
-  }, [] as typeof validated.proposalsOnchains.items);
+  }, [] as typeof validated.proposals);
 }
 
 // Internal helper function to process validated voting power history
-export function processVotingPowerHistory(validated: SafeVotingPowerHistoryResponse, daoId: string): ProcessedVotingPowerHistory[] {
+export function processVotingPowerHistory(validated: SafeVotingPowerHistoryResponse, daoId: string, chainId?: number): ProcessedVotingPowerHistory[] {
   return validated.votingPowerHistorys.items
     .filter(item => item.accountId)
     .map((item) => {
@@ -102,7 +116,8 @@ export function processVotingPowerHistory(validated: SafeVotingPowerHistoryRespo
         delta: item.delta,
         changeType: item.delegation ? 'delegation' : item.transfer ? 'transfer' : 'other',
         sourceAccountId: item.transfer?.fromAccountId || item.delegation?.delegatorAccountId || '',
-        targetAccountId: item.accountId
+        targetAccountId: item.accountId,
+        ...(chainId !== undefined && { chainId })
       };
       
       return processed;

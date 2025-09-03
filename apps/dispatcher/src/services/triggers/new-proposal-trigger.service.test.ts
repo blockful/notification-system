@@ -48,8 +48,11 @@ describe('NewProposalTriggerHandler', () => {
     mockSubscriptionClient = {
       getDaoSubscribers: jest.fn(),
       shouldSend: jest.fn(),
+      shouldSendBatch: jest.fn(),
       markAsSent: jest.fn(),
-      getWalletOwners: jest.fn()
+      getWalletOwners: jest.fn(),
+      getWalletOwnersBatch: jest.fn(),
+      getFollowedAddresses: jest.fn()
     } as jest.Mocked<ISubscriptionClient>;
     
     mockNotificationClient = {

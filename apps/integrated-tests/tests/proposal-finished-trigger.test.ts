@@ -13,9 +13,10 @@ describe('Proposal Finished Trigger - Integration Test', () => {
 
   // Helper function
   const createFinishedProposal = (daoId: string, proposalId: string, baseTime?: Date) => {
-    // Use baseTime or create a proposal that finished 10 seconds ago
-    const base = baseTime || new Date();
-    const proposalCreationTime = new Date(base.getTime() + testConstants.proposalTiming.creationOffset);
+    // Create a proposal that finished 10 seconds ago
+    const now = Date.now();
+    const proposalCreationTime = new Date(now + testConstants.proposalTiming.creationOffset);
+    const proposalEndTime = now + testConstants.proposalTiming.finishOffset * 1000; // 10 seconds ago
     
     // For a 12-second block time:
     // Proposal created at block 1000, voting starts immediately (no delay)
@@ -28,7 +29,8 @@ describe('Proposal Finished Trigger - Integration Test', () => {
       timestamp: Math.floor(proposalCreationTime.getTime() / 1000).toString(),
       startBlock: startBlock,
       endBlock: endBlock,
-      status: 'active',
+      endTimestamp: Math.floor(proposalEndTime / 1000).toString(), // Finished 10 seconds ago
+      status: 'EXECUTED',
       description: `# Finished Proposal\n\nThis proposal has ended.`
     });
   };
@@ -67,15 +69,15 @@ describe('Proposal Finished Trigger - Integration Test', () => {
 
     // Wait for the notification to be sent
     const message = await telegramHelper.waitForMessage(
-      msg => msg.text.includes('Finished Proposal') && 
-             msg.text.includes('has ended') &&
+      msg => msg.text.includes('has ended') &&
              msg.text.includes(testDaoId),
       { timeout: timeouts.notification.delivery }
     );
 
     // Verify message content
     expect(message.chatId).toBe(testUser.chatId);
-    expect(message.text).toContain('Finished Proposal');
+    expect(message.text).toContain('has ended');
+    expect(message.text).toMatch(/📊 Proposal .* has ended on DAO/);
     
     // Verify database record
     await dbHelper.waitForRecordCount(testConstants.tables.notifications, 1);
@@ -99,7 +101,7 @@ describe('Proposal Finished Trigger - Integration Test', () => {
       timestamp: (now - 10).toString(), // Created 10 seconds ago
       startBlock: testConstants.proposalTiming.defaultStartBlock,
       endBlock: testConstants.proposalTiming.defaultStartBlock + testConstants.proposalTiming.futureProposalBlocks, // Will finish in ~1080 seconds
-      status: 'active',
+      status: 'ACTIVE',
       description: '# Future Proposal\n\nThis proposal will not finish during the test.'
     });
 
@@ -128,11 +130,12 @@ describe('Proposal Finished Trigger - Integration Test', () => {
       subscriptionTime.toISOString()
     );
     
-    // Create multiple finished proposals
+    // Create multiple finished proposals with incremental timestamps
+    const baseTime = new Date(Date.now() - testConstants.proposalTiming.finishOffset * 1000);
     const proposals = [
-      createFinishedProposal(testDaoId, 'finished-1'),
-      createFinishedProposal(testDaoId, 'finished-2'),
-      createFinishedProposal(testDaoId, 'finished-3')
+      createFinishedProposal(testDaoId, 'finished-1', baseTime),
+      createFinishedProposal(testDaoId, 'finished-2', new Date(baseTime.getTime() + 1000)),
+      createFinishedProposal(testDaoId, 'finished-3', new Date(baseTime.getTime() + 2000))
     ];
 
     // Setup mock
@@ -149,13 +152,13 @@ describe('Proposal Finished Trigger - Integration Test', () => {
     const userMessages = allMessages.filter(msg => msg.chatId === testUser.chatId);
     
     expect(userMessages).toHaveLength(3);
-    expect(userMessages[0].text).toContain('Finished Proposal');
-    expect(userMessages[1].text).toContain('Finished Proposal');
-    expect(userMessages[2].text).toContain('Finished Proposal');
+    expect(userMessages[0].text).toContain('has ended');
+    expect(userMessages[1].text).toContain('has ended');
+    expect(userMessages[2].text).toContain('has ended');
     
     // Verify all messages are about finished proposals
-    expect(userMessages.every(msg => msg.text.includes('Finished Proposal'))).toBe(true);
     expect(userMessages.every(msg => msg.text.includes('has ended'))).toBe(true);
+    expect(userMessages.every(msg => msg.text.match(/📊 Proposal .* has ended on DAO/))).toBe(true);
     
     // Verify database records
     await dbHelper.waitForRecordCount(testConstants.tables.notifications, 3);
@@ -182,9 +185,10 @@ describe('Proposal Finished Trigger - Integration Test', () => {
     // Create proposal that was created and finished before user subscription
     const oldProposal = ProposalFactory.createProposal(testDaoId, 'old-finished-proposal', {
       timestamp: Math.floor(proposalCreatedAt.getTime() / 1000).toString(),
+      endTimestamp: Math.floor(proposalCreatedAt.getTime() / 1000 + 3600).toString(), // Ended 1 hour after creation, still before subscription
       startBlock: testConstants.proposalTiming.defaultStartBlock,
       endBlock: testConstants.proposalTiming.defaultStartBlock + 1, // Finished quickly (1 block = 12 seconds)
-      status: 'executed',
+      status: 'EXECUTED',
       description: '# Old Proposal\n\nThis finished before user subscribed.'
     });
 
@@ -222,9 +226,10 @@ describe('Proposal Finished Trigger - Integration Test', () => {
       subscriptionTime.toISOString()
     );
     
-    // Create finished proposals for each DAO
-    const dao1Proposal = createFinishedProposal(dao1Id, 'dao1-finished');
-    const dao2Proposal = createFinishedProposal(dao2Id, 'dao2-finished');
+    // Create finished proposals for each DAO with incremental timestamps
+    const baseTime = new Date(Date.now() - testConstants.proposalTiming.finishOffset * 1000);
+    const dao1Proposal = createFinishedProposal(dao1Id, 'dao1-finished', baseTime);
+    const dao2Proposal = createFinishedProposal(dao2Id, 'dao2-finished', new Date(baseTime.getTime() + 1000)); // 1 second later
 
     // Setup mock
     GraphQLMockSetup.setupMock(httpMockSetup.getMockClient(), [dao1Proposal, dao2Proposal], []);
@@ -246,12 +251,12 @@ describe('Proposal Finished Trigger - Integration Test', () => {
     const dao2Message = userMessages.find(msg => msg.text.includes(dao2Id));
     
     expect(dao1Message).toBeDefined();
-    expect(dao1Message?.text).toContain('Finished Proposal');
     expect(dao1Message?.text).toContain('has ended');
+    expect(dao1Message?.text).toMatch(/📊 Proposal .* has ended on DAO/);
     
     expect(dao2Message).toBeDefined();
-    expect(dao2Message?.text).toContain('Finished Proposal');
     expect(dao2Message?.text).toContain('has ended');
+    expect(dao2Message?.text).toMatch(/📊 Proposal .* has ended on DAO/);
     
     // Verify database records
     await dbHelper.waitForRecordCount(testConstants.tables.notifications, 2);

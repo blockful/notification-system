@@ -4,7 +4,8 @@ import {
   subscriptionBodySchema,
   subscriptionQuerystringSchema,
   createUpdateSubscriptionResponseSchema,
-  getDaoSubscribersResponseSchema
+  getDaoSubscribersResponseSchema,
+  getFollowedAddressesResponseSchema
 } from '../schemas/subscription.schema';
 import { DaoHandler } from '../handlers/dao.handlers';
 
@@ -51,6 +52,18 @@ export class DaoController {
       const { dao } = request.params;
       const { proposal_timestamp } = request.query;
       return this.daoHandler.getDaoSubscribers(dao, proposal_timestamp);
+    });
+
+    app.get('/dao/:dao/followed-addresses', {
+      schema: {
+        tags: ['dao'],
+        description: 'Get all unique addresses being followed by users in a specific DAO',
+        params: subscriptionParamsSchema,
+        response: getFollowedAddressesResponseSchema
+      }
+    }, (request) => {
+      const { dao } = request.params;
+      return this.daoHandler.getFollowedAddresses(dao);
     });
   }
 } 

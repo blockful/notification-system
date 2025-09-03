@@ -6,6 +6,14 @@ export interface NotificationPayload {
   channel: string;
   channelUserId: string;
   message: string;
+  metadata?: {
+    addresses?: Record<string, string>; // key: placeholder name, value: ethereum address
+    transaction?: {
+      hash: string;
+      chainId: number;
+    };
+    [key: string]: any;
+  };
 }
 
 /**
@@ -27,6 +35,11 @@ export interface INotificationClient {
 export interface ProposalFinishedNotification {
   id: string;
   daoId: string;
+  title?: string;
   description: string;
   endTimestamp: number;
+  status: string;
+  forVotes: string;
+  againstVotes: string;
+  abstainVotes: string;
 }
