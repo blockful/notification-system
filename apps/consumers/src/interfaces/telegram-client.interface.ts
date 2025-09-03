@@ -4,7 +4,7 @@
  */
 
 import { Message } from 'telegraf/types';
-import { Context } from 'telegraf';
+import { ContextWithSession, MatchedContext } from '../interfaces/bot.interface';
 
 export interface SendMessageOptions {
   parse_mode?: 'Markdown' | 'HTML' | 'MarkdownV2';
@@ -13,10 +13,10 @@ export interface SendMessageOptions {
 }
 
 export interface HandlerRegistration {
-  command(command: string | RegExp, handler: (ctx: Context) => Promise<void>): void;
-  hears(text: string | RegExp, handler: (ctx: Context) => Promise<void>): void;
-  action(action: string | RegExp, handler: (ctx: Context) => Promise<void>): void;
-  on(event: string, handler: (ctx: Context, next: () => Promise<void>) => Promise<void>): void;
+  command(command: string | RegExp, handler: (ctx: ContextWithSession) => Promise<void>): void;
+  hears(text: string | RegExp, handler: (ctx: ContextWithSession) => Promise<void>): void;
+  action(action: string | RegExp, handler: (ctx: ContextWithSession | MatchedContext) => Promise<void>): void;
+  on(event: string, handler: (ctx: ContextWithSession, next: () => Promise<void>) => Promise<void>): void;
   use(middleware: any): void;
 }
 

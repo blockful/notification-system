@@ -10,7 +10,7 @@ import { DAOService } from '../services/dao.service';
 import { WalletService } from '../services/wallet.service';
 import { ExplorerService } from '../services/explorer.service';
 import { EnsResolverService } from '../services/ens-resolver.service';
-import { ContextWithSession } from '../interfaces/bot.interface';
+import { ContextWithSession, MatchedContext } from '../interfaces/bot.interface';
 import { NotificationPayload } from '../interfaces/notification.interface';
 import { TelegramClient } from '../interfaces/telegram-client.interface';
 
@@ -50,75 +50,77 @@ export class TelegramBotService {
 
   private setupCommands(): void {
     this.telegramClient.setupHandlers((handlers) => {
-      handlers.command(/^start$/i, async (ctx: any) => {
+      handlers.command(/^start$/i, async (ctx) => {
         await ctx.reply(WELCOME_MESSAGE, this.createPersistentKeyboard());
       });
 
-      handlers.command(/^learn_more$/i, async (ctx: any) => {
+      handlers.command(/^learn_more$/i, async (ctx) => {
         await ctx.reply(HELP_MESSAGE, { 
           parse_mode: 'HTML',
           ...this.createPersistentKeyboard() 
         });
       });
 
-      handlers.command(/^daos$/i, async (ctx: any) => {
-        await this.daoService.initialize(ctx);
+      handlers.command(/^daos$/i, async (ctx) => {
+        await this.daoService.initialize(ctx as ContextWithSession);
       });
 
-      handlers.command(/^wallets$/i, async (ctx: any) => {
+      handlers.command(/^wallets$/i, async (ctx) => {
         await this.walletService.initialize(ctx);
       });
 
-      handlers.hears(DAOS_BUTTON_TEXT, async (ctx: any) => {
+      handlers.hears(DAOS_BUTTON_TEXT, async (ctx) => {
         await this.daoService.initialize(ctx);
       });
 
-      handlers.hears(MY_WALLETS_BUTTON_TEXT, async (ctx: any) => {
+      handlers.hears(MY_WALLETS_BUTTON_TEXT, async (ctx) => {
         await this.walletService.initialize(ctx);
       });
 
-      handlers.hears(LEARN_MORE_BUTTON_TEXT, async (ctx: any) => {
+      handlers.hears(LEARN_MORE_BUTTON_TEXT, async (ctx) => {
         await ctx.reply(HELP_MESSAGE, { 
           parse_mode: 'HTML',
           ...this.createPersistentKeyboard() 
         });
       });
 
-      handlers.action(/^dao_toggle_(\w+)$/, async (ctx: any) => {
-        const daoName = ctx.match[1];
+      handlers.action(/^dao_toggle_(\w+)$/, async (ctx) => {
+        const matchedCtx = ctx as MatchedContext;
+        const daoName = matchedCtx.match[1];
         await this.daoService.toggle(ctx, daoName);
         await ctx.answerCbQuery();
       });
 
-      handlers.action(/^dao_confirm$/, async (ctx: any) => {
+      handlers.action(/^dao_confirm$/, async (ctx) => {
         await this.daoService.confirm(ctx);
         await ctx.answerCbQuery();
       });
 
       // Wallet action handlers
-      handlers.action(/^wallet_add$/, async (ctx: any) => {
+      handlers.action(/^wallet_add$/, async (ctx) => {
         await this.walletService.addWallet(ctx);
         await ctx.answerCbQuery();
       });
 
-      handlers.action(/^wallet_remove$/, async (ctx: any) => {
+      handlers.action(/^wallet_remove$/, async (ctx) => {
         await this.walletService.removeWallet(ctx);
         await ctx.answerCbQuery();
       });
 
-      handlers.action(/^wallet_toggle_(.+)$/, async (ctx: any) => {
-        const address = ctx.match[1];
+      handlers.action(/^wallet_toggle_(.+)$/, async (ctx) => {
+        const matchedCtx = ctx as MatchedContext;
+        const address = matchedCtx.match[1];
         await this.walletService.toggleWalletForRemoval(ctx, address);
         await ctx.answerCbQuery();
       });
 
-      handlers.action(/^wallet_confirm_remove$/, async (ctx: any) => {
+      handlers.action(/^wallet_confirm_remove$/, async (ctx) => {
         await this.walletService.confirmRemoval(ctx);
         await ctx.answerCbQuery();
       });
 
-      handlers.on('message', async (ctx: any, next) => {
-      if ('text' in ctx.message && !ctx.message.text.startsWith('/')) {
+      handlers.on('message', async (ctx, next) => {
+        if (ctx.message && 'text' in ctx.message && !ctx.message.text.startsWith('/')) {
         if (ctx.session?.awaitingWalletInput) {
           await this.walletService.processWalletInput(ctx, ctx.message.text);
           return;
