@@ -64,6 +64,7 @@ export class NonVotingHandler extends BaseTriggerHandler<ProposalFinishedNotific
     }
 
     const followedAddresses = await this.subscriptionClient.getFollowedAddresses(currentProposal.daoId);
+    
     if (!ValidationService.hasItems(
       followedAddresses, 
       `followed addresses for DAO ${currentProposal.daoId}`
@@ -95,12 +96,13 @@ export class NonVotingHandler extends BaseTriggerHandler<ProposalFinishedNotific
     daoId: string
   ): Promise<string[]> {
     const votes = await this.getVotingData(daoId, lastProposals, followedAddresses);
+    
     const voterAddresses = new Set(votes.map(v => v.voterAccountId.toLowerCase()));
+    
     const nonVoters = followedAddresses.filter(
       addr => !voterAddresses.has(addr.toLowerCase())
     );
 
-    console.log(`Found ${nonVoters.length} non-voting addresses`);
     return nonVoters;
   }
 

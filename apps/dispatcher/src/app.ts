@@ -19,7 +19,8 @@ export class App {
   constructor(
     private subscriptionServerUrl: string, 
     private rabbitmqUrl: string,
-    private anticaptureGraphqlEndpoint: string
+    private anticaptureGraphqlEndpoint: string,
+    private anticaptureHttpClient?: any
   ) {}
 
   private async setupServices(): Promise<void> {
@@ -33,8 +34,8 @@ export class App {
     });
     const subscriptionClient = new SubscriptionClient(subscriptionAxiosClient);
     
-    // Setup AnticaptureClient
-    const anticaptureAxiosClient = axios.create({
+    // Setup AnticaptureClient - use provided client or create new one
+    const anticaptureAxiosClient = this.anticaptureHttpClient || axios.create({
       baseURL: this.anticaptureGraphqlEndpoint,
       headers: {
         'Content-Type': 'application/json',

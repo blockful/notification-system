@@ -76,11 +76,12 @@ export const startTestApps = async (db: Knex, mockHttpClient: any): Promise<Test
   );
   await consumerApp.start();
   
-  // Start dispatcher
+  // Start dispatcher with mocked HTTP client
   const dispatcherApp = new DispatcherApp(
     TEST_CONFIG.urls.subscriptionServer, 
     rabbitmqUrl,
-    TEST_CONFIG.urls.mockGraphQL
+    TEST_CONFIG.urls.mockGraphQL,
+    mockHttpClient
   );
   await dispatcherApp.start();
   
