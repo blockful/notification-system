@@ -38,6 +38,11 @@ describe('Duplicate Prevention - Integration Test', () => {
   });
 
   test('should not send duplicate notifications on repeated logic system triggers', async () => {
+    // Clear any setup messages before starting the actual test
+    if (global.mockSendMessage) {
+      global.mockSendMessage.mockClear();
+    }
+    
     // Setup mock to return the same UNI proposal consistently
     const persistentProposal = ProposalFactory.createProposal(testConstants.daoIds.uniswap, 'persistent-uni-proposal');
     GraphQLMockSetup.setupMock(httpMockSetup.getMockClient(), [persistentProposal]);

@@ -36,15 +36,8 @@ beforeAll(async () => {
   await rabbitmqSetup.setupWithExistingContainer(rabbitmqUrl);
   apps.rabbitmqSetup = rabbitmqSetup;
   
-  // If using real Telegram, inject a spy to capture real sendMessage calls
-  if (process.env.SEND_REAL_TELEGRAM) {
-    const { jest } = await import('@jest/globals');
-    const sendMessageSpy = jest.fn();
-    apps.consumerApp.getTelegramBotService().injectSendMessageSpy(sendMessageSpy);
-    global.mockSendMessage = sendMessageSpy;
-  } else {
-    global.mockSendMessage = mockSendMessage;
-  }
+  // Get the mock from the test client that was injected into the app
+  global.mockSendMessage = apps.mockSendMessage || mockSendMessage;
   
   global.testApps = apps;
   global.httpMockSetup = httpMockSetup;

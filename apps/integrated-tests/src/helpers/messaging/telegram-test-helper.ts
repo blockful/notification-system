@@ -42,14 +42,14 @@ export class TelegramTestHelper {
       () => {
         const calls = this.getNewCalls(startCount);
         const message = calls.find(call => {
-          const [chatId, text, ...rest] = call;
-          const msg: TelegramMessage = { chatId, text, ...rest };
+          const [chatId, text, options] = call;
+          const msg: TelegramMessage = { chatId, text, ...(options || {}) };
           return predicate(msg);
         });
         return message ? { 
           chatId: message[0], 
           text: message[1],
-          ...message[2] 
+          ...(message[2] || {})
         } : null;
       },
       {
@@ -91,7 +91,7 @@ export class TelegramTestHelper {
     return filteredCalls.slice(0, expectedCount).map(call => ({
       chatId: call[0],
       text: call[1],
-      ...call[2]
+      ...(call[2] || {})
     }));
   }
 
@@ -147,11 +147,14 @@ export class TelegramTestHelper {
    * @return Array of all Telegram messages sent via the mock
    */
   getAllMessages(): TelegramMessage[] {
-    return this.mockSendMessage.mock.calls.map(call => ({
-      chatId: call[0] as string | number,
-      text: call[1] as string,
-      ...(call[2] || {})
-    }));
+    return this.mockSendMessage.mock.calls.map(call => {
+      const [chatId, text, options] = call;
+      return {
+        chatId: chatId as string | number,
+        text: text as string,
+        ...(options || {})
+      };
+    });
   }
 
   /**

@@ -7,6 +7,9 @@ import { RabbitMQTestSetup } from '../rabbitmq-setup';
 import { serviceConfig, timeouts } from '../../config';
 import { waitFor } from '../../helpers/utilities/wait-for';
 import { MockEnsResolverService } from '../../mocks/ens-resolver-mock';
+import { TestTelegramClient } from '@notification-system/consumer/dist/clients/test-telegram.client';
+import { RealTelegramClient } from '@notification-system/consumer/dist/clients/real-telegram.client';
+import { jest } from '@jest/globals';
 
 /**
  * @notice Type definition for test applications container
@@ -23,6 +26,8 @@ export type TestApps = {
   subscriptionServerApp: SubscriptionServerApp;
   /** RabbitMQ test setup instance */
   rabbitmqSetup: RabbitMQTestSetup;
+  /** Mock sendMessage function for testing */
+  mockSendMessage?: jest.Mock;
 };
 
 /**
@@ -66,20 +71,45 @@ export const startTestApps = async (db: Knex, mockHttpClient: any): Promise<Test
   // Create mock ENS resolver for tests
   const mockEnsResolver = new MockEnsResolverService() as any;
   
-  // When SEND_REAL_TELEGRAM is set, use real bot token
-  let telegramBotToken = TEST_CONFIG.telegram.botToken;
+  // Create appropriate Telegram client based on environment
+  let telegramClient;
+  let mockSendMessage;
   
   if (process.env.SEND_REAL_TELEGRAM) {
-    telegramBotToken = process.env.TELEGRAM_BOT_TOKEN || TEST_CONFIG.telegram.botToken;
+    // Use real Telegram with a spy - in send-only mode for tests
+    const botToken = process.env.TELEGRAM_BOT_TOKEN || TEST_CONFIG.telegram.botToken;
+    const realClient = new RealTelegramClient(botToken, { sendOnlyMode: true });
+    mockSendMessage = jest.fn();
+    
+    // Wrap the real client's sendMessage to spy on it
+    const originalSendMessage = realClient.sendMessage.bind(realClient);
+    realClient.sendMessage = jest.fn().mockImplementation(
+      async (chatId: string | number, text: string, options?: any) => {
+        mockSendMessage(chatId, text, options);
+        return originalSendMessage(chatId, text, options);
+      }
+    );
+    telegramClient = realClient;
+  } else {
+    // Use test client with mock
+    mockSendMessage = jest.fn().mockResolvedValue({
+      message_id: 123,
+      date: Date.now(),
+      chat: { id: 1, type: 'private' },
+      text: 'test',
+      from: { id: 123456789, is_bot: true, first_name: 'TestBot' }
+    });
+    telegramClient = new TestTelegramClient(mockSendMessage);
   }
   
-  // Start consumer - it will use real Telegraf if mock is not applied
+  // Start consumer with injected telegram client
   const consumerApp = new ConsumerApp(
-    telegramBotToken,
+    TEST_CONFIG.telegram.botToken,  // Token still needed for config but won't be used
     TEST_CONFIG.urls.subscriptionServer,
     mockHttpClient,
     rabbitmqUrl,
-    mockEnsResolver
+    mockEnsResolver,
+    telegramClient
   );
   await consumerApp.start();
   
@@ -120,7 +150,8 @@ export const startTestApps = async (db: Knex, mockHttpClient: any): Promise<Test
     logicSystemApp,
     dispatcherApp,
     subscriptionServerApp,
-    rabbitmqSetup
+    rabbitmqSetup,
+    mockSendMessage
   };
 };
 
