@@ -62,7 +62,7 @@ export class TelegramBotService {
       });
 
       handlers.command(/^daos$/i, async (ctx) => {
-        await this.daoService.initialize(ctx as ContextWithSession);
+        await this.daoService.initialize(ctx);
       });
 
       handlers.command(/^wallets$/i, async (ctx) => {
