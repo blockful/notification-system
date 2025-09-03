@@ -64,11 +64,7 @@ describe('Duplicate Prevention - Integration Test', () => {
     
     // Wait a bit to ensure logic system triggers again (500ms interval)
     // But no new notifications should be sent
-    await new Promise(resolve => setTimeout(resolve, timeouts.notification.processing));
-    
-    // Check that no additional messages were sent during the wait
-    const messageCountAfterWait = telegramHelper.getCallCount();
-    expect(messageCountAfterWait).toBe(messageCountBeforeWait);
+    await telegramHelper.waitForNoMessages(timeouts.notification.processing);
     
     // Verify still only 2 notifications in database (no duplicates)
     const notificationCount = await db(testConstants.tables.notifications).count('* as count').first();
