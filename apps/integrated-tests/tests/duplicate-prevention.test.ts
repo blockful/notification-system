@@ -59,10 +59,6 @@ describe('Duplicate Prevention - Integration Test', () => {
     // Verify notifications were recorded in database
     await dbHelper.waitForRecordCount(testConstants.tables.notifications, 2);
     
-    // Record the message count after the first batch
-    const messageCountBeforeWait = telegramHelper.getCallCount();
-    
-    // Wait a bit to ensure logic system triggers again (500ms interval)
     // But no new notifications should be sent
     await telegramHelper.waitForNoMessages(timeouts.notification.processing);
     
