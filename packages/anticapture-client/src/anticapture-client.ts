@@ -7,13 +7,16 @@ import type {
   GetProposalByIdQueryVariables,
   ListProposalsQuery,
   ListProposalsQueryVariables,
-  ListVotingPowerHistorysQueryVariables
+  ListVotingPowerHistorysQueryVariables,
+  ListVotesOnchainsQuery,
+  ListVotesOnchainsQueryVariables
 } from './gql/graphql';
-import { GetDaOsDocument, GetProposalByIdDocument, ListProposalsDocument, ListVotingPowerHistorysDocument } from './gql/graphql';
-import { SafeDaosResponseSchema, SafeProposalByIdResponseSchema, SafeProposalsResponseSchema, SafeVotingPowerHistoryResponseSchema, processProposals, processVotingPowerHistory, ProcessedVotingPowerHistory } from './schemas';
+import { GetDaOsDocument, GetProposalByIdDocument, ListProposalsDocument, ListVotingPowerHistorysDocument, ListVotesOnchainsDocument } from './gql/graphql';
+import { SafeDaosResponseSchema, SafeProposalByIdResponseSchema, SafeProposalsResponseSchema, SafeVotingPowerHistoryResponseSchema, SafeVotesOnchainsResponseSchema, processProposals, processVotingPowerHistory, ProcessedVotingPowerHistory } from './schemas';
 
 type ProposalItems = NonNullable<ListProposalsQuery['proposals']>;
 type VotingPowerHistoryItems = ProcessedVotingPowerHistory[];
+type VotesOnchain = NonNullable<ListVotesOnchainsQuery['votesOnchains']['items'][0]>;
 
 export class AnticaptureClient {
   private readonly httpClient: AxiosInstance;
@@ -151,6 +154,26 @@ export class AnticaptureClient {
       return processVotingPowerHistory(validated, daoId!);
     } catch (error) {
       console.warn(`Error querying voting power history for DAO ${daoId}: ${error instanceof Error ? error.message : error}`);
+      return [];
+    }
+  }
+
+  /**
+   * Fetches votes for specific proposals and voter addresses
+   * @param variables Query variables including daoId, proposalId_in, voterAccountId_in
+   * @returns List of votes matching the criteria
+   */
+  async listVotesOnchains(variables: ListVotesOnchainsQueryVariables): Promise<VotesOnchain[]> {
+    try {
+      const validated = await this.query(
+        ListVotesOnchainsDocument, 
+        SafeVotesOnchainsResponseSchema, 
+        variables,
+        variables.daoId
+      );
+      return validated.votesOnchains.items;
+    } catch (error) {
+      console.warn('Error fetching votes', error);
       return [];
     }
   }

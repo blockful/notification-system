@@ -53,6 +53,53 @@ export class SubscriptionClient implements ISubscriptionClient {
   }
 
   /**
+   * Filters multiple groups of subscribers in batch
+   * @param requests Array of shouldSend requests
+   * @returns Array of notification arrays corresponding to each request
+   */
+  async shouldSendBatch(requests: Array<{
+    subscribers: User[];
+    eventId: string;
+    daoId: string;
+  }>): Promise<Notification[][]> {
+    // Flatten all notifications into one request
+    const allNotifications = requests.flatMap(request =>
+      request.subscribers.map(subscriber => ({
+        user_id: subscriber.id,
+        event_id: request.eventId,
+        dao_id: request.daoId
+      }))
+    );
+
+    if (allNotifications.length === 0) {
+      return requests.map(() => []);
+    }
+
+    // Make single batch request
+    const response = await this.client.post('/notifications/exclude-sent', {
+      notifications: allNotifications
+    });
+    
+    // Create Map for O(1) lookup and return result in one flow
+    const notificationMap = new Map<string, Notification>();
+    (response.data as Notification[]).forEach(notification => {
+      notificationMap.set(
+        `${notification.user_id}-${notification.event_id}-${notification.dao_id}`,
+        notification
+      );
+    });
+    
+    // Each request becomes an array of notifications for its subscribers
+    return requests.map(request =>                    // For each non-voter delegate
+      request.subscribers                             // Take all users following this delegate
+        .map(subscriber =>                            // For each user in this group send the notification
+          notificationMap.get(`${subscriber.id}-${request.eventId}-${request.daoId}`) // O(1) lookup
+        )
+        .filter((notification): notification is Notification => notification !== undefined) // Remove users who shouldn't receive notification (e.g. already sent)
+    );
+  }
+
+  /**
    * Marks notifications as sent for successful deliveries
    * @param notifications List of notifications to mark as sent
    */
@@ -69,6 +116,28 @@ export class SubscriptionClient implements ISubscriptionClient {
    */
   async getWalletOwners(address: string): Promise<User[]> {
     const response = await this.client.get(`/users/by-address/${encodeURIComponent(address)}`);
+    return response.data;
+  }
+
+  /**
+   * Get users who own specific wallet addresses (batch operation)
+   * @param addresses Array of wallet addresses
+   * @returns Record mapping addresses to arrays of users who own each address
+   */
+  async getWalletOwnersBatch(addresses: string[]): Promise<Record<string, User[]>> {
+    const response = await this.client.post('/users/by-addresses/batch', {
+      addresses
+    });
+    return response.data;
+  }
+
+  /**
+   * Get all unique addresses being followed by users in a specific DAO
+   * @param daoId The DAO ID
+   * @returns List of unique addresses being followed
+   */
+  async getFollowedAddresses(daoId: string): Promise<string[]> {
+    const response = await this.client.get(`/dao/${encodeURIComponent(daoId)}/followed-addresses`);
     return response.data;
   }
 } 

@@ -40,6 +40,7 @@ export interface Notification {
 export interface IUserRepository {
   findByChannelAndId(channel: string, channelUserId: string): Promise<User | undefined>;
   findById(id: string): Promise<User | undefined>;
+  findByIds(ids: string[]): Promise<User[]>;
   create(data: Omit<User, 'id'>): Promise<User>;
 }
 

@@ -33,10 +33,12 @@ export class GraphQLMockSetup {
   /**
    * @notice Generic mock implementation that handles all query types
    */
-  private static createMockImplementation(proposals: ProposalData[] = [], votingPowerData: ProcessedVotingPowerHistory[] = [], daoChainMapping: Record<string, number> = {}) {
+  private static createMockImplementation(proposals: ProposalData[] = [], votingPowerData: ProcessedVotingPowerHistory[] = [], daoChainMapping: Record<string, number> = {}, votesData: any[] = []) {
     return (url: string, data: any, config: any) => {
       // Handle proposals
       if (data.query?.includes('ListProposals')) {
+        console.log('[Mock] ListProposals called with variables:', JSON.stringify(data.variables));
+        console.log('[Mock] Headers:', JSON.stringify(config?.headers));
         let filtered = proposals;
         if (data.variables?.status) {
           // Status can be string or array (JSON type in GraphQL)
@@ -46,7 +48,7 @@ export class GraphQLMockSetup {
           filtered = filtered.filter(p => statusFilter.includes(p.status));
         }
         if (data.variables?.fromDate) {
-          filtered = filtered.filter(p => parseInt(p.timestamp) > data.variables.fromDate);
+          filtered = filtered.filter(p => parseInt(p.endTimestamp) >= data.variables.fromDate);
         }
         if (config?.headers?.['anticapture-dao-id']) {
           filtered = filtered.filter(p => p.daoId === config.headers['anticapture-dao-id']);
@@ -76,6 +78,40 @@ export class GraphQLMockSetup {
         });
       }
 
+      // Handle votes
+      if (data.query?.includes('ListVotesOnchains')) {
+        let filtered = votesData;
+        
+        const daoId = data.variables?.daoId;
+        const proposalIdIn = data.variables?.proposalId_in;
+        const voterAccountIdIn = data.variables?.voterAccountId_in;
+        
+        // Filter by daoId if provided
+        if (daoId) {
+          filtered = filtered.filter((v: any) => v.daoId === daoId);
+        }
+        
+        // Filter by proposalId_in if provided
+        if (proposalIdIn) {
+          filtered = filtered.filter((v: any) => 
+            proposalIdIn.includes(v.proposalId)
+          );
+        }
+        
+        // Filter by voterAccountId_in if provided
+        if (voterAccountIdIn) {
+          filtered = filtered.filter((v: any) => 
+            voterAccountIdIn.some((addr: string) => 
+              v.voterAccountId.toLowerCase() === addr.toLowerCase()
+            )
+          );
+        }
+        
+        return Promise.resolve({
+          data: { data: { votesOnchains: { items: filtered, totalCount: filtered.length } } }
+        });
+      }
+
       // Handle DAOs
       if (data.query?.includes('GetDAOs')) {
         const uniqueDaoIds = [...new Set([
@@ -97,7 +133,8 @@ export class GraphQLMockSetup {
             votingPowerHistorys: { items: [] },
             proposals: [],
             proposal: null,
-            daos: { items: [] }
+            daos: { items: [] },
+            votesOnchains: { items: [] }
           }
         }
       });
@@ -109,14 +146,16 @@ export class GraphQLMockSetup {
    * @param proposals Array of proposal data
    * @param votingPowerData Array of voting power history data  
    * @param daoChainMapping Optional mapping of DAO IDs to chain IDs
+   * @param votesData Array of vote data
    */
   static setupMock(
     mockHttpClient: any, 
     proposals: ProposalData[] = [], 
     votingPowerData: ProcessedVotingPowerHistory[] = [],
-    daoChainMapping: Record<string, number> = {}
+    daoChainMapping: Record<string, number> = {},
+    votesData: any[] = []
   ): void {
-    mockHttpClient.post.mockImplementation(this.createMockImplementation(proposals, votingPowerData, daoChainMapping));
+    mockHttpClient.post.mockImplementation(this.createMockImplementation(proposals, votingPowerData, daoChainMapping, votesData));
   }
 
   /**

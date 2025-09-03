@@ -97,6 +97,15 @@ export class DatabaseTestHelper {
   }
 
   /**
+   * Gets all notifications from the database
+   * 
+   * @returns Promise that resolves to an array of notification records
+   */
+  async getNotifications(): Promise<any[]> {
+    return await this.db(testConstants.tables.notifications).select('*');
+  }
+
+  /**
    * Ensures that no notification exists for a specific user and event
    * 
    * This method waits for a specified time period and then verifies that no

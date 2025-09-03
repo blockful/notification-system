@@ -980,7 +980,9 @@ export type Proposal_200_Response = {
     forVotes: Scalars['String']['output'];
     id: Scalars['String']['output'];
     proposerAccountId: Scalars['String']['output'];
+    quorum: Scalars['String']['output'];
     startBlock: Scalars['Float']['output'];
+    startTimestamp: Scalars['String']['output'];
     status: Scalars['String']['output'];
     timestamp: Scalars['String']['output'];
     title?: Maybe<Scalars['String']['output']>;
@@ -1321,7 +1323,9 @@ export type Query_Proposals_Items = {
     forVotes: Scalars['String']['output'];
     id: Scalars['String']['output'];
     proposerAccountId: Scalars['String']['output'];
+    quorum: Scalars['String']['output'];
     startBlock: Scalars['Float']['output'];
+    startTimestamp: Scalars['String']['output'];
     status: Scalars['String']['output'];
     timestamp: Scalars['String']['output'];
     title?: Maybe<Scalars['String']['output']>;
@@ -1781,6 +1785,27 @@ export type ListProposalsQuery = {
         abstainVotes: string;
     } | null> | null;
 };
+export type ListVotesOnchainsQueryVariables = Exact<{
+    daoId: Scalars['String']['input'];
+    proposalId_in?: InputMaybe<Array<Scalars['String']['input']> | Scalars['String']['input']>;
+    voterAccountId_in?: InputMaybe<Array<Scalars['String']['input']> | Scalars['String']['input']>;
+}>;
+export type ListVotesOnchainsQuery = {
+    __typename?: 'Query';
+    votesOnchains: {
+        __typename?: 'votesOnchainPage';
+        totalCount: number;
+        items: Array<{
+            __typename?: 'votesOnchain';
+            txHash?: string | null;
+            proposalId?: string | null;
+            voterAccountId: string;
+            support?: string | null;
+            votingPower?: string | null;
+            timestamp?: string | null;
+        }>;
+    };
+};
 export type ListVotingPowerHistorysQueryVariables = Exact<{
     where?: InputMaybe<VotingPowerHistoryFilter>;
     limit?: InputMaybe<Scalars['Int']['input']>;
@@ -1816,4 +1841,5 @@ export type ListVotingPowerHistorysQuery = {
 export declare const GetDaOsDocument: DocumentNode<GetDaOsQuery, GetDaOsQueryVariables>;
 export declare const GetProposalByIdDocument: DocumentNode<GetProposalByIdQuery, GetProposalByIdQueryVariables>;
 export declare const ListProposalsDocument: DocumentNode<ListProposalsQuery, ListProposalsQueryVariables>;
+export declare const ListVotesOnchainsDocument: DocumentNode<ListVotesOnchainsQuery, ListVotesOnchainsQueryVariables>;
 export declare const ListVotingPowerHistorysDocument: DocumentNode<ListVotingPowerHistorysQuery, ListVotingPowerHistorysQueryVariables>;

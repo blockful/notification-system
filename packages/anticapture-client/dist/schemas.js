@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.SafeVotingPowerHistoryResponseSchema = exports.SafeProposalByIdResponseSchema = exports.SafeProposalsResponseSchema = exports.SafeDaosResponseSchema = void 0;
+exports.SafeVotesOnchainsResponseSchema = exports.SafeVotingPowerHistoryResponseSchema = exports.SafeProposalByIdResponseSchema = exports.SafeProposalsResponseSchema = exports.SafeDaosResponseSchema = void 0;
 exports.processProposals = processProposals;
 exports.processVotingPowerHistory = processVotingPowerHistory;
 const zod_1 = require("zod");
@@ -60,6 +60,19 @@ exports.SafeVotingPowerHistoryResponseSchema = zod_1.z.object({
     return {
         votingPowerHistorys: data.votingPowerHistorys || { items: [] }
     };
+});
+exports.SafeVotesOnchainsResponseSchema = zod_1.z.object({
+    votesOnchains: zod_1.z.object({
+        items: zod_1.z.array(zod_1.z.object({
+            txHash: zod_1.z.string().optional(),
+            proposalId: zod_1.z.string(),
+            voterAccountId: zod_1.z.string(),
+            support: zod_1.z.string().optional(),
+            votingPower: zod_1.z.string().optional(),
+            timestamp: zod_1.z.string().optional()
+        })),
+        totalCount: zod_1.z.number()
+    })
 });
 // Internal helper function to process validated proposals
 function processProposals(validated, daoId) {

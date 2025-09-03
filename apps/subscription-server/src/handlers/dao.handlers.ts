@@ -43,4 +43,13 @@ export class DaoHandler {
     
     return subscribers.map(toUserResponse);
   }
+
+  /**
+   * Handles retrieving all unique addresses being followed by users in a specific DAO.
+   * 
+   * @param daoId - The ID of the DAO
+   */
+  async getFollowedAddresses(daoId: string) {
+    return await this.subscriptionService.getFollowedAddresses(daoId);
+  }
 } 
