@@ -19,6 +19,8 @@ export class TelegramBotService {
   private walletService: WalletService;
   private explorerService: ExplorerService;
   private ensResolver: EnsResolverService;
+  private originalSendMessage?: typeof this.bot.telegram.sendMessage;
+  private isRunning: boolean = false;
 
   constructor(
     bot: Telegraf<ContextWithSession>, 
@@ -130,12 +132,42 @@ export class TelegramBotService {
   }
 
   async launch(): Promise<void> {
+    // Skip launch in test mode with real Telegram - we only need to send messages
+    if (process.env.SEND_REAL_TELEGRAM && process.env.NODE_ENV === 'test') {
+      console.log('🤖 Bot ready for sending messages (test mode - polling skipped)');
+      return;
+    }
     await this.bot.launch();
+    this.isRunning = true;
     console.log('🤖 Bot is running...');
   }
 
   public stop(signal: string): void {
-    this.bot.stop(signal);
+    // Only stop the bot if it was actually launched
+    if (this.isRunning) {
+      this.bot.stop(signal);
+      this.isRunning = false;
+    }
+  }
+  
+  /**
+   * Inject a spy function for testing purposes
+   * @param spyFn Jest spy function to replace sendMessage
+   * @dev Used in integration tests to capture real Telegram API calls
+   */
+  public injectSendMessageSpy(spyFn: any): void {
+    // Store the original sendMessage if not already stored
+    if (!this.originalSendMessage) {
+      this.originalSendMessage = this.bot.telegram.sendMessage.bind(this.bot.telegram);
+    }
+    
+    // Replace sendMessage with a spy that calls the original and captures the call
+    this.bot.telegram.sendMessage = spyFn.mockImplementation(
+      (chatId: string | number, text: string, options?: any) => {
+        // Call the original sendMessage
+        return this.originalSendMessage!(chatId, text, options);
+      }
+    );
   }
 
   /**

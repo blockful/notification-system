@@ -49,4 +49,12 @@ export class App {
     }
     this.telegramBotService.stop('SIGINT');
   }
+  
+  /**
+   * Get the Telegram bot service instance
+   * @dev Used in tests to inject spies for message validation
+   */
+  getTelegramBotService(): TelegramBotService {
+    return this.telegramBotService;
+  }
 } 
