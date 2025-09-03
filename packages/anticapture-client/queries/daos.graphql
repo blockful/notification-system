@@ -3,6 +3,7 @@ query GetDAOs {
     items {
       id
       votingDelay
+      chainId
     }
   }
 }

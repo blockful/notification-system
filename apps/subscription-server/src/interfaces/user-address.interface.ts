@@ -70,4 +70,11 @@ export interface IUserAddressRepository {
    * @returns Updated UserAddress record
    */
   reactivate(userId: string, address: string): Promise<UserAddress>;
+
+  /**
+   * Get all unique addresses being followed by users in a specific DAO
+   * @param daoId - The DAO ID
+   * @returns Array of unique addresses being followed
+   */
+  getFollowedAddressByDao(daoId: string): Promise<string[]>;
 }

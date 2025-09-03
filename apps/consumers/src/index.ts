@@ -13,15 +13,20 @@
 import axios from 'axios';
 import { App } from './app';
 import { loadConfig } from './config/env';
+import { EnsResolverService } from './services/ens-resolver.service';
 
 const config = loadConfig();
+
+// Create ENS resolver
+const ensResolver = new EnsResolverService();
 
 // Create and start the application
 const app = new App(
   config.telegramBotToken,
   config.subscriptionServerUrl,
   axios.create({ baseURL: config.anticaptureGraphqlEndpoint }),
-  config.rabbitmqUrl
+  config.rabbitmqUrl,
+  ensResolver
 );
 
 (async () => {

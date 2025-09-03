@@ -7,10 +7,17 @@ export type {
   GetProposalByIdQueryVariables,
   ListProposalsQuery,
   ListProposalsQueryVariables,
+  ListVotesOnchainsQuery,
+  ListVotesOnchainsQueryVariables,
   VotingPowerHistory,
   VotingPowerHistoryFilter,
   ListVotingPowerHistorysQuery,
   ListVotingPowerHistorysQueryVariables
+} from './gql/graphql';
+
+// Export GraphQL enums
+export {
+  QueryInput_Proposals_OrderDirection
 } from './gql/graphql';
 
 export type { ProcessedVotingPowerHistory } from './schemas';

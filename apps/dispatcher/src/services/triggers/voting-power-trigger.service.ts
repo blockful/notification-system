@@ -65,7 +65,7 @@ export class VotingPowerTriggerHandler extends BaseTriggerHandler {
 
     // Now process each event with cached data
     for (const votingPowerEvent of validEvents) {
-      const { daoId, accountId, votingPower, timestamp, delta, transactionHash, changeType, sourceAccountId, targetAccountId } = votingPowerEvent;
+      const { daoId, accountId, votingPower, timestamp, delta, transactionHash, changeType, sourceAccountId, targetAccountId, chainId } = votingPowerEvent;
       
       // Get wallet owners from cache
       const walletOwners = walletOwnersMap[accountId] || [];
@@ -95,7 +95,7 @@ export class VotingPowerTriggerHandler extends BaseTriggerHandler {
       );
       
       let notificationMessage = '';
-      let metadata: { addresses?: Record<string, string> } | undefined;
+      let addressMetadata: { addresses?: Record<string, string> } | undefined;
       
       const deltaValue = delta ? parseInt(delta) : 0;
       const formattedDelta = formatTokenAmount(Math.abs(deltaValue));
@@ -103,10 +103,10 @@ export class VotingPowerTriggerHandler extends BaseTriggerHandler {
       if (changeType === 'delegation') {
         if (deltaValue >= 0) {
           notificationMessage = `🥳 You've received a new delegation in ${daoId}!\n{{delegator}} delegated to you, increasing your voting power by ${formattedDelta}.`;
-          metadata = { addresses: { delegator: sourceAccountId } };
+          addressMetadata = { addresses: { delegator: sourceAccountId } };
         } else if (deltaValue < 0) {
           notificationMessage = `🥺 A delegator just undelegated in ${daoId}!\n{{delegator}} removed their delegation, reducing your voting power by ${formattedDelta}.`;
-          metadata = { addresses: { delegator: sourceAccountId } };
+          addressMetadata = { addresses: { delegator: sourceAccountId } };
         } 
       } else if (changeType === 'transfer') {
         if (deltaValue >= 0) {
@@ -122,10 +122,21 @@ export class VotingPowerTriggerHandler extends BaseTriggerHandler {
           notificationMessage = `⚡ Your voting power has changed in ${daoId}!\nVoting power activity detected.`;
         }
       }
+      // Add transaction link placeholder
+      notificationMessage += '\n\n{{txLink}}';
       
-      if (notificationMessage) {
-        await this.sendNotificationsToSubscribers(subscribers, notificationMessage, transactionHash, daoId, metadata);
-      }
+      // Prepare metadata with transaction info and addresses
+      const metadata = {
+        ...(chainId && {
+          transaction: {
+            hash: transactionHash,
+            chainId: chainId
+          }
+        }),
+        ...addressMetadata
+      };
+      
+      await this.sendNotificationsToSubscribers(subscribers, notificationMessage, transactionHash, daoId, metadata);
     }
     
     return {

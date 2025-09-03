@@ -8,6 +8,7 @@ import { Telegraf, Markup } from 'telegraf';
 import { WELCOME_MESSAGE, HELP_MESSAGE, DAOS_BUTTON_TEXT, LEARN_MORE_BUTTON_TEXT, MY_WALLETS_BUTTON_TEXT } from '../messages';
 import { DAOService } from '../services/dao.service';
 import { WalletService } from '../services/wallet.service';
+import { ExplorerService } from '../services/explorer.service';
 import { EnsResolverService } from '../services/ens-resolver.service';
 import { ContextWithSession } from '../interfaces/bot.interface';
 import { NotificationPayload } from '../interfaces/notification.interface';
@@ -16,17 +17,20 @@ export class TelegramBotService {
   private bot: Telegraf<ContextWithSession>;
   private daoService: DAOService;
   private walletService: WalletService;
+  private explorerService: ExplorerService;
   private ensResolver: EnsResolverService;
 
   constructor(
     bot: Telegraf<ContextWithSession>, 
     daoService: DAOService, 
     walletService: WalletService,
+    explorerService: ExplorerService,
     ensResolver: EnsResolverService
   ) {
     this.bot = bot;
     this.daoService = daoService;
     this.walletService = walletService;
+    this.explorerService = explorerService;
     this.ensResolver = ensResolver;
     this.setupCommands();
   }
@@ -143,6 +147,14 @@ export class TelegramBotService {
   public async sendNotification(payload: NotificationPayload): Promise<string> {
     let processedMessage = payload.message;
     
+    // Process transaction link if transaction metadata is provided
+    if (payload.metadata?.transaction) {
+      const { hash, chainId } = payload.metadata.transaction;
+      const txUrl = this.explorerService.getTransactionLink(chainId, hash);
+      const markdownLink = `[Transaction details](${txUrl})`;
+      processedMessage = processedMessage.replace('{{txLink}}', markdownLink);
+    }
+    
     // Process ENS names if addresses are provided in metadata
     if (payload.metadata?.addresses) {
       for (const [placeholder, address] of Object.entries(payload.metadata.addresses)) {
@@ -153,7 +165,8 @@ export class TelegramBotService {
     
     const sentMessage = await this.bot.telegram.sendMessage(
       payload.channelUserId, 
-      processedMessage
+      processedMessage,
+      { parse_mode: 'Markdown' }
     );
     return `${sentMessage.message_id}`;
   }
