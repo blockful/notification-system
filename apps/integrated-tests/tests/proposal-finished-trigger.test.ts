@@ -13,9 +13,10 @@ describe('Proposal Finished Trigger - Integration Test', () => {
 
   // Helper function
   const createFinishedProposal = (daoId: string, proposalId: string, baseTime?: Date) => {
-    // Use baseTime or create a proposal that finished 10 seconds ago
-    const base = baseTime || new Date();
-    const proposalCreationTime = new Date(base.getTime() + testConstants.proposalTiming.creationOffset);
+    // Create a proposal that finished 10 seconds ago
+    const now = Date.now();
+    const proposalCreationTime = new Date(now + testConstants.proposalTiming.creationOffset);
+    const proposalEndTime = now + testConstants.proposalTiming.finishOffset * 1000; // 10 seconds ago
     
     // For a 12-second block time:
     // Proposal created at block 1000, voting starts immediately (no delay)
@@ -28,7 +29,7 @@ describe('Proposal Finished Trigger - Integration Test', () => {
       timestamp: Math.floor(proposalCreationTime.getTime() / 1000).toString(),
       startBlock: startBlock,
       endBlock: endBlock,
-      endTimestamp: Math.floor(proposalCreationTime.getTime() / 1000 + 300).toString(), // Ended 5 minutes after creation
+      endTimestamp: Math.floor(proposalEndTime / 1000).toString(), // Finished 10 seconds ago
       status: 'EXECUTED',
       description: `# Finished Proposal\n\nThis proposal has ended.`
     });

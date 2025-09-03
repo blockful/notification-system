@@ -4,21 +4,26 @@ export declare const SafeDaosResponseSchema: z.ZodEffects<z.ZodObject<{
         items: z.ZodArray<z.ZodObject<{
             id: z.ZodString;
             votingDelay: z.ZodOptional<z.ZodString>;
+            chainId: z.ZodNumber;
         }, "strip", z.ZodTypeAny, {
             id: string;
+            chainId: number;
             votingDelay?: string | undefined;
         }, {
             id: string;
+            chainId: number;
             votingDelay?: string | undefined;
         }>, "many">;
     }, "strip", z.ZodTypeAny, {
         items: {
             id: string;
+            chainId: number;
             votingDelay?: string | undefined;
         }[];
     }, {
         items: {
             id: string;
+            chainId: number;
             votingDelay?: string | undefined;
         }[];
     }>>;
@@ -26,6 +31,7 @@ export declare const SafeDaosResponseSchema: z.ZodEffects<z.ZodObject<{
     daos: {
         items: {
             id: string;
+            chainId: number;
             votingDelay?: string | undefined;
         }[];
     } | null;
@@ -33,6 +39,7 @@ export declare const SafeDaosResponseSchema: z.ZodEffects<z.ZodObject<{
     daos: {
         items: {
             id: string;
+            chainId: number;
             votingDelay?: string | undefined;
         }[];
     } | null;
@@ -40,6 +47,7 @@ export declare const SafeDaosResponseSchema: z.ZodEffects<z.ZodObject<{
     daos: {
         items: {
             id: string;
+            chainId: number;
             votingDelay?: string | undefined;
         }[];
     };
@@ -47,6 +55,7 @@ export declare const SafeDaosResponseSchema: z.ZodEffects<z.ZodObject<{
     daos: {
         items: {
             id: string;
+            chainId: number;
             votingDelay?: string | undefined;
         }[];
     } | null;
@@ -315,13 +324,85 @@ export declare const SafeVotingPowerHistoryResponseSchema: z.ZodEffects<z.ZodObj
         }[];
     } | null;
 }>;
+export declare const SafeVotesOnchainsResponseSchema: z.ZodObject<{
+    votesOnchains: z.ZodObject<{
+        items: z.ZodArray<z.ZodObject<{
+            txHash: z.ZodOptional<z.ZodString>;
+            proposalId: z.ZodString;
+            voterAccountId: z.ZodString;
+            support: z.ZodOptional<z.ZodString>;
+            votingPower: z.ZodOptional<z.ZodString>;
+            timestamp: z.ZodOptional<z.ZodString>;
+        }, "strip", z.ZodTypeAny, {
+            proposalId: string;
+            voterAccountId: string;
+            timestamp?: string | undefined;
+            votingPower?: string | undefined;
+            txHash?: string | undefined;
+            support?: string | undefined;
+        }, {
+            proposalId: string;
+            voterAccountId: string;
+            timestamp?: string | undefined;
+            votingPower?: string | undefined;
+            txHash?: string | undefined;
+            support?: string | undefined;
+        }>, "many">;
+        totalCount: z.ZodNumber;
+    }, "strip", z.ZodTypeAny, {
+        items: {
+            proposalId: string;
+            voterAccountId: string;
+            timestamp?: string | undefined;
+            votingPower?: string | undefined;
+            txHash?: string | undefined;
+            support?: string | undefined;
+        }[];
+        totalCount: number;
+    }, {
+        items: {
+            proposalId: string;
+            voterAccountId: string;
+            timestamp?: string | undefined;
+            votingPower?: string | undefined;
+            txHash?: string | undefined;
+            support?: string | undefined;
+        }[];
+        totalCount: number;
+    }>;
+}, "strip", z.ZodTypeAny, {
+    votesOnchains: {
+        items: {
+            proposalId: string;
+            voterAccountId: string;
+            timestamp?: string | undefined;
+            votingPower?: string | undefined;
+            txHash?: string | undefined;
+            support?: string | undefined;
+        }[];
+        totalCount: number;
+    };
+}, {
+    votesOnchains: {
+        items: {
+            proposalId: string;
+            voterAccountId: string;
+            timestamp?: string | undefined;
+            votingPower?: string | undefined;
+            txHash?: string | undefined;
+            support?: string | undefined;
+        }[];
+        totalCount: number;
+    };
+}>;
 type SafeProposalsResponse = z.infer<typeof SafeProposalsResponseSchema>;
 type SafeVotingPowerHistoryResponse = z.infer<typeof SafeVotingPowerHistoryResponseSchema>;
 export type ProcessedVotingPowerHistory = z.infer<typeof VotingPowerHistoryItemSchema> & {
     changeType: 'delegation' | 'transfer' | 'other';
     sourceAccountId: string;
     targetAccountId: string;
+    chainId?: number;
 };
 export declare function processProposals(validated: SafeProposalsResponse, daoId: string): any;
-export declare function processVotingPowerHistory(validated: SafeVotingPowerHistoryResponse, daoId: string): ProcessedVotingPowerHistory[];
+export declare function processVotingPowerHistory(validated: SafeVotingPowerHistoryResponse, daoId: string, chainId?: number): ProcessedVotingPowerHistory[];
 export {};

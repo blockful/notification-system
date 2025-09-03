@@ -160,4 +160,43 @@ export class UserFactory {
     await db('user_addresses').insert(userAddress);
     return userAddress;
   }
+
+  /**
+   * @notice Creates a user with DAO subscription and followed addresses
+   * @param channelUserId The user's channel identifier
+   * @param name The user's display name
+   * @param daoId The DAO to subscribe to
+   * @param followedAddresses Array of addresses this user follows
+   * @param preferenceActive Whether preferences are active
+   * @param timestamp Optional custom timestamp
+   * @return Promise resolving to user, preference, and address data
+   */
+  static async createUserWithFollowedAddresses(
+    channelUserId: string,
+    name: string,
+    daoId: string,
+    followedAddresses: string[],
+    preferenceActive: boolean = true,
+    timestamp?: string
+  ): Promise<{ 
+    user: UserData; 
+    preference: UserPreferenceData;
+    addresses: UserAddressData[];
+  }> {
+    const { user, preference } = await this.createUserWithFullSetup(
+      channelUserId,
+      name,
+      daoId,
+      preferenceActive,
+      timestamp
+    );
+
+    const addresses = await Promise.all(
+      followedAddresses.map(address => 
+        this.createUserAddress(user.id, address, timestamp)
+      )
+    );
+
+    return { user, preference, addresses };
+  }
 }
