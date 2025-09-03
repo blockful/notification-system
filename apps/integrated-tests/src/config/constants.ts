@@ -19,7 +19,7 @@ export const testConstants = {
   
   // Test user profiles, combining chatId and a primary address
   profiles: {
-    p1: { chatId: '111111111', address: '0xadd_p1' },
+    p1: { chatId: '6717185777', address: '0xadd_p1' },
     p2: { chatId: '222222222', address: '0xadd_p2' },
     p3: { chatId: '333333333', address: '0xadd_p3' },
     p4: { chatId: '555555555', address: '0xadd_p4' },
