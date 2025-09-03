@@ -1,5 +1,3 @@
-import { Telegraf } from 'telegraf';
-import { session } from 'telegraf/session';
 import { AxiosInstance } from 'axios';
 import { TelegramBotService } from './services/telegram-bot.service';
 import { DAOService } from './services/dao.service';
@@ -8,8 +6,10 @@ import { ExplorerService } from './services/explorer.service';
 import { EnsResolverService } from './services/ens-resolver.service';
 import { AnticaptureClient } from '@notification-system/anticapture-client';
 import { SubscriptionAPIService } from './services/subscription-api.service';
-import { ContextWithSession } from './interfaces/bot.interface';
 import { RabbitMQNotificationConsumerService } from './services/rabbitmq-notification-consumer.service';
+import { TelegramClient } from './interfaces/telegram-client.interface';
+import { RealTelegramClient } from './clients/real-telegram.client';
+import { TestTelegramClient } from './clients/test-telegram.client';
 
 export class App {
   private telegramBotService: TelegramBotService;
@@ -21,16 +21,25 @@ export class App {
     subscriptionServerUrl: string, 
     httpClient: AxiosInstance,
     rabbitmqUrl: string,
-    ensResolver: EnsResolverService
+    ensResolver: EnsResolverService,
+    telegramClient?: TelegramClient
   ) {
     const subscriptionApi = new SubscriptionAPIService(subscriptionServerUrl);
     const anticaptureClient = new AnticaptureClient(httpClient);
     const daoService = new DAOService(anticaptureClient, subscriptionApi);
     const walletService = new WalletService(subscriptionApi, ensResolver);
     const explorerService = new ExplorerService();
-    const bot = new Telegraf<ContextWithSession>(telegramBotToken);
-    bot.use(session());
-    this.telegramBotService = new TelegramBotService(bot, daoService, walletService, explorerService, ensResolver);
+    
+    // Use provided client or create a real one
+    const client = telegramClient || new RealTelegramClient(telegramBotToken);
+    
+    this.telegramBotService = new TelegramBotService(
+      client,
+      daoService, 
+      walletService, 
+      explorerService, 
+      ensResolver
+    );
     this.rabbitmqUrl = rabbitmqUrl;
   }
 
@@ -48,13 +57,5 @@ export class App {
       await this.rabbitmqConsumerService.stop();
     }
     this.telegramBotService.stop('SIGINT');
-  }
-  
-  /**
-   * Get the Telegram bot service instance
-   * @dev Used in tests to inject spies for message validation
-   */
-  getTelegramBotService(): TelegramBotService {
-    return this.telegramBotService;
   }
 } 

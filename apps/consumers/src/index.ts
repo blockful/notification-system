@@ -27,6 +27,7 @@ const app = new App(
   axios.create({ baseURL: config.anticaptureGraphqlEndpoint }),
   config.rabbitmqUrl,
   ensResolver
+  // No telegramClient provided - will use RealTelegramClient
 );
 
 (async () => {

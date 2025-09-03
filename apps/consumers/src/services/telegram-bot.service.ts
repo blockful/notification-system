@@ -4,7 +4,7 @@
  * Consolidates both interactive commands and notification sending capabilities.
  */
 
-import { Telegraf, Markup } from 'telegraf';
+import { Markup } from 'telegraf';
 import { WELCOME_MESSAGE, HELP_MESSAGE, DAOS_BUTTON_TEXT, LEARN_MORE_BUTTON_TEXT, MY_WALLETS_BUTTON_TEXT } from '../messages';
 import { DAOService } from '../services/dao.service';
 import { WalletService } from '../services/wallet.service';
@@ -12,24 +12,23 @@ import { ExplorerService } from '../services/explorer.service';
 import { EnsResolverService } from '../services/ens-resolver.service';
 import { ContextWithSession } from '../interfaces/bot.interface';
 import { NotificationPayload } from '../interfaces/notification.interface';
+import { TelegramClient } from '../interfaces/telegram-client.interface';
 
 export class TelegramBotService {
-  private bot: Telegraf<ContextWithSession>;
+  private telegramClient: TelegramClient;
   private daoService: DAOService;
   private walletService: WalletService;
   private explorerService: ExplorerService;
   private ensResolver: EnsResolverService;
-  private originalSendMessage?: typeof this.bot.telegram.sendMessage;
-  private isRunning: boolean = false;
 
   constructor(
-    bot: Telegraf<ContextWithSession>, 
+    telegramClient: TelegramClient,
     daoService: DAOService, 
     walletService: WalletService,
     explorerService: ExplorerService,
     ensResolver: EnsResolverService
   ) {
-    this.bot = bot;
+    this.telegramClient = telegramClient;
     this.daoService = daoService;
     this.walletService = walletService;
     this.explorerService = explorerService;
@@ -50,74 +49,75 @@ export class TelegramBotService {
   }
 
   private setupCommands(): void {
-    this.bot.command(/^start$/i, async (ctx) => {
-      await ctx.reply(WELCOME_MESSAGE, this.createPersistentKeyboard());
-    });
-
-    this.bot.command(/^learn_more$/i, async (ctx) => {
-      await ctx.reply(HELP_MESSAGE, { 
-        parse_mode: 'HTML',
-        ...this.createPersistentKeyboard() 
+    this.telegramClient.setupHandlers((handlers) => {
+      handlers.command(/^start$/i, async (ctx: any) => {
+        await ctx.reply(WELCOME_MESSAGE, this.createPersistentKeyboard());
       });
-    });
 
-    this.bot.command(/^daos$/i, async (ctx) => {
-      await this.daoService.initialize(ctx);
-    });
-
-    this.bot.command(/^wallets$/i, async (ctx) => {
-      await this.walletService.initialize(ctx);
-    });
-
-    this.bot.hears(DAOS_BUTTON_TEXT, async (ctx) => {
-      await this.daoService.initialize(ctx);
-    });
-
-    this.bot.hears(MY_WALLETS_BUTTON_TEXT, async (ctx) => {
-      await this.walletService.initialize(ctx);
-    });
-
-    this.bot.hears(LEARN_MORE_BUTTON_TEXT, async (ctx) => {
-      await ctx.reply(HELP_MESSAGE, { 
-        parse_mode: 'HTML',
-        ...this.createPersistentKeyboard() 
+      handlers.command(/^learn_more$/i, async (ctx: any) => {
+        await ctx.reply(HELP_MESSAGE, { 
+          parse_mode: 'HTML',
+          ...this.createPersistentKeyboard() 
+        });
       });
-    });
 
-    this.bot.action(/^dao_toggle_(\w+)$/, async (ctx) => {
-      const daoName = ctx.match[1];
-      await this.daoService.toggle(ctx, daoName);
-      await ctx.answerCbQuery();
-    });
+      handlers.command(/^daos$/i, async (ctx: any) => {
+        await this.daoService.initialize(ctx);
+      });
 
-    this.bot.action(/^dao_confirm$/, async (ctx) => {
-      await this.daoService.confirm(ctx);
-      await ctx.answerCbQuery();
-    });
+      handlers.command(/^wallets$/i, async (ctx: any) => {
+        await this.walletService.initialize(ctx);
+      });
 
-    // Wallet action handlers
-    this.bot.action(/^wallet_add$/, async (ctx) => {
-      await this.walletService.addWallet(ctx);
-      await ctx.answerCbQuery();
-    });
+      handlers.hears(DAOS_BUTTON_TEXT, async (ctx: any) => {
+        await this.daoService.initialize(ctx);
+      });
 
-    this.bot.action(/^wallet_remove$/, async (ctx) => {
-      await this.walletService.removeWallet(ctx);
-      await ctx.answerCbQuery();
-    });
+      handlers.hears(MY_WALLETS_BUTTON_TEXT, async (ctx: any) => {
+        await this.walletService.initialize(ctx);
+      });
 
-    this.bot.action(/^wallet_toggle_(.+)$/, async (ctx) => {
-      const address = ctx.match[1];
-      await this.walletService.toggleWalletForRemoval(ctx, address);
-      await ctx.answerCbQuery();
-    });
+      handlers.hears(LEARN_MORE_BUTTON_TEXT, async (ctx: any) => {
+        await ctx.reply(HELP_MESSAGE, { 
+          parse_mode: 'HTML',
+          ...this.createPersistentKeyboard() 
+        });
+      });
 
-    this.bot.action(/^wallet_confirm_remove$/, async (ctx) => {
-      await this.walletService.confirmRemoval(ctx);
-      await ctx.answerCbQuery();
-    });
+      handlers.action(/^dao_toggle_(\w+)$/, async (ctx: any) => {
+        const daoName = ctx.match[1];
+        await this.daoService.toggle(ctx, daoName);
+        await ctx.answerCbQuery();
+      });
 
-    this.bot.on('message', async (ctx, next) => {
+      handlers.action(/^dao_confirm$/, async (ctx: any) => {
+        await this.daoService.confirm(ctx);
+        await ctx.answerCbQuery();
+      });
+
+      // Wallet action handlers
+      handlers.action(/^wallet_add$/, async (ctx: any) => {
+        await this.walletService.addWallet(ctx);
+        await ctx.answerCbQuery();
+      });
+
+      handlers.action(/^wallet_remove$/, async (ctx: any) => {
+        await this.walletService.removeWallet(ctx);
+        await ctx.answerCbQuery();
+      });
+
+      handlers.action(/^wallet_toggle_(.+)$/, async (ctx: any) => {
+        const address = ctx.match[1];
+        await this.walletService.toggleWalletForRemoval(ctx, address);
+        await ctx.answerCbQuery();
+      });
+
+      handlers.action(/^wallet_confirm_remove$/, async (ctx: any) => {
+        await this.walletService.confirmRemoval(ctx);
+        await ctx.answerCbQuery();
+      });
+
+      handlers.on('message', async (ctx: any, next) => {
       if ('text' in ctx.message && !ctx.message.text.startsWith('/')) {
         if (ctx.session?.awaitingWalletInput) {
           await this.walletService.processWalletInput(ctx, ctx.message.text);
@@ -128,46 +128,16 @@ export class TelegramBotService {
           this.createPersistentKeyboard());
       }
       return next();
+      });
     });
   }
 
   async launch(): Promise<void> {
-    // Skip launch in test mode with real Telegram - we only need to send messages
-    if (process.env.SEND_REAL_TELEGRAM && process.env.NODE_ENV === 'test') {
-      console.log('🤖 Bot ready for sending messages (test mode - polling skipped)');
-      return;
-    }
-    await this.bot.launch();
-    this.isRunning = true;
-    console.log('🤖 Bot is running...');
+    await this.telegramClient.launch();
   }
 
   public stop(signal: string): void {
-    // Only stop the bot if it was actually launched
-    if (this.isRunning) {
-      this.bot.stop(signal);
-      this.isRunning = false;
-    }
-  }
-  
-  /**
-   * Inject a spy function for testing purposes
-   * @param spyFn Jest spy function to replace sendMessage
-   * @dev Used in integration tests to capture real Telegram API calls
-   */
-  public injectSendMessageSpy(spyFn: any): void {
-    // Store the original sendMessage if not already stored
-    if (!this.originalSendMessage) {
-      this.originalSendMessage = this.bot.telegram.sendMessage.bind(this.bot.telegram);
-    }
-    
-    // Replace sendMessage with a spy that calls the original and captures the call
-    this.bot.telegram.sendMessage = spyFn.mockImplementation(
-      (chatId: string | number, text: string, options?: any) => {
-        // Call the original sendMessage
-        return this.originalSendMessage!(chatId, text, options);
-      }
-    );
+    this.telegramClient.stop(signal);
   }
 
   /**
@@ -195,7 +165,7 @@ export class TelegramBotService {
       }
     }
     
-    const sentMessage = await this.bot.telegram.sendMessage(
+    const sentMessage = await this.telegramClient.sendMessage(
       payload.channelUserId, 
       processedMessage,
       { parse_mode: 'Markdown' }
