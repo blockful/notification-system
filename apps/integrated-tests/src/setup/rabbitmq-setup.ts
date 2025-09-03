@@ -177,6 +177,39 @@ export class RabbitMQTestSetup {
   clearCollectedEvents(): void {
     this.getEventCollector().clear();
   }
+
+  /**
+   * Purge all queues to ensure clean state between tests
+   * This removes all messages from the queues
+   */
+  async purgeAllQueues(): Promise<void> {
+    if (!this.connection) {
+      return;
+    }
+
+    const channel = await this.connection.createChannel();
+    
+    const queues = [
+      'logic-system-queue',
+      'dispatcher-queue', 
+      'consumer-queue',
+      'subscription-queue'
+    ];
+
+    for (const queueName of queues) {
+      try {
+        // Assert queue exists and purge it
+        await channel.checkQueue(queueName);
+        await channel.purgeQueue(queueName);
+        console.log(`Purged queue: ${queueName}`);
+      } catch (error) {
+        // Queue might not exist, that's ok
+        console.log(`Could not purge queue ${queueName}:`, error);
+      }
+    }
+
+    await channel.close();
+  }
 }
 
 // Export the global cleanup function for Jest teardown
