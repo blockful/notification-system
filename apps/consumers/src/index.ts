@@ -14,20 +14,23 @@ import axios from 'axios';
 import { App } from './app';
 import { loadConfig } from './config/env';
 import { EnsResolverService } from './services/ens-resolver.service';
+import { RealTelegramClient } from './clients/real-telegram.client';
 
 const config = loadConfig();
 
 // Create ENS resolver
 const ensResolver = new EnsResolverService();
 
+// Create Telegram client for production
+const telegramClient = new RealTelegramClient(config.telegramBotToken);
+
 // Create and start the application
 const app = new App(
-  config.telegramBotToken,
   config.subscriptionServerUrl,
   axios.create({ baseURL: config.anticaptureGraphqlEndpoint }),
   config.rabbitmqUrl,
-  ensResolver
-  // No telegramClient provided - will use RealTelegramClient
+  ensResolver,
+  telegramClient
 );
 
 (async () => {

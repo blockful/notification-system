@@ -8,8 +8,6 @@ import { AnticaptureClient } from '@notification-system/anticapture-client';
 import { SubscriptionAPIService } from './services/subscription-api.service';
 import { RabbitMQNotificationConsumerService } from './services/rabbitmq-notification-consumer.service';
 import { TelegramClient } from './interfaces/telegram-client.interface';
-import { RealTelegramClient } from './clients/real-telegram.client';
-import { TestTelegramClient } from './clients/test-telegram.client';
 
 export class App {
   private telegramBotService: TelegramBotService;
@@ -17,12 +15,11 @@ export class App {
   private rabbitmqUrl: string;
 
   constructor(
-    telegramBotToken: string, 
     subscriptionServerUrl: string, 
     httpClient: AxiosInstance,
     rabbitmqUrl: string,
     ensResolver: EnsResolverService,
-    telegramClient?: TelegramClient
+    telegramClient: TelegramClient
   ) {
     const subscriptionApi = new SubscriptionAPIService(subscriptionServerUrl);
     const anticaptureClient = new AnticaptureClient(httpClient);
@@ -30,11 +27,8 @@ export class App {
     const walletService = new WalletService(subscriptionApi, ensResolver);
     const explorerService = new ExplorerService();
     
-    // Use provided client or create a real one
-    const client = telegramClient || new RealTelegramClient(telegramBotToken);
-    
     this.telegramBotService = new TelegramBotService(
-      client,
+      telegramClient,
       daoService, 
       walletService, 
       explorerService, 

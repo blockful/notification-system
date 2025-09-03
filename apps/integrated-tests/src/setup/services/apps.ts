@@ -104,7 +104,6 @@ export const startTestApps = async (db: Knex, mockHttpClient: any): Promise<Test
   
   // Start consumer with injected telegram client
   const consumerApp = new ConsumerApp(
-    TEST_CONFIG.telegram.botToken,  // Token still needed for config but won't be used
     TEST_CONFIG.urls.subscriptionServer,
     mockHttpClient,
     rabbitmqUrl,
