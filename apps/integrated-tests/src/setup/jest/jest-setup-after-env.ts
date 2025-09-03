@@ -1,3 +1,6 @@
+// Import mock setup first to apply mocks conditionally before other imports
+import '../../mocks/telegram-mock-setup';
+
 import { beforeAll, afterAll } from '@jest/globals';
 import { mockSendMessage, HttpClientMockSetup, GraphQLMockSetup } from '../../mocks';
 import { setupDatabase, db, closeDatabase, startTestApps, stopTestApps, TestApps } from '../../setup';
@@ -32,9 +35,19 @@ beforeAll(async () => {
   const rabbitmqSetup = new RabbitMQTestSetup();
   await rabbitmqSetup.setupWithExistingContainer(rabbitmqUrl);
   apps.rabbitmqSetup = rabbitmqSetup;
+  
+  // If using real Telegram, inject a spy to capture real sendMessage calls
+  if (process.env.SEND_REAL_TELEGRAM) {
+    const { jest } = await import('@jest/globals');
+    const sendMessageSpy = jest.fn();
+    apps.consumerApp.getTelegramBotService().injectSendMessageSpy(sendMessageSpy);
+    global.mockSendMessage = sendMessageSpy;
+  } else {
+    global.mockSendMessage = mockSendMessage;
+  }
+  
   global.testApps = apps;
   global.httpMockSetup = httpMockSetup;
-  global.mockSendMessage = mockSendMessage;
   
 }, timeouts.test.short);
 

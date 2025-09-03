@@ -66,9 +66,16 @@ export const startTestApps = async (db: Knex, mockHttpClient: any): Promise<Test
   // Create mock ENS resolver for tests
   const mockEnsResolver = new MockEnsResolverService() as any;
   
-  // Start consumer with mock ENS resolver
+  // When SEND_REAL_TELEGRAM is set, use real bot token
+  let telegramBotToken = TEST_CONFIG.telegram.botToken;
+  
+  if (process.env.SEND_REAL_TELEGRAM) {
+    telegramBotToken = process.env.TELEGRAM_BOT_TOKEN || TEST_CONFIG.telegram.botToken;
+  }
+  
+  // Start consumer - it will use real Telegraf if mock is not applied
   const consumerApp = new ConsumerApp(
-    TEST_CONFIG.telegram.botToken,
+    telegramBotToken,
     TEST_CONFIG.urls.subscriptionServer,
     mockHttpClient,
     rabbitmqUrl,
