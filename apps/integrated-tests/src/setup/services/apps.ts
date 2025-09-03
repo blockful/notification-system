@@ -55,23 +55,22 @@ const TEST_CONFIG = {
 } as const;
 
 /**
- * @notice Starts all test applications required for integration tests  
- * @dev Sets up RabbitMQ, database, and starts all microservices
- * @param db Database connection instance
- * @param mockHttpClient Mocked HTTP client for external API calls
- * @return Promise resolving to TestApps object containing service references
+ * @notice Sets up RabbitMQ connection for testing
+ * @dev Creates RabbitMQ test setup and returns connection URL
+ * @return Object containing setup instance and connection URL
  */
-export const startTestApps = async (db: Knex, mockHttpClient: any): Promise<TestApps> => {
+const setupRabbitMQ = async (): Promise<{ rabbitmqSetup: RabbitMQTestSetup; rabbitmqUrl: string }> => {
   const rabbitmqSetup = new RabbitMQTestSetup();
   const rabbitmqUrl = process.env.TEST_RABBITMQ_URL || await rabbitmqSetup.setup();
-  
-  const subscriptionServerApp = new SubscriptionServerApp(db, TEST_CONFIG.ports.subscriptionServer);
-  await subscriptionServerApp.start();
-  
-  // Create mock ENS resolver for tests
-  const mockEnsResolver = new MockEnsResolverService() as any;
-  
-  // Create appropriate Telegram client based on environment
+  return { rabbitmqSetup, rabbitmqUrl };
+};
+
+/**
+ * @notice Creates and configures Telegram client for testing
+ * @dev Returns either real or mock Telegram client based on environment
+ * @return Object containing telegram client and mock send message function
+ */
+const createTelegramClient = () => {
   let telegramClient;
   let mockSendMessage;
   
@@ -83,16 +82,16 @@ export const startTestApps = async (db: Knex, mockHttpClient: any): Promise<Test
     
     // Wrap the real client's sendMessage to spy on it
     const originalSendMessage = realClient.sendMessage.bind(realClient);
-    realClient.sendMessage = jest.fn().mockImplementation(
+    realClient.sendMessage = jest.fn<typeof realClient.sendMessage>().mockImplementation(
       async (chatId: string | number, text: string, options?: any) => {
         mockSendMessage(chatId, text, options);
         return originalSendMessage(chatId, text, options);
       }
-    );
+    ) as any;
     telegramClient = realClient;
   } else {
     // Use test client with mock
-    mockSendMessage = jest.fn().mockResolvedValue({
+    mockSendMessage = jest.fn<any>().mockResolvedValue({
       message_id: 123,
       date: Date.now(),
       chat: { id: 1, type: 'private' },
@@ -102,7 +101,35 @@ export const startTestApps = async (db: Knex, mockHttpClient: any): Promise<Test
     telegramClient = new TestTelegramClient(mockSendMessage);
   }
   
-  // Start consumer with injected telegram client
+  return { telegramClient, mockSendMessage };
+};
+
+/**
+ * @notice Starts the subscription server application
+ * @dev Initializes and starts the subscription server with given database
+ * @param db Database connection instance
+ * @return Started subscription server application instance
+ */
+const startSubscriptionServer = async (db: Knex): Promise<SubscriptionServerApp> => {
+  const subscriptionServerApp = new SubscriptionServerApp(db, TEST_CONFIG.ports.subscriptionServer);
+  await subscriptionServerApp.start();
+  return subscriptionServerApp;
+};
+
+/**
+ * @notice Starts the consumer application
+ * @dev Initializes and starts the consumer with dependencies
+ * @param mockHttpClient Mocked HTTP client
+ * @param rabbitmqUrl RabbitMQ connection URL
+ * @param telegramClient Telegram client instance
+ * @return Started consumer application instance
+ */
+const startConsumer = async (
+  mockHttpClient: any,
+  rabbitmqUrl: string,
+  telegramClient: any
+): Promise<ConsumerApp> => {
+  const mockEnsResolver = new MockEnsResolverService() as any;
   const consumerApp = new ConsumerApp(
     TEST_CONFIG.urls.subscriptionServer,
     mockHttpClient,
@@ -111,8 +138,20 @@ export const startTestApps = async (db: Knex, mockHttpClient: any): Promise<Test
     telegramClient
   );
   await consumerApp.start();
-  
-  // Start dispatcher with mocked HTTP client
+  return consumerApp;
+};
+
+/**
+ * @notice Starts the dispatcher application
+ * @dev Initializes and starts the dispatcher with dependencies
+ * @param rabbitmqUrl RabbitMQ connection URL
+ * @param mockHttpClient Mocked HTTP client
+ * @return Started dispatcher application instance
+ */
+const startDispatcher = async (
+  rabbitmqUrl: string,
+  mockHttpClient: any
+): Promise<DispatcherApp> => {
   const dispatcherApp = new DispatcherApp(
     TEST_CONFIG.urls.subscriptionServer, 
     rabbitmqUrl,
@@ -120,7 +159,20 @@ export const startTestApps = async (db: Knex, mockHttpClient: any): Promise<Test
     mockHttpClient
   );
   await dispatcherApp.start();
-  
+  return dispatcherApp;
+};
+
+/**
+ * @notice Starts the logic system application
+ * @dev Initializes and starts the logic system with dependencies
+ * @param mockHttpClient Mocked HTTP client
+ * @param rabbitmqUrl RabbitMQ connection URL
+ * @return Started logic system application instance
+ */
+const startLogicSystem = async (
+  mockHttpClient: any,
+  rabbitmqUrl: string
+): Promise<LogicSystemApp> => {
   const oneYearAgo = Math.floor((Date.now() - 365 * 24 * 60 * 60 * 1000) / 1000).toString();
   const logicSystemApp = new LogicSystemApp(
     TEST_CONFIG.logicSystem.interval,
@@ -130,12 +182,18 @@ export const startTestApps = async (db: Knex, mockHttpClient: any): Promise<Test
     oneYearAgo
   );
   await logicSystemApp.start();
-  
-  // Wait for apps to be ready
+  return logicSystemApp;
+};
+
+/**
+ * @notice Waits for all applications to be ready
+ * @dev Verifies that all applications have started successfully
+ * @param apps Object containing all application instances
+ */
+const waitForAppsReady = async (apps: Omit<TestApps, 'rabbitmqSetup' | 'mockSendMessage'>) => {
   await waitFor(
     async () => {
-      // Check if all apps are ready by verifying they have started successfully
-      return consumerApp && logicSystemApp && dispatcherApp && subscriptionServerApp;
+      return apps.consumerApp && apps.logicSystemApp && apps.dispatcherApp && apps.subscriptionServerApp;
     },
     {
       timeout: TEST_CONFIG.timeouts.appStartup,
@@ -143,6 +201,33 @@ export const startTestApps = async (db: Knex, mockHttpClient: any): Promise<Test
       errorMessage: 'Apps failed to start within timeout period'
     }
   );
+};
+
+/**
+ * @notice Starts all test applications required for integration tests  
+ * @dev Sets up RabbitMQ, database, and starts all microservices
+ * @param db Database connection instance
+ * @param mockHttpClient Mocked HTTP client for external API calls
+ * @return Promise resolving to TestApps object containing service references
+ */
+export const startTestApps = async (db: Knex, mockHttpClient: any): Promise<TestApps> => {
+  // Setup infrastructure
+  const { rabbitmqSetup, rabbitmqUrl } = await setupRabbitMQ();
+  const { telegramClient, mockSendMessage } = createTelegramClient();
+  
+  // Start all services
+  const subscriptionServerApp = await startSubscriptionServer(db);
+  const consumerApp = await startConsumer(mockHttpClient, rabbitmqUrl, telegramClient);
+  const dispatcherApp = await startDispatcher(rabbitmqUrl, mockHttpClient);
+  const logicSystemApp = await startLogicSystem(mockHttpClient, rabbitmqUrl);
+  
+  // Wait for all apps to be ready
+  await waitForAppsReady({
+    consumerApp,
+    logicSystemApp,
+    dispatcherApp,
+    subscriptionServerApp
+  });
   
   return {
     consumerApp,
