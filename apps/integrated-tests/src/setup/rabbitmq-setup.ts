@@ -51,10 +51,15 @@ class GlobalRabbitMQSetup {
 
   private async setupInitialQueues(): Promise<void> {
     await this.queueManager.clearQueue('dispatcher-queue');
-    await this.spyConsumerManager.setupSpyConsumer({
-      queueName: 'dispatcher-queue',
-      eventCollector: this.eventCollector
-    });
+    
+    // Only setup spy consumer if not using real Telegram
+    // Spy consumers interfere with real message processing
+    if (!process.env.SEND_REAL_TELEGRAM) {
+      await this.spyConsumerManager.setupSpyConsumer({
+        queueName: 'dispatcher-queue',
+        eventCollector: this.eventCollector
+      });
+    }
   }
 
   async globalCleanup(): Promise<void> {
@@ -104,11 +109,14 @@ export class RabbitMQTestSetup {
     this.queueManager = new RabbitMQQueueManager(this.connectionManager);
     this.spyConsumerManager = new RabbitMQSpyConsumerManager(this.connectionManager);
     
-    // Setup spy consumer for dispatcher queue
-    await this.spyConsumerManager.setupSpyConsumer({
-      queueName: 'dispatcher-queue',
-      eventCollector: this.eventCollector
-    });
+    // Only setup spy consumer if not using real Telegram
+    // Spy consumers interfere with real message processing
+    if (!process.env.SEND_REAL_TELEGRAM) {
+      await this.spyConsumerManager.setupSpyConsumer({
+        queueName: 'dispatcher-queue',
+        eventCollector: this.eventCollector
+      });
+    }
     
     this.isSetup = true;
   }

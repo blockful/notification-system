@@ -29,7 +29,12 @@ export class RabbitMQConsumer {
         this.channel.ack(msg);
       } catch (error) {
         console.error('[RabbitMQConsumer] Error in message handler:', error);
-        this.channel.nack(msg, false, true);
+        // Try to nack the message, but handle errors gracefully
+        try {
+          this.channel.nack(msg, false, true);
+        } catch (nackError) {
+          console.error('[RabbitMQConsumer] Failed to nack message (channel may be closed):', nackError);
+        }
       }
     });
   }

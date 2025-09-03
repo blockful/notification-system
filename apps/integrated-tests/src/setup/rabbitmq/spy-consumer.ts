@@ -61,8 +61,13 @@ export class RabbitMQSpyConsumerManager implements SpyConsumerManager {
    * @return Promise<void> Resolves when all spy consumers are successfully cleaned up
    */
   async cleanup(): Promise<void> {
-    for (const [_, channel] of this.spyConsumers) {
-      await channel.close();
+    for (const [queueName, channel] of this.spyConsumers) {
+      try {
+        await channel.close();
+      } catch (error) {
+        // Channel may already be closed or errored
+        console.warn(`[SpyConsumer] Error closing channel for ${queueName}:`, error);
+      }
     }
     this.spyConsumers.clear();
   }
