@@ -14,7 +14,7 @@ import axios from 'axios';
 import { App } from './app';
 import { loadConfig } from './config/env';
 import { EnsResolverService } from './services/ens-resolver.service';
-import { TelegramClient } from './clients/telegram.client';
+import { TelegramClient } from './telegram.client';
 
 const config = loadConfig();
 

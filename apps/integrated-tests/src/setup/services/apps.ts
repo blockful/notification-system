@@ -7,7 +7,7 @@ import { RabbitMQTestSetup } from '../rabbitmq-setup';
 import { serviceConfig, timeouts } from '../../config';
 import { waitFor } from '../../helpers/utilities/wait-for';
 import { MockEnsResolverService } from '../../mocks/ens-resolver-mock';
-import { TestTelegramClient } from '@notification-system/consumer/dist/clients/test-telegram.client';
+import { TelegramTestClient } from '../../test-clients/telegram-test.client';
 import { jest } from '@jest/globals';
 
 /**
@@ -82,12 +82,12 @@ const createTelegramClient = () => {
   let telegramClient;
   
   if (process.env.SEND_REAL_TELEGRAM) {
-    // Use TestTelegramClient with real bot token
+    // Use TelegramTestClient with real bot token
     const botToken = process.env.TELEGRAM_BOT_TOKEN || TEST_CONFIG.telegram.botToken;
-    telegramClient = new TestTelegramClient(mockSendMessage);
+    telegramClient = new TelegramTestClient(mockSendMessage, botToken);
   } else {
-    // Use TestTelegramClient in mock-only mode
-    telegramClient = new TestTelegramClient(mockSendMessage);
+    // Use TelegramTestClient in mock-only mode
+    telegramClient = new TelegramTestClient(mockSendMessage);
   }
   
   return { telegramClient, mockSendMessage };

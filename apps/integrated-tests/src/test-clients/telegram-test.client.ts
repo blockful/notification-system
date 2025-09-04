@@ -9,7 +9,7 @@ import {
   TelegramClientInterface, 
   SendMessageOptions, 
   HandlerRegistration 
-} from '../interfaces/telegram-client.interface';
+} from '@notification-system/consumer/dist/interfaces/telegram-client.interface';
 
 export interface CapturedMessage {
   chatId: string | number;
@@ -18,7 +18,7 @@ export interface CapturedMessage {
   timestamp: Date;
 }
 
-export class TestTelegramClient implements TelegramClientInterface {
+export class TelegramTestClient implements TelegramClientInterface {
   private messages: CapturedMessage[] = [];
   private running: boolean = false;
   private handlers: {

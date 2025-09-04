@@ -7,7 +7,7 @@ import { EnsResolverService } from './services/ens-resolver.service';
 import { AnticaptureClient } from '@notification-system/anticapture-client';
 import { SubscriptionAPIService } from './services/subscription-api.service';
 import { RabbitMQNotificationConsumerService } from './services/rabbitmq-notification-consumer.service';
-import { TelegramClient } from './interfaces/telegram-client.interface';
+import { TelegramClientInterface } from './interfaces/telegram-client.interface';
 
 export class App {
   private telegramBotService: TelegramBotService;
@@ -19,7 +19,7 @@ export class App {
     httpClient: AxiosInstance,
     rabbitmqUrl: string,
     ensResolver: EnsResolverService,
-    telegramClient: TelegramClient
+    telegramClient: TelegramClientInterface
   ) {
     const subscriptionApi = new SubscriptionAPIService(subscriptionServerUrl);
     const anticaptureClient = new AnticaptureClient(httpClient);

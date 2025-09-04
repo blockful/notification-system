@@ -12,17 +12,17 @@ import { ExplorerService } from '../services/explorer.service';
 import { EnsResolverService } from '../services/ens-resolver.service';
 import { ContextWithSession, MatchedContext } from '../interfaces/bot.interface';
 import { NotificationPayload } from '../interfaces/notification.interface';
-import { TelegramClient } from '../interfaces/telegram-client.interface';
+import { TelegramClientInterface } from '../interfaces/telegram-client.interface';
 
 export class TelegramBotService {
-  private telegramClient: TelegramClient;
+  private telegramClient: TelegramClientInterface;
   private daoService: DAOService;
   private walletService: WalletService;
   private explorerService: ExplorerService;
   private ensResolver: EnsResolverService;
 
   constructor(
-    telegramClient: TelegramClient,
+    telegramClient: TelegramClientInterface,
     daoService: DAOService, 
     walletService: WalletService,
     explorerService: ExplorerService,
