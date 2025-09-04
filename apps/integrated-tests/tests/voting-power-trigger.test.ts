@@ -42,9 +42,6 @@ describe('Voting Power Trigger - Integration Test', () => {
     // Create user address mapping to link user to wallet address
     await UserFactory.createUserAddress(userWithSub.id, testUserWithSubscription, pastTimestamp);
     
-    // Ensure the mapping exists in the real DB when using real Telegram
-    await UserFactory.ensureUserAddressInRealDB(userWithSub.id, testUserWithSubscription, pastTimestamp);
-    
     // Create voting power data with a timestamp that's after the user subscription
     // Add some buffer time to ensure the event happens after the user subscription
     const eventTimestamp = (Math.floor(Date.now() / 1000) + 10).toString(); // 10 seconds in the future

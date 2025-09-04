@@ -162,52 +162,6 @@ export class UserFactory {
   }
 
   /**
-   * @notice Ensures user address mapping exists in the real database
-   * @dev Only executes when SEND_REAL_TELEGRAM is set, for integration testing
-   * @param userId The user's unique identifier
-   * @param address The wallet address to map
-   * @param timestamp Optional timestamp for record creation
-   * @return Promise resolving when operation completes
-   */
-  static async ensureUserAddressInRealDB(
-    userId: string,
-    address: string,
-    timestamp?: string
-  ): Promise<void> {
-    console.log('ensureUserAddressInRealDB called with:', { userId, address, SEND_REAL_TELEGRAM: process.env.SEND_REAL_TELEGRAM });
-    
-    // Only execute when using real Telegram
-    if (!process.env.SEND_REAL_TELEGRAM) {
-      console.log('Skipping ensureUserAddressInRealDB - SEND_REAL_TELEGRAM not set');
-      return;
-    }
-    
-    // First check if user exists
-    const user = await db('users').where({ id: userId }).first();
-    console.log('User in DB:', user ? `Found user with id=${userId}` : `USER NOT FOUND with id=${userId}`);
-    
-    // Check if mapping already exists
-    const existing = await db('user_addresses')
-      .where({ user_id: userId, address: address })
-      .first();
-    
-    if (!existing) {
-      // Create the mapping if it doesn't exist
-      await db('user_addresses').insert({
-        id: uuidv4(),
-        user_id: userId,
-        address: address,
-        is_active: true,
-        created_at: timestamp || new Date().toISOString(),
-        updated_at: timestamp || new Date().toISOString()
-      });
-      console.log(`Created user_address mapping in real DB: user=${userId}, address=${address}`);
-    } else {
-      console.log(`User_address mapping already exists: user=${userId}, address=${address}`);
-    }
-  }
-
-  /**
    * @notice Creates a user with DAO subscription and followed addresses
    * @param channelUserId The user's channel identifier
    * @param name The user's display name
