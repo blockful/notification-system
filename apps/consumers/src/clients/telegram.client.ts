@@ -35,16 +35,16 @@ export class TelegramClient implements TelegramClientInterface {
   setupHandlers(registration: (handlers: HandlerRegistration) => void): void {
     const handlers: HandlerRegistration = {
       command: (command, handler) => {
-        this.bot.command(command, handler as any);
+        this.bot.command(command, handler);
       },
       hears: (text, handler) => {
-        this.bot.hears(text, handler as any);
+        this.bot.hears(text, handler);
       },
       action: (action, handler) => {
-        this.bot.action(action, handler as any);
+        this.bot.action(action, handler);
       },
       on: (event, handler) => {
-        this.bot.on(event as any, handler as any);
+        this.bot.on(event, handler);
       },
       use: (middleware) => {
         this.bot.use(middleware);
