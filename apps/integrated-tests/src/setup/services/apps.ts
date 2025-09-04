@@ -60,7 +60,7 @@ const TEST_CONFIG = {
  * @return Object containing setup instance and connection URL
  */
 const setupRabbitMQ = async (): Promise<{ rabbitmqSetup: RabbitMQTestSetup; rabbitmqUrl: string }> => {
-  const rabbitmqSetup = new RabbitMQTestSetup();
+  const rabbitmqSetup = RabbitMQTestSetup.getInstance();
   const rabbitmqUrl = process.env.TEST_RABBITMQ_URL || await rabbitmqSetup.setup();
   return { rabbitmqSetup, rabbitmqUrl };
 };

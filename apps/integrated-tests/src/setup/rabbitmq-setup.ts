@@ -1,216 +1,210 @@
-import { EventCollector, CollectedEvent } from '../helpers/messaging/event-collector';
-import { RabbitMQContainerManager } from './rabbitmq/container-manager';
-import { RabbitMQConnectionManager } from './rabbitmq/connection-manager';
-import { RabbitMQQueueManager } from './rabbitmq/queue-manager';
-import { RabbitMQSpyConsumerManager } from './rabbitmq/spy-consumer';
-import { RabbitMQSetupConfig } from './types/rabbitmq-setup.types';
+import { RabbitMQContainer, StartedRabbitMQContainer } from '@testcontainers/rabbitmq';
+import { RabbitMQConnection } from '@notification-system/rabbitmq-client';
+import { EventCollector } from '../helpers/messaging/event-collector';
+import { timeouts } from '../config';
+
+const STANDARD_QUEUES = [
+  'logic-system-queue',
+  'dispatcher-queue',
+  'consumer-queue',
+  'subscription-queue'
+];
 
 /**
- * Global singleton RabbitMQ setup for all tests
- * This ensures we only create one container for the entire test suite
+ * Simplified RabbitMQ setup for tests
+ * Single class, direct methods, no over-abstraction
  */
-class GlobalRabbitMQSetup {
-  private containerManager = new RabbitMQContainerManager();
-  private connectionManager = new RabbitMQConnectionManager();
-  private queueManager = new RabbitMQQueueManager(this.connectionManager);
-  private spyConsumerManager = new RabbitMQSpyConsumerManager(this.connectionManager);
-  private eventCollector = new EventCollector();
-  private isStarted = false;
-  
-  async getOrCreateSetup(): Promise<RabbitMQSetupConfig> {
-    if (this.isStarted) {
-      const container = await this.containerManager.getContainer();
-      return {
-        amqpUrl: container.getAmqpUrl(),
-        eventCollector: this.eventCollector,
-        cleanup: () => this.queueManager.clearQueue('dispatcher-queue'),
-        reset: () => this.eventCollector.clear()
-      };
-    }
-
-    console.log('Starting global RabbitMQ container...');
-    
-    // Setup container and connection
-    const container = await this.containerManager.getContainer();
-    const amqpUrl = container.getAmqpUrl();
-    await this.connectionManager.initialize(amqpUrl);
-    
-    // Setup initial queues and spy consumers
-    await this.setupInitialQueues();
-    
-    this.isStarted = true;
-    console.log('Global RabbitMQ setup complete');
-    
-    return {
-      amqpUrl,
-      eventCollector: this.eventCollector,
-      cleanup: () => this.queueManager.clearQueue('dispatcher-queue'),
-      reset: () => this.eventCollector.clear()
-    };
-  }
-
-  private async setupInitialQueues(): Promise<void> {
-    await this.queueManager.clearQueue('dispatcher-queue');
-    
-    // Only setup spy consumer if not using real Telegram
-    // Spy consumers interfere with real message processing
-    if (!process.env.SEND_REAL_TELEGRAM) {
-      await this.spyConsumerManager.setupSpyConsumer({
-        queueName: 'dispatcher-queue',
-        eventCollector: this.eventCollector
-      });
-    }
-  }
-
-  async globalCleanup(): Promise<void> {
-    if (!this.isStarted) return;
-    
-    await this.spyConsumerManager.cleanup();
-    await this.connectionManager.cleanup();
-    await this.containerManager.cleanup();
-
-    this.isStarted = false;
-    this.eventCollector.clear();
-  }
-}
-
-// Global singleton instance
-const globalRabbitMQSetup = new GlobalRabbitMQSetup();
-
 export class RabbitMQTestSetup {
-  private connectionManager: RabbitMQConnectionManager | null = null;
-  private queueManager: RabbitMQQueueManager | null = null;
-  private spyConsumerManager: RabbitMQSpyConsumerManager | null = null;
-  private eventCollector: EventCollector | null = null;
-  private amqpUrl = '';
-  private isSetup = false;
+  private static instance: RabbitMQTestSetup | null = null;
+  private container: StartedRabbitMQContainer | null = null;
+  private connection: RabbitMQConnection | null = null;
+  private eventCollector = new EventCollector();
+  private spyConsumers: any[] = [];
   
-  async setup(): Promise<string> {
-    if (this.isSetup) return this.amqpUrl;
-
-    const globalSetup = await globalRabbitMQSetup.getOrCreateSetup();
-    this.amqpUrl = globalSetup.amqpUrl;
-    this.eventCollector = globalSetup.eventCollector;
-    this.isSetup = true;
-    
-    return this.amqpUrl;
+  // Singleton pattern for global container reuse
+  static getInstance(): RabbitMQTestSetup {
+    if (!this.instance) {
+      this.instance = new RabbitMQTestSetup();
+    }
+    return this.instance;
   }
-  
-  async setupWithExistingContainer(amqpUrl: string): Promise<void> {
-    if (this.isSetup) return;
+
+  /**
+   * Start container and establish connection
+   * Returns AMQP URL for services to use
+   */
+  async setup(existingUrl?: string): Promise<string> {
+    // If already connected, return existing URL
+    if (this.connection) {
+      // Return the URL we're using (might be from external container)
+      return existingUrl || process.env.TEST_RABBITMQ_URL || this.container?.getAmqpUrl() || '';
+    }
     
-    this.amqpUrl = amqpUrl;
-    this.eventCollector = new EventCollector();
+    // If existing URL provided (from global setup), use it
+    let amqpUrl: string;
+    if (existingUrl || process.env.TEST_RABBITMQ_URL) {
+      amqpUrl = existingUrl || process.env.TEST_RABBITMQ_URL!;
+      console.log('Using existing RabbitMQ container');
+      // Don't set this.container since we didn't create it
+    } else {
+      // Only create new container if no URL exists
+      console.log('Starting RabbitMQ container...');
+      this.container = await new RabbitMQContainer()
+        .withStartupTimeout(timeouts.rabbitmq.containerStartup)
+        .start();
+      
+      // Small delay for container initialization
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      
+      amqpUrl = this.container.getAmqpUrl();
+    }
     
-    // Setup managers for existing container
-    this.connectionManager = new RabbitMQConnectionManager();
-    await this.connectionManager.initialize(amqpUrl);
+    // Connect
+    this.connection = new RabbitMQConnection(amqpUrl);
+    await this.connection.connect();
+    console.log('RabbitMQ ready');
     
-    this.queueManager = new RabbitMQQueueManager(this.connectionManager);
-    this.spyConsumerManager = new RabbitMQSpyConsumerManager(this.connectionManager);
-    
-    // Only setup spy consumer if not using real Telegram
-    // Spy consumers interfere with real message processing
+    // Setup spy consumer if not using real Telegram
     if (!process.env.SEND_REAL_TELEGRAM) {
-      await this.spyConsumerManager.setupSpyConsumer({
-        queueName: 'dispatcher-queue',
-        eventCollector: this.eventCollector
-      });
+      await this.setupSpyConsumer('dispatcher-queue');
     }
     
-    this.isSetup = true;
+    return amqpUrl;
   }
 
-  async cleanup(): Promise<void> {
-    if (!this.isSetup) return;
+  /**
+   * Clear specific queue
+   */
+  async clearQueue(queueName: string): Promise<void> {
+    if (!this.connection) return;
     
-    if (this.queueManager) {
-      await this.queueManager.clearQueue('dispatcher-queue');
+    try {
+      const channel = await this.connection.createChannel();
+      await channel.assertQueue(queueName, { durable: true });
+      await channel.purgeQueue(queueName);
+      await channel.close();
+    } catch (error) {
+      console.warn(`Failed to clear queue ${queueName}:`, error);
     }
-    
-    if (this.spyConsumerManager) {
-      await this.spyConsumerManager.cleanup();
-    }
-    
-    if (this.connectionManager) {
-      await this.connectionManager.cleanup();
-    }
-    
-    this.connectionManager = null;
-    this.queueManager = null;
-    this.spyConsumerManager = null;
-    this.eventCollector = null;
-    this.isSetup = false;
   }
 
-  getEventCollector(): EventCollector {
-    if (!this.eventCollector) {
-      throw new Error('Setup not initialized. Call setup() or setupWithExistingContainer() first.');
+  /**
+   * Purge all standard queues
+   */
+  async purgeAllQueues(): Promise<void> {
+    if (!this.connection) return;
+    
+    for (const queue of STANDARD_QUEUES) {
+      await this.clearQueue(queue);
     }
-    return this.eventCollector;
   }
 
+  /**
+   * Setup spy consumer for testing
+   */
+  private async setupSpyConsumer(queueName: string): Promise<void> {
+    if (!this.connection) return;
+    
+    const channel = await this.connection.createChannel();
+    await channel.assertQueue(queueName, { durable: true });
+    
+    const consumer = await channel.consume(queueName, (msg) => {
+      if (msg) {
+        const data = JSON.parse(msg.content.toString());
+        this.eventCollector.collect({
+          source: queueName,
+          data,
+          timestamp: Date.now()
+        });
+        // Important: nack with requeue=true to keep message in queue for real consumer
+        channel.nack(msg, false, true);
+      }
+    }, { noAck: false });
+    
+    this.spyConsumers.push({ channel, consumerTag: consumer.consumerTag });
+  }
+
+  /**
+   * Wait for a specific message
+   */
   async waitForMessage<T = any>(
     queueName: string,
     predicate: (message: T) => boolean,
     options?: { timeout?: number }
-  ): Promise<CollectedEvent<T>> {
-    const eventCollector = this.getEventCollector();
-    return eventCollector.waitForEvent<T>(
+  ) {
+    return this.eventCollector.waitForEvent<T>(
       (event) => event.source === queueName && predicate(event.data),
       options
     );
   }
 
+  /**
+   * Wait for N messages
+   */
   async waitForMessageCount(
     queueName: string,
     expectedCount: number,
     options?: { timeout?: number }
-  ): Promise<CollectedEvent[]> {
-    const eventCollector = this.getEventCollector();
-    return eventCollector.waitForEventCount(
+  ) {
+    return this.eventCollector.waitForEventCount(
       expectedCount,
       { ...options, source: queueName }
     );
   }
 
+  /**
+   * Clear collected events
+   */
   clearCollectedEvents(): void {
-    this.getEventCollector().clear();
+    this.eventCollector.clear();
   }
 
   /**
-   * Purge all queues to ensure clean state between tests
-   * This removes all messages from the queues
+   * Get event collector for direct access
    */
-  async purgeAllQueues(): Promise<void> {
-    if (!this.connection) {
-      return;
-    }
+  getEventCollector(): EventCollector {
+    return this.eventCollector;
+  }
 
-    const channel = await this.connection.createChannel();
-    
-    const queues = [
-      'logic-system-queue',
-      'dispatcher-queue', 
-      'consumer-queue',
-      'subscription-queue'
-    ];
+  /**
+   * Reset state for next test
+   */
+  async reset(): Promise<void> {
+    this.eventCollector.clear();
+    await this.clearQueue('dispatcher-queue');
+  }
 
-    for (const queueName of queues) {
-      try {
-        // Assert queue exists and purge it
-        await channel.checkQueue(queueName);
-        await channel.purgeQueue(queueName);
-        console.log(`Purged queue: ${queueName}`);
-      } catch (error) {
-        // Queue might not exist, that's ok
-        console.log(`Could not purge queue ${queueName}:`, error);
+  /**
+   * Full cleanup (only for global teardown)
+   */
+  async cleanup(): Promise<void> {
+    // Close spy consumers
+    for (const spy of this.spyConsumers) {
+      if (spy.consumerTag) {
+        await spy.channel.cancel(spy.consumerTag);
       }
+      await spy.channel.close();
     }
-
-    await channel.close();
+    this.spyConsumers = [];
+    
+    // Close connection
+    if (this.connection) {
+      await this.connection.close();
+      this.connection = null;
+    }
+    
+    // Stop container
+    if (this.container) {
+      await this.container.stop();
+      this.container = null;
+    }
+    
+    // Clear state
+    this.eventCollector.clear();
+    RabbitMQTestSetup.instance = null;
   }
 }
 
-// Export the global cleanup function for Jest teardown
-export { globalRabbitMQSetup };
+// Export singleton instance and factory
+export const rabbitmqSetup = RabbitMQTestSetup.getInstance();
+export default RabbitMQTestSetup;

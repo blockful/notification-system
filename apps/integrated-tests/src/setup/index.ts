@@ -11,4 +11,4 @@ export * from './services/apps';
 
 // RabbitMQ setup
 export * from './rabbitmq-setup';
-export * from './types/rabbitmq-setup.types';
+export { rabbitmqSetup } from './rabbitmq-setup';
