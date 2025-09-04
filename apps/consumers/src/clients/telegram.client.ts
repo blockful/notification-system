@@ -7,13 +7,13 @@ import { Telegraf, Context } from 'telegraf';
 import { session } from 'telegraf/session';
 import { Message } from 'telegraf/types';
 import { 
-  TelegramClient, 
+  TelegramClientInterface, 
   SendMessageOptions, 
   HandlerRegistration 
 } from '../interfaces/telegram-client.interface';
 import { ContextWithSession } from '../interfaces/bot.interface';
 
-export class RealTelegramClient implements TelegramClient {
+export class TelegramClient implements TelegramClientInterface {
   private bot: Telegraf<ContextWithSession>;
   private running: boolean = false;
   private sendOnlyMode: boolean;

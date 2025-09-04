@@ -20,7 +20,7 @@ export interface HandlerRegistration {
   use(middleware: any): void;
 }
 
-export interface TelegramClient {
+export interface TelegramClientInterface {
   /**
    * Send a message to a specific chat
    * @param chatId The chat identifier

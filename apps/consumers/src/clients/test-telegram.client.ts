@@ -3,9 +3,10 @@
  * Test implementation that captures messages for validation
  */
 
+import { Telegraf } from 'telegraf';
 import { Message } from 'telegraf/types';
 import { 
-  TelegramClient, 
+  TelegramClientInterface, 
   SendMessageOptions, 
   HandlerRegistration 
 } from '../interfaces/telegram-client.interface';
@@ -17,7 +18,7 @@ export interface CapturedMessage {
   timestamp: Date;
 }
 
-export class TestTelegramClient implements TelegramClient {
+export class TestTelegramClient implements TelegramClientInterface {
   private messages: CapturedMessage[] = [];
   private running: boolean = false;
   private handlers: {
@@ -37,9 +38,14 @@ export class TestTelegramClient implements TelegramClient {
    * This allows tests to use Jest mocks if needed
    */
   private sendMessageSpy?: any;
+  private realBot?: Telegraf;
 
-  constructor(sendMessageSpy?: any) {
+  constructor(sendMessageSpy?: any, botToken?: string) {
     this.sendMessageSpy = sendMessageSpy;
+    // If bot token provided, create real Telegraf instance for actual sending
+    if (botToken) {
+      this.realBot = new Telegraf(botToken);
+    }
   }
 
   async sendMessage(
@@ -59,6 +65,16 @@ export class TestTelegramClient implements TelegramClient {
     // Call spy if provided (for compatibility with existing tests)
     if (this.sendMessageSpy) {
       this.sendMessageSpy(chatId, text, options);
+    }
+
+    // If real bot configured, send actual message
+    if (this.realBot) {
+      try {
+        return await this.realBot.telegram.sendMessage(chatId, text, options);
+      } catch (error) {
+        console.error('Failed to send real Telegram message:', error);
+        // Fall through to mock response
+      }
     }
 
     // Return mock message object

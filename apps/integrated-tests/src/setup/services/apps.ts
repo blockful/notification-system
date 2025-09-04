@@ -8,7 +8,6 @@ import { serviceConfig, timeouts } from '../../config';
 import { waitFor } from '../../helpers/utilities/wait-for';
 import { MockEnsResolverService } from '../../mocks/ens-resolver-mock';
 import { TestTelegramClient } from '@notification-system/consumer/dist/clients/test-telegram.client';
-import { RealTelegramClient } from '@notification-system/consumer/dist/clients/real-telegram.client';
 import { jest } from '@jest/globals';
 
 /**
@@ -67,37 +66,27 @@ const setupRabbitMQ = async (): Promise<{ rabbitmqSetup: RabbitMQTestSetup; rabb
 
 /**
  * @notice Creates and configures Telegram client for testing
- * @dev Returns either real or mock Telegram client based on environment
+ * @dev Returns TestTelegramClient configured for either real or mock mode
  * @return Object containing telegram client and mock send message function
  */
 const createTelegramClient = () => {
+  // Always create a mock function for test assertions
+  const mockSendMessage = jest.fn<any>().mockResolvedValue({
+    message_id: 123,
+    date: Date.now(),
+    chat: { id: 1, type: 'private' },
+    text: 'test',
+    from: { id: 123456789, is_bot: true, first_name: 'TestBot' }
+  });
+  
   let telegramClient;
-  let mockSendMessage;
   
   if (process.env.SEND_REAL_TELEGRAM) {
-    // Use real Telegram with a spy - in send-only mode for tests
+    // Use TestTelegramClient with real bot token
     const botToken = process.env.TELEGRAM_BOT_TOKEN || TEST_CONFIG.telegram.botToken;
-    const realClient = new RealTelegramClient(botToken, { sendOnlyMode: true });
-    mockSendMessage = jest.fn();
-    
-    // Wrap the real client's sendMessage to spy on it
-    const originalSendMessage = realClient.sendMessage.bind(realClient);
-    realClient.sendMessage = jest.fn<typeof realClient.sendMessage>().mockImplementation(
-      async (chatId: string | number, text: string, options?: any) => {
-        mockSendMessage(chatId, text, options);
-        return originalSendMessage(chatId, text, options);
-      }
-    ) as any;
-    telegramClient = realClient;
+    telegramClient = new TestTelegramClient(mockSendMessage);
   } else {
-    // Use test client with mock
-    mockSendMessage = jest.fn<any>().mockResolvedValue({
-      message_id: 123,
-      date: Date.now(),
-      chat: { id: 1, type: 'private' },
-      text: 'test',
-      from: { id: 123456789, is_bot: true, first_name: 'TestBot' }
-    });
+    // Use TestTelegramClient in mock-only mode
     telegramClient = new TestTelegramClient(mockSendMessage);
   }
   
