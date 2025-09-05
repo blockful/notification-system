@@ -161,17 +161,14 @@ export class VoteConfirmationTriggerHandler extends BaseTriggerHandler<VoteEvent
     const emoji = this.getSupportEmoji(vote.support);
     const votingPower = this.formatVotingPower(vote.votingPower);
     
-    let message = `${emoji} Your vote has been cast!\n\n`;
-    message += `DAO: ${vote.daoId}\n`;
-    message += `Proposal: #${vote.proposalId.slice(0, 8)}...\n`;
-    message += `Your position: ${position}\n`;
-    message += `Voting power: ${votingPower} votes\n`;
+    let message = `${emoji} Your vote just went through on ${vote.daoId}!\n`;
+    message += `You voted ${position} on proposal #${vote.proposalId.slice(0, 8)}... with ${votingPower} voting power.`;
     
     if (vote.reason && vote.reason.trim()) {
-      message += `\nYour reason: "${vote.reason}"\n`;
+      message += `\n\nYour reason: "${vote.reason}"`;
     }
     
-    message += `\nView transaction →`;
+    message += `\n\n{{txLink}}`;
     
     return message;
   }

@@ -68,14 +68,14 @@ describe('Vote Confirmation Trigger - Integration Test', () => {
     
     // Wait for notification
     const message = await telegramHelper.waitForMessage(
-      msg => msg.text.includes('vote has been cast') || msg.text.includes('Your vote'),
+      msg => msg.text.includes('Your vote just went through') || msg.text.includes('Your vote'),
       { timeout: timeouts.notification.delivery }
     );
     
     // Verify message content for FOR vote
     expect(message.text).toContain('✅'); // FOR emoji
-    expect(message.text).toMatch(/FOR|vote has been cast/i);
-    expect(message.text).toContain('View transaction');
+    expect(message.text).toMatch(/FOR|Your vote just went through/i);
+    expect(message.text).toContain('Transaction details');
     expect(message.text).not.toContain('{{txLink}}');
     expect(message.chatId).toBe(testUser.chatId);
   });
@@ -121,14 +121,14 @@ describe('Vote Confirmation Trigger - Integration Test', () => {
     );
     
     const message = await telegramHelper.waitForMessage(
-      msg => msg.text.includes('vote has been cast') || msg.text.includes('Your vote'),
+      msg => msg.text.includes('Your vote just went through') || msg.text.includes('Your vote'),
       { timeout: timeouts.notification.delivery }
     );
     
     // Verify message content for AGAINST vote
     expect(message.text).toContain('❌'); // AGAINST emoji
-    expect(message.text).toMatch(/AGAINST|vote has been cast/i);
-    expect(message.text).toContain('View transaction');
+    expect(message.text).toMatch(/AGAINST|Your vote just went through/i);
+    expect(message.text).toContain('Transaction details');
     expect(message.chatId).toBe(testUser.chatId);
   });
 
@@ -173,14 +173,14 @@ describe('Vote Confirmation Trigger - Integration Test', () => {
     );
     
     const message = await telegramHelper.waitForMessage(
-      msg => msg.text.includes('vote has been cast') || msg.text.includes('Your vote'),
+      msg => msg.text.includes('Your vote just went through') || msg.text.includes('Your vote'),
       { timeout: timeouts.notification.delivery }
     );
     
     // Verify message content for ABSTAIN vote
     expect(message.text).toContain('⚪'); // ABSTAIN emoji
-    expect(message.text).toMatch(/ABSTAIN|vote has been cast/i);
-    expect(message.text).toContain('View transaction');
+    expect(message.text).toMatch(/ABSTAIN|Your vote just went through/i);
+    expect(message.text).toContain('Transaction details');
     expect(message.chatId).toBe(testUser.chatId);
   });
 
@@ -227,7 +227,7 @@ describe('Vote Confirmation Trigger - Integration Test', () => {
     
     // Wait for first notification
     const firstMessage = await telegramHelper.waitForMessage(
-      msg => msg.text.includes('vote has been cast') || msg.text.includes('Your vote'),
+      msg => msg.text.includes('Your vote just went through') || msg.text.includes('Your vote'),
       { timeout: timeouts.notification.delivery }
     );
     
@@ -239,7 +239,7 @@ describe('Vote Confirmation Trigger - Integration Test', () => {
     // Wait and verify no second notification is sent
     const startTime = Date.now();
     const messagePromise = telegramHelper.waitForMessage(
-      msg => msg.text.includes('vote has been cast') || msg.text.includes('Your vote'),
+      msg => msg.text.includes('Your vote just went through') || msg.text.includes('Your vote'),
       { timeout: timeouts.wait.short }
     );
     
@@ -370,7 +370,7 @@ describe('Vote Confirmation Trigger - Integration Test', () => {
     
     // Verify no notification is sent
     const messagePromise = telegramHelper.waitForMessage(
-      msg => msg.text.includes('vote has been cast') || msg.text.includes('Your vote'),
+      msg => msg.text.includes('Your vote just went through') || msg.text.includes('Your vote'),
       { timeout: timeouts.wait.short }
     );
     
