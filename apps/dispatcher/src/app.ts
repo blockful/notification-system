@@ -14,6 +14,7 @@ import { AnticaptureClient } from '@notification-system/anticapture-client';
 export class App {
   private rabbitMQConsumerService!: RabbitMQConsumerService;
   private rabbitmqConnection!: RabbitMQConnection;
+  private publisher!: RabbitMQPublisher;
   private isCreated = false;
 
   constructor(
@@ -45,9 +46,9 @@ export class App {
     
     this.rabbitmqConnection = new RabbitMQConnection(this.rabbitmqUrl);
     await this.rabbitmqConnection.connect();
-    const publisher = await RabbitMQPublisher.create(this.rabbitmqConnection);
+    this.publisher = await RabbitMQPublisher.create(this.rabbitmqConnection);
     const notificationFactory = new NotificationClientFactory();
-    notificationFactory.addClient('telegram', new RabbitMQNotificationService(publisher));
+    notificationFactory.addClient('telegram', new RabbitMQNotificationService(this.publisher));
     const triggerProcessorService = new TriggerProcessorService();
 
     triggerProcessorService.addHandler(
@@ -82,7 +83,16 @@ export class App {
   }
 
   async stop(): Promise<void> {
-    await this.rabbitMQConsumerService?.stop();
-    await this.rabbitmqConnection?.close();
+    if (this.rabbitMQConsumerService) {
+      await this.rabbitMQConsumerService.stop();
+    }
+    
+    if (this.publisher) {
+      await this.publisher.close();
+    }
+    
+    if (this.rabbitmqConnection) {
+      await this.rabbitmqConnection.close();
+    }
   }
 } 

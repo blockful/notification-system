@@ -23,7 +23,12 @@ export class RabbitMQConsumerService {
   }
 
   async stop(): Promise<void> {
-    await this.consumer.close();
-    await this.connection.close();
+    if (this.consumer) {
+      await this.consumer.close();
+    }
+    
+    if (this.connection) {
+      await this.connection.close();
+    }
   }
 }

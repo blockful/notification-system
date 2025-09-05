@@ -107,8 +107,9 @@ describe('NonVotingHandler', () => {
     expect(result.messageId).toBe('proposal-finished');
     expect(mockAnticaptureClient.listProposals).toHaveBeenCalledWith(
       expect.objectContaining({
-        status: expect.arrayContaining(['SUCCEEDED']),
-        limit: 3
+        status: expect.arrayContaining(['EXECUTED', 'SUCCEEDED', 'DEFEATED', 'EXPIRED', 'CANCELED']),
+        limit: 15,
+        orderDirection: 'desc'
       }),
       'ENS'
     );
