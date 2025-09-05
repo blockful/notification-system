@@ -35,14 +35,20 @@ export class RabbitMQNotificationConsumerService {
   }
 
   async stop(): Promise<void> {
-    await this.consumer.close();
-    await this.connection.close();
+    if (this.consumer) {
+      await this.consumer.close();
+    }
+    
+    if (this.connection) {
+      await this.connection.close();
+    }
   }
 
   private async processNotification(message: RabbitMQMessage<NotificationPayload>): Promise<void> {
     if (message.type !== 'NOTIFICATION_EVENT') {
       return;
     }
+    
     try {
       await this.telegramBotService.sendNotification(message.payload);
     } catch (error: any) {

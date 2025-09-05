@@ -81,7 +81,7 @@ describe('Multi-DAO Notification Flow - Integration Test', () => {
     GraphQLMockSetup.setupMock(httpMockSetup.getMockClient(), multipleUniProposals);
     
     // Wait for all 6 messages (3 proposals × 2 UNI followers)
-    await telegramHelper.waitForMessageCount(6, { timeout: timeouts.notification.delivery });
+    await telegramHelper.waitForMessageCount(6);
     
     // Get all messages and verify distribution
     const allMessages = telegramHelper.getAllMessages();
