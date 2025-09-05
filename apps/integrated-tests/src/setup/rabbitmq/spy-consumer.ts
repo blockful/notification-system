@@ -31,17 +31,8 @@ export class RabbitMQSpyConsumerManager implements SpyConsumerManager {
     
     // Create connection if not exists
     if (!this.connection) {
-      console.log('[SpyConsumer] Creating rabbitmq-client connection to:', url.replace(/\/\/[^:]+:[^@]+@/, '//***:***@'));
       this.connection = new Connection(url);
-      
-      // Wait for connection to be ready
-      try {
-        await this.connection.onConnect(5000);
-        console.log('[SpyConsumer] Connected successfully');
-      } catch (error) {
-        console.error('[SpyConsumer] Failed to connect:', error);
-        throw error;
-      }
+      await this.connection.onConnect(5000);
     }
     
     // Create a spy consumer that intercepts and requeues messages
