@@ -55,6 +55,7 @@ export const testConstants = {
     temporalTest8: 'TEMPORAL_DAO_8',
     temporalTest9: 'TEMPORAL_DAO_9',
     secondDao: 'second-dao',
+    voteTest: 'test-dao-vote',
   },
   
   // Voting power test values 
