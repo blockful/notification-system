@@ -24,15 +24,20 @@ describe('Voting Power Trigger - Integration Test', () => {
 
   test('should send voting power change notification to subscribed users', async () => {
     const testDaoId = testConstants.daoIds.votingPowerTest;
-    const testUserWithSubscription = testConstants.profiles.p9.address;
+    const testUser = testConstants.profiles.p1;
+    const testUserWithSubscription = testUser.address;
     
     // Create users in database with a timestamp from the past to ensure temporal filtering works
     const pastTimestamp = new Date(Date.now() - timeouts.wait.long).toISOString(); // 10 seconds ago
     
-    const userWithSub = await UserFactory.createUser(testUserWithSubscription, 'voting-power-user');
-
-    // Create user preference (subscription equivalent) for voting power changes with past timestamp
-    await UserFactory.createUserPreference(userWithSub.id, testDaoId, true, pastTimestamp);
+    // Create user with full setup
+    const { user: userWithSub } = await UserFactory.createUserWithFullSetup(
+      testUser.chatId, 
+      'voting-power-user',
+      testDaoId,
+      true,
+      pastTimestamp
+    );
     
     // Create user address mapping to link user to wallet address
     await UserFactory.createUserAddress(userWithSub.id, testUserWithSubscription, pastTimestamp);
@@ -81,11 +86,6 @@ describe('Voting Power Trigger - Integration Test', () => {
     
     // Verify the message was sent to a user (we got a telegram message)
     expect(message.chatId).toBeDefined();
-    
-    console.log('Voting power notification sent successfully:', {
-      chatId: message.chatId,
-      text: message.text
-    });
   });
 
   test('should create voting power events with different types', async () => {

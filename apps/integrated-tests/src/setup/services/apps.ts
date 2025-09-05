@@ -66,7 +66,6 @@ export const startTestApps = async (db: Knex, mockHttpClient: any): Promise<Test
   // Create mock ENS resolver for tests
   const mockEnsResolver = new MockEnsResolverService() as any;
   
-  // Start consumer with mock ENS resolver
   const consumerApp = new ConsumerApp(
     TEST_CONFIG.telegram.botToken,
     TEST_CONFIG.urls.subscriptionServer,
@@ -76,7 +75,6 @@ export const startTestApps = async (db: Knex, mockHttpClient: any): Promise<Test
   );
   await consumerApp.start();
   
-  // Start dispatcher with mocked HTTP client
   const dispatcherApp = new DispatcherApp(
     TEST_CONFIG.urls.subscriptionServer, 
     rabbitmqUrl,

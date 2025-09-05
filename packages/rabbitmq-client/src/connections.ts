@@ -1,44 +1,47 @@
-import * as amqp from 'amqplib';
-import { AmqpConnection } from './types';
-
+import { Connection, Consumer as RabbitConsumer, Publisher as RabbitPublisher } from 'rabbitmq-client';
 
 export class RabbitMQConnection {
-  private connection: AmqpConnection | null = null;
+  private connection: Connection | null = null;
   private url: string;
+  private isClosing: boolean = false;
 
   constructor(url: string) {
-    this.url = url;
+    const urlObj = new URL(url);
+    
+    // Force IPv4 for consistency
+    if (urlObj.hostname === 'localhost') {
+      urlObj.hostname = '127.0.0.1';
+    }
+    
+    this.url = urlObj.toString();
   }
 
   async connect(): Promise<void> {
     if (!this.connection) {
-      this.connection = await amqp.connect(this.url);
+      this.connection = new Connection(this.url);
+      await this.connection.onConnect(5000);
     }
-  }
-
-  async createChannel(): Promise<amqp.Channel> {
-    if (!this.connection) {
-      throw new Error('No connection available. Call connect() first.');
-    }
-    return this.connection.createChannel();
-  }
-
-  async createConfirmChannel(): Promise<amqp.ConfirmChannel> {
-    if (!this.connection) {
-      throw new Error('No connection available. Call connect() first.');
-    }
-    return this.connection.createConfirmChannel();
   }
 
   async close(): Promise<void> {
-    if (!this.connection) {
+    if (!this.connection || this.isClosing) {
       return;
     }
-    await this.connection.close();
-    this.connection = null;
+    
+    this.isClosing = true;
+    try {
+      await this.connection.close();
+      this.connection = null;
+    } finally {
+      this.isClosing = false;
+    }
   }
 
   isConnected(): boolean {
-    return this.connection !== null;
+    return this.connection !== null && !this.isClosing;
+  }
+  
+  getConnection(): Connection | null {
+    return this.connection;
   }
 }

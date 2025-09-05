@@ -47,6 +47,7 @@ export class App {
     if (this.rabbitmqConsumerService) {
       await this.rabbitmqConsumerService.stop();
     }
+    
     this.telegramBotService.stop('SIGINT');
   }
 } 

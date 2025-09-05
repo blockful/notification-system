@@ -12,10 +12,11 @@ import { RabbitMQSetupConfig } from './types/rabbitmq-setup.types';
 class GlobalRabbitMQSetup {
   private containerManager = new RabbitMQContainerManager();
   private connectionManager = new RabbitMQConnectionManager();
-  private queueManager = new RabbitMQQueueManager(this.connectionManager);
-  private spyConsumerManager = new RabbitMQSpyConsumerManager(this.connectionManager);
+  private queueManager: RabbitMQQueueManager | null = null;
+  private spyConsumerManager: RabbitMQSpyConsumerManager | null = null;
   private eventCollector = new EventCollector();
   private isStarted = false;
+  private amqpUrl: string | null = null;
   
   async getOrCreateSetup(): Promise<RabbitMQSetupConfig> {
     if (this.isStarted) {
@@ -33,6 +34,12 @@ class GlobalRabbitMQSetup {
     // Setup container and connection
     const container = await this.containerManager.getContainer();
     const amqpUrl = container.getAmqpUrl();
+    this.amqpUrl = amqpUrl;
+    
+    // Initialize managers with the correct URL
+    this.queueManager = new RabbitMQQueueManager(this.connectionManager, amqpUrl);
+    this.spyConsumerManager = new RabbitMQSpyConsumerManager(this.connectionManager, amqpUrl);
+    
     await this.connectionManager.initialize(amqpUrl);
     
     // Setup initial queues and spy consumers
@@ -50,22 +57,30 @@ class GlobalRabbitMQSetup {
   }
 
   private async setupInitialQueues(): Promise<void> {
-    await this.queueManager.clearQueue('dispatcher-queue');
-    await this.spyConsumerManager.setupSpyConsumer({
-      queueName: 'dispatcher-queue',
-      eventCollector: this.eventCollector
-    });
+    if (this.queueManager && this.spyConsumerManager) {
+      await this.queueManager.clearQueue('dispatcher-queue');
+      await this.spyConsumerManager.setupSpyConsumer({
+        queueName: 'dispatcher-queue',
+        eventCollector: this.eventCollector
+      });
+    }
   }
 
   async globalCleanup(): Promise<void> {
     if (!this.isStarted) return;
     
-    await this.spyConsumerManager.cleanup();
+    if (this.spyConsumerManager) {
+      await this.spyConsumerManager.cleanup();
+    }
+    if (this.queueManager) {
+      await this.queueManager.cleanup();
+    }
     await this.connectionManager.cleanup();
     await this.containerManager.cleanup();
 
     this.isStarted = false;
     this.eventCollector.clear();
+    this.amqpUrl = null;
   }
 }
 
@@ -101,8 +116,8 @@ export class RabbitMQTestSetup {
     this.connectionManager = new RabbitMQConnectionManager();
     await this.connectionManager.initialize(amqpUrl);
     
-    this.queueManager = new RabbitMQQueueManager(this.connectionManager);
-    this.spyConsumerManager = new RabbitMQSpyConsumerManager(this.connectionManager);
+    this.queueManager = new RabbitMQQueueManager(this.connectionManager, amqpUrl);
+    this.spyConsumerManager = new RabbitMQSpyConsumerManager(this.connectionManager, amqpUrl);
     
     // Setup spy consumer for dispatcher queue
     await this.spyConsumerManager.setupSpyConsumer({
@@ -118,6 +133,7 @@ export class RabbitMQTestSetup {
     
     if (this.queueManager) {
       await this.queueManager.clearQueue('dispatcher-queue');
+      await this.queueManager.cleanup();
     }
     
     if (this.spyConsumerManager) {

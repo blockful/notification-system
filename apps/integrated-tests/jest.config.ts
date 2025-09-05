@@ -8,6 +8,6 @@ export default {
   globalTeardown: '<rootDir>/src/setup/jest/jest-global-teardown.ts',
   setupFilesAfterEnv: ['<rootDir>/src/setup/jest/jest-setup-after-env.ts'],
   forceExit: true,
-  silent: true,
+  silent: false,
   verbose: true,
 }; 

@@ -1,14 +1,37 @@
-import * as amqp from 'amqplib';
+import { Publisher } from 'rabbitmq-client';
 import { v4 as uuidv4 } from 'uuid';
 import { RabbitMQMessage, PublishMessage } from './types';
 import { RabbitMQConnection } from './connections';
 
 export class RabbitMQPublisher {
-  private constructor(private channel: amqp.ConfirmChannel) {}
+  private publisher: Publisher | null = null;
+  private connection: RabbitMQConnection;
+  private queueAssertions: Set<string> = new Set();
+
+  private constructor(connection: RabbitMQConnection) {
+    this.connection = connection;
+  }
 
   static async create(connection: RabbitMQConnection): Promise<RabbitMQPublisher> {
-    const channel = await connection.createConfirmChannel();
-    return new RabbitMQPublisher(channel);
+    // Ensure connection is established
+    await connection.connect();
+    return new RabbitMQPublisher(connection);
+  }
+
+  private async ensurePublisher(): Promise<Publisher> {
+    if (!this.publisher) {
+      const conn = this.connection.getConnection();
+      if (!conn) {
+        throw new Error('No connection available');
+      }
+      
+      this.publisher = conn.createPublisher({
+        confirm: true,
+        maxAttempts: 3,
+        exchanges: []
+      });
+    }
+    return this.publisher;
   }
 
   async publish<T = any>(
@@ -21,14 +44,38 @@ export class RabbitMQPublisher {
       ...message
     };
 
-    await this.channel.assertQueue(queueName, { durable: true });
+    const publisher = await this.ensurePublisher();
+    
+    if (!this.queueAssertions.has(queueName)) {
+      const conn = this.connection.getConnection();
+      if (conn) {
+        await conn.queueDeclare({
+          queue: queueName,
+          durable: true,
+          exclusive: false,
+          autoDelete: false
+        });
+        this.queueAssertions.add(queueName);
+      }
+    }
 
     const messageBuffer = Buffer.from(JSON.stringify(fullMessage));
-    this.channel.sendToQueue(queueName, messageBuffer, { persistent: true });
-    await this.channel.waitForConfirms();
+    
+    await publisher.send(
+      {
+        routingKey: queueName,
+        exchange: '',
+        durable: true
+      },
+      messageBuffer
+    );
   }
 
   async close(): Promise<void> {
-    await this.channel.close();
+    if (this.publisher) {
+      await this.publisher.close();
+      this.publisher = null;
+    }
+    this.queueAssertions.clear();
   }
 }

@@ -13,10 +13,18 @@ declare global {
  */
 export default async function globalSetup() {
   const container = await new RabbitMQContainer()
-    .withStartupTimeout(150000)
+    .withStartupTimeout(30000)
     .start();
   
-  const amqpUrl = container.getAmqpUrl();
+  let amqpUrl = container.getAmqpUrl();
+  
+  // Fix URL to include credentials (testcontainers doesn't include them)
+  const urlObj = new URL(amqpUrl);
+  if (!urlObj.username && !urlObj.password) {
+    urlObj.username = 'guest';
+    urlObj.password = 'guest';
+  }
+  amqpUrl = urlObj.toString();
   
   // Store RabbitMQ URL in environment variable for tests to access
   process.env.TEST_RABBITMQ_URL = amqpUrl;

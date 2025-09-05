@@ -38,13 +38,16 @@ describe('Duplicate Prevention - Integration Test', () => {
   });
 
   test('should not send duplicate notifications on repeated logic system triggers', async () => {
+    // Clear any setup messages before starting the actual test
+    if (global.mockSendMessage) {
+      global.mockSendMessage.mockClear();
+    }
     // Setup mock to return the same UNI proposal consistently
     const persistentProposal = ProposalFactory.createProposal(testConstants.daoIds.uniswap, 'persistent-uni-proposal');
     GraphQLMockSetup.setupMock(httpMockSetup.getMockClient(), [persistentProposal]);
     
     // Wait for first round of notifications (2 users should get notified)
-    await telegramHelper.waitForMessageCount(2, { timeout: timeouts.notification.delivery });
-    
+    await telegramHelper.waitForMessageCount(2, { timeout: timeouts.notification.delivery });       
     // Verify notifications were sent to both users
     const firstRoundMessages = telegramHelper.getAllMessages();
     expect(firstRoundMessages).toHaveLength(2);
@@ -54,7 +57,6 @@ describe('Duplicate Prevention - Integration Test', () => {
     // Verify notifications were recorded in database
     await dbHelper.waitForRecordCount(testConstants.tables.notifications, 2);
     
-    // Wait a bit to ensure logic system triggers again (500ms interval)
     // But no new notifications should be sent
     await telegramHelper.waitForNoMessages(timeouts.notification.processing);
     

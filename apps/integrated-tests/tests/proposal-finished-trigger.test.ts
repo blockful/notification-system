@@ -49,7 +49,7 @@ describe('Proposal Finished Trigger - Integration Test', () => {
 
   test('should send notification when proposal finishes', async () => {
     const testDaoId = testConstants.daoIds.temporalTest1;
-    const testUser = testConstants.profiles.p9;
+    const testUser = testConstants.profiles.p1;
     
     // Create user with subscription before proposal
     const subscriptionTime = new Date(Date.now() + testConstants.proposalTiming.subscriptionOffset);
@@ -85,7 +85,7 @@ describe('Proposal Finished Trigger - Integration Test', () => {
 
   test('should NOT send notification for proposals that have not finished yet', async () => {
     const testDaoId = testConstants.daoIds.temporalTest1;
-    const testUser = testConstants.profiles.p8;
+    const testUser = testConstants.profiles.p1;
     
     // Create user with subscription
     await UserFactory.createUserWithFullSetup(
