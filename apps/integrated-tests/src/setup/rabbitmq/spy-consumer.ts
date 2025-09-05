@@ -65,7 +65,6 @@ export class RabbitMQSpyConsumerManager implements SpyConsumerManager {
         };
         
         config.eventCollector.collect(event);
-        console.log(`[SpyConsumer] Intercepted message from queue: ${config.queueName}`);
         
         // Return 1 to NACK with requeue=true
         // This ensures the message goes back to the queue for actual consumers
@@ -74,7 +73,6 @@ export class RabbitMQSpyConsumerManager implements SpyConsumerManager {
     );
     
     this.spyConsumers.set(config.queueName, consumer);
-    console.log(`[SpyConsumer] Spy consumer setup for queue: ${config.queueName}`);
   }
 
   /**
