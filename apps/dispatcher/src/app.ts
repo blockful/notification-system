@@ -8,6 +8,7 @@ import { NewProposalTriggerHandler } from './services/triggers/new-proposal-trig
 import { VotingPowerTriggerHandler } from './services/triggers/voting-power-trigger.service';
 import { ProposalFinishedTriggerHandler } from './services/triggers/proposal-finished-trigger.service';
 import { NonVotingHandler } from './services/triggers/non-voting-handler.service';
+import { VoteConfirmationTriggerHandler } from './services/triggers/vote-confirmation-trigger.service';
 import { RabbitMQConnection, RabbitMQPublisher } from '@notification-system/rabbitmq-client';
 import { AnticaptureClient } from '@notification-system/anticapture-client';
 
@@ -69,6 +70,11 @@ export class App {
     triggerProcessorService.addHandler(
       'proposal-finished',
       new NonVotingHandler(subscriptionClient, notificationFactory, anticaptureClient)
+    );
+
+    triggerProcessorService.addHandler(
+      'vote-confirmation',
+      new VoteConfirmationTriggerHandler(subscriptionClient, notificationFactory, anticaptureClient)
     );
 
     this.rabbitMQConsumerService = new RabbitMQConsumerService(this.rabbitmqUrl, triggerProcessorService);
