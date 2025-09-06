@@ -27,7 +27,7 @@ export class RabbitMQPublisher {
       
       this.publisher = conn.createPublisher({
         confirm: true,
-        maxAttempts: 3,
+        maxAttempts: 10,
         exchanges: []
       });
     }

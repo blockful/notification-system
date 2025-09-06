@@ -46,7 +46,7 @@ export class RabbitMQConsumer {
     );
 
     this.consumer.on('error', (err) => {
-      console.error('[RabbitMQConsumer] Consumer error:', err);
+      console.error(`[RabbitMQConsumer] Consumer error on queue '${this.queueName}':`, err.message);
     });
 
     this.isConsuming = true;

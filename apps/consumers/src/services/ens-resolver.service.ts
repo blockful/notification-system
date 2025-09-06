@@ -15,7 +15,7 @@ export class EnsResolverService {
       chain: mainnet,
       transport: http(undefined, {
         timeout: 5_000,  // 5 seconds timeout
-        retryCount: 2,    // Try 2 times  
+        retryCount: 10,   // Try 10 times  
         retryDelay: 500   // Wait 500ms between retries
       })
     });
