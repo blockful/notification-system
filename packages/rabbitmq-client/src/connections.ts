@@ -12,6 +12,7 @@ export class RabbitMQConnection {
     if (urlObj.hostname === 'localhost') {
       urlObj.hostname = '127.0.0.1';
     }
+    urlObj.searchParams.set('heartbeat', '30');
     
     this.url = urlObj.toString();
   }
@@ -19,6 +20,14 @@ export class RabbitMQConnection {
   async connect(): Promise<void> {
     if (!this.connection) {
       this.connection = new Connection(this.url);
+      this.connection.on('error', (err) => {
+        console.error('[RabbitMQ] Connection error:', err.message);
+      });
+      
+      this.connection.on('connection', () => {
+        console.log('[RabbitMQ] Connection (re)established');
+      });
+      
       await this.connection.onConnect(5000);
     }
   }
