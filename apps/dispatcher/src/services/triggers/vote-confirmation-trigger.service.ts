@@ -52,8 +52,6 @@ export class VoteConfirmationTriggerHandler extends BaseTriggerHandler<VoteEvent
       };
     }
 
-    console.log(`[VoteConfirmationHandler] Processing ${events.length} vote events`);
-
     // Extract unique voter addresses and batch fetch wallet owners
     const voterAddresses = [...new Set(events.map(event => event.voterAccountId))];
     const walletOwners = await this.subscriptionClient.getWalletOwnersBatch(voterAddresses);
@@ -159,10 +157,10 @@ export class VoteConfirmationTriggerHandler extends BaseTriggerHandler<VoteEvent
   private formatVoteMessage(vote: VoteEvent): string {
     const position = this.getSupportText(vote.support);
     const emoji = this.getSupportEmoji(vote.support);
-    const votingPower = this.formatVotingPower(vote.votingPower);
+    const votingPower = formatTokenAmount(vote.votingPower, 18);
     
-    let message = `${emoji} Your vote just went through on ${vote.daoId}!\n`;
-    message += `You voted ${position} on proposal #${vote.proposalId.slice(0, 8)}... with ${votingPower} voting power.`;
+    let message = `${emoji} Your vote just went through on ${vote.daoId}!\n
+    You voted ${position} on proposal #${vote.proposalId.slice(0, 8)}... with ${votingPower} voting power.`;
     
     if (vote.reason && vote.reason.trim()) {
       message += `\n\nYour reason: "${vote.reason}"`;
@@ -197,10 +195,6 @@ export class VoteConfirmationTriggerHandler extends BaseTriggerHandler<VoteEvent
       default:
         return '🗳️';
     }
-  }
-
-  private formatVotingPower(votingPower: string): string {
-    return formatTokenAmount(votingPower, 18);
   }
 
   private async getChainIdForDao(daoId: string): Promise<number> {
