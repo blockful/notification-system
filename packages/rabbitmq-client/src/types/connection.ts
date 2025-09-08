@@ -1,4 +1,2 @@
-import * as amqp from 'amqplib';
-
-// Type alias for amqplib connection to avoid verbose ReturnType everywhere
-export type AmqpConnection = Awaited<ReturnType<typeof amqp.connect>>;
+// Type definitions for the new rabbitmq-client library
+export type { Connection as AmqpConnection } from 'rabbitmq-client';

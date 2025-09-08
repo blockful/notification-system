@@ -1,5 +1,6 @@
 import { RabbitMQContainer, StartedRabbitMQContainer } from '@testcontainers/rabbitmq';
 import { RabbitMQConnection } from '@notification-system/rabbitmq-client';
+import { Consumer } from 'rabbitmq-client';
 import { EventCollector } from '../helpers/messaging/event-collector';
 import { timeouts } from '../config';
 
@@ -19,7 +20,7 @@ export class RabbitMQTestSetup {
   private container: StartedRabbitMQContainer | null = null;
   private connection: RabbitMQConnection | null = null;
   private eventCollector = new EventCollector();
-  private spyConsumers: any[] = [];
+  private spyConsumers: { consumer: Consumer }[] = [];
   
   // Singleton pattern for global container reuse
   static getInstance(): RabbitMQTestSetup {
@@ -79,10 +80,7 @@ export class RabbitMQTestSetup {
     if (!this.connection) return;
     
     try {
-      const channel = await this.connection.createChannel();
-      await channel.assertQueue(queueName, { durable: true });
-      await channel.purgeQueue(queueName);
-      await channel.close();
+      await this.connection.queuePurge(queueName);
     } catch (error) {
       console.warn(`Failed to clear queue ${queueName}:`, error);
     }
@@ -100,28 +98,37 @@ export class RabbitMQTestSetup {
   }
 
   /**
-   * Setup spy consumer for testing
+   * Setup spy consumer for testing  
    */
   private async setupSpyConsumer(queueName: string): Promise<void> {
     if (!this.connection) return;
     
-    const channel = await this.connection.createChannel();
-    await channel.assertQueue(queueName, { durable: true });
+    const conn = this.connection.getConnection();
+    if (!conn) return;
     
-    const consumer = await channel.consume(queueName, (msg) => {
-      if (msg) {
-        const data = JSON.parse(msg.content.toString());
+    // Spy consumer that observes messages but requeues them for real consumer
+    const consumer = conn.createConsumer(
+      {
+        queue: queueName,
+        queueOptions: { durable: true },
+        qos: { prefetchCount: 1 }
+      },
+      async (msg) => {
+        const data = JSON.parse(msg.body.toString());
         this.eventCollector.collect({
           source: queueName,
           data,
           timestamp: Date.now()
         });
-        // Important: nack with requeue=true to keep message in queue for real consumer
-        channel.nack(msg, false, true);
+        // Return 1 = BasicNack(requeue=true) - message goes back to queue
+        return 1;
       }
-    }, { noAck: false });
+    );
     
-    this.spyConsumers.push({ channel, consumerTag: consumer.consumerTag });
+    // Ignore errors from requeue (they're expected)
+    consumer.on('error', () => {});
+    
+    this.spyConsumers.push({ consumer });
   }
 
   /**
@@ -180,10 +187,9 @@ export class RabbitMQTestSetup {
   async cleanup(): Promise<void> {
     // Close spy consumers
     for (const spy of this.spyConsumers) {
-      if (spy.consumerTag) {
-        await spy.channel.cancel(spy.consumerTag);
+      if (spy.consumer) {
+        await spy.consumer.close();
       }
-      await spy.channel.close();
     }
     this.spyConsumers = [];
     

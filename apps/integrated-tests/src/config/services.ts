@@ -2,15 +2,18 @@
  * Service configuration for integration tests
  */
 
+// Generate random port to avoid conflicts in parallel tests
+const randomPort = 14000 + Math.floor(Math.random() * 1000);
+
 export const serviceConfig = {
   // Service ports 
   ports: {
-    subscriptionServer: 14001,
+    subscriptionServer: randomPort,
   },
   
   // Service URLs 
   urls: {
-    subscriptionServer: 'http://localhost:14001',
+    subscriptionServer: `http://localhost:${randomPort}`,
   },
   
   // Logic system configuration 
