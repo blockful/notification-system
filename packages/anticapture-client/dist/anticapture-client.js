@@ -135,5 +135,35 @@ class AnticaptureClient {
             return [];
         }
     }
+    /**
+     * List recent votes from all DAOs since a given timestamp
+     * @param timestampGt Fetch votes with timestamp greater than this value
+     * @param limit Maximum number of votes to fetch per DAO (default: 100)
+     * @returns Array of votes from all DAOs
+     */
+    async listRecentVotesFromAllDaos(timestampGt, limit = 100) {
+        // First, fetch all DAOs
+        const daos = await this.getDAOs();
+        // Fetch votes from each DAO in parallel
+        const votePromises = daos.map(dao => this.listVotesOnchains({
+            daoId: dao.id,
+            timestamp_gt: timestampGt,
+            limit,
+            orderBy: 'timestamp',
+            orderDirection: 'asc'
+        }).catch(error => {
+            console.warn(`Failed to fetch votes for DAO ${dao.id}:`, error);
+            return []; // Return empty array for failed DAOs
+        }));
+        const voteArrays = await Promise.all(votePromises);
+        // Flatten and sort by timestamp
+        const allVotes = voteArrays.flat();
+        allVotes.sort((a, b) => {
+            const timestampA = parseInt(a.timestamp || '0');
+            const timestampB = parseInt(b.timestamp || '0');
+            return timestampA - timestampB;
+        });
+        return allVotes;
+    }
 }
 exports.AnticaptureClient = AnticaptureClient;

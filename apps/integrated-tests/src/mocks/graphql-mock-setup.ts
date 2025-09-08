@@ -85,6 +85,7 @@ export class GraphQLMockSetup {
         const daoId = data.variables?.daoId;
         const proposalIdIn = data.variables?.proposalId_in;
         const voterAccountIdIn = data.variables?.voterAccountId_in;
+        const timestampGt = data.variables?.timestamp_gt;
         
         // Filter by daoId if provided
         if (daoId) {
@@ -107,6 +108,13 @@ export class GraphQLMockSetup {
           );
         }
         
+        // Filter by timestamp_gt if provided
+        if (timestampGt) {
+          filtered = filtered.filter((v: any) => 
+            parseInt(v.timestamp || '0') > parseInt(timestampGt)
+          );
+        }
+        
         return Promise.resolve({
           data: { data: { votesOnchains: { items: filtered, totalCount: filtered.length } } }
         });
@@ -116,7 +124,8 @@ export class GraphQLMockSetup {
       if (data.query?.includes('GetDAOs')) {
         const uniqueDaoIds = [...new Set([
           ...proposals.map(p => p.daoId).filter(Boolean),
-          ...votingPowerData.map(vp => vp.daoId).filter(Boolean)
+          ...votingPowerData.map(vp => vp.daoId).filter(Boolean),
+          ...votesData.map((v: any) => v.daoId).filter(Boolean)
         ])];
         return Promise.resolve({
           data: { data: { daos: { items: uniqueDaoIds.map(id => ({ 

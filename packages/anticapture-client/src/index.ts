@@ -9,6 +9,7 @@ export type {
   ListProposalsQueryVariables,
   ListVotesOnchainsQuery,
   ListVotesOnchainsQueryVariables,
+  VotesOnchain,
   VotingPowerHistory,
   VotingPowerHistoryFilter,
   ListVotingPowerHistorysQuery,
