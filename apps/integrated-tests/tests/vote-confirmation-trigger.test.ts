@@ -47,7 +47,7 @@ describe('Vote Confirmation Trigger - Integration Test', () => {
     const voteEvents = [
       {
         daoId: testDaoId,
-        txHash: '0xabc123def456789',
+        txHash: '0x1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef',
         proposalId: 'prop-for-123',
         voterAccountId: voterAddress,
         support: '1', // FOR
@@ -75,7 +75,7 @@ describe('Vote Confirmation Trigger - Integration Test', () => {
     // Verify message content for FOR vote
     expect(message.text).toContain('✅'); // FOR emoji
     expect(message.text).toMatch(/FOR|Your vote just went through/i);
-    expect(message.text).toContain('Transaction details');
+    expect(message.text).toContain('[Transaction details](https://etherscan.io/tx/');
     expect(message.text).not.toContain('{{txLink}}');
     expect(message.chatId).toBe(testUser.chatId);
   });
@@ -102,7 +102,7 @@ describe('Vote Confirmation Trigger - Integration Test', () => {
     const voteEvents = [
       {
         daoId: testDaoId,
-        txHash: '0xdef456abc789123',
+        txHash: '0x2345678901bcdef2345678901bcdef2345678901bcdef2345678901bcdef2345',
         proposalId: 'prop-against-456',
         voterAccountId: voterAddress,
         support: '0', // AGAINST
@@ -128,7 +128,7 @@ describe('Vote Confirmation Trigger - Integration Test', () => {
     // Verify message content for AGAINST vote
     expect(message.text).toContain('❌'); // AGAINST emoji
     expect(message.text).toMatch(/AGAINST|Your vote just went through/i);
-    expect(message.text).toContain('Transaction details');
+    expect(message.text).toContain('[Transaction details](https://etherscan.io/tx/');
     expect(message.chatId).toBe(testUser.chatId);
   });
 
@@ -154,7 +154,7 @@ describe('Vote Confirmation Trigger - Integration Test', () => {
     const voteEvents = [
       {
         daoId: testDaoId,
-        txHash: '0x789abc123def456',
+        txHash: '0x3456789012cdef3456789012cdef3456789012cdef3456789012cdef34567890',
         proposalId: 'prop-abstain-789',
         voterAccountId: voterAddress,
         support: '2', // ABSTAIN
@@ -180,7 +180,7 @@ describe('Vote Confirmation Trigger - Integration Test', () => {
     // Verify message content for ABSTAIN vote
     expect(message.text).toContain('⚪'); // ABSTAIN emoji
     expect(message.text).toMatch(/ABSTAIN|Your vote just went through/i);
-    expect(message.text).toContain('Transaction details');
+    expect(message.text).toContain('[Transaction details](https://etherscan.io/tx/');
     expect(message.chatId).toBe(testUser.chatId);
   });
 
@@ -202,7 +202,7 @@ describe('Vote Confirmation Trigger - Integration Test', () => {
     await UserFactory.createUserAddress(userWithSub.id, voterAddress, pastTimestamp);
     
     const eventTimestamp = (Math.floor(Date.now() / 1000) + 10).toString();
-    const sameTxHash = '0xsame123456789';
+    const sameTxHash = '0x4567890123def4567890123def4567890123def4567890123def4567890123def';
     
     // Same vote event will be processed twice (simulating duplicate trigger)
     const voteEvents = [
@@ -272,7 +272,7 @@ describe('Vote Confirmation Trigger - Integration Test', () => {
     const voteEvents = [
       {
         daoId: testDaoId,
-        txHash: '0xvote1234',
+        txHash: '0x5678901234ef5678901234ef5678901234ef5678901234ef5678901234ef5678',
         proposalId: 'prop-multi-1',
         voterAccountId: voterAddress,
         support: '1', // FOR
@@ -281,7 +281,7 @@ describe('Vote Confirmation Trigger - Integration Test', () => {
       },
       {
         daoId: testDaoId,
-        txHash: '0xvote5678',
+        txHash: '0x6789012345f6789012345f6789012345f6789012345f6789012345f6789012345',
         proposalId: 'prop-multi-2',
         voterAccountId: voterAddress,
         support: '0', // AGAINST
@@ -290,7 +290,7 @@ describe('Vote Confirmation Trigger - Integration Test', () => {
       },
       {
         daoId: testDaoId,
-        txHash: '0xvote9012',
+        txHash: '0x78901234567890123456789012345678901234567890123456789012345678ab',
         proposalId: 'prop-multi-3',
         voterAccountId: voterAddress,
         support: '2', // ABSTAIN
@@ -351,7 +351,7 @@ describe('Vote Confirmation Trigger - Integration Test', () => {
     const voteEvents = [
       {
         daoId: testDaoId, // Vote is in testDaoId
-        txHash: '0xnosub123',
+        txHash: '0x890123456789012345678901234567890123456789012345678901234567890cd',
         proposalId: 'prop-nosub',
         voterAccountId: voterAddress,
         support: '1',

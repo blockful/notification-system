@@ -159,8 +159,7 @@ export class VoteConfirmationTriggerHandler extends BaseTriggerHandler<VoteEvent
     const emoji = this.getSupportEmoji(vote.support);
     const votingPower = formatTokenAmount(vote.votingPower, 18);
     
-    let message = `${emoji} Your vote just went through on ${vote.daoId}!\n
-    You voted ${position} on proposal #${vote.proposalId.slice(0, 8)}... with ${votingPower} voting power.`;
+    let message = `${emoji} Your vote just went through on ${vote.daoId}!\n\nYou voted ${position} on proposal #${vote.proposalId.slice(0, 8)}... with ${votingPower} voting power.`;
     
     if (vote.reason && vote.reason.trim()) {
       message += `\n\nYour reason: "${vote.reason}"`;
