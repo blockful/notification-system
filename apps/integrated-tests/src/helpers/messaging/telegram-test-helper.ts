@@ -3,6 +3,12 @@ import { waitFor, waitForCondition } from '../utilities/wait-for';
 import { timeouts } from '../../config';
 
 /**
+ * @notice Represents a mock call to Telegram sendMessage
+ * @dev Tuple structure: [chatId, text, options?]
+ */
+type MockCall = [chatId: string | number, text: string, options?: Record<string, any>];
+
+/**
  * @notice Represents a Telegram message in test context
  * @dev Structure matches Jest mock call format: [chatId, text, ...additionalOptions]
  */
@@ -41,16 +47,8 @@ export class TelegramTestHelper {
     return waitFor(
       () => {
         const calls = this.getNewCalls(startCount);
-        const message = calls.find(call => {
-          const [chatId, text, ...rest] = call;
-          const msg: TelegramMessage = { chatId, text, ...rest };
-          return predicate(msg);
-        });
-        return message ? { 
-          chatId: message[0], 
-          text: message[1],
-          ...message[2] 
-        } : null;
+        const messages = this.toMessages(calls);
+        return messages.find(msg => predicate(msg)) as TelegramMessage;
       },
       {
         timeout: options?.timeout || timeouts.wait.default,
@@ -88,11 +86,7 @@ export class TelegramTestHelper {
     const calls = this.getNewCalls(startCount);
     const filteredCalls = this.filterCalls(calls, options);
     
-    return filteredCalls.slice(0, expectedCount).map(call => ({
-      chatId: call[0],
-      text: call[1],
-      ...call[2]
-    }));
+    return this.toMessages(filteredCalls.slice(0, expectedCount));
   }
 
   /**
@@ -147,11 +141,7 @@ export class TelegramTestHelper {
    * @return Array of all Telegram messages sent via the mock
    */
   getAllMessages(): TelegramMessage[] {
-    return this.mockSendMessage.mock.calls.map(call => ({
-      chatId: call[0] as string | number,
-      text: call[1] as string,
-      ...(call[2] || {})
-    }));
+    return this.toMessages(this.mockSendMessage.mock.calls as MockCall[]);
   }
 
   /**
@@ -169,20 +159,20 @@ export class TelegramTestHelper {
    * @return Filtered array of calls
    */
   private filterCalls(
-    calls: any[], 
+    calls: MockCall[], 
     options?: { fromUser?: string; containing?: string }
-  ): any[] {
+  ): MockCall[] {
     let filteredCalls = calls;
     
     if (options?.fromUser) {
       filteredCalls = filteredCalls.filter(
-        call => call[0].toString() === options.fromUser
+        ([chatId]) => chatId.toString() === options.fromUser
       );
     }
     
     if (options?.containing) {
       filteredCalls = filteredCalls.filter(
-        call => call[1].includes(options.containing!)
+        ([, text]) => text.includes(options.containing!)
       );
     }
     
@@ -194,8 +184,21 @@ export class TelegramTestHelper {
    * @param sinceCount Starting count to slice from
    * @return Array of new mock calls
    */
-  private getNewCalls(sinceCount: number): any[] {
-    return this.mockSendMessage.mock.calls.slice(sinceCount);
+  private getNewCalls(sinceCount: number): MockCall[] {
+    return this.mockSendMessage.mock.calls.slice(sinceCount) as MockCall[];
+  }
+
+  /**
+   * @notice Converts mock calls to TelegramMessage objects
+   * @param calls Array of mock call data
+   * @return Array of TelegramMessage objects
+   */
+  private toMessages(calls: MockCall[]): TelegramMessage[] {
+    return calls.map(([chatId, text, options = {}]) => ({
+      chatId,
+      text,
+      ...options
+    }));
   }
 
 }

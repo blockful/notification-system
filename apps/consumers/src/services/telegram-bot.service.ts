@@ -4,30 +4,31 @@
  * Consolidates both interactive commands and notification sending capabilities.
  */
 
-import { Telegraf, Markup } from 'telegraf';
+import { Markup } from 'telegraf';
 import { WELCOME_MESSAGE, HELP_MESSAGE, DAOS_BUTTON_TEXT, LEARN_MORE_BUTTON_TEXT, MY_WALLETS_BUTTON_TEXT } from '../messages';
 import { DAOService } from '../services/dao.service';
 import { WalletService } from '../services/wallet.service';
 import { ExplorerService } from '../services/explorer.service';
 import { EnsResolverService } from '../services/ens-resolver.service';
-import { ContextWithSession } from '../interfaces/bot.interface';
+import { ContextWithSession, MatchedContext } from '../interfaces/bot.interface';
 import { NotificationPayload } from '../interfaces/notification.interface';
+import { TelegramClientInterface } from '../interfaces/telegram-client.interface';
 
 export class TelegramBotService {
-  private bot: Telegraf<ContextWithSession>;
+  private telegramClient: TelegramClientInterface;
   private daoService: DAOService;
   private walletService: WalletService;
   private explorerService: ExplorerService;
   private ensResolver: EnsResolverService;
 
   constructor(
-    bot: Telegraf<ContextWithSession>, 
+    telegramClient: TelegramClientInterface,
     daoService: DAOService, 
     walletService: WalletService,
     explorerService: ExplorerService,
     ensResolver: EnsResolverService
   ) {
-    this.bot = bot;
+    this.telegramClient = telegramClient;
     this.daoService = daoService;
     this.walletService = walletService;
     this.explorerService = explorerService;
@@ -48,75 +49,78 @@ export class TelegramBotService {
   }
 
   private setupCommands(): void {
-    this.bot.command(/^start$/i, async (ctx) => {
-      await ctx.reply(WELCOME_MESSAGE, this.createPersistentKeyboard());
-    });
-
-    this.bot.command(/^learn_more$/i, async (ctx) => {
-      await ctx.reply(HELP_MESSAGE, { 
-        parse_mode: 'HTML',
-        ...this.createPersistentKeyboard() 
+    this.telegramClient.setupHandlers((handlers) => {
+      handlers.command(/^start$/i, async (ctx) => {
+        await ctx.reply(WELCOME_MESSAGE, this.createPersistentKeyboard());
       });
-    });
 
-    this.bot.command(/^daos$/i, async (ctx) => {
-      await this.daoService.initialize(ctx);
-    });
-
-    this.bot.command(/^wallets$/i, async (ctx) => {
-      await this.walletService.initialize(ctx);
-    });
-
-    this.bot.hears(DAOS_BUTTON_TEXT, async (ctx) => {
-      await this.daoService.initialize(ctx);
-    });
-
-    this.bot.hears(MY_WALLETS_BUTTON_TEXT, async (ctx) => {
-      await this.walletService.initialize(ctx);
-    });
-
-    this.bot.hears(LEARN_MORE_BUTTON_TEXT, async (ctx) => {
-      await ctx.reply(HELP_MESSAGE, { 
-        parse_mode: 'HTML',
-        ...this.createPersistentKeyboard() 
+      handlers.command(/^learn_more$/i, async (ctx) => {
+        await ctx.reply(HELP_MESSAGE, { 
+          parse_mode: 'HTML',
+          ...this.createPersistentKeyboard() 
+        });
       });
-    });
 
-    this.bot.action(/^dao_toggle_(\w+)$/, async (ctx) => {
-      const daoName = ctx.match[1];
-      await this.daoService.toggle(ctx, daoName);
-      await ctx.answerCbQuery();
-    });
+      handlers.command(/^daos$/i, async (ctx) => {
+        await this.daoService.initialize(ctx);
+      });
 
-    this.bot.action(/^dao_confirm$/, async (ctx) => {
-      await this.daoService.confirm(ctx);
-      await ctx.answerCbQuery();
-    });
+      handlers.command(/^wallets$/i, async (ctx) => {
+        await this.walletService.initialize(ctx);
+      });
 
-    // Wallet action handlers
-    this.bot.action(/^wallet_add$/, async (ctx) => {
-      await this.walletService.addWallet(ctx);
-      await ctx.answerCbQuery();
-    });
+      handlers.hears(DAOS_BUTTON_TEXT, async (ctx) => {
+        await this.daoService.initialize(ctx);
+      });
 
-    this.bot.action(/^wallet_remove$/, async (ctx) => {
-      await this.walletService.removeWallet(ctx);
-      await ctx.answerCbQuery();
-    });
+      handlers.hears(MY_WALLETS_BUTTON_TEXT, async (ctx) => {
+        await this.walletService.initialize(ctx);
+      });
 
-    this.bot.action(/^wallet_toggle_(.+)$/, async (ctx) => {
-      const address = ctx.match[1];
-      await this.walletService.toggleWalletForRemoval(ctx, address);
-      await ctx.answerCbQuery();
-    });
+      handlers.hears(LEARN_MORE_BUTTON_TEXT, async (ctx) => {
+        await ctx.reply(HELP_MESSAGE, { 
+          parse_mode: 'HTML',
+          ...this.createPersistentKeyboard() 
+        });
+      });
 
-    this.bot.action(/^wallet_confirm_remove$/, async (ctx) => {
-      await this.walletService.confirmRemoval(ctx);
-      await ctx.answerCbQuery();
-    });
+      handlers.action(/^dao_toggle_(\w+)$/, async (ctx) => {
+        const matchedCtx = ctx as MatchedContext;
+        const daoName = matchedCtx.match[1];
+        await this.daoService.toggle(ctx, daoName);
+        await ctx.answerCbQuery();
+      });
 
-    this.bot.on('message', async (ctx, next) => {
-      if ('text' in ctx.message && !ctx.message.text.startsWith('/')) {
+      handlers.action(/^dao_confirm$/, async (ctx) => {
+        await this.daoService.confirm(ctx);
+        await ctx.answerCbQuery();
+      });
+
+      // Wallet action handlers
+      handlers.action(/^wallet_add$/, async (ctx) => {
+        await this.walletService.addWallet(ctx);
+        await ctx.answerCbQuery();
+      });
+
+      handlers.action(/^wallet_remove$/, async (ctx) => {
+        await this.walletService.removeWallet(ctx);
+        await ctx.answerCbQuery();
+      });
+
+      handlers.action(/^wallet_toggle_(.+)$/, async (ctx) => {
+        const matchedCtx = ctx as MatchedContext;
+        const address = matchedCtx.match[1];
+        await this.walletService.toggleWalletForRemoval(ctx, address);
+        await ctx.answerCbQuery();
+      });
+
+      handlers.action(/^wallet_confirm_remove$/, async (ctx) => {
+        await this.walletService.confirmRemoval(ctx);
+        await ctx.answerCbQuery();
+      });
+
+      handlers.on('message', async (ctx, next) => {
+        if (ctx.message && 'text' in ctx.message && !ctx.message.text.startsWith('/')) {
         if (ctx.session?.awaitingWalletInput) {
           await this.walletService.processWalletInput(ctx, ctx.message.text);
           return;
@@ -126,16 +130,16 @@ export class TelegramBotService {
           this.createPersistentKeyboard());
       }
       return next();
+      });
     });
   }
 
   async launch(): Promise<void> {
-    await this.bot.launch();
-    console.log('🤖 Bot is running...');
+    await this.telegramClient.launch();
   }
 
   public stop(signal: string): void {
-    this.bot.stop(signal);
+    this.telegramClient.stop(signal);
   }
 
   /**
@@ -147,12 +151,15 @@ export class TelegramBotService {
   public async sendNotification(payload: NotificationPayload): Promise<string> {
     let processedMessage = payload.message;
     
-    // Process transaction link if transaction metadata is provided
-    if (payload.metadata?.transaction) {
-      const { hash, chainId } = payload.metadata.transaction;
-      const txUrl = this.explorerService.getTransactionLink(chainId, hash);
-      const markdownLink = `[Transaction details](${txUrl})`;
-      processedMessage = processedMessage.replace('{{txLink}}', markdownLink);
+    // Process transaction link placeholder
+    if (processedMessage.includes('{{txLink}}')) {
+      const txUrl = payload.metadata?.transaction 
+        ? this.explorerService.getTransactionLink(payload.metadata.transaction.chainId, payload.metadata.transaction.hash)
+        : null;
+      
+      processedMessage = txUrl 
+        ? processedMessage.replace('{{txLink}}', `[Transaction details](${txUrl})`)
+        : processedMessage.replace('\n\n{{txLink}}', '');
     }
     
     // Process ENS names if addresses are provided in metadata
@@ -163,10 +170,13 @@ export class TelegramBotService {
       }
     }
     
-    const sentMessage = await this.bot.telegram.sendMessage(
+    const sentMessage = await this.telegramClient.sendMessage(
       payload.channelUserId, 
       processedMessage,
-      { parse_mode: 'Markdown' }
+      { 
+        parse_mode: 'Markdown',
+        disable_web_page_preview: true
+      }
     );
     return `${sentMessage.message_id}`;
   }

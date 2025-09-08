@@ -12,3 +12,10 @@ export interface ContextWithSession extends Context {
         awaitingWalletInput?: boolean;
     };
 }
+
+/**
+ * Context with regex match for action handlers
+ */
+export type MatchedContext = ContextWithSession & {
+    match: RegExpExecArray;
+};

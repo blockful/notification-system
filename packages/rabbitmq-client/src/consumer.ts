@@ -39,9 +39,13 @@ export class RabbitMQConsumer {
         qos: { prefetchCount: 1 }
       },
       async (msg) => {
-        const messageContent = msg.body.toString();
-        const parsedMessage: RabbitMQMessage<T> = JSON.parse(messageContent);
-        await handler(parsedMessage);
+        try {
+          const messageContent = msg.body.toString();
+          const parsedMessage: RabbitMQMessage<T> = JSON.parse(messageContent);
+          await handler(parsedMessage);
+        } catch (error) {
+          console.error('[RabbitMQConsumer] Error in message handler:', error);
+        }
       }
     );
 

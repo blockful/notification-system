@@ -37,5 +37,12 @@ export declare class AnticaptureClient {
      * @returns List of votes matching the criteria
      */
     listVotesOnchains(variables: ListVotesOnchainsQueryVariables): Promise<VotesOnchain[]>;
+    /**
+     * List recent votes from all DAOs since a given timestamp
+     * @param timestampGt Fetch votes with timestamp greater than this value
+     * @param limit Maximum number of votes to fetch per DAO (default: 100)
+     * @returns Array of votes from all DAOs
+     */
+    listRecentVotesFromAllDaos(timestampGt: string, limit?: number): Promise<VotesOnchain[]>;
 }
 export {};
