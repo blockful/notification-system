@@ -5,6 +5,7 @@ import { App as SubscriptionServerApp } from '@notification-system/subscription-
 import { Knex } from 'knex';
 import { RabbitMQTestSetup } from '../rabbitmq-setup';
 import { serviceConfig, timeouts } from '../../config';
+import { env } from '../../config/env';
 import { waitFor } from '../../helpers/utilities/wait-for';
 import { MockEnsResolverService } from '../../mocks/ens-resolver-mock';
 import { TelegramTestClient } from '../../test-clients/telegram-test.client';
@@ -60,7 +61,7 @@ const TEST_CONFIG = {
  */
 const setupRabbitMQ = async (): Promise<{ rabbitmqSetup: RabbitMQTestSetup; rabbitmqUrl: string }> => {
   const rabbitmqSetup = RabbitMQTestSetup.getInstance();
-  const rabbitmqUrl = process.env.TEST_RABBITMQ_URL || await rabbitmqSetup.setup();
+  const rabbitmqUrl = env.TEST_RABBITMQ_URL || await rabbitmqSetup.setup();
   return { rabbitmqSetup, rabbitmqUrl };
 };
 
@@ -81,9 +82,9 @@ const createTelegramClient = () => {
   
   let telegramClient;
   
-  if (process.env.SEND_REAL_TELEGRAM) {
+  if (env.SEND_REAL_TELEGRAM) {
     // Use TelegramTestClient with real bot token
-    const botToken = process.env.TELEGRAM_BOT_TOKEN || TEST_CONFIG.telegram.botToken;
+    const botToken = env.TELEGRAM_BOT_TOKEN || TEST_CONFIG.telegram.botToken;
     telegramClient = new TelegramTestClient(mockSendMessage, botToken);
   } else {
     // Use TelegramTestClient in mock-only mode

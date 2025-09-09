@@ -151,12 +151,15 @@ export class TelegramBotService {
   public async sendNotification(payload: NotificationPayload): Promise<string> {
     let processedMessage = payload.message;
     
-    // Process transaction link if transaction metadata is provided
-    if (payload.metadata?.transaction) {
-      const { hash, chainId } = payload.metadata.transaction;
-      const txUrl = this.explorerService.getTransactionLink(chainId, hash);
-      const markdownLink = `[Transaction details](${txUrl})`;
-      processedMessage = processedMessage.replace('{{txLink}}', markdownLink);
+    // Process transaction link placeholder
+    if (processedMessage.includes('{{txLink}}')) {
+      const txUrl = payload.metadata?.transaction 
+        ? this.explorerService.getTransactionLink(payload.metadata.transaction.chainId, payload.metadata.transaction.hash)
+        : null;
+      
+      processedMessage = txUrl 
+        ? processedMessage.replace('{{txLink}}', `[Transaction details](${txUrl})`)
+        : processedMessage.replace('\n\n{{txLink}}', '');
     }
     
     // Process ENS names if addresses are provided in metadata
@@ -170,7 +173,10 @@ export class TelegramBotService {
     const sentMessage = await this.telegramClient.sendMessage(
       payload.channelUserId, 
       processedMessage,
-      { parse_mode: 'Markdown' }
+      { 
+        parse_mode: 'Markdown',
+        disable_web_page_preview: true
+      }
     );
     return `${sentMessage.message_id}`;
   }

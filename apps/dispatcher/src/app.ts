@@ -8,12 +8,14 @@ import { NewProposalTriggerHandler } from './services/triggers/new-proposal-trig
 import { VotingPowerTriggerHandler } from './services/triggers/voting-power-trigger.service';
 import { ProposalFinishedTriggerHandler } from './services/triggers/proposal-finished-trigger.service';
 import { NonVotingHandler } from './services/triggers/non-voting-handler.service';
+import { VoteConfirmationTriggerHandler } from './services/triggers/vote-confirmation-trigger.service';
 import { RabbitMQConnection, RabbitMQPublisher } from '@notification-system/rabbitmq-client';
 import { AnticaptureClient } from '@notification-system/anticapture-client';
 
 export class App {
   private rabbitMQConsumerService!: RabbitMQConsumerService;
   private rabbitmqConnection!: RabbitMQConnection;
+  private publisher!: RabbitMQPublisher;
   private isCreated = false;
 
   constructor(
@@ -45,9 +47,9 @@ export class App {
     
     this.rabbitmqConnection = new RabbitMQConnection(this.rabbitmqUrl);
     await this.rabbitmqConnection.connect();
-    const publisher = await RabbitMQPublisher.create(this.rabbitmqConnection);
+    this.publisher = await RabbitMQPublisher.create(this.rabbitmqConnection);
     const notificationFactory = new NotificationClientFactory();
-    notificationFactory.addClient('telegram', new RabbitMQNotificationService(publisher));
+    notificationFactory.addClient('telegram', new RabbitMQNotificationService(this.publisher));
     const triggerProcessorService = new TriggerProcessorService();
 
     triggerProcessorService.addHandler(
@@ -71,6 +73,11 @@ export class App {
       new NonVotingHandler(subscriptionClient, notificationFactory, anticaptureClient)
     );
 
+    triggerProcessorService.addHandler(
+      'vote-confirmation',
+      new VoteConfirmationTriggerHandler(subscriptionClient, notificationFactory, anticaptureClient)
+    );
+
     this.rabbitMQConsumerService = new RabbitMQConsumerService(this.rabbitmqUrl, triggerProcessorService);
     this.isCreated = true;
   }
@@ -82,7 +89,16 @@ export class App {
   }
 
   async stop(): Promise<void> {
-    await this.rabbitMQConsumerService?.stop();
-    await this.rabbitmqConnection?.close();
+    if (this.rabbitMQConsumerService) {
+      await this.rabbitMQConsumerService.stop();
+    }
+    
+    if (this.publisher) {
+      await this.publisher.close();
+    }
+    
+    if (this.rabbitmqConnection) {
+      await this.rabbitmqConnection.close();
+    }
   }
 } 

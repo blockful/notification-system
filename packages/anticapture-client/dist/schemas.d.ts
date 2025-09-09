@@ -327,70 +327,84 @@ export declare const SafeVotingPowerHistoryResponseSchema: z.ZodEffects<z.ZodObj
 export declare const SafeVotesOnchainsResponseSchema: z.ZodObject<{
     votesOnchains: z.ZodObject<{
         items: z.ZodArray<z.ZodObject<{
+            daoId: z.ZodString;
             txHash: z.ZodOptional<z.ZodString>;
             proposalId: z.ZodString;
             voterAccountId: z.ZodString;
             support: z.ZodOptional<z.ZodString>;
             votingPower: z.ZodOptional<z.ZodString>;
             timestamp: z.ZodOptional<z.ZodString>;
+            reason: z.ZodNullable<z.ZodOptional<z.ZodString>>;
         }, "strip", z.ZodTypeAny, {
+            daoId: string;
             proposalId: string;
             voterAccountId: string;
             timestamp?: string | undefined;
             votingPower?: string | undefined;
             txHash?: string | undefined;
             support?: string | undefined;
+            reason?: string | null | undefined;
         }, {
+            daoId: string;
             proposalId: string;
             voterAccountId: string;
             timestamp?: string | undefined;
             votingPower?: string | undefined;
             txHash?: string | undefined;
             support?: string | undefined;
+            reason?: string | null | undefined;
         }>, "many">;
         totalCount: z.ZodNumber;
     }, "strip", z.ZodTypeAny, {
         items: {
+            daoId: string;
             proposalId: string;
             voterAccountId: string;
             timestamp?: string | undefined;
             votingPower?: string | undefined;
             txHash?: string | undefined;
             support?: string | undefined;
+            reason?: string | null | undefined;
         }[];
         totalCount: number;
     }, {
         items: {
+            daoId: string;
             proposalId: string;
             voterAccountId: string;
             timestamp?: string | undefined;
             votingPower?: string | undefined;
             txHash?: string | undefined;
             support?: string | undefined;
+            reason?: string | null | undefined;
         }[];
         totalCount: number;
     }>;
 }, "strip", z.ZodTypeAny, {
     votesOnchains: {
         items: {
+            daoId: string;
             proposalId: string;
             voterAccountId: string;
             timestamp?: string | undefined;
             votingPower?: string | undefined;
             txHash?: string | undefined;
             support?: string | undefined;
+            reason?: string | null | undefined;
         }[];
         totalCount: number;
     };
 }, {
     votesOnchains: {
         items: {
+            daoId: string;
             proposalId: string;
             voterAccountId: string;
             timestamp?: string | undefined;
             votingPower?: string | undefined;
             txHash?: string | undefined;
             support?: string | undefined;
+            reason?: string | null | undefined;
         }[];
         totalCount: number;
     };

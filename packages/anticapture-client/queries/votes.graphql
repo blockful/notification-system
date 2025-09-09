@@ -2,21 +2,37 @@ query ListVotesOnchains(
   $daoId: String!
   $proposalId_in: [String!]
   $voterAccountId_in: [String!]
+  $timestamp_gt: BigInt
+  $timestamp_gte: BigInt
+  $timestamp_lt: BigInt
+  $timestamp_lte: BigInt
+  $limit: Int
+  $orderBy: String
+  $orderDirection: String
 ) {
   votesOnchains(
     where: {
       daoId: $daoId
       proposalId_in: $proposalId_in
       voterAccountId_in: $voterAccountId_in
+      timestamp_gt: $timestamp_gt
+      timestamp_gte: $timestamp_gte
+      timestamp_lt: $timestamp_lt
+      timestamp_lte: $timestamp_lte
     }
+    limit: $limit
+    orderBy: $orderBy
+    orderDirection: $orderDirection
   ) {
     items {
+      daoId
       txHash
       proposalId
       voterAccountId
       support
       votingPower
       timestamp
+      reason
     }
     totalCount
   }
