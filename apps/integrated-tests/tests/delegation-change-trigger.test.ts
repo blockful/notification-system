@@ -112,7 +112,7 @@ describe('Delegation Change Notifications - Integration Test', () => {
       { 
         timestamp: eventTimestamp,
         chainId: 1,
-        transactionHash: `0xabcdef1234567890abcdef1234567890abcdef1234567890abcdef123456789${Math.floor(Date.now() / 1000)}`
+        transactionHash: '0x1111111111111111111111111111111111111111111111111111111111111111'
       }
     );
     
