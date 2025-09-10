@@ -13,6 +13,32 @@ export class FormattingService {
   }
 
   /**
+   * Extracts a title from a description string
+   * @param description - The description to extract title from
+   * @param fallback - Optional fallback text if no title can be extracted
+   * @returns Extracted title or fallback
+   */
+  static extractTitle(description: string, fallback: string = ''): string {
+    if (!description) return fallback;
+    
+    // Try to extract first line (removing markdown headers)
+    const firstLine = description.split('\n')[0].replace(/^#+\s*/, '').trim();
+    if (firstLine && firstLine.length <= 100) {
+      return firstLine;
+    }
+    
+    // If first line is too long, try first sentence
+    const firstSentence = description.split('.')[0].replace(/^#+\s*/, '').trim();
+    if (firstSentence && firstSentence.length <= 100) {
+      return firstSentence + '.';
+    }
+    
+    // If still too long, truncate
+    const truncated = description.substring(0, 80).replace(/^#+\s*/, '').trim();
+    return truncated ? truncated + '...' : fallback;
+  }
+
+  /**
    * Formats a list of proposals for display in notifications
    * @param proposals - Proposals to format
    * @returns Formatted proposal list with bullet points
@@ -20,7 +46,7 @@ export class FormattingService {
   static formatProposalList(proposals: any[]): string {
     return proposals
       .map(p => {
-        const title = p.title || p.description.split('\n')[0].replace(/^#+\s*/, '').trim();
+        const title = p.title || FormattingService.extractTitle(p.description);
         return `• ${title}`;
       })
       .join('\n');

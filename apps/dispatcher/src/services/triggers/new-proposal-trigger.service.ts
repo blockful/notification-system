@@ -2,6 +2,7 @@ import { DispatcherMessage, MessageProcessingResult } from "../../interfaces/dis
 import { ISubscriptionClient } from "../../interfaces/subscription-client.interface";
 import { NotificationClientFactory } from "../notification/notification-factory.service";
 import { BaseTriggerHandler } from "./base-trigger.service";
+import { FormattingService } from "../formatting.service";
 import crypto from 'crypto';
 
 /**
@@ -27,7 +28,7 @@ export class NewProposalTriggerHandler extends BaseTriggerHandler {
   async handleMessage(message: DispatcherMessage): Promise<MessageProcessingResult> {
     for (const proposal of message.events) {
       const { daoId, id: proposalId, title, description, timestamp } = proposal;
-      const proposalTitle = title || description.split('\n')[0].replace(/^#+\s*/, '') || 'Unnamed Proposal';
+      const proposalTitle = title || FormattingService.extractTitle(description, 'Unnamed Proposal');
       const subscribers = await this.getSubscribers(daoId, proposalId, timestamp);
       const notificationMessage = `🗳️ New governance proposal in ${daoId}: "${proposalTitle}"`;
       await this.sendNotificationsToSubscribers(subscribers, notificationMessage, proposalId, daoId);

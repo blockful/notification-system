@@ -4,6 +4,7 @@ import { ISubscriptionClient } from '../../interfaces/subscription-client.interf
 import { NotificationClientFactory } from '../notification/notification-factory.service';
 import { ProposalFinishedNotification } from '../../interfaces/notification-client.interface';
 import { formatTokenAmount } from '../../lib/number-formatter';
+import { FormattingService } from '../formatting.service';
 
 /**
  * Handler for proposal finished trigger events
@@ -49,7 +50,7 @@ export class ProposalFinishedTriggerHandler extends BaseTriggerHandler<ProposalF
   }
 
   private generateNotificationMessage(proposal: ProposalFinishedNotification): string {
-    const proposalTitle = proposal.title || proposal.description.split('\n')[0].replace(/^#+\s*/, '').trim();
+    const proposalTitle = proposal.title || FormattingService.extractTitle(proposal.description);
     
     const statusEmoji: Record<string, string> = {
       'EXECUTED': '✅',
