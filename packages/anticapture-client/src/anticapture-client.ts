@@ -14,7 +14,7 @@ import type {
 import { GetDaOsDocument, GetProposalByIdDocument, ListProposalsDocument, ListVotingPowerHistorysDocument, ListVotesOnchainsDocument } from './gql/graphql';
 import { SafeDaosResponseSchema, SafeProposalByIdResponseSchema, SafeProposalsResponseSchema, SafeVotingPowerHistoryResponseSchema, SafeVotesOnchainsResponseSchema, processProposals, processVotingPowerHistory, ProcessedVotingPowerHistory } from './schemas';
 
-type ProposalItems = NonNullable<ListProposalsQuery['proposals']>;
+type ProposalItems = NonNullable<ListProposalsQuery['proposals']>['items'];
 type VotingPowerHistoryItems = ProcessedVotingPowerHistory[];
 type VotesOnchain = NonNullable<ListVotesOnchainsQuery['votesOnchains']['items'][0]>;
 
@@ -32,7 +32,7 @@ export class AnticaptureClient {
     daoId?: string
   ): Promise<z.infer<TSchema>> {
     const headers = this.buildHeaders(daoId);
-    
+
     const response = await this.httpClient.post('', {
       query: print(document),
       variables,
@@ -57,7 +57,7 @@ export class AnticaptureClient {
 
     return headers;
   }
-  
+
 
   /**
    * Fetches all DAOs from the anticapture GraphQL API with full type safety
@@ -74,7 +74,7 @@ export class AnticaptureClient {
         chainId: dao.chainId
       }));
     } catch (error) {
-      console.warn('Returning empty DAO list due to API error: ',  error instanceof Error ? error.message : error);
+      console.warn('Returning empty DAO list due to API error: ', error instanceof Error ? error.message : error);
       return [];
     }
   }
@@ -106,7 +106,7 @@ export class AnticaptureClient {
       for (const dao of allDAOs) {
         try {
           const validated = await this.query(ListProposalsDocument, SafeProposalsResponseSchema, variables, dao.id);
-          allProposals.push(...processProposals(validated, dao.id));
+          allProposals.push(...processProposals(validated.proposals.items, dao.id));
         } catch (error) {
           console.warn(`Skipping ${dao.id} due to API error: ${error instanceof Error ? error.message : error}`);
         }
@@ -117,7 +117,7 @@ export class AnticaptureClient {
 
     try {
       const validated = await this.query(ListProposalsDocument, SafeProposalsResponseSchema, variables, daoId);
-      return processProposals(validated, daoId!);
+      return processProposals(validated.proposals.items, daoId!);
     } catch (error) {
       console.warn(`Error querying proposals for DAO ${daoId}: ${error instanceof Error ? error.message : error}`);
       return [];
@@ -144,7 +144,7 @@ export class AnticaptureClient {
       });
 
       const results = await Promise.all(queryPromises);
-      return results.flat().sort((a: ProcessedVotingPowerHistory, b: ProcessedVotingPowerHistory) => 
+      return results.flat().sort((a: ProcessedVotingPowerHistory, b: ProcessedVotingPowerHistory) =>
         parseInt(a.timestamp) - parseInt(b.timestamp)
       );
     }
@@ -166,8 +166,8 @@ export class AnticaptureClient {
   async listVotesOnchains(variables: ListVotesOnchainsQueryVariables): Promise<VotesOnchain[]> {
     try {
       const validated = await this.query(
-        ListVotesOnchainsDocument, 
-        SafeVotesOnchainsResponseSchema, 
+        ListVotesOnchainsDocument,
+        SafeVotesOnchainsResponseSchema,
         variables,
         variables.daoId
       );
