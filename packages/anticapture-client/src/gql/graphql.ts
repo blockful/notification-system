@@ -98,7 +98,7 @@ export type Query = {
   /** Returns a single proposal by its ID */
   proposal?: Maybe<Proposal_200_Response>;
   /** Returns a list of proposal */
-  proposals?: Maybe<Array<Maybe<Query_Proposals_Items>>>;
+  proposals?: Maybe<Proposals_200_Response>;
   /** Returns proposal activity data including voting history, win rates, and detailed proposal information for the specified delegate within the given time window */
   proposalsActivity?: Maybe<ProposalsActivity_200_Response>;
   proposalsOnchain?: Maybe<ProposalsOnchain>;
@@ -1320,6 +1320,12 @@ export type ProposalsOnchainPage = {
   totalCount: Scalars['Int']['output'];
 };
 
+export type Proposals_200_Response = {
+  __typename?: 'proposals_200_response';
+  items: Array<Maybe<Query_Proposals_Items_Items>>;
+  totalCount: Scalars['Float']['output'];
+};
+
 export enum QueryInput_CompareActiveSupply_Days {
   '7d' = '_7d',
   '30d' = '_30d',
@@ -1493,11 +1499,11 @@ export type Query_ProposalsActivity_Proposals_Items_Proposal = {
   againstVotes: Scalars['String']['output'];
   daoId: Scalars['String']['output'];
   description?: Maybe<Scalars['String']['output']>;
-  endBlock: Scalars['String']['output'];
+  endBlock: Scalars['Float']['output'];
   forVotes: Scalars['String']['output'];
   id: Scalars['String']['output'];
   proposerAccountId: Scalars['String']['output'];
-  startBlock: Scalars['String']['output'];
+  startBlock: Scalars['Float']['output'];
   status: Scalars['String']['output'];
   timestamp: Scalars['String']['output'];
 };
@@ -1513,8 +1519,8 @@ export type Query_ProposalsActivity_Proposals_Items_UserVote = {
   votingPower?: Maybe<Scalars['String']['output']>;
 };
 
-export type Query_Proposals_Items = {
-  __typename?: 'query_proposals_items';
+export type Query_Proposals_Items_Items = {
+  __typename?: 'query_proposals_items_items';
   abstainVotes: Scalars['String']['output'];
   againstVotes: Scalars['String']['output'];
   daoId: Scalars['String']['output'];
@@ -2139,7 +2145,7 @@ export type ListProposalsQueryVariables = Exact<{
 }>;
 
 
-export type ListProposalsQuery = { __typename?: 'Query', proposals?: Array<{ __typename?: 'query_proposals_items', id: string, daoId: string, proposerAccountId: string, title?: string | null, description: string, startBlock: number, endBlock: number, endTimestamp: string, timestamp: string, status: string, forVotes: string, againstVotes: string, abstainVotes: string } | null> | null };
+export type ListProposalsQuery = { __typename?: 'Query', proposals?: { __typename?: 'proposals_200_response', items: Array<{ __typename?: 'query_proposals_items_items', id: string, daoId: string, proposerAccountId: string, title?: string | null, description: string, startBlock: number, endBlock: number, endTimestamp: string, timestamp: string, status: string, forVotes: string, againstVotes: string, abstainVotes: string } | null> } | null };
 
 export type ListVotesOnchainsQueryVariables = Exact<{
   daoId: Scalars['String']['input'];
