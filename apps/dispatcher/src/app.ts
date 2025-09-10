@@ -9,6 +9,7 @@ import { VotingPowerTriggerHandler } from './services/triggers/voting-power-trig
 import { ProposalFinishedTriggerHandler } from './services/triggers/proposal-finished-trigger.service';
 import { NonVotingHandler } from './services/triggers/non-voting-handler.service';
 import { VoteConfirmationTriggerHandler } from './services/triggers/vote-confirmation-trigger.service';
+import { VotingReminderTriggerHandler } from './services/triggers/voting-reminder-trigger.service';
 import { RabbitMQConnection, RabbitMQPublisher } from '@notification-system/rabbitmq-client';
 import { AnticaptureClient } from '@notification-system/anticapture-client';
 
@@ -76,6 +77,12 @@ export class App {
     triggerProcessorService.addHandler(
       'vote-confirmation',
       new VoteConfirmationTriggerHandler(subscriptionClient, notificationFactory, anticaptureClient)
+    );
+
+    // Register a single voting reminder handler for all thresholds
+    triggerProcessorService.addHandler(
+      'voting-reminder',
+      new VotingReminderTriggerHandler(subscriptionClient, notificationFactory, anticaptureClient)
     );
 
     this.rabbitMQConsumerService = new RabbitMQConsumerService(this.rabbitmqUrl, triggerProcessorService);
