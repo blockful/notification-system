@@ -6,6 +6,15 @@ on:
 jobs:
   test:
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        package:
+          - dispatcher
+          - logic-system
+          - consumers
+          - subscription-server
+          - integrated-tests
+          - anticapture-client
     steps:
       - uses: actions/checkout@v3
       - uses: actions/setup-node@v3
@@ -27,5 +36,6 @@ jobs:
             ${{ runner.os }}-pnpm-store-
       - name: Install dependencies
         run: pnpm install
-      - name: Run tests
-        run: pnpm test
+      - name: Test ${{ matrix.package }}
+        run: |
+          pnpm ${{ matrix.package }} test
