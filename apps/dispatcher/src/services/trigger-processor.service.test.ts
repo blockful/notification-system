@@ -186,6 +186,4 @@ describe('TriggerProcessorService', () => {
       expect(handler2.handleMessage).toHaveBeenCalledWith(mockMessage);
     });
   });
-
-  // Pattern matching tests removed - no longer supported after simplification
 });
