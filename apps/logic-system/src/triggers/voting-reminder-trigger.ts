@@ -9,16 +9,6 @@ import { ProposalOnChain, ListProposalsOptions, ProposalDataSource } from '../in
 import { DispatcherService, DispatcherMessage } from '../interfaces/dispatcher.interface';
 
 /**
- * Options for configuring the voting reminder trigger
- */
-export interface VotingReminderOptions {
-  /** Percentage threshold (0-100) for when to send reminders */
-  thresholdPercentage: number;
-  /** Window size in percentage points for sending notifications (default: 5) */
-  windowSize?: number;
-}
-
-/**
  * Event data sent to dispatcher for voting reminders
  */
 export interface VotingReminderEvent {
@@ -35,7 +25,7 @@ export interface VotingReminderEvent {
 const TRIGGER_ID_PREFIX = 'voting-reminder';
 const DEFAULT_WINDOW_SIZE = 5; // 5% window
 
-export class VotingReminderTrigger extends Trigger<ProposalOnChain, VotingReminderOptions> {
+export class VotingReminderTrigger extends Trigger<ProposalOnChain> {
   private lastProcessedTimestamp: string;
   private thresholdPercentage: number;
   private windowSize: number;
@@ -189,7 +179,7 @@ export class VotingReminderTrigger extends Trigger<ProposalOnChain, VotingRemind
   /**
    * Fetches active proposals from the repository
    */
-  protected async fetchData(options?: VotingReminderOptions): Promise<ProposalOnChain[]> {
+  protected async fetchData(): Promise<ProposalOnChain[]> {
     return await this.proposalRepository.listAll({ 
       status: 'ACTIVE',
       fromDate: this.lastProcessedTimestamp

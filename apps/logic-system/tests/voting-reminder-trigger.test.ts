@@ -194,7 +194,7 @@ describe('VotingReminderTrigger', () => {
 
       mockProposalRepository.listAll.mockResolvedValue(proposals);
 
-      const result = await trigger['fetchData']({ thresholdPercentage: 90 });
+      const result = await trigger['fetchData']();
 
       // Should include fromDate filter with lastProcessedTimestamp
       expect(mockProposalRepository.listAll).toHaveBeenCalledWith({

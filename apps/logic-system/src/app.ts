@@ -83,7 +83,6 @@ export class App {
     );
 
     // Initialize voting reminder triggers with different thresholds
-    // Use the same interval as other triggers for consistency (especially important for tests)
     this.votingReminderTrigger30 = new VotingReminderTrigger(
       dispatcherService,
       proposalRepository,
@@ -114,9 +113,9 @@ export class App {
     this.voteConfirmationTrigger.start();
     
     // Start voting reminder triggers with their respective configurations
-    this.votingReminderTrigger30.start({ thresholdPercentage: 30});
-    this.votingReminderTrigger60.start({ thresholdPercentage: 60 });
-    this.votingReminderTrigger90.start({ thresholdPercentage: 90 });
+    this.votingReminderTrigger30.start();
+    this.votingReminderTrigger60.start();
+    this.votingReminderTrigger90.start();
     
     console.log('Logic system is running. Press Ctrl+C to stop.');
   }
