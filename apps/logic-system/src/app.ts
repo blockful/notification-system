@@ -2,6 +2,7 @@ import { NewProposalTrigger } from './triggers/new-proposal-trigger';
 import { VotingPowerChangedTrigger } from './triggers/voting-power-changed-trigger';
 import { ProposalFinishedTrigger } from './triggers/proposal-finished-trigger';
 import { VoteConfirmationTrigger } from './triggers/vote-confirmation-trigger';
+import { VotingReminderTrigger } from './triggers/voting-reminder-trigger';
 import { ProposalRepository } from './repositories/proposal.repository';
 import { VotingPowerRepository } from './repositories/voting-power.repository';
 import { VotesRepository } from './repositories/votes.repository';
@@ -16,6 +17,9 @@ export class App {
   private votingPowerTrigger!: VotingPowerChangedTrigger;
   private proposalFinishedTrigger!: ProposalFinishedTrigger;
   private voteConfirmationTrigger!: VoteConfirmationTrigger;
+  private votingReminderTrigger30!: VotingReminderTrigger;
+  private votingReminderTrigger60!: VotingReminderTrigger;
+  private votingReminderTrigger90!: VotingReminderTrigger;
   private proposalStatus: ProposalStatus;
   private rabbitMQConnection!: RabbitMQConnection;
   private rabbitMQPublisher!: RabbitMQPublisher;
@@ -77,6 +81,29 @@ export class App {
       votesRepository,
       triggerInterval
     );
+
+    // Initialize voting reminder triggers with different thresholds
+    // Use the same interval as other triggers for consistency (especially important for tests)
+    this.votingReminderTrigger30 = new VotingReminderTrigger(
+      dispatcherService,
+      proposalRepository,
+      triggerInterval,
+      30, // 30% threshold
+    );
+
+    this.votingReminderTrigger60 = new VotingReminderTrigger(
+      dispatcherService,
+      proposalRepository,
+      triggerInterval,
+      60, // 60% threshold
+    );
+
+    this.votingReminderTrigger90 = new VotingReminderTrigger(
+      dispatcherService,
+      proposalRepository,
+      triggerInterval,
+      90, // 90% threshold
+    );
   }
 
   async start(): Promise<void> {
@@ -85,6 +112,12 @@ export class App {
     this.votingPowerTrigger.start();
     this.proposalFinishedTrigger.start();
     this.voteConfirmationTrigger.start();
+    
+    // Start voting reminder triggers with their respective configurations
+    this.votingReminderTrigger30.start({ thresholdPercentage: 30});
+    this.votingReminderTrigger60.start({ thresholdPercentage: 60 });
+    this.votingReminderTrigger90.start({ thresholdPercentage: 90 });
+    
     console.log('Logic system is running. Press Ctrl+C to stop.');
   }
 
@@ -107,6 +140,15 @@ export class App {
     if (this.voteConfirmationTrigger) {
       this.voteConfirmationTrigger.reset(initialTimestamp);
     }
+    if (this.votingReminderTrigger30) {
+      this.votingReminderTrigger30.reset(initialTimestamp);
+    }
+    if (this.votingReminderTrigger60) {
+      this.votingReminderTrigger60.reset(initialTimestamp);
+    }
+    if (this.votingReminderTrigger90) {
+      this.votingReminderTrigger90.reset(initialTimestamp);
+    }
   }
 
   async stop(): Promise<void> {
@@ -114,6 +156,9 @@ export class App {
     await this.votingPowerTrigger.stop();
     await this.proposalFinishedTrigger.stop();
     await this.voteConfirmationTrigger.stop();
+    await this.votingReminderTrigger30.stop();
+    await this.votingReminderTrigger60.stop();
+    await this.votingReminderTrigger90.stop();
     if (this.rabbitMQPublisher) {
       await this.rabbitMQPublisher.close();
     }
