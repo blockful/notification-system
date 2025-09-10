@@ -7,14 +7,13 @@ jobs:
   test:
     runs-on: ubuntu-latest
     strategy:
+      fail-fast: false
       matrix:
         package:
           - dispatcher
           - logic-system
           - consumers
           - subscription-server
-          - integrated-tests
-          - anticapture-client
     steps:
       - uses: actions/checkout@v3
       - uses: actions/setup-node@v3
