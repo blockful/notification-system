@@ -7,6 +7,7 @@ import { DispatcherMessage } from '../../interfaces/dispatcher-message.interface
 import { ISubscriptionClient } from '../../interfaces/subscription-client.interface';
 import { NotificationClientFactory } from '../notification/notification-factory.service';
 import { AnticaptureClient } from '@notification-system/anticapture-client';
+import { FormattingService } from '../formatting.service';
 
 describe('VotingReminderTriggerHandler', () => {
   let handler: VotingReminderTriggerHandler;
@@ -224,14 +225,14 @@ describe('VotingReminderTriggerHandler', () => {
     it('should calculate time remaining correctly', () => {
       // Mock current time to be 1500000 (middle of proposal period)
       const endTimestamp = 2000000;
-      const remaining = (handler as any).calculateTimeRemaining(endTimestamp);
+      const remaining = FormattingService.calculateTimeRemaining(endTimestamp);
       
       expect(remaining).toContain('day'); // Should show days remaining
     });
 
     it('should handle proposals that have ended', () => {
       const endTimestamp = 1000000; // Before current time (1500000)
-      const remaining = (handler as any).calculateTimeRemaining(endTimestamp);
+      const remaining = FormattingService.calculateTimeRemaining(endTimestamp);
       
       expect(remaining).toBe('Proposal has ended');
     });
@@ -239,7 +240,7 @@ describe('VotingReminderTriggerHandler', () => {
     it('should format time in hours when less than a day remains', () => {
       jest.spyOn(Date, 'now').mockReturnValue(1990000 * 1000); // Close to end
       const endTimestamp = 2000000;
-      const remaining = (handler as any).calculateTimeRemaining(endTimestamp);
+      const remaining = FormattingService.calculateTimeRemaining(endTimestamp);
       
       expect(remaining).toMatch(/hour/);
     });
@@ -247,7 +248,7 @@ describe('VotingReminderTriggerHandler', () => {
     it('should format time in minutes when less than an hour remains', () => {
       jest.spyOn(Date, 'now').mockReturnValue(1999000 * 1000); // Very close to end
       const endTimestamp = 2000000;
-      const remaining = (handler as any).calculateTimeRemaining(endTimestamp);
+      const remaining = FormattingService.calculateTimeRemaining(endTimestamp);
       
       expect(remaining).toMatch(/minute/);
     });
