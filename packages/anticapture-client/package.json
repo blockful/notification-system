@@ -36,6 +36,7 @@
     "@graphql-typed-document-node/core": "^3.2.0",
     "axios": "^1.7.2",
     "graphql": "^16.11.0",
+    "viem": "^2.34.0",
     "zod": "^3.22.4"
   }
 }
