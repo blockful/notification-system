@@ -1,4 +1,4 @@
-import { globalRabbitMQSetup } from '../rabbitmq-setup';
+import { RabbitMQTestSetup } from '../rabbitmq-setup';
 
 /**
  * @notice Jest global teardown function executed once after all tests
@@ -9,6 +9,6 @@ export default async function globalTeardown() {
   if ((global as any).__RABBITMQ_CONTAINER__) {
     await (global as any).__RABBITMQ_CONTAINER__.stop();
   }
-  await globalRabbitMQSetup.globalCleanup();
+  await RabbitMQTestSetup.getInstance().cleanup();
   delete (process as any).env.TEST_RABBITMQ_URL;
 }

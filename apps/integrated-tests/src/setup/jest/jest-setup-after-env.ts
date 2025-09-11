@@ -1,3 +1,4 @@
+import '../../mocks/telegram-mock-setup';
 import { beforeAll, afterAll } from '@jest/globals';
 import { mockSendMessage, HttpClientMockSetup, GraphQLMockSetup } from '../../mocks';
 import { setupDatabase, db, closeDatabase, startTestApps, stopTestApps, TestApps } from '../../setup';
@@ -29,12 +30,15 @@ beforeAll(async () => {
     throw new Error('TEST_RABBITMQ_URL not set. Make sure globalSetup ran correctly.');
   }
   const apps = await startTestApps(db, httpMockSetup.getMockClient());
-  const rabbitmqSetup = new RabbitMQTestSetup();
-  await rabbitmqSetup.setupWithExistingContainer(rabbitmqUrl);
+  const rabbitmqSetup = RabbitMQTestSetup.getInstance();
+  await rabbitmqSetup.setup(rabbitmqUrl); // Pass existing URL to avoid creating new container
   apps.rabbitmqSetup = rabbitmqSetup;
+  
+  // Get the mock from the test client that was injected into the app
+  global.mockSendMessage = apps.mockSendMessage || mockSendMessage;
+  
   global.testApps = apps;
   global.httpMockSetup = httpMockSetup;
-  global.mockSendMessage = mockSendMessage;
   
 }, timeouts.test.short);
 

@@ -64,12 +64,14 @@ exports.SafeVotingPowerHistoryResponseSchema = zod_1.z.object({
 exports.SafeVotesOnchainsResponseSchema = zod_1.z.object({
     votesOnchains: zod_1.z.object({
         items: zod_1.z.array(zod_1.z.object({
+            daoId: zod_1.z.string(),
             txHash: zod_1.z.string().optional(),
             proposalId: zod_1.z.string(),
             voterAccountId: zod_1.z.string(),
             support: zod_1.z.string().optional(),
             votingPower: zod_1.z.string().optional(),
-            timestamp: zod_1.z.string().optional()
+            timestamp: zod_1.z.string().optional(),
+            reason: zod_1.z.string().optional().nullable()
         })),
         totalCount: zod_1.z.number()
     })

@@ -1,5 +1,3 @@
-import { Telegraf } from 'telegraf';
-import { session } from 'telegraf/session';
 import { AxiosInstance } from 'axios';
 import { TelegramBotService } from './services/telegram-bot.service';
 import { DAOService } from './services/dao.service';
@@ -8,8 +6,8 @@ import { ExplorerService } from './services/explorer.service';
 import { EnsResolverService } from './services/ens-resolver.service';
 import { AnticaptureClient } from '@notification-system/anticapture-client';
 import { SubscriptionAPIService } from './services/subscription-api.service';
-import { ContextWithSession } from './interfaces/bot.interface';
 import { RabbitMQNotificationConsumerService } from './services/rabbitmq-notification-consumer.service';
+import { TelegramClientInterface } from './interfaces/telegram-client.interface';
 
 export class App {
   private telegramBotService: TelegramBotService;
@@ -17,20 +15,25 @@ export class App {
   private rabbitmqUrl: string;
 
   constructor(
-    telegramBotToken: string, 
     subscriptionServerUrl: string, 
     httpClient: AxiosInstance,
     rabbitmqUrl: string,
-    ensResolver: EnsResolverService
+    ensResolver: EnsResolverService,
+    telegramClient: TelegramClientInterface
   ) {
     const subscriptionApi = new SubscriptionAPIService(subscriptionServerUrl);
     const anticaptureClient = new AnticaptureClient(httpClient);
     const daoService = new DAOService(anticaptureClient, subscriptionApi);
     const walletService = new WalletService(subscriptionApi, ensResolver);
     const explorerService = new ExplorerService();
-    const bot = new Telegraf<ContextWithSession>(telegramBotToken);
-    bot.use(session());
-    this.telegramBotService = new TelegramBotService(bot, daoService, walletService, explorerService, ensResolver);
+    
+    this.telegramBotService = new TelegramBotService(
+      telegramClient,
+      daoService, 
+      walletService, 
+      explorerService, 
+      ensResolver
+    );
     this.rabbitmqUrl = rabbitmqUrl;
   }
 

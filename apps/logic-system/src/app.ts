@@ -1,8 +1,11 @@
 import { NewProposalTrigger } from './triggers/new-proposal-trigger';
 import { VotingPowerChangedTrigger } from './triggers/voting-power-changed-trigger';
 import { ProposalFinishedTrigger } from './triggers/proposal-finished-trigger';
+import { VoteConfirmationTrigger } from './triggers/vote-confirmation-trigger';
+import { VotingReminderTrigger } from './triggers/voting-reminder-trigger';
 import { ProposalRepository } from './repositories/proposal.repository';
 import { VotingPowerRepository } from './repositories/voting-power.repository';
+import { VotesRepository } from './repositories/votes.repository';
 import { RabbitMQDispatcherService } from './api-clients/rabbitmq-dispatcher.service';
 import { AnticaptureClient } from '@notification-system/anticapture-client';
 import { RabbitMQConnection, RabbitMQPublisher } from '@notification-system/rabbitmq-client';
@@ -13,6 +16,10 @@ export class App {
   private trigger!: NewProposalTrigger;
   private votingPowerTrigger!: VotingPowerChangedTrigger;
   private proposalFinishedTrigger!: ProposalFinishedTrigger;
+  private voteConfirmationTrigger!: VoteConfirmationTrigger;
+  private votingReminderTrigger30!: VotingReminderTrigger;
+  private votingReminderTrigger60!: VotingReminderTrigger;
+  private votingReminderTrigger90!: VotingReminderTrigger;
   private proposalStatus: ProposalStatus;
   private rabbitMQConnection!: RabbitMQConnection;
   private rabbitMQPublisher!: RabbitMQPublisher;
@@ -30,14 +37,16 @@ export class App {
     const anticaptureClient = new AnticaptureClient(anticaptureHttpClient);
     const proposalRepository = new ProposalRepository(anticaptureClient);
     const votingPowerRepository = new VotingPowerRepository(anticaptureClient);
+    const votesRepository = new VotesRepository(anticaptureClient);
 
-    this.initPromise = this.initializeRabbitMQ(rabbitmqUrl, proposalRepository, votingPowerRepository, triggerInterval, initialTimestamp);
+    this.initPromise = this.initializeRabbitMQ(rabbitmqUrl, proposalRepository, votingPowerRepository, votesRepository, triggerInterval, initialTimestamp);
   }
 
   private async initializeRabbitMQ(
     rabbitmqUrl: string, 
     proposalRepository: ProposalRepository,
     votingPowerRepository: VotingPowerRepository,
+    votesRepository: VotesRepository,
     triggerInterval: number,
     initialTimestamp?: string
   ): Promise<void> {
@@ -66,6 +75,34 @@ export class App {
       triggerInterval,
       initialTimestamp
     );
+
+    this.voteConfirmationTrigger = new VoteConfirmationTrigger(
+      dispatcherService,
+      votesRepository,
+      triggerInterval
+    );
+
+    // Initialize voting reminder triggers with different thresholds
+    this.votingReminderTrigger30 = new VotingReminderTrigger(
+      dispatcherService,
+      proposalRepository,
+      triggerInterval,
+      30, // 30% threshold
+    );
+
+    this.votingReminderTrigger60 = new VotingReminderTrigger(
+      dispatcherService,
+      proposalRepository,
+      triggerInterval,
+      60, // 60% threshold
+    );
+
+    this.votingReminderTrigger90 = new VotingReminderTrigger(
+      dispatcherService,
+      proposalRepository,
+      triggerInterval,
+      90, // 90% threshold
+    );
   }
 
   async start(): Promise<void> {
@@ -73,6 +110,13 @@ export class App {
     this.trigger.start({ status: this.proposalStatus });
     this.votingPowerTrigger.start();
     this.proposalFinishedTrigger.start();
+    this.voteConfirmationTrigger.start();
+    
+    // Start voting reminder triggers with their respective configurations
+    this.votingReminderTrigger30.start();
+    this.votingReminderTrigger60.start();
+    this.votingReminderTrigger90.start();
+    
     console.log('Logic system is running. Press Ctrl+C to stop.');
   }
 
@@ -92,12 +136,28 @@ export class App {
     if (this.proposalFinishedTrigger) {
       this.proposalFinishedTrigger.reset(initialTimestamp);
     }
+    if (this.voteConfirmationTrigger) {
+      this.voteConfirmationTrigger.reset(initialTimestamp);
+    }
+    if (this.votingReminderTrigger30) {
+      this.votingReminderTrigger30.reset(initialTimestamp);
+    }
+    if (this.votingReminderTrigger60) {
+      this.votingReminderTrigger60.reset(initialTimestamp);
+    }
+    if (this.votingReminderTrigger90) {
+      this.votingReminderTrigger90.reset(initialTimestamp);
+    }
   }
 
   async stop(): Promise<void> {
     await this.trigger.stop();
     await this.votingPowerTrigger.stop();
     await this.proposalFinishedTrigger.stop();
+    await this.voteConfirmationTrigger.stop();
+    await this.votingReminderTrigger30.stop();
+    await this.votingReminderTrigger60.stop();
+    await this.votingReminderTrigger90.stop();
     if (this.rabbitMQPublisher) {
       await this.rabbitMQPublisher.close();
     }

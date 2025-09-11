@@ -7,6 +7,13 @@ type VotesOnchain = NonNullable<ListVotesOnchainsQuery['votesOnchains']['items']
 export declare class AnticaptureClient {
     private readonly httpClient;
     constructor(httpClient: AxiosInstance);
+    /**
+     * Recursively normalizes Ethereum addresses to EIP-55 checksum format
+     * Detects addresses by their format using viem's isAddress validation
+     * @param obj - Any value to normalize (primitives, objects, arrays, nested structures)
+     * @returns The normalized value with checksummed addresses
+     */
+    private normalizeAddresses;
     private query;
     private buildHeaders;
     /**
@@ -37,5 +44,12 @@ export declare class AnticaptureClient {
      * @returns List of votes matching the criteria
      */
     listVotesOnchains(variables: ListVotesOnchainsQueryVariables): Promise<VotesOnchain[]>;
+    /**
+     * List recent votes from all DAOs since a given timestamp
+     * @param timestampGt Fetch votes with timestamp greater than this value
+     * @param limit Maximum number of votes to fetch per DAO (default: 100)
+     * @returns Array of votes from all DAOs
+     */
+    listRecentVotesFromAllDaos(timestampGt: string, limit?: number): Promise<VotesOnchain[]>;
 }
 export {};

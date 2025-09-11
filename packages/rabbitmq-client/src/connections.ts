@@ -53,4 +53,8 @@ export class RabbitMQConnection {
   getConnection(): Connection | null {
     return this.connection;
   }
+  
+  async queuePurge(queueName: string): Promise<void> {
+    await this.connection?.queuePurge(queueName);
+  }
 }

@@ -25,9 +25,11 @@ export class TestCleanup {
       GraphQLMockSetup.setupMock(global.httpMockSetup.getMockClient());
     }
     
-    // Clear RabbitMQ collected events
+    // Clear RabbitMQ collected events and purge all queues
     if (global.testApps?.rabbitmqSetup) {
       global.testApps.rabbitmqSetup.clearCollectedEvents();
+      // Purge all queues to prevent event leakage between tests
+      await global.testApps.rabbitmqSetup.purgeAllQueues();
     }
     
     // Reset trigger timestamps to initial state (1 year ago)
