@@ -38,8 +38,12 @@ export class VotingPowerTriggerHandler extends BaseTriggerHandler {
       };
     }
 
-    // Get unique account IDs to batch wallet owners lookup
-    const uniqueAccountIds = [...new Set(validEvents.map(event => event.accountId))];
+    // Get unique account IDs to batch wallet owners lookup (including sourceAccountIds for delegation notifications)
+    const allAccountIds = [
+      ...validEvents.map(event => event.accountId), // who receives voting power changes
+      ...validEvents.map(event => event.sourceAccountId).filter(Boolean) // who delegates
+    ];
+    const uniqueAccountIds = [...new Set(allAccountIds)];
     const walletOwnersMap = await this.subscriptionClient.getWalletOwnersBatch(uniqueAccountIds);
 
     // Group events by DAO to batch DAO subscribers lookup
@@ -65,83 +69,224 @@ export class VotingPowerTriggerHandler extends BaseTriggerHandler {
 
     // Now process each event with cached data
     for (const votingPowerEvent of validEvents) {
-      const { daoId, accountId, votingPower, timestamp, delta, transactionHash, changeType, sourceAccountId, targetAccountId, chainId } = votingPowerEvent;
-      
-      // Get wallet owners from cache
-      const walletOwners = walletOwnersMap[accountId] || [];
-      
-      if (walletOwners.length === 0) {
-        continue;
-      }
-      
-      // Get DAO subscribers from cache
-      const daoSubscribers = daoSubscribersMap[daoId] || [];
-      
-      // Filter wallet owners to only include those subscribed to this DAO
-      const subscribedOwners = walletOwners.filter(owner => 
-        daoSubscribers.some(sub => sub.id === owner.id)
-      );
-      
-      if (subscribedOwners.length === 0) {
-        continue;
-      }
-      
-      // Check deduplication for all subscribed owners at once
-      const shouldSendNotifications = await this.subscriptionClient.shouldSend(subscribedOwners, transactionHash, daoId);
-      
-      // Final filtered list of subscribers
-      const subscribers = subscribedOwners.filter(owner => 
-        shouldSendNotifications.some(notification => notification.user_id === owner.id)
-      );
-      
-      let notificationMessage = '';
-      let addressMetadata: { addresses?: Record<string, string> } | undefined;
-      
-      const deltaValue = delta ? parseInt(delta) : 0;
-      const formattedDelta = formatTokenAmount(Math.abs(deltaValue));
-
+      const { changeType, accountId, sourceAccountId } = votingPowerEvent;
       if (changeType === 'delegation') {
-        if (deltaValue >= 0) {
-          notificationMessage = `🥳 You've received a new delegation in ${daoId}!\n{{delegator}} delegated to you, increasing your voting power by ${formattedDelta}.`;
-          addressMetadata = { addresses: { delegator: sourceAccountId } };
-        } else if (deltaValue < 0) {
-          notificationMessage = `🥺 A delegator just undelegated in ${daoId}!\n{{delegator}} removed their delegation, reducing your voting power by ${formattedDelta}.`;
-          addressMetadata = { addresses: { delegator: sourceAccountId } };
-        } 
-      } else if (changeType === 'transfer') {
-        if (deltaValue >= 0) {
-          notificationMessage = `📈 Your voting power increased in ${daoId}!\nYou gained ${formattedDelta} voting power from token transfer activity.`;
-        } else if (deltaValue < 0) {
-          notificationMessage = `📉 Your voting power decreased in ${daoId}!\nYou lost ${formattedDelta} voting power from token transfer activity.`;
-        } 
-      } else {
-        // Generic voting power change
-        if (deltaValue !== 0) {
-          notificationMessage = `⚡ Your voting power has changed in ${daoId}!\nVoting power updated by ${formattedDelta}.`;
-        } else {
-          notificationMessage = `⚡ Your voting power has changed in ${daoId}!\nVoting power activity detected.`;
+        const isSelfDelegation = sourceAccountId === accountId;
+        
+        if (!isSelfDelegation) {
+          await this.processDelegationReceivedNotification(votingPowerEvent, walletOwnersMap, daoSubscribersMap);
         }
+        await this.processDelegationSentNotification(votingPowerEvent, walletOwnersMap, daoSubscribersMap);
+      } else {
+        await this.processOtherVotingPowerNotification(votingPowerEvent, walletOwnersMap, daoSubscribersMap);
       }
-      // Add transaction link placeholder
-      notificationMessage += '\n\n{{txLink}}';
-      
-      // Prepare metadata with transaction info and addresses
-      const metadata = {
-        ...(chainId && {
-          transaction: {
-            hash: transactionHash,
-            chainId: chainId
-          }
-        }),
-        ...addressMetadata
-      };
-      
-      await this.sendNotificationsToSubscribers(subscribers, notificationMessage, transactionHash, daoId, metadata);
     }
     
     return {
       messageId: crypto.randomUUID(),
       timestamp: new Date().toISOString()
+    };
+  }
+
+  /**
+   * Process delegation received notification
+   */
+  private async processDelegationReceivedNotification(
+    votingPowerEvent: any,
+    walletOwnersMap: Record<string, User[]>,
+    daoSubscribersMap: Record<string, User[]>
+  ): Promise<void> {
+    const { daoId, accountId, sourceAccountId, delta, transactionHash, chainId } = votingPowerEvent;
+    
+    const subscribers = await this.getNotificationSubscribers(
+      accountId, // who receives the delegation
+      daoId,
+      transactionHash,
+      walletOwnersMap,
+      daoSubscribersMap
+    );
+    
+    if (subscribers.length === 0) return;
+    
+    const deltaValue = delta ? parseInt(delta) : 0;
+    const formattedDelta = formatTokenAmount(Math.abs(deltaValue));
+    
+    let notificationMessage = '';
+    if (deltaValue >= 0) {
+      notificationMessage = `🥳 You've received a new delegation in ${daoId}!\n{{delegator}} delegated to you, increasing your voting power by ${formattedDelta}.`;
+    } else {
+      notificationMessage = `🥺 A delegator just undelegated in ${daoId}!\n{{delegator}} removed their delegation, reducing your voting power by ${formattedDelta}.`;
+    }
+    
+    notificationMessage += '\n\n{{txLink}}';
+    
+    const metadata = this.buildNotificationMetadata(chainId, transactionHash, {
+      delegator: sourceAccountId
+    });
+    
+    await this.sendNotificationsToSubscribers(subscribers, notificationMessage, transactionHash, daoId, metadata);
+  }
+
+  /**
+   * Process delegation sent notification
+   */
+  private async processDelegationSentNotification(
+    votingPowerEvent: any,
+    walletOwnersMap: Record<string, User[]>,
+    daoSubscribersMap: Record<string, User[]>
+  ): Promise<void> {
+    const { daoId, accountId, sourceAccountId, targetAccountId, delta, transactionHash, chainId } = votingPowerEvent;
+    
+    // Skip if sourceAccountId is not present
+    if (!sourceAccountId) {
+      return;
+    }
+    
+    const subscribers = await this.getNotificationSubscribers(
+      sourceAccountId, // who MADE the delegation
+      daoId,
+      transactionHash,
+      walletOwnersMap,
+      daoSubscribersMap
+    );
+    
+    if (subscribers.length === 0) {
+      return;
+    }
+    
+    const deltaValue = delta ? parseInt(delta) : 0;
+    const formattedDelta = formatTokenAmount(Math.abs(deltaValue));
+    
+    let notificationMessage = '';
+    
+    // Check for self-delegation
+    if (sourceAccountId === accountId) {
+      const { votingPower } = votingPowerEvent;
+      const formattedVotingPower = votingPower ? formatTokenAmount(parseInt(votingPower)) : formattedDelta;
+      
+      if (deltaValue > 0) {
+        notificationMessage = `🔄 Self-delegation confirmed in ${daoId}!\nYou delegated ${formattedDelta} voting power to yourself.\n\n💪 Your total voting power is now ${formattedVotingPower}.`;
+      } else {
+        notificationMessage = `🔄 Self-undelegation confirmed in ${daoId}!\nYou removed ${formattedDelta} voting power from yourself.\n\n💪 Your total voting power is now ${formattedVotingPower}.`;
+      }
+    } else {
+      if (deltaValue > 0) {
+        notificationMessage = `✅ Delegation confirmed in ${daoId}!\nAccount {{delegatorAccount}} delegated ${formattedDelta} voting power to {{delegate}}.`;
+      } else {
+        notificationMessage = `↩️ Undelegation confirmed in ${daoId}!\nAccount {{delegatorAccount}} removed ${formattedDelta} voting power from {{delegate}}.`;
+      }
+    }
+    
+    notificationMessage += '\n\n{{txLink}}';
+    
+    const metadata = this.buildNotificationMetadata(chainId, transactionHash, {
+      delegatorAccount: sourceAccountId,
+      delegate: targetAccountId || accountId
+    });
+    
+    await this.sendNotificationsToSubscribers(subscribers, notificationMessage, transactionHash, daoId, metadata);
+  }
+
+  /**
+   * Process other voting power notifications (transfer, other types)
+   */
+  private async processOtherVotingPowerNotification(
+    votingPowerEvent: any,
+    walletOwnersMap: Record<string, User[]>,
+    daoSubscribersMap: Record<string, User[]>
+  ): Promise<void> {
+    const { daoId, accountId, changeType, delta, transactionHash, chainId } = votingPowerEvent;
+    
+    const subscribers = await this.getNotificationSubscribers(
+      accountId,
+      daoId,
+      transactionHash,
+      walletOwnersMap,
+      daoSubscribersMap
+    );
+    
+    if (subscribers.length === 0) return;
+    
+    const deltaValue = delta ? parseInt(delta) : 0;
+    const formattedDelta = formatTokenAmount(Math.abs(deltaValue));
+    
+    let notificationMessage = '';
+    if (changeType === 'transfer') {
+      if (deltaValue >= 0) {
+        notificationMessage = `📈 Your voting power increased in ${daoId}!\nYou gained ${formattedDelta} voting power from token transfer activity.`;
+      } else {
+        notificationMessage = `📉 Your voting power decreased in ${daoId}!\nYou lost ${formattedDelta} voting power from token transfer activity.`;
+      }
+    } else {
+      // Generic voting power change
+      if (deltaValue !== 0) {
+        notificationMessage = `⚡ Your voting power has changed in ${daoId}!\nVoting power updated by ${formattedDelta}.`;
+      } else {
+        notificationMessage = `⚡ Your voting power has changed in ${daoId}!\nVoting power activity detected.`;
+      }
+    }
+    
+    notificationMessage += '\n\n{{txLink}}';
+    
+    const metadata = this.buildNotificationMetadata(chainId, transactionHash);
+    
+    await this.sendNotificationsToSubscribers(subscribers, notificationMessage, transactionHash, daoId, metadata);
+  }
+
+  /**
+   * Shared method to get notification subscribers with deduplication
+   */
+  private async getNotificationSubscribers(
+    accountId: string,
+    daoId: string,
+    transactionHash: string,
+    walletOwnersMap: Record<string, User[]>,
+    daoSubscribersMap: Record<string, User[]>
+  ): Promise<User[]> {
+    // Get wallet owners from cache
+    const walletOwners = walletOwnersMap[accountId] || [];
+    if (walletOwners.length === 0) return [];
+    
+    // Get DAO subscribers from cache
+    const daoSubscribers = daoSubscribersMap[daoId] || [];
+    
+    // Filter wallet owners to only include those subscribed to this DAO
+    const subscribedOwners = walletOwners.filter(owner => 
+      daoSubscribers.some(sub => sub.id === owner.id)
+    );
+    
+    if (subscribedOwners.length === 0) return [];
+    
+    // Check deduplication for all subscribed owners at once
+    const shouldSendNotifications = await this.subscriptionClient.shouldSend(
+      subscribedOwners, 
+      transactionHash, 
+      daoId
+    );
+    
+    // Final filtered list of subscribers
+    const finalSubscribers = subscribedOwners.filter(owner => 
+      shouldSendNotifications.some(notification => notification.user_id === owner.id)
+    );
+    return finalSubscribers;
+  }
+
+  /**
+   * Shared method to build notification metadata
+   */
+  private buildNotificationMetadata(
+    chainId?: number,
+    transactionHash?: string,
+    addresses?: Record<string, string>
+  ): any {
+    return {
+      ...(chainId && transactionHash && {
+        transaction: {
+          hash: transactionHash,
+          chainId: chainId
+        }
+      }),
+      ...(addresses && { addresses })
     };
   }
 }
