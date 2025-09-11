@@ -1493,11 +1493,11 @@ export type Query_ProposalsActivity_Proposals_Items_Proposal = {
   againstVotes: Scalars['String']['output'];
   daoId: Scalars['String']['output'];
   description?: Maybe<Scalars['String']['output']>;
-  endBlock: Scalars['String']['output'];
+  endBlock: Scalars['Float']['output'];
   forVotes: Scalars['String']['output'];
   id: Scalars['String']['output'];
   proposerAccountId: Scalars['String']['output'];
-  startBlock: Scalars['String']['output'];
+  startBlock: Scalars['Float']['output'];
   status: Scalars['String']['output'];
   timestamp: Scalars['String']['output'];
 };
@@ -1806,7 +1806,7 @@ export type Transactions_200_Response = {
 
 export type Transfer = {
   __typename?: 'transfer';
-  amount?: Maybe<Scalars['BigInt']['output']>;
+  amount: Scalars['BigInt']['output'];
   daoId: Scalars['String']['output'];
   from?: Maybe<Account>;
   fromAccountId: Scalars['String']['output'];
@@ -1815,11 +1815,11 @@ export type Transfer = {
   isLending: Scalars['Boolean']['output'];
   isTotal: Scalars['Boolean']['output'];
   logIndex: Scalars['Int']['output'];
-  timestamp?: Maybe<Scalars['BigInt']['output']>;
+  timestamp: Scalars['BigInt']['output'];
   to?: Maybe<Account>;
   toAccountId: Scalars['String']['output'];
   token?: Maybe<Token>;
-  tokenId?: Maybe<Scalars['String']['output']>;
+  tokenId: Scalars['String']['output'];
   transaction?: Maybe<Transaction>;
   transactionHash: Scalars['String']['output'];
 };
@@ -2165,7 +2165,7 @@ export type ListVotingPowerHistorysQueryVariables = Exact<{
 }>;
 
 
-export type ListVotingPowerHistorysQuery = { __typename?: 'Query', votingPowerHistorys: { __typename?: 'votingPowerHistoryPage', items: Array<{ __typename?: 'votingPowerHistory', accountId: string, timestamp: string, votingPower: string, delta: string, daoId: string, transactionHash: string, delegation?: { __typename?: 'delegation', delegatorAccountId: string, delegatedValue: string } | null, transfer?: { __typename?: 'transfer', amount?: string | null, fromAccountId: string, toAccountId: string } | null }> } };
+export type ListVotingPowerHistorysQuery = { __typename?: 'Query', votingPowerHistorys: { __typename?: 'votingPowerHistoryPage', items: Array<{ __typename?: 'votingPowerHistory', accountId: string, timestamp: string, votingPower: string, delta: string, daoId: string, transactionHash: string, delegation?: { __typename?: 'delegation', delegatorAccountId: string, delegatedValue: string } | null, transfer?: { __typename?: 'transfer', amount: string, fromAccountId: string, toAccountId: string } | null }> } };
 
 
 export const GetDaOsDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"query","name":{"kind":"Name","value":"GetDAOs"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"daos"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"items"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"votingDelay"}},{"kind":"Field","name":{"kind":"Name","value":"chainId"}}]}}]}}]}}]} as unknown as DocumentNode<GetDaOsQuery, GetDaOsQueryVariables>;
