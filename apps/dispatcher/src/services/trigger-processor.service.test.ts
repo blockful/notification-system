@@ -62,14 +62,21 @@ describe('TriggerProcessorService', () => {
       expect(result).toStrictEqual(mockResult);
     });
 
-    it('should throw error for unknown trigger', async () => {
+    it('should return unhandled response for unknown trigger', async () => {
+      const consoleSpy = jest.spyOn(console, 'log').mockImplementation(() => {});
+      
       const mockMessage: DispatcherMessage = {
         triggerId: 'unknown-trigger',
         ...MOCK_MESSAGE_BASE
       };
-      await expect(service.processTrigger(mockMessage))
-        .rejects
-        .toThrow('No handler registered for trigger: unknown-trigger');
+      
+      const result = await service.processTrigger(mockMessage);
+      
+      // Should log and return unhandled response
+      expect(consoleSpy).toHaveBeenCalledWith('No handler registered for trigger: unknown-trigger');
+      expect(result.messageId).toMatch(/^unhandled-unknown-trigger-/);
+      
+      consoleSpy.mockRestore();
     });
   });
 

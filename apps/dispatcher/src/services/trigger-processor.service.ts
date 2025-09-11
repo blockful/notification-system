@@ -33,8 +33,14 @@ export class TriggerProcessorService {
    */
   async processTrigger<T = any>(message: DispatcherMessage<T>): Promise<MessageProcessingResult> {
     const handlers = this.triggerHandlers.get(message.triggerId);
+    
+    // If no handlers found, return early
     if (!handlers || handlers.length === 0) {
-      throw new Error(`No handler registered for trigger: ${message.triggerId}`);
+      console.log(`No handler registered for trigger: ${message.triggerId}`);
+      return {
+        messageId: `unhandled-${message.triggerId}-${Date.now()}`,
+        timestamp: new Date().toISOString()
+      };
     }
 
     // Execute all handlers in parallel
