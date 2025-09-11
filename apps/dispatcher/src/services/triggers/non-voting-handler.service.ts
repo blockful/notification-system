@@ -174,6 +174,11 @@ export class NonVotingHandler extends BaseTriggerHandler<ProposalFinishedNotific
       orderDirection: QueryInput_Proposals_OrderDirection.Desc
     }, daoId);
 
+    // If proposals is undefined or empty, return empty array
+    if (!proposals || !Array.isArray(proposals)) {
+      return [];
+    }
+
     // Sort by endTimestamp (most recent first)
     const sortedByEndTime = proposals.sort((a, b) => {
       if (!a || !b) return 0;

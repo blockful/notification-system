@@ -61,21 +61,21 @@ export declare const SafeDaosResponseSchema: z.ZodEffects<z.ZodObject<{
     } | null;
 }>;
 export declare const SafeProposalsResponseSchema: z.ZodEffects<z.ZodObject<{
-    proposals: z.ZodObject<{
+    proposals: z.ZodNullable<z.ZodObject<{
         items: z.ZodNullable<z.ZodArray<z.ZodAny, "many">>;
     }, "strip", z.ZodTypeAny, {
         items: any[] | null;
     }, {
         items: any[] | null;
-    }>;
+    }>>;
 }, "strip", z.ZodTypeAny, {
     proposals: {
         items: any[] | null;
-    };
+    } | null;
 }, {
     proposals: {
         items: any[] | null;
-    };
+    } | null;
 }>, {
     proposals: {
         items: any[] | null;
@@ -83,7 +83,7 @@ export declare const SafeProposalsResponseSchema: z.ZodEffects<z.ZodObject<{
 }, {
     proposals: {
         items: any[] | null;
-    };
+    } | null;
 }>;
 export declare const SafeProposalByIdResponseSchema: z.ZodObject<{
     proposal: z.ZodNullable<z.ZodAny>;

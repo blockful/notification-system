@@ -21,10 +21,10 @@ export const SafeDaosResponseSchema = z.object({
 export const SafeProposalsResponseSchema = z.object({
   proposals: z.object({
     items: z.array(z.any()).nullable()
-  })
+  }).nullable()
 }).transform((data) => {
-  if (!data.proposals) {
-    console.warn('ProposalsResponse has null proposals:', data);
+  if (!data.proposals || !data.proposals.items) {
+    console.warn('ProposalsResponse has null proposals or items:', data);
     return { proposals: { items: [] } };
   }
   return { proposals: data.proposals };
@@ -103,7 +103,7 @@ export function processProposals(validated: SafeProposalsResponse['proposals']['
       });
     }
     return acc;
-  }, [] as typeof validated);
+  }, [] as typeof validated) || [];
 }
 
 // Internal helper function to process validated voting power history

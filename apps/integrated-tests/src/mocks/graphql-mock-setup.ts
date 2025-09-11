@@ -54,7 +54,7 @@ export class GraphQLMockSetup {
           filtered = filtered.filter(p => p.daoId === config.headers['anticapture-dao-id']);
         }
         return Promise.resolve({
-          data: { data: { proposals: filtered } }
+          data: { data: { proposals: { items: filtered } } }
         });
       }
 

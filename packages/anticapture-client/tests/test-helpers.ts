@@ -12,7 +12,9 @@ export function createMockClient() {
 
 export function createProposalResponse(id: string, description: string, title?: string) {
   return {
-    proposals: [{ id, description, title: title || null }]
+    proposals: {
+      items: [{ id, description, title: title || null }]
+    }
   };
 }
 
