@@ -41,23 +41,6 @@ describe('Non-Voting Trigger - Integration Test', () => {
     });
   };
 
-  // Helper to format expected non-voting message
-  const formatNonVotingMessage = (address: string, daoId: string, proposals: any[]) => {
-    const fullAddress = address;
-    const proposalList = proposals
-      .slice(0, 3)
-      .map(p => `• ${p.title}`)
-      .join('\n');
-    
-    return `⚠️ Non-Voting Alert for DAO ${daoId.toUpperCase()}
-
-The address ${fullAddress} that you follow hasn't voted in the last 3 proposals:
-
-${proposalList}
-
-Consider reaching out to encourage participation!`;
-  };
-
   beforeAll(async () => {
     apps = TestCleanup.getGlobalApps();
     httpMockSetup = TestCleanup.getGlobalHttpMockSetup();
