@@ -8,7 +8,7 @@ import { ProposalOnChain, ProposalFinishedNotification } from '../interfaces/pro
  * Trigger for detecting finished proposals
  */
 export class ProposalFinishedTrigger extends Trigger<ProposalOnChain, void> {
-  private readonly finishedStatuses = ['EXECUTED', 'DEFEATED', 'SUCCEEDED', 'EXPIRED', 'CANCELED'];
+  private readonly finishedStatuses = ['EXECUTED', 'DEFEATED', 'SUCCEEDED', 'EXPIRED', 'CANCELED', 'QUEUED'];
   private lastProcessedEndTimestamp: string;
 
   constructor(
