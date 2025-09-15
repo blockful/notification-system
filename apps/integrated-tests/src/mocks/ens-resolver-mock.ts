@@ -21,13 +21,23 @@ export class MockEnsResolverService {
 
   /**
    * Mock implementation of address to display name resolution
-   * Returns a shortened address format immediately without network calls
+   * Returns ENS names for known addresses or shortened format for others
    * @param address The Ethereum address
-   * @returns Shortened address format (0x1234...5678)
+   * @returns ENS name if known, otherwise shortened address format (0x1234...5678)
    */
   async resolveDisplayName(address: string): Promise<string> {
-    // Return shortened address format immediately (no async operations)
-    const shortened = `${address.substring(0, 6)}...${address.substring(address.length - 4)}`;
-    return Promise.resolve(shortened);
+    // Map of known ENS names for testing
+    const ensNames: Record<string, string> = {
+      '0xb8c2c29ee19d8307cb7255e1cd9cbde883a267d5': 'nick.eth',
+      '0xd8da6bf26964af9d7eed9e03e53415d37aa96045': 'vitalik.eth',
+      // Add more ENS mappings as needed for testing
+    };
+    
+    // Check if this address has a known ENS name
+    const lowerAddress = address.toLowerCase();
+    if (ensNames[lowerAddress]) {
+      return Promise.resolve(ensNames[lowerAddress]);
+    }
+    return Promise.resolve(address);
   }
 }
