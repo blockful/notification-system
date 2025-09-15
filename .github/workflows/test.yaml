@@ -14,7 +14,6 @@ jobs:
           - logic-system
           - consumer
           - subscription-server
-          - integrated-tests
     steps:
       - uses: actions/checkout@v3
       - uses: actions/setup-node@v3
@@ -39,3 +38,5 @@ jobs:
       - name: Test ${{ matrix.package }}
         run: |
           pnpm ${{ matrix.package }} test
+      - name: Test integrated-tests
+        run: pnpm integrated-tests test
