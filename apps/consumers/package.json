@@ -27,6 +27,7 @@
   "dependencies": {
     "@notification-system/anticapture-client": "workspace:*",
     "@notification-system/rabbitmq-client": "workspace:*",
+    "@slack/web-api": "^7.10.0",
     "axios": "^1.7.2",
     "dotenv": "^16.4.7",
     "telegraf": "^4.16.3",

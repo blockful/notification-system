@@ -13,7 +13,7 @@ describe('NotificationClientFactory', () => {
   beforeEach(() => {
     jest.clearAllMocks();
     mockRabbitMQClient = { sendNotification: jest.fn() };
-    (RabbitMQNotificationService as jest.Mock).mockReturnValue(mockRabbitMQClient);
+    jest.mocked(RabbitMQNotificationService).mockReturnValue(mockRabbitMQClient);
     factory = new NotificationClientFactory();
   });
   
