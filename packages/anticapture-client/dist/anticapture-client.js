@@ -2,17 +2,45 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.AnticaptureClient = void 0;
 const graphql_1 = require("graphql");
+const viem_1 = require("viem");
 const graphql_2 = require("./gql/graphql");
 const schemas_1 = require("./schemas");
 class AnticaptureClient {
     constructor(httpClient) {
         this.httpClient = httpClient;
     }
+    /**
+     * Recursively normalizes Ethereum addresses to EIP-55 checksum format
+     * Detects addresses by their format using viem's isAddress validation
+     * @param obj - Any value to normalize (primitives, objects, arrays, nested structures)
+     * @returns The normalized value with checksummed addresses
+     */
+    normalizeAddresses(obj) {
+        if (obj == null)
+            return obj;
+        if (typeof obj === 'string') {
+            try {
+                return (0, viem_1.isAddress)(obj) ? (0, viem_1.getAddress)(obj) : obj;
+            }
+            catch {
+                return obj;
+            }
+        }
+        if (Array.isArray(obj)) {
+            return obj.map(item => this.normalizeAddresses(item));
+        }
+        if (typeof obj === 'object') {
+            return Object.fromEntries(Object.entries(obj).map(([k, v]) => [k, this.normalizeAddresses(v)]));
+        }
+        return obj;
+    }
     async query(document, schema, variables, daoId) {
         const headers = this.buildHeaders(daoId);
+        // Normalize addresses in variables to EIP-55 checksum format
+        const normalizedVariables = variables ? this.normalizeAddresses(variables) : variables;
         const response = await this.httpClient.post('', {
             query: (0, graphql_1.print)(document),
-            variables,
+            variables: normalizedVariables,
         }, { headers });
         if (response.data.errors) {
             throw new Error(JSON.stringify(response.data.errors));

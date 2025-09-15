@@ -1664,7 +1664,7 @@ export type Transactions_200_Response = {
 };
 export type Transfer = {
     __typename?: 'transfer';
-    amount?: Maybe<Scalars['BigInt']['output']>;
+    amount: Scalars['BigInt']['output'];
     daoId: Scalars['String']['output'];
     from?: Maybe<Account>;
     fromAccountId: Scalars['String']['output'];
@@ -1673,11 +1673,11 @@ export type Transfer = {
     isLending: Scalars['Boolean']['output'];
     isTotal: Scalars['Boolean']['output'];
     logIndex: Scalars['Int']['output'];
-    timestamp?: Maybe<Scalars['BigInt']['output']>;
+    timestamp: Scalars['BigInt']['output'];
     to?: Maybe<Account>;
     toAccountId: Scalars['String']['output'];
     token?: Maybe<Token>;
-    tokenId?: Maybe<Scalars['String']['output']>;
+    tokenId: Scalars['String']['output'];
     transaction?: Maybe<Transaction>;
     transactionHash: Scalars['String']['output'];
 };
@@ -2088,7 +2088,7 @@ export type ListVotingPowerHistorysQuery = {
             } | null;
             transfer?: {
                 __typename?: 'transfer';
-                amount?: string | null;
+                amount: string;
                 fromAccountId: string;
                 toAccountId: string;
             } | null;

@@ -2,6 +2,7 @@ import { AxiosInstance } from 'axios';
 import { print } from 'graphql';
 import type { TypedDocumentNode } from '@graphql-typed-document-node/core';
 import { z } from 'zod';
+import { getAddress, isAddress } from 'viem';
 import type {
   GetProposalByIdQuery,
   GetProposalByIdQueryVariables,
@@ -25,6 +26,36 @@ export class AnticaptureClient {
     this.httpClient = httpClient;
   }
 
+  /**
+   * Recursively normalizes Ethereum addresses to EIP-55 checksum format
+   * Detects addresses by their format using viem's isAddress validation
+   * @param obj - Any value to normalize (primitives, objects, arrays, nested structures)
+   * @returns The normalized value with checksummed addresses
+   */
+  private normalizeAddresses(obj: any): any {
+    if (obj == null) return obj;
+
+    if (typeof obj === 'string') {
+      try {
+        return isAddress(obj) ? getAddress(obj) : obj;
+      } catch {
+        return obj;
+      }
+    }
+
+    if (Array.isArray(obj)) {
+      return obj.map(item => this.normalizeAddresses(item));
+    }
+
+    if (typeof obj === 'object') {
+      return Object.fromEntries(
+        Object.entries(obj).map(([k, v]) => [k, this.normalizeAddresses(v)])
+      );
+    }
+
+    return obj;
+  }
+
   private async query<TResult, TVariables, TSchema extends z.ZodSchema<any>>(
     document: TypedDocumentNode<TResult, TVariables>,
     schema: TSchema,
@@ -33,9 +64,12 @@ export class AnticaptureClient {
   ): Promise<z.infer<TSchema>> {
     const headers = this.buildHeaders(daoId);
 
+    // Normalize addresses in variables to EIP-55 checksum format
+    const normalizedVariables = variables ? this.normalizeAddresses(variables) : variables;
+
     const response = await this.httpClient.post('', {
       query: print(document),
-      variables,
+      variables: normalizedVariables,
     }, { headers });
 
     if (response.data.errors) {
@@ -190,9 +224,9 @@ export class AnticaptureClient {
   async listRecentVotesFromAllDaos(timestampGt: string, limit: number = 100): Promise<VotesOnchain[]> {
     // First, fetch all DAOs
     const daos = await this.getDAOs();
-    
+
     // Fetch votes from each DAO in parallel
-    const votePromises = daos.map(dao => 
+    const votePromises = daos.map(dao =>
       this.listVotesOnchains({
         daoId: dao.id,
         timestamp_gt: timestampGt,
@@ -206,7 +240,7 @@ export class AnticaptureClient {
     );
 
     const voteArrays = await Promise.all(votePromises);
-    
+
     // Flatten and sort by timestamp
     const allVotes = voteArrays.flat();
     allVotes.sort((a: VotesOnchain, b: VotesOnchain) => {

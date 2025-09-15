@@ -7,6 +7,13 @@ type VotesOnchain = NonNullable<ListVotesOnchainsQuery['votesOnchains']['items']
 export declare class AnticaptureClient {
     private readonly httpClient;
     constructor(httpClient: AxiosInstance);
+    /**
+     * Recursively normalizes Ethereum addresses to EIP-55 checksum format
+     * Detects addresses by their format using viem's isAddress validation
+     * @param obj - Any value to normalize (primitives, objects, arrays, nested structures)
+     * @returns The normalized value with checksummed addresses
+     */
+    private normalizeAddresses;
     private query;
     private buildHeaders;
     /**
