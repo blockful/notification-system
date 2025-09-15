@@ -38,7 +38,7 @@ describe('ProposalFinishedTrigger', () => {
       await (trigger as any).fetchData();
       
       expect(mockProposalRepository.listAll).toHaveBeenCalledWith({
-        status: ['EXECUTED', 'DEFEATED', 'SUCCEEDED', 'EXPIRED', 'CANCELED'],
+        status: ['EXECUTED', 'DEFEATED', 'SUCCEEDED', 'EXPIRED', 'CANCELED', 'QUEUED'],
         fromDate: initialTimestamp,
         orderDirection: 'desc',
         limit: 100
