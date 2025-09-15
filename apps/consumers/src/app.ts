@@ -8,15 +8,14 @@ import { EnsResolverService } from './services/ens-resolver.service';
 import { AnticaptureClient } from '@notification-system/anticapture-client';
 import { SubscriptionAPIService } from './services/subscription-api.service';
 import { RabbitMQNotificationConsumerService } from './services/rabbitmq-notification-consumer.service';
-import { RabbitMQSlackConsumerService } from './services/rabbitmq-slack-consumer.service';
 import { TelegramClientInterface } from './interfaces/telegram-client.interface';
 import { SlackClientInterface } from './interfaces/slack-client.interface';
 
 export class App {
   private telegramBotService: TelegramBotService;
   private slackBotService: SlackBotService;
-  private rabbitmqTelegramConsumerService?: RabbitMQNotificationConsumerService;
-  private rabbitmqSlackConsumerService?: RabbitMQSlackConsumerService;
+  private rabbitmqTelegramConsumerService?: RabbitMQNotificationConsumerService<TelegramBotService>;
+  private rabbitmqSlackConsumerService?: RabbitMQNotificationConsumerService<SlackBotService>;
   private rabbitmqUrl: string;
 
   constructor(
@@ -52,15 +51,17 @@ export class App {
     // Start Telegram consumer
     this.rabbitmqTelegramConsumerService = await RabbitMQNotificationConsumerService.create(
       this.rabbitmqUrl,
-      this.telegramBotService
+      this.telegramBotService,
+      'telegram'
     );
     await this.telegramBotService.launch();
     console.log('✅ Telegram bot is running!');
 
     // Start Slack consumer
-    this.rabbitmqSlackConsumerService = await RabbitMQSlackConsumerService.create(
+    this.rabbitmqSlackConsumerService = await RabbitMQNotificationConsumerService.create(
       this.rabbitmqUrl,
-      this.slackBotService
+      this.slackBotService,
+      'slack'
     );
     console.log('✅ Slack bot is running!');
   }

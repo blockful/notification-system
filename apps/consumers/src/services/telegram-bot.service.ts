@@ -10,11 +10,12 @@ import { DAOService } from '../services/dao.service';
 import { WalletService } from '../services/wallet.service';
 import { ExplorerService } from '../services/explorer.service';
 import { EnsResolverService } from '../services/ens-resolver.service';
-import { ContextWithSession, MatchedContext } from '../interfaces/bot.interface';
+import { MatchedContext } from '../interfaces/bot.interface';
 import { NotificationPayload } from '../interfaces/notification.interface';
 import { TelegramClientInterface } from '../interfaces/telegram-client.interface';
+import { BotServiceInterface } from '../interfaces/bot-service.interface';
 
-export class TelegramBotService {
+export class TelegramBotService implements BotServiceInterface {
   private telegramClient: TelegramClientInterface;
   private daoService: DAOService;
   private walletService: WalletService;
