@@ -152,7 +152,7 @@ export class UserFactory {
     const userAddress = {
       id: uuidv4(),
       user_id: userId,
-      address: address,
+      address: address.toLowerCase(),
       is_active: true,
       created_at: timestamp || new Date().toISOString(),
       updated_at: timestamp || new Date().toISOString()

@@ -66,11 +66,9 @@ export class FormattingService {
     proposalsCount: number,
     proposalTitles: string
   ): string {
-    const formattedAddress = FormattingService.formatAddress(address);
-    
     return `⚠️ Non-Voting Alert for DAO ${daoId.toUpperCase()}
 
-The address ${formattedAddress} that you follow hasn't voted in the last ${proposalsCount} proposals:
+The address {{nonVoterAddress}} that you follow hasn't voted in the last ${proposalsCount} proposals:
 
 ${proposalTitles}
 
