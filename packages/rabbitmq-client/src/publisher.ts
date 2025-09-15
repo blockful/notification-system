@@ -71,6 +71,44 @@ export class RabbitMQPublisher {
     );
   }
 
+  async publishToTopic<T = any>(
+    exchangeName: string,
+    routingKey: string,
+    message: PublishMessage<T>
+  ): Promise<void> {
+    const fullMessage: RabbitMQMessage<T> = {
+      id: uuidv4(),
+      timestamp: new Date().toISOString(),
+      ...message
+    };
+
+    const publisher = await this.ensurePublisher();
+
+    // Ensure topic exchange exists
+    if (!this.queueAssertions.has(exchangeName)) {
+      const conn = this.connection.getConnection();
+      if (conn) {
+        await conn.exchangeDeclare({
+          exchange: exchangeName,
+          type: 'topic',
+          durable: true
+        });
+        this.queueAssertions.add(exchangeName);
+      }
+    }
+
+    const messageBuffer = Buffer.from(JSON.stringify(fullMessage));
+
+    await publisher.send(
+      {
+        routingKey,
+        exchange: exchangeName,
+        durable: true
+      },
+      messageBuffer
+    );
+  }
+
   async close(): Promise<void> {
     if (this.publisher) {
       await this.publisher.close();
