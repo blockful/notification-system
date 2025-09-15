@@ -14,6 +14,7 @@ jobs:
           - logic-system
           - consumer
           - subscription-server
+          - integrated-tests
     steps:
       - uses: actions/checkout@v3
       - uses: actions/setup-node@v3
