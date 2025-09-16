@@ -1,6 +1,7 @@
-import '../../mocks/telegram-mock-setup';
 import { beforeAll, afterAll } from '@jest/globals';
-import { mockSendMessage, HttpClientMockSetup, GraphQLMockSetup } from '../../mocks';
+import { HttpClientMockSetup, GraphQLMockSetup } from '../../mocks';
+import { mockTelegramSendMessage } from '../../mocks/telegram-mock-setup';
+import { mockSlackSendMessage } from '../../mocks/slack-mock-setup';
 import { setupDatabase, db, closeDatabase, startTestApps, stopTestApps, TestApps } from '../../setup';
 import { RabbitMQTestSetup } from '../rabbitmq-setup';
 import * as fs from 'fs';
@@ -10,7 +11,8 @@ import { timeouts } from '../../config';
 declare global {
   var testApps: TestApps;
   var httpMockSetup: HttpClientMockSetup;
-  var mockSendMessage: any;
+  var mockTelegramSendMessage: any;
+  var mockSlackSendMessage: any;
 }
 
 /**
@@ -34,9 +36,10 @@ beforeAll(async () => {
   await rabbitmqSetup.setup(rabbitmqUrl); // Pass existing URL to avoid creating new container
   apps.rabbitmqSetup = rabbitmqSetup;
   
-  // Get the mock from the test client that was injected into the app
-  global.mockSendMessage = apps.mockSendMessage || mockSendMessage;
-  
+  // Get the mocks from the test clients that were injected into the app
+  global.mockTelegramSendMessage = apps.mockTelegramSendMessage || mockTelegramSendMessage;
+  global.mockSlackSendMessage = apps.mockSlackSendMessage || mockSlackSendMessage;
+
   global.testApps = apps;
   global.httpMockSetup = httpMockSetup;
   
