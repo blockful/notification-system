@@ -12,10 +12,15 @@ dotenv.config();
 const envSchema = z.object({
   // RabbitMQ configuration
   TEST_RABBITMQ_URL: z.string().url().optional(),
-  
+
   // Telegram configuration
   TELEGRAM_BOT_TOKEN: z.string().min(1, "Telegram bot token is required").optional(),
   SEND_REAL_TELEGRAM: z.string().optional(),
+
+  // Slack configuration
+  SLACK_BOT_TOKEN: z.string().optional(),
+  SEND_REAL_SLACK: z.string().optional(),
+  SLACK_TEST_CHANNEL_ID: z.string().optional(), // Channel ID like 'C1234567890'
 });
 
 const _env = envSchema.safeParse(process.env);
