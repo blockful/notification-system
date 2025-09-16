@@ -52,7 +52,7 @@ export class SlackTestHelper {
    */
   async waitForMessage(
     predicate: (message: SlackTestMessage) => boolean,
-    options?: { timeout?: number; errorMessage?: string; useHistory?: boolean }
+    options?: { timeout?: number; errorMessage?: string; useHistory?: boolean; channel?: string }
   ): Promise<SlackTestMessage> {
     const startCount = this.mockSendMessage.mock.calls.length;
 

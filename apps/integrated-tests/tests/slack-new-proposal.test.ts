@@ -86,7 +86,8 @@ describe('Slack New Proposal - Integration Test', () => {
       {
         timeout: timeouts.notification.delivery,
         errorMessage: 'Slack notification not received',
-        useHistory: env.SEND_REAL_SLACK === 'true' // Use history API in real mode
+        useHistory: env.SEND_REAL_SLACK === 'true', // Use history API in real mode
+        channel: SLACK_CHANNEL_ID // Pass channel explicitly for history mode
       }
     );
 
