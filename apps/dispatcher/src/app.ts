@@ -51,6 +51,7 @@ export class App {
     this.publisher = await RabbitMQPublisher.create(this.rabbitmqConnection);
     const notificationFactory = new NotificationClientFactory();
     notificationFactory.addClient('telegram', new RabbitMQNotificationService(this.publisher));
+    notificationFactory.addClient('slack', new RabbitMQNotificationService(this.publisher));
     const triggerProcessorService = new TriggerProcessorService();
 
     triggerProcessorService.addHandler(

@@ -57,9 +57,11 @@ describe('NonVotingHandler', () => {
   });
 
   it('should identify and notify about non-voting addresses', async () => {
-    // Setup test data using factories
+    // Setup test data using factories - need 3 proposals in message to meet minimum requirement
     const message = createDispatcherMessage([
-      createProposalNotification()
+      createProposalNotification({ id: 'proposal-3' }),
+      createProposalNotification({ id: 'proposal-2' }),
+      createProposalNotification({ id: 'proposal-1' })
     ]);
 
     const followedAddresses = [TestAddresses.ADDRESS_1, TestAddresses.ADDRESS_2, TestAddresses.ADDRESS_3];
