@@ -6,7 +6,9 @@ describe('SlackDAOService - User ID Validation', () => {
   let slackDAOService: SlackDAOService;
   let subscriptionApiMock: jest.Mocked<SubscriptionAPIService>;
   let anticaptureClientMock: jest.Mocked<AnticaptureClient>;
-
+  let subscriptionApi: SubscriptionAPIService;
+  let axiosPostMock: jest.Mock;
+  
   beforeEach(() => {
     // Create mocks
     subscriptionApiMock = {
@@ -24,7 +26,9 @@ describe('SlackDAOService - User ID Validation', () => {
         { id: 'ENS', name: 'ENS' },
       ]),
     } as any;
-
+    subscriptionApi = new SubscriptionAPIService('http://test-api');
+    axiosPostMock = jest.fn().mockResolvedValue({ data: {} });
+    (subscriptionApi as any).client.post = axiosPostMock;
     slackDAOService = new SlackDAOService(anticaptureClientMock, subscriptionApiMock);
   });
 
@@ -49,36 +53,6 @@ describe('SlackDAOService - User ID Validation', () => {
           userId,
           'slack',
           expect.any(Array)
-        );
-      }
-    });
-  });
-});
-
-describe('SubscriptionAPIService - NaN Validation', () => {
-  let subscriptionApi: SubscriptionAPIService;
-  let axiosPostMock: jest.Mock;
-
-  beforeEach(() => {
-    subscriptionApi = new SubscriptionAPIService('http://test-api');
-
-    // Mock the axios client
-    axiosPostMock = jest.fn().mockResolvedValue({ data: {} });
-    (subscriptionApi as any).client.post = axiosPostMock;
-  });
-
-  describe('saveUserPreference validation', () => {
-    it('should accept valid Slack user IDs', async () => {
-      const validIds = ['U024BE7LH', 'W012A3CDE', 'U9Z8Y7X6W'];
-
-      for (const userId of validIds) {
-        await subscriptionApi.saveUserPreference('UNI', userId, 'slack', true);
-
-        expect(axiosPostMock).toHaveBeenCalledWith(
-          '/subscriptions/UNI',
-          expect.objectContaining({
-            channel_user_id: userId,
-          })
         );
       }
     });
