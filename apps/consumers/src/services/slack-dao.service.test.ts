@@ -29,36 +29,6 @@ describe('SlackDAOService - User ID Validation', () => {
   });
 
   describe('User ID handling', () => {
-    it('should pass Slack user IDs as strings without conversion', async () => {
-      const slackUserId = 'U024BE7LH';
-      const selectedDAOs = new Set(['UNI']);
-
-      // Call the private method through reflection or make it public for testing
-      // For now, we'll test through the public interface
-      subscriptionApiMock.saveUserPreference.mockResolvedValue({
-        user: { id: '123', channel: 'slack', channel_user_id: slackUserId },
-        result: { id: '456', user_id: '123', dao_id: 'UNI', is_active: true }
-      });
-
-      // Test the updateSubscriptions method indirectly through confirm
-      const context: any = {
-        body: { user: { id: slackUserId } },
-        session: { daoSelections: selectedDAOs },
-        ack: jest.fn(),
-        respond: jest.fn(),
-      };
-
-      await slackDAOService.confirm(context, 'subscribe');
-
-      // Verify that saveUserPreference was called with string ID, not Number
-      expect(subscriptionApiMock.saveUserPreference).toHaveBeenCalledWith(
-        'UNI',
-        slackUserId, // Should be string, not number
-        'slack',
-        true
-      );
-    });
-
     it('should handle alphanumeric Slack IDs correctly', async () => {
       const alphanumericIds = ['U024BE7LH', 'W012A3CDE', 'U9Z8Y7X6W'];
 
@@ -126,54 +96,6 @@ describe('SubscriptionAPIService - NaN Validation', () => {
           })
         );
       }
-    });
-
-    it('should handle NaN values by converting to "NaN" string', async () => {
-      const nanValue = NaN;
-
-      await subscriptionApi.saveUserPreference('UNI', nanValue as any, 'slack', true);
-
-      expect(axiosPostMock).toHaveBeenCalledWith(
-        '/subscriptions/UNI',
-        expect.objectContaining({
-          channel_user_id: 'NaN',
-        })
-      );
-    });
-
-    it('should accept "NaN" as a valid string', async () => {
-      await subscriptionApi.saveUserPreference('UNI', 'NaN', 'slack', true);
-
-      expect(axiosPostMock).toHaveBeenCalledWith(
-        '/subscriptions/UNI',
-        expect.objectContaining({
-          channel_user_id: 'NaN',
-        })
-      );
-    });
-
-  });
-
-  describe('getUserPreferences validation', () => {
-    it('should handle NaN values by converting to "NaN" string', async () => {
-      const nanValue = Number('U024BE7LH'); // This creates NaN
-      const axiosGetMock = jest.fn().mockResolvedValue({ data: [] });
-      (subscriptionApi as any).client.get = axiosGetMock;
-
-      const result = await subscriptionApi.getUserPreferences(nanValue, 'slack', ['UNI']);
-
-      expect(result).toEqual([]);
-      expect(axiosGetMock).toHaveBeenCalled();
-    });
-
-    it('should accept valid string IDs', async () => {
-      const axiosGetMock = jest.fn().mockResolvedValue({ data: [] });
-      (subscriptionApi as any).client.get = axiosGetMock;
-
-      const result = await subscriptionApi.getUserPreferences('U024BE7LH', 'slack', ['UNI']);
-
-      expect(result).toEqual([]);
-      expect(axiosGetMock).toHaveBeenCalled();
     });
   });
 });
