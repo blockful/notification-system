@@ -14,12 +14,15 @@ import { SlackDAOService } from './slack-dao.service';
 import { SlackWalletService } from './wallet/slack-wallet.service';
 import { SlackCommandContext } from '../interfaces/slack-context.interface';
 
+type CommandHandler = (context: SlackCommandContext, args: string[]) => Promise<void>;
+
 export class SlackBotService implements BotServiceInterface {
   private slackClient: SlackClientInterface;
   private explorerService: ExplorerService;
   private ensResolver: EnsResolverService;
   private daoService?: SlackDAOService;
   private walletService?: SlackWalletService;
+  private commandHandlers: Map<string, CommandHandler>;
 
   constructor(
     slackClient: SlackClientInterface,
@@ -33,6 +36,10 @@ export class SlackBotService implements BotServiceInterface {
     this.ensResolver = ensResolver;
     this.daoService = daoService;
     this.walletService = walletService;
+
+    // Initialize command registry
+    this.commandHandlers = this.createCommandRegistry();
+
     // Setup command handlers
     this.setupCommands();
   }
@@ -86,66 +93,70 @@ export class SlackBotService implements BotServiceInterface {
   }
 
   /**
+   * Create the command registry mapping commands to handlers
+   */
+  private createCommandRegistry(): Map<string, CommandHandler> {
+    const registry = new Map<string, CommandHandler>();
+    registry.set('subscribe', async (ctx, args) => this.handleDaoCommand(ctx, 'subscribe'));
+    registry.set('unsubscribe', async (ctx, args) => this.handleDaoCommand(ctx, 'unsubscribe'));
+    registry.set('list', async (ctx, args) => this.handleDaoList(ctx));
+    registry.set('wallet', async (ctx, args) => this.handleWalletCommand(ctx, args));
+    registry.set('help', async (ctx, args) => this.showHelp(ctx));
+    
+    return registry;
+  }
+
+  /**
    * Handle the main /dao-notify command and route to subcommands
    */
   private async handleMainCommand(context: SlackCommandContext): Promise<void> {
     const text = context.body.text?.trim().toLowerCase();
     const args = text ? text.split(/\s+/) : [];
-    const subcommand = args[0];
-    const param = args[1];
+    const command = args[0] || 'help';
+    const handler = this.commandHandlers.get(command) || this.commandHandlers.get('help')!;
+    await handler(context, args.slice(1));
+  }
 
-    // Route to appropriate handler
-    switch (subcommand) {
-      case 'subscribe':
-        if (this.daoService) {
-          await this.daoService.initialize(context, 'subscribe');
-        } else {
-          await this.respondWithError(context, 'DAO management is not available');
-        }
-        break;
-
-      case 'unsubscribe':
-        if (this.daoService) {
-          await this.daoService.initialize(context, 'unsubscribe');
-        } else {
-          await this.respondWithError(context, 'DAO management is not available');
-        }
-        break;
-
-      case 'list':
-        if (this.daoService) {
-          await this.daoService.listSubscriptions(context);
-        } else {
-          await this.respondWithError(context, 'DAO management is not available');
-        }
-        break;
-
-      case 'wallet':
-        if (!this.walletService) {
-          await this.respondWithError(context, 'Wallet management is not available');
-          break;
-        }
-
-        // Handle wallet subcommands
-        switch (param) {
-          case 'add':
-            await this.walletService.initialize(context, 'add');
-            break;
-          case 'remove':
-            await this.walletService.initialize(context, 'remove');
-            break;
-          case 'list':
-          default:
-            await this.walletService.initialize(context, 'list');
-            break;
-        }
-        break;
-
-      case 'help':
-      default:
-        await this.showHelp(context);
-        break;
+  /**
+   * Handle DAO subscribe/unsubscribe commands
+   */
+  private async handleDaoCommand(context: SlackCommandContext, action: 'subscribe' | 'unsubscribe'): Promise<void> {
+    if (!this.daoService) {
+      await this.respondWithError(context, 'DAO management is not available');
+      return;
     }
+    await this.daoService.initialize(context, action);
+  }
+
+  /**
+   * Handle DAO list command
+   */
+  private async handleDaoList(context: SlackCommandContext): Promise<void> {
+    if (!this.daoService) {
+      await this.respondWithError(context, 'DAO management is not available');
+      return;
+    }
+    await this.daoService.listSubscriptions(context);
+  }
+
+  /**
+   * Handle wallet commands with subcommands
+   */
+  private async handleWalletCommand(context: SlackCommandContext, args: string[]): Promise<void> {
+    if (!this.walletService) {
+      await this.respondWithError(context, 'Wallet management is not available');
+      return;
+    }
+
+    const subcommand = args[0] || 'list';
+    const validSubcommands: Record<string, 'add' | 'remove' | 'list'> = {
+      'add': 'add',
+      'remove': 'remove',
+      'list': 'list'
+    };
+
+    const action = validSubcommands[subcommand] || 'list';
+    await this.walletService.initialize(context, action);
   }
 
   /**
