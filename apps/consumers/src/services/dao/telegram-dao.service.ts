@@ -5,13 +5,13 @@
  */
 
 import { BaseDAOService } from './base-dao.service';
-import { ContextWithSession } from '../interfaces/bot.interface';
+import { ContextWithSession } from '../../interfaces/bot.interface';
 import {
   CONFIRM_SELECTION_BUTTON,
   SELECTED_DAOS_MESSAGE,
   DAO_SELECTION_MESSAGE,
   EDIT_DAOS_MESSAGE
-} from '../messages';
+} from '../../messages';
 
 export class TelegramDAOService extends BaseDAOService {
 

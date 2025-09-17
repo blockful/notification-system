@@ -10,7 +10,7 @@ import {
   SlackClientInterface,
   SlackSendMessageOptions,
   SlackMessage
-} from './interfaces/slack-client.interface';
+} from '../interfaces/slack-client.interface';
 import {
   SlackHandlerRegistration,
   SlackCommandContext,
@@ -18,7 +18,7 @@ import {
   SlackViewContext,
   SlackSessionStorage,
   SlackSession
-} from './interfaces/slack-context.interface';
+} from '../interfaces/slack-context.interface';
 
 export class SlackClient implements SlackClientInterface {
   private client: WebClient;

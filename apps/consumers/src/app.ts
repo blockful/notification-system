@@ -1,9 +1,9 @@
 import { AxiosInstance } from 'axios';
-import { TelegramBotService } from './services/telegram-bot.service';
-import { SlackBotService } from './services/slack-bot.service';
-import { SlackDAOService } from './services/slack-dao.service';
+import { TelegramBotService } from './services/bot/telegram-bot.service';
+import { SlackBotService } from './services/bot/slack-bot.service';
+import { SlackDAOService } from './services/dao/slack-dao.service';
 import { SlackWalletService } from './services/wallet/slack-wallet.service';
-import { TelegramDAOService } from './services/telegram-dao.service';
+import { TelegramDAOService } from './services/dao/telegram-dao.service';
 import { TelegramWalletService } from './services/wallet/telegram-wallet.service';
 import { ExplorerService } from './services/explorer.service';
 import { EnsResolverService } from './services/ens-resolver.service';

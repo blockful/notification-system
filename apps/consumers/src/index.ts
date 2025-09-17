@@ -13,8 +13,8 @@ import axios from 'axios';
 import { App } from './app';
 import { loadConfig } from './config/env';
 import { EnsResolverService } from './services/ens-resolver.service';
-import { TelegramClient } from './telegram.client';
-import { SlackClient } from './slack.client';
+import { TelegramClient } from './clients/telegram.client';
+import { SlackClient } from './clients/slack.client';
 
 const config = loadConfig();
 

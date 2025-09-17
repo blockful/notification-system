@@ -5,14 +5,14 @@
  * Similar to TelegramBotService but for Slack platform
  */
 
-import { SlackClientInterface } from '../interfaces/slack-client.interface';
-import { NotificationPayload } from '../interfaces/notification.interface';
-import { BotServiceInterface } from '../interfaces/bot-service.interface';
-import { ExplorerService } from './explorer.service';
-import { EnsResolverService } from './ens-resolver.service';
-import { SlackDAOService } from './slack-dao.service';
-import { SlackWalletService } from './wallet/slack-wallet.service';
-import { SlackCommandContext } from '../interfaces/slack-context.interface';
+import { SlackClientInterface } from '../../interfaces/slack-client.interface';
+import { NotificationPayload } from '../../interfaces/notification.interface';
+import { BotServiceInterface } from '../../interfaces/bot-service.interface';
+import { ExplorerService } from '../explorer.service';
+import { EnsResolverService } from '../ens-resolver.service';
+import { SlackDAOService } from '../dao/slack-dao.service';
+import { SlackWalletService } from '../wallet/slack-wallet.service';
+import { SlackCommandContext } from '../../interfaces/slack-context.interface';
 
 type CommandHandler = (context: SlackCommandContext, args: string[]) => Promise<void>;
 

@@ -5,7 +5,7 @@
  */
 
 import { BaseDAOService } from './base-dao.service';
-import { SlackCommandContext, SlackActionContext } from '../interfaces/slack-context.interface';
+import { SlackCommandContext, SlackActionContext } from '../../interfaces/slack-context.interface';
 
 export class SlackDAOService extends BaseDAOService {
 

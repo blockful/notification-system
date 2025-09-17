@@ -5,7 +5,7 @@
  */
 
 import { AnticaptureClient } from '@notification-system/anticapture-client';
-import { SubscriptionAPIService } from './subscription-api.service';
+import { SubscriptionAPIService } from '../subscription-api.service';
 
 export interface DAOSelectionState {
   selections: Set<string>;
