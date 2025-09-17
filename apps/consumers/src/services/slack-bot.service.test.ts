@@ -17,7 +17,8 @@ describe('SlackBotService', () => {
 
   beforeEach(() => {
     mockSlackClient = {
-      sendMessage: jest.fn()
+      sendMessage: jest.fn(),
+      setupHandlers: jest.fn()
     };
 
     mockExplorerService = {

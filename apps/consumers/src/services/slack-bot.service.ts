@@ -33,11 +33,8 @@ export class SlackBotService implements BotServiceInterface {
     this.ensResolver = ensResolver;
     this.daoService = daoService;
     this.walletService = walletService;
-
-    // Setup command handlers if Socket Mode is available
-    if (this.slackClient.setupHandlers) {
-      this.setupCommands();
-    }
+    // Setup command handlers
+    this.setupCommands();
   }
 
   /**
