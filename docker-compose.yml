@@ -45,7 +45,7 @@ services:
     depends_on:
       - subscription-db
 
-  # Consumers (Telegram Bot + RabbitMQ Consumer)
+  # Consumers (Telegram Bot + Slack Bot + RabbitMQ Consumer)
   consumers:
     build:
       context: .
@@ -54,6 +54,10 @@ services:
     environment:
       TELEGRAM_BOT_TOKEN: ${TELEGRAM_BOT_TOKEN}
       ANTICAPTURE_GRAPHQL_ENDPOINT: ${ANTICAPTURE_GRAPHQL_ENDPOINT}
+      SLACK_BOT_TOKEN: ${SLACK_BOT_TOKEN}
+      SLACK_APP_TOKEN: ${SLACK_APP_TOKEN}
+      SLACK_SIGNING_SECRET: ${SLACK_SIGNING_SECRET}
+      SLACK_CHANNEL_ID: ${SLACK_CHANNEL_ID:-}
       SUBSCRIPTION_SERVER_URL: http://subscription-server:3003
       RABBITMQ_URL: amqp://admin:admin@rabbitmq:5672
     depends_on:
@@ -72,6 +76,7 @@ services:
       dockerfile: apps/dispatcher/Dockerfile
     container_name: dispatcher
     environment:
+      ANTICAPTURE_GRAPHQL_ENDPOINT: ${ANTICAPTURE_GRAPHQL_ENDPOINT}
       RABBITMQ_URL: amqp://admin:admin@rabbitmq:5672
       SUBSCRIPTION_SERVER_URL: http://subscription-server:3003
     depends_on:
