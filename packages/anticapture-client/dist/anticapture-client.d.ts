@@ -1,7 +1,7 @@
 import { AxiosInstance } from 'axios';
 import type { GetProposalByIdQuery, ListProposalsQuery, ListProposalsQueryVariables, ListVotingPowerHistorysQueryVariables, ListVotesOnchainsQuery, ListVotesOnchainsQueryVariables } from './gql/graphql';
 import { ProcessedVotingPowerHistory } from './schemas';
-type ProposalItems = NonNullable<ListProposalsQuery['proposals']>;
+type ProposalItems = NonNullable<ListProposalsQuery['proposals']>['items'];
 type VotingPowerHistoryItems = ProcessedVotingPowerHistory[];
 type VotesOnchain = NonNullable<ListVotesOnchainsQuery['votesOnchains']['items'][0]>;
 export declare class AnticaptureClient {

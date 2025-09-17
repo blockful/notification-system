@@ -15,7 +15,7 @@ import type {
 import { GetDaOsDocument, GetProposalByIdDocument, ListProposalsDocument, ListVotingPowerHistorysDocument, ListVotesOnchainsDocument } from './gql/graphql';
 import { SafeDaosResponseSchema, SafeProposalByIdResponseSchema, SafeProposalsResponseSchema, SafeVotingPowerHistoryResponseSchema, SafeVotesOnchainsResponseSchema, processProposals, processVotingPowerHistory, ProcessedVotingPowerHistory } from './schemas';
 
-type ProposalItems = NonNullable<ListProposalsQuery['proposals']>;
+type ProposalItems = NonNullable<ListProposalsQuery['proposals']>['items'];
 type VotingPowerHistoryItems = ProcessedVotingPowerHistory[];
 type VotesOnchain = NonNullable<ListVotesOnchainsQuery['votesOnchains']['items'][0]>;
 

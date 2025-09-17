@@ -19,11 +19,14 @@ export const SafeDaosResponseSchema = z.object({
 
 
 export const SafeProposalsResponseSchema = z.object({
-  proposals: z.array(z.any()).nullable()
+  proposals: z.object({
+    items: z.array(z.any()),
+    totalCount: z.number()
+  }).nullable()
 }).transform((data) => {
   if (!data.proposals) {
     console.warn('ProposalsResponse has null proposals:', data);
-    return { proposals: [] };
+    return { proposals: { items: [], totalCount: 0 } };
   }
   return { proposals: data.proposals };
 });
@@ -95,7 +98,7 @@ export type ProcessedVotingPowerHistory = z.infer<typeof VotingPowerHistoryItemS
 
 // Internal helper function to process validated proposals
 export function processProposals(validated: SafeProposalsResponse, daoId: string) {
-  return validated.proposals.reduce((acc, proposal) => {
+  return validated.proposals.items.reduce((acc, proposal) => {
     if (proposal !== null) {
       acc.push({
         ...proposal,
@@ -103,7 +106,7 @@ export function processProposals(validated: SafeProposalsResponse, daoId: string
       });
     }
     return acc;
-  }, [] as typeof validated.proposals);
+  }, [] as typeof validated.proposals.items);
 }
 
 // Internal helper function to process validated voting power history
