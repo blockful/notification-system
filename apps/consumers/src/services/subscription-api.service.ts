@@ -21,15 +21,16 @@ export class SubscriptionAPIService {
   /**
    * Updates or creates a user subscription for a specific DAO
    * @param daoId The DAO identifier
-   * @param channelUserId The user/chat ID
+   * @param channelUserId The user/chat ID (string for Slack, number for Telegram)
    * @param channel The notification channel
    * @param isActive Whether the subscription is active
    * @returns The subscription response
    */
-  public async saveUserPreference(daoId: string, channelUserId: number, channel: string, isActive: boolean = true): Promise<UserSubscriptionResponse> {
+  public async saveUserPreference(daoId: string, channelUserId: string | number, channel: string, isActive: boolean = true): Promise<UserSubscriptionResponse> {
+    const userIdStr = channelUserId.toString();
     const { data } = await this.client.post(`/subscriptions/${daoId}`, {
       channel,
-      channel_user_id: channelUserId.toString(),
+      channel_user_id: userIdStr,
       is_active: isActive
     });
     return data;
@@ -37,18 +38,19 @@ export class SubscriptionAPIService {
 
   /**
    * Checks if a user exists by querying subscriptions
-   * @param channelUserId User/chat ID
+   * @param channelUserId User/chat ID (string for Slack, number for Telegram)
    * @param channel The notification channel
    * @param daoIds List of DAOs to check for user subscriptions
    * @returns Boolean indicating if the user has any subscriptions
    */
-  public async userExists(channelUserId: number, channel: string, daoIds: string[]): Promise<boolean> {
+  public async userExists(channelUserId: string | number, channel: string, daoIds: string[]): Promise<boolean> {
+    const userIdStr = channelUserId.toString();
     // For each DAO, check if the user is subscribed
     for (const daoId of daoIds) {
       const subscribers = await this.getDaoSubscribers(daoId);
-      return subscribers.some(sub => 
-          sub.channel === channel && 
-          sub.channel_user_id === channelUserId.toString()
+      return subscribers.some(sub =>
+          sub.channel === channel &&
+          sub.channel_user_id === userIdStr
       )
     }
     return false;
@@ -66,20 +68,21 @@ export class SubscriptionAPIService {
 
   /**
    * Gets all active DAOs that a user is subscribed to
-   * @param channelUserId User/chat ID
+   * @param channelUserId User/chat ID (string for Slack, number for Telegram)
    * @param channel The notification channel
    * @param availableDAOs List of all available DAOs to check
    * @returns Array of DAO IDs that the user is subscribed to
    */
-  public async getUserPreferences(channelUserId: number, channel: string, availableDAOs: string[]): Promise<string[]> {
+  public async getUserPreferences(channelUserId: string | number, channel: string, availableDAOs: string[]): Promise<string[]> {
+    const userIdStr = channelUserId.toString();
     const userDAOs: string[] = [];
     
     for (const daoId of availableDAOs) {
       try {
         const subscribers = await this.getDaoSubscribers(daoId);
-        const isSubscribed = subscribers.some(sub => 
-          sub.channel === channel && 
-          sub.channel_user_id === channelUserId.toString()
+        const isSubscribed = subscribers.some(sub =>
+          sub.channel === channel &&
+          sub.channel_user_id === userIdStr
         );
         
         if (isSubscribed) {

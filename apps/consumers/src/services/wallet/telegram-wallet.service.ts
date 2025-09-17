@@ -1,12 +1,16 @@
 /**
- * Handles all wallet-related interactions in the Telegram bot.
- * Manages wallet addresses for users and provides functionality for
- * adding, removing, and displaying wallet addresses.
+ * Telegram-specific wallet service implementation.
+ * Handles UI interactions and platform-specific logic while delegating
+ * business logic to BaseWalletService.
  */
 
-import { 
-  WALLET_SELECTION_MESSAGE, 
-  ADD_WALLET_BUTTON_TEXT, 
+import { BaseWalletService } from './base-wallet.service';
+import { SubscriptionAPIService } from '../subscription-api.service';
+import { EnsResolverService } from '../ens-resolver.service';
+import { ContextWithSession } from '../../interfaces/bot.interface';
+import {
+  WALLET_SELECTION_MESSAGE,
+  ADD_WALLET_BUTTON_TEXT,
   REMOVE_WALLET_BUTTON_TEXT,
   WALLET_INPUT_MESSAGE,
   WALLET_PROCESSING_MESSAGE,
@@ -16,21 +20,20 @@ import {
   WALLET_REMOVE_CONFIRM_BUTTON_TEXT,
   WALLET_REMOVE_SUCCESS_MESSAGE,
   NO_WALLETS_MESSAGE
-} from '../messages';
-import { SubscriptionAPIService } from './subscription-api.service';
-import { EnsResolverService } from './ens-resolver.service';
-import { ContextWithSession } from '../interfaces/bot.interface';
+} from '../../messages';
 
-export class WalletService {
-  
+export class TelegramWalletService extends BaseWalletService {
+
   constructor(
-    private subscriptionApi: SubscriptionAPIService,
-    private ensResolver: EnsResolverService
-  ) {}
+    subscriptionApi: SubscriptionAPIService,
+    ensResolver: EnsResolverService
+  ) {
+    super(subscriptionApi, ensResolver);
+  }
 
   private ensureSession(ctx: ContextWithSession): void {
     if (!ctx.session) {
-      ctx.session = { 
+      ctx.session = {
         daoSelections: new Set<string>(),
         walletAction: undefined,
         walletsToRemove: new Set<string>(),
@@ -50,21 +53,18 @@ export class WalletService {
 
     try {
       // Get user's current wallets
-      const wallets = await this.subscriptionApi.getUserWallets(userId.toString(), 'telegram');
-      
+      const wallets = await this.getUserWalletsWithDisplayNames(userId.toString(), 'telegram');
+
       let message = WALLET_SELECTION_MESSAGE;
-      
+
       if (wallets.length === 0) {
         message = NO_WALLETS_MESSAGE;
       } else {
         // Show current wallets with ENS names when available
-        const walletList = await Promise.all(
-          wallets.map(async (wallet, index) => {
-            const displayName = await this.ensResolver.resolveDisplayName(wallet.address);
-            return `${index + 1}. ${displayName}`;
-          })
+        const walletList = wallets.map((wallet, index) =>
+          `${index + 1}. ${wallet.displayName || wallet.address}`
         );
-        
+
         message = `${WALLET_SELECTION_MESSAGE}\n\n${walletList.join('\n')}`;
       }
 
@@ -89,10 +89,10 @@ export class WalletService {
    */
   async addWallet(ctx: ContextWithSession): Promise<void> {
     this.ensureSession(ctx);
-    
+
     ctx.session.walletAction = 'add';
     ctx.session.awaitingWalletInput = true;
-    
+
     await ctx.reply(WALLET_INPUT_MESSAGE);
   }
 
@@ -106,8 +106,8 @@ export class WalletService {
     this.ensureSession(ctx);
 
     try {
-      const wallets = await this.subscriptionApi.getUserWallets(userId.toString(), 'telegram');
-      
+      const wallets = await this.getUserWalletsWithDisplayNames(userId.toString(), 'telegram');
+
       if (wallets.length === 0) {
         await ctx.reply(NO_WALLETS_MESSAGE);
         return;
@@ -119,13 +119,10 @@ export class WalletService {
       const keyboard = {
         inline_keyboard: [
           // Create checkboxes for each wallet with ENS names when available
-          ...(await Promise.all(wallets.map(async wallet => {
-            const displayName = await this.ensResolver.resolveDisplayName(wallet.address);
-            return [{
-              text: `☐ ${displayName}`,
-              callback_data: `wallet_toggle_${wallet.address}`
-            }];
-          }))),
+          ...wallets.map(wallet => [{
+            text: `☐ ${wallet.displayName || wallet.address}`,
+            callback_data: `wallet_toggle_${wallet.address}`
+          }]),
           [
             { text: WALLET_REMOVE_CONFIRM_BUTTON_TEXT, callback_data: 'wallet_confirm_remove' }
           ]
@@ -154,49 +151,20 @@ export class WalletService {
 
     try {
       await ctx.reply(WALLET_PROCESSING_MESSAGE);
-      
-      const normalized = input.trim();
-      let address: string;
-      
-      // 1. Check if it's a valid address
-      if (/^0x[a-fA-F0-9]{40}$/i.test(normalized)) {
-        address = normalized;
+
+      // Use base service for validation and addition
+      const result = await this.addUserWallet(userId.toString(), input, 'telegram');
+
+      if (result.success) {
+        await ctx.reply(WALLET_SUCCESS_MESSAGE);
+      } else {
+        await ctx.reply(`❌ ${result.message}`);
       }
-      // 2. Has dot? Try ENS resolution
-      else if (normalized.includes('.')) {
-        const resolved = await this.ensResolver.resolveToAddress(normalized);
-        if (!resolved) {
-          await ctx.reply('❌ ENS invalid or not found');
-          return;
-        }
-        address = resolved;
-      }
-      // 3. Invalid input
-      else {
-        await ctx.reply('❌ Invalid input. Please enter a valid address or ENS name');
-        return;
-      }
-      
-      // Check if wallet already exists
-      const existingWallets = await this.subscriptionApi.getUserWallets(userId.toString(), 'telegram');
-      const alreadyExists = existingWallets.some(
-        wallet => wallet.address.toLowerCase() === address.toLowerCase()
-      );
-      
-      if (alreadyExists) {
-        await ctx.reply('⚠️ This wallet has already been added');
-        return;
-      }
-      
-      // Add wallet via API
-      await this.subscriptionApi.addUserWallet(userId.toString(), address, 'telegram');
-      
-      await ctx.reply(WALLET_SUCCESS_MESSAGE);
-      
+
       // Reset session state
       ctx.session.awaitingWalletInput = false;
       ctx.session.walletAction = undefined;
-      
+
     } catch (error) {
       console.error('Error adding wallet:', error);
       await ctx.reply(WALLET_ERROR_MESSAGE);
@@ -226,18 +194,17 @@ export class WalletService {
 
     try {
       // Get current wallets to rebuild keyboard
-      const wallets = await this.subscriptionApi.getUserWallets(userId.toString(), 'telegram');
-      
+      const wallets = await this.getUserWalletsWithDisplayNames(userId.toString(), 'telegram');
+
       const keyboard = {
         inline_keyboard: [
-          ...(await Promise.all(wallets.map(async wallet => {
-            const displayName = await this.ensResolver.resolveDisplayName(wallet.address);
+          ...wallets.map(wallet => {
             const isSelected = ctx.session.walletsToRemove?.has(wallet.address);
             return [{
-              text: `${isSelected ? '☑️' : '☐'} ${displayName}`,
+              text: `${isSelected ? '☑️' : '☐'} ${wallet.displayName || wallet.address}`,
               callback_data: `wallet_toggle_${wallet.address}`
             }];
-          }))),
+          }),
           [
             { text: WALLET_REMOVE_CONFIRM_BUTTON_TEXT, callback_data: 'wallet_confirm_remove' }
           ]
@@ -267,19 +234,23 @@ export class WalletService {
     }
 
     try {
-      // Remove each selected wallet
-      const promises = Array.from(walletsToRemove).map(address => 
-        this.subscriptionApi.removeUserWallet(userId.toString(), address, 'telegram')
+      // Use base service for removal
+      const result = await this.removeUserWallets(
+        userId.toString(),
+        Array.from(walletsToRemove),
+        'telegram'
       );
 
-      await Promise.all(promises);
-      
-      await ctx.reply(WALLET_REMOVE_SUCCESS_MESSAGE);
-      
+      if (result.success) {
+        await ctx.reply(WALLET_REMOVE_SUCCESS_MESSAGE);
+      } else {
+        await ctx.reply(`❌ ${result.message}`);
+      }
+
       // Reset session state
       ctx.session.walletsToRemove = new Set<string>();
       ctx.session.walletAction = undefined;
-      
+
     } catch (error) {
       console.error('Error removing wallets:', error);
       await ctx.reply('Sorry, there was an error removing your wallets. Please try again later.');
