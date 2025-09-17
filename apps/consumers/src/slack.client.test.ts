@@ -1,12 +1,15 @@
 /**
  * Tests for SlackClient implementation
+ * Tests both Web API and Bolt framework integration
  */
 
 import { describe, it, expect, jest, beforeEach } from '@jest/globals';
 import { SlackClient } from './slack.client';
 import { WebClient } from '@slack/web-api';
+import { App } from '@slack/bolt';
 
 jest.mock('@slack/web-api');
+jest.mock('@slack/bolt');
 
 describe('SlackClient', () => {
   let slackClient: SlackClient;
@@ -17,12 +20,12 @@ describe('SlackClient', () => {
     mockWebClient = new WebClient() as jest.Mocked<WebClient>;
     (WebClient as unknown as jest.Mock).mockImplementation(() => mockWebClient);
 
-    slackClient = new SlackClient('test-token');
+    slackClient = new SlackClient('test-token', 'test-app-token', 'test-signing-secret');
   });
 
   describe('constructor', () => {
     it('should create client with valid token', () => {
-      expect(new SlackClient('valid-token')).toBeInstanceOf(SlackClient);
+      expect(new SlackClient('valid-token', 'valid-app-token', 'valid-signing-secret')).toBeInstanceOf(SlackClient);
     });
   });
 
@@ -131,6 +134,79 @@ describe('SlackClient', () => {
         unfurl_media: true,
         mrkdwn: false
       });
+    });
+  });
+
+  describe('Socket Mode', () => {
+    let mockBoltApp: jest.Mocked<App>;
+
+    beforeEach(() => {
+      jest.clearAllMocks();
+      mockBoltApp = {
+        command: jest.fn(),
+        action: jest.fn(),
+        view: jest.fn(),
+        message: jest.fn(),
+        start: jest.fn().mockResolvedValue(undefined as never),
+        stop: jest.fn()
+      } as any;
+
+      (App as unknown as jest.Mock).mockImplementation(() => mockBoltApp);
+    });
+
+    it('should always initialize with Socket Mode', () => {
+      const client = new SlackClient('xoxb-token', 'xapp-token', 'signing-secret');
+
+      expect(App).toHaveBeenCalledWith({
+        token: 'xoxb-token',
+        appToken: 'xapp-token',
+        signingSecret: 'signing-secret',
+        socketMode: true,
+        processBeforeResponse: true
+      });
+
+      expect(client.isInteractive()).toBe(true);
+    });
+
+
+    it('should setup command handlers', () => {
+      const client = new SlackClient('xoxb-token', 'xapp-token', 'signing-secret');
+
+      client.setupHandlers?.((handlers) => {
+        handlers.command('/test', async (ctx) => {
+          await ctx.ack();
+        });
+      });
+
+      expect(mockBoltApp.command).toHaveBeenCalledWith('/test', expect.any(Function));
+    });
+
+    it('should setup action handlers', () => {
+      const client = new SlackClient('xoxb-token', 'xapp-token', 'signing-secret');
+
+      client.setupHandlers?.((handlers) => {
+        handlers.action('button_click', async (ctx) => {
+          await ctx.ack();
+        });
+      });
+
+      expect(mockBoltApp.action).toHaveBeenCalledWith('button_click', expect.any(Function));
+    });
+
+    it('should launch the Bolt app', async () => {
+      const client = new SlackClient('xoxb-token', 'xapp-token', 'signing-secret');
+
+      await client.launch?.();
+
+      expect(mockBoltApp.start).toHaveBeenCalled();
+    });
+
+    it('should stop the Bolt app', () => {
+      const client = new SlackClient('xoxb-token', 'xapp-token', 'signing-secret');
+
+      client.stop?.('SIGTERM');
+
+      expect(mockBoltApp.stop).toHaveBeenCalled();
     });
   });
 });
