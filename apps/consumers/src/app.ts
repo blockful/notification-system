@@ -71,36 +71,10 @@ export class App {
       'slack'
     );
     console.log('✅ Slack consumer connected to RabbitMQ');
+  
+    await this.telegramBotService.launch();
+    await this.slackBotService.launch();
 
-    // Launch both bots in parallel
-    const launchPromises: Promise<void>[] = [];
-
-    // Launch Telegram bot
-    launchPromises.push(
-      (async () => {
-        try {
-          await this.telegramBotService.launch();
-          console.log('✅ Telegram bot is running!');
-        } catch (error) {
-          console.error('❌ Failed to launch Telegram bot:', error);
-        }
-      })()
-    );
-
-    // Launch Slack bot
-    launchPromises.push(
-      (async () => {
-        try {
-          await this.slackBotService.launch();
-          console.log('✅ Slack bot is running!');
-        } catch (error) {
-          console.error('❌ Failed to launch Slack bot:', error);
-        }
-      })()
-    );
-
-    // Wait for both launches to complete (whether successful or not)
-    await Promise.allSettled(launchPromises);
     console.log('🚀 All bot services have been initialized');
   }
 
