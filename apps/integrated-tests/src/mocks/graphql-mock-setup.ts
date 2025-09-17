@@ -75,7 +75,7 @@ export class GraphQLMockSetup {
           proposerAccountId: this.toChecksum(p.proposerAccountId)
         }));
         return Promise.resolve({
-          data: { data: { proposals: checksummedProposals } }
+          data: { data: { proposals: { items: checksummedProposals, totalCount: checksummedProposals.length } } }
         });
       }
 
@@ -173,7 +173,7 @@ export class GraphQLMockSetup {
         data: {
           data: {
             votingPowerHistorys: { items: [] },
-            proposals: [],
+            proposals: { items: [], totalCount: 0 },
             proposal: null,
             daos: { items: [] },
             votesOnchains: { items: [] }
