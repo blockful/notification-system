@@ -35,7 +35,7 @@ export class SlackBotService implements BotServiceInterface {
     this.walletService = walletService;
 
     // Setup command handlers if Socket Mode is available
-    if (this.slackClient.isInteractive?.()) {
+    if (this.slackClient.setupHandlers) {
       this.setupCommands();
     }
   }

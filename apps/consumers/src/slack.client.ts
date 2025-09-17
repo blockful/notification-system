@@ -227,13 +227,6 @@ export class SlackClient implements SlackClientInterface {
   isRunning(): boolean {
     return true; // Always in Socket Mode now
   }
-
-  /**
-   * Check if Socket Mode is enabled
-   */
-  isInteractive(): boolean {
-    return true; // Always interactive with Socket Mode
-  }
 }
 
 /**

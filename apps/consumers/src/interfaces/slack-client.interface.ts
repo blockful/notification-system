@@ -1,7 +1,6 @@
 /**
  * Slack Client Interface
  * Defines the contract for Slack bot operations similar to TelegramClientInterface
- * Extended to support both Web API and Bolt framework features
  */
 
 import { SlackHandlerRegistration } from './slack-context.interface';
@@ -59,10 +58,4 @@ export interface SlackClientInterface {
    * @returns true if bot is active
    */
   isRunning?(): boolean;
-
-  /**
-   * Check if Socket Mode is enabled
-   * @returns true if Socket Mode is configured and available
-   */
-  isInteractive?(): boolean;
 }

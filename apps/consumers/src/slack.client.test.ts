@@ -164,8 +164,6 @@ describe('SlackClient', () => {
         socketMode: true,
         processBeforeResponse: true
       });
-
-      expect(client.isInteractive()).toBe(true);
     });
 
 
