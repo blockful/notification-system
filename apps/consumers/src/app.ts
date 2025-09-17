@@ -1,8 +1,10 @@
 import { AxiosInstance } from 'axios';
 import { TelegramBotService } from './services/telegram-bot.service';
 import { SlackBotService } from './services/slack-bot.service';
-import { DAOService } from './services/dao.service';
-import { WalletService } from './services/wallet.service';
+import { SlackDAOService } from './services/slack-dao.service';
+import { SlackWalletService } from './services/wallet/slack-wallet.service';
+import { TelegramDAOService } from './services/telegram-dao.service';
+import { TelegramWalletService } from './services/wallet/telegram-wallet.service';
 import { ExplorerService } from './services/explorer.service';
 import { EnsResolverService } from './services/ens-resolver.service';
 import { AnticaptureClient } from '@notification-system/anticapture-client';
@@ -28,42 +30,78 @@ export class App {
   ) {
     const subscriptionApi = new SubscriptionAPIService(subscriptionServerUrl);
     const anticaptureClient = new AnticaptureClient(httpClient);
-    const daoService = new DAOService(anticaptureClient, subscriptionApi);
-    const walletService = new WalletService(subscriptionApi, ensResolver);
     const explorerService = new ExplorerService();
-    
+
+    // Telegram services
+    const telegramDaoService = new TelegramDAOService(anticaptureClient, subscriptionApi);
+    const telegramWalletService = new TelegramWalletService(subscriptionApi, ensResolver);
+
     this.telegramBotService = new TelegramBotService(
       telegramClient,
-      daoService, 
-      walletService, 
+      telegramDaoService,
+      telegramWalletService,
       explorerService,
       ensResolver
     );
+
+    const slackDaoService = new SlackDAOService(anticaptureClient, subscriptionApi);
+    const slackWalletService = new SlackWalletService(subscriptionApi, ensResolver);
+
     this.slackBotService = new SlackBotService(
       slackClient,
       explorerService,
-      ensResolver
+      ensResolver,
+      slackDaoService,
+      slackWalletService
     );
     this.rabbitmqUrl = rabbitmqUrl;
   }
 
   async start(): Promise<void> {
-    // Start Telegram consumer
     this.rabbitmqTelegramConsumerService = await RabbitMQNotificationConsumerService.create(
       this.rabbitmqUrl,
       this.telegramBotService,
       'telegram'
     );
-    await this.telegramBotService.launch();
-    console.log('✅ Telegram bot is running!');
+    console.log('✅ Telegram consumer connected to RabbitMQ');
 
-    // Start Slack consumer
     this.rabbitmqSlackConsumerService = await RabbitMQNotificationConsumerService.create(
       this.rabbitmqUrl,
       this.slackBotService,
       'slack'
     );
-    console.log('✅ Slack bot is running!');
+    console.log('✅ Slack consumer connected to RabbitMQ');
+
+    // Launch both bots in parallel
+    const launchPromises: Promise<void>[] = [];
+
+    // Launch Telegram bot
+    launchPromises.push(
+      (async () => {
+        try {
+          await this.telegramBotService.launch();
+          console.log('✅ Telegram bot is running!');
+        } catch (error) {
+          console.error('❌ Failed to launch Telegram bot:', error);
+        }
+      })()
+    );
+
+    // Launch Slack bot
+    launchPromises.push(
+      (async () => {
+        try {
+          await this.slackBotService.launch();
+          console.log('✅ Slack bot is running!');
+        } catch (error) {
+          console.error('❌ Failed to launch Slack bot:', error);
+        }
+      })()
+    );
+
+    // Wait for both launches to complete (whether successful or not)
+    await Promise.allSettled(launchPromises);
+    console.log('🚀 All bot services have been initialized');
   }
 
   async stop(): Promise<void> {
@@ -74,5 +112,6 @@ export class App {
       await this.rabbitmqSlackConsumerService.stop();
     }
     this.telegramBotService.stop('SIGINT');
+    this.slackBotService.stop('SIGINT');
   }
 } 
