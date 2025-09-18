@@ -89,111 +89,132 @@ export class SlackClient implements SlackClientInterface {
   }
 
   /**
+   * Register a command handler with session management
+   */
+  private registerCommand(
+    command: string,
+    handler: (context: SlackCommandContext) => Promise<void>
+  ): void {
+    this.boltApp.command(command, async (args) => {
+      const userId = args.body.user_id;
+      const session = this.sessionStorage.get(userId);
+      const context: SlackCommandContext = {
+        body: args.body,
+        session,
+        ack: args.ack as any,
+        respond: args.respond,
+        say: args.say,
+        client: args.client
+      };
+
+      try {
+        await handler(context);
+        this.sessionStorage.set(userId, context.session);
+      } catch (error) {
+        console.error(`Error handling command ${command}:`, error);
+        await args.ack();
+        await args.respond({
+          text: '❌ An error occurred while processing your command. Please try again.',
+          response_type: 'ephemeral'
+        });
+      }
+    });
+  }
+
+  /**
+   * Register an action handler with session management
+   */
+  private registerAction(
+    actionId: string | RegExp,
+    handler: (context: SlackActionContext) => Promise<void>
+  ): void {
+    this.boltApp.action(actionId, async (args) => {
+      const userId = args.body.user.id;
+      const session = this.sessionStorage.get(userId);
+      const context: SlackActionContext = {
+        body: args.body,
+        session,
+        ack: args.ack as any,
+        respond: args.respond,
+        say: undefined,
+        client: args.client
+      };
+
+      try {
+        await handler(context);
+        this.sessionStorage.set(userId, context.session);
+      } catch (error) {
+        console.error(`Error handling action ${actionId}:`, error);
+        await args.ack();
+      }
+    });
+  }
+
+  /**
+   * Register a view submission handler with session management
+   */
+  private registerView(
+    callbackId: string | RegExp,
+    handler: (context: SlackViewContext) => Promise<void>
+  ): void {
+    this.boltApp.view(callbackId, async (args) => {
+      const userId = args.body.user.id;
+      const session = this.sessionStorage.get(userId);
+      const context: SlackViewContext = {
+        body: args.body,
+        view: args.view,
+        session,
+        ack: args.ack,
+        client: args.client
+      };
+
+      try {
+        await handler(context);
+        this.sessionStorage.set(userId, context.session);
+      } catch (error) {
+        console.error(`Error handling view ${callbackId}:`, error);
+        await args.ack();
+      }
+    });
+  }
+
+  /**
+   * Register a message handler with session management
+   */
+  private registerMessage(
+    pattern: string | RegExp,
+    handler: (context: SlackCommandContext) => Promise<void>
+  ): void {
+    this.boltApp.message(pattern, async (args) => {
+      const userId = (args.message as any).user;
+      const session = this.sessionStorage.get(userId);
+      const context: SlackCommandContext = {
+        body: args.message as any,
+        session,
+        ack: async () => {},  // No ack needed for message events
+        respond: undefined,
+        say: args.say,
+        client: args.client
+      };
+
+      try {
+        await handler(context);
+        this.sessionStorage.set(userId, context.session);
+      } catch (error) {
+        console.error(`Error handling message pattern ${pattern}:`, error);
+      }
+    });
+  }
+
+  /**
    * Setup handlers for Slack commands and interactions
    */
   setupHandlers(registration: (handlers: SlackHandlerRegistration) => void): void {
     const handlers: SlackHandlerRegistration = {
-      command: (command: string, handler: (context: SlackCommandContext) => Promise<void>) => {
-        this.boltApp.command(command, async (args) => {
-          // Add session to context
-          const userId = args.body.user_id;
-          const session = this.sessionStorage.get(userId);
-          const context: SlackCommandContext = {
-            body: args.body,
-            session,
-            ack: args.ack as any,
-            respond: args.respond,
-            say: args.say,
-            client: args.client
-          };
-
-          try {
-            await handler(context);
-            // Save session after handler
-            this.sessionStorage.set(userId, context.session);
-          } catch (error) {
-            console.error(`Error handling command ${command}:`, error);
-            await args.ack();
-            await args.respond({
-              text: '❌ An error occurred while processing your command. Please try again.',
-              response_type: 'ephemeral'
-            });
-          }
-        });
-      },
-
-      action: (actionId: string | RegExp, handler: (context: SlackActionContext) => Promise<void>) => {
-        this.boltApp.action(actionId, async (args) => {
-          // Add session to context
-          const userId = args.body.user.id;
-          const session = this.sessionStorage.get(userId);
-          const context: SlackActionContext = {
-            body: args.body,
-            session,
-            ack: args.ack as any,
-            respond: args.respond,
-            say: undefined,
-            client: args.client
-          };
-
-          try {
-            await handler(context);
-            // Save session after handler
-            this.sessionStorage.set(userId, context.session);
-          } catch (error) {
-            console.error(`Error handling action ${actionId}:`, error);
-            await args.ack();
-          }
-        });
-      },
-
-      view: (callbackId: string | RegExp, handler: (context: SlackViewContext) => Promise<void>) => {
-        this.boltApp.view(callbackId, async (args) => {
-          // Add session to context
-          const userId = args.body.user.id;
-          const session = this.sessionStorage.get(userId);
-          const context: SlackViewContext = {
-            body: args.body,
-            view: args.view,
-            session,
-            ack: args.ack,
-            client: args.client
-          };
-
-          try {
-            await handler(context);
-            // Save session after handler
-            this.sessionStorage.set(userId, context.session);
-          } catch (error) {
-            console.error(`Error handling view ${callbackId}:`, error);
-            await args.ack();
-          }
-        });
-      },
-
-      message: (pattern: string | RegExp, handler: (context: SlackCommandContext) => Promise<void>) => {
-        this.boltApp.message(pattern, async (args) => {
-          // Add session to context
-          const userId = (args.message as any).user;
-          const session = this.sessionStorage.get(userId);
-          const context: SlackCommandContext = {
-            body: args.message as any,
-            session,
-            ack: async () => {},  // No ack needed for message events
-            respond: undefined,
-            say: args.say,
-            client: args.client
-          };
-
-          try {
-            await handler(context);
-            // Save session after handler
-            this.sessionStorage.set(userId, context.session);
-          } catch (error) {
-            console.error(`Error handling message pattern ${pattern}:`, error);
-          }
-        });
-      }
+      command: this.registerCommand.bind(this),
+      action: this.registerAction.bind(this),
+      view: this.registerView.bind(this),
+      message: this.registerMessage.bind(this)
     };
 
     registration(handlers);
