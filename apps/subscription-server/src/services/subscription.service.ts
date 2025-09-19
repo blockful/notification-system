@@ -116,7 +116,10 @@ export class SubscriptionService {
 
       // Parse workspace ID from format "workspace:user"
       const [workspaceId, userId] = user.channel_user_id.split(':');
-      if (!userId || workspaceId === DEFAULT_WORKSPACE_PREFIX) return user;
+      if (!userId) return user;
+
+      // For T_DEFAULT, also check if a workspace exists in the database
+      // This supports both legacy mode and OAuth mode with a default workspace
 
       // Fetch and attach token
       const token = await this.workspaceService?.getWorkspaceToken(workspaceId);

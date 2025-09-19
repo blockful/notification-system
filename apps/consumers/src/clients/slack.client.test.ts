@@ -20,12 +20,12 @@ describe('SlackClient', () => {
     mockWebClient = new WebClient() as jest.Mocked<WebClient>;
     (WebClient as unknown as jest.Mock).mockImplementation(() => mockWebClient);
 
-    slackClient = new SlackClient('test-token', 'test-app-token', 'test-signing-secret');
+    slackClient = new SlackClient('test-app-token', 'test-signing-secret');
   });
 
   describe('constructor', () => {
     it('should create client with valid token', () => {
-      expect(new SlackClient('valid-token', 'valid-app-token', 'valid-signing-secret')).toBeInstanceOf(SlackClient);
+      expect(new SlackClient('valid-app-token', 'valid-signing-secret')).toBeInstanceOf(SlackClient);
     });
   });
 
@@ -45,7 +45,7 @@ describe('SlackClient', () => {
 
       (mockWebClient.chat.postMessage as jest.Mock).mockResolvedValue(mockResponse as never);
 
-      const result = await slackClient.sendMessage('C1234567890', 'Test message');
+      const result = await slackClient.sendMessage('C1234567890', 'Test message', { token: 'xoxb-test-token' });
 
       expect(mockWebClient.chat.postMessage).toHaveBeenCalledWith({
         channel: 'C1234567890',
@@ -73,7 +73,7 @@ describe('SlackClient', () => {
 
       (mockWebClient.chat.postMessage as jest.Mock).mockResolvedValue(mockResponse as never);
 
-      await slackClient.sendMessage('C1234567890', 'Check [this link](https://example.com)');
+      await slackClient.sendMessage('C1234567890', 'Check [this link](https://example.com)', { token: 'xoxb-test-token' });
 
       expect(mockWebClient.chat.postMessage).toHaveBeenCalledWith({
         channel: 'C1234567890',
@@ -95,7 +95,7 @@ describe('SlackClient', () => {
 
       (mockWebClient.chat.postMessage as jest.Mock).mockResolvedValue(mockResponse as never);
 
-      await slackClient.sendMessage('C1234567890', 'This is **bold** text');
+      await slackClient.sendMessage('C1234567890', 'This is **bold** text', { token: 'xoxb-test-token' });
 
       expect(mockWebClient.chat.postMessage).toHaveBeenCalledWith({
         channel: 'C1234567890',
@@ -118,6 +118,7 @@ describe('SlackClient', () => {
       (mockWebClient.chat.postMessage as jest.Mock).mockResolvedValue(mockResponse as never);
 
       await slackClient.sendMessage('C1234567890', 'Test message', {
+        token: 'xoxb-test-token',
         parse: 'full',
         link_names: false,
         unfurl_links: true,
@@ -155,20 +156,20 @@ describe('SlackClient', () => {
     });
 
     it('should always initialize with Socket Mode', () => {
-      const client = new SlackClient('xoxb-token', 'xapp-token', 'signing-secret');
+      const client = new SlackClient('xapp-token', 'signing-secret');
 
       expect(App).toHaveBeenCalledWith({
-        token: 'xoxb-token',
         appToken: 'xapp-token',
         signingSecret: 'signing-secret',
         socketMode: true,
-        processBeforeResponse: true
+        processBeforeResponse: true,
+        token: undefined
       });
     });
 
 
     it('should setup command handlers', () => {
-      const client = new SlackClient('xoxb-token', 'xapp-token', 'signing-secret');
+      const client = new SlackClient('xapp-token', 'signing-secret');
 
       client.setupHandlers?.((handlers) => {
         handlers.command('/test', async (ctx) => {
@@ -180,7 +181,7 @@ describe('SlackClient', () => {
     });
 
     it('should setup action handlers', () => {
-      const client = new SlackClient('xoxb-token', 'xapp-token', 'signing-secret');
+      const client = new SlackClient('xapp-token', 'signing-secret');
 
       client.setupHandlers?.((handlers) => {
         handlers.action('button_click', async (ctx) => {
@@ -192,7 +193,7 @@ describe('SlackClient', () => {
     });
 
     it('should launch the Bolt app', async () => {
-      const client = new SlackClient('xoxb-token', 'xapp-token', 'signing-secret');
+      const client = new SlackClient('xapp-token', 'signing-secret');
 
       await client.launch?.();
 
@@ -200,7 +201,7 @@ describe('SlackClient', () => {
     });
 
     it('should stop the Bolt app', () => {
-      const client = new SlackClient('xoxb-token', 'xapp-token', 'signing-secret');
+      const client = new SlackClient('xapp-token', 'signing-secret');
 
       client.stop?.('SIGTERM');
 

@@ -4,6 +4,13 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Recent Changes
 
+### Slack OAuth Multi-Workspace Support (2025-09-18)
+- OAuth 2.0 flow implementation in Subscription Server (`/slack/install`, `/slack/oauth/callback`)
+- Workspace token storage with AES-256-CBC encryption in `slack_workspaces` table
+- Dynamic token distribution via RabbitMQ messages (bot_token field)
+- Backward compatible with workspace:user ID format (T_DEFAULT for legacy)
+- See `docs/slack-oauth-setup.md` for configuration guide
+
 ### Slack Integration (2025-09-17)
 - Added Socket Mode support for interactive Slack features in Consumer service
 - New service classes: SlackDAOService, SlackWalletService for command handling
