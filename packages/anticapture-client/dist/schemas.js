@@ -89,7 +89,7 @@ function processProposals(validated, daoId) {
             });
         }
         return acc;
-    }, []) || [];
+    }, []);
 }
 // Internal helper function to process validated voting power history
 function processVotingPowerHistory(validated, daoId, chainId) {

@@ -140,7 +140,7 @@ export class AnticaptureClient {
       for (const dao of allDAOs) {
         try {
           const validated = await this.query(ListProposalsDocument, SafeProposalsResponseSchema, variables, dao.id);
-          const processed = processProposals(validated.proposals.items, dao.id);
+          const processed = processProposals(validated, dao.id);
           if (processed && processed.length > 0) {
             allProposals.push(...processed);
           }
@@ -154,7 +154,7 @@ export class AnticaptureClient {
 
     try {
       const validated = await this.query(ListProposalsDocument, SafeProposalsResponseSchema, variables, daoId);
-      return processProposals(validated.proposals.items, daoId!) || [];
+      return processProposals(validated, daoId!) || [];
     } catch (error) {
       console.warn(`Error querying proposals for DAO ${daoId}: ${error instanceof Error ? error.message : error}`);
       return [];
