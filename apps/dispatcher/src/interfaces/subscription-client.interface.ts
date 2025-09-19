@@ -6,6 +6,7 @@ export interface User {
     channel: string;
     channel_user_id: string;
     created_at: Date;
+    token?: string;  // Optional token for workspace authentication (e.g., Slack bot token)
   }
 
 /**

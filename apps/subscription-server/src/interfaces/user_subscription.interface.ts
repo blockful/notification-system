@@ -11,6 +11,7 @@ export interface User {
   channel: string;
   channel_user_id: string;
   created_at?: string;
+  token?: string;  // Optional token for workspace authentication
 }
 
 /**
@@ -83,4 +84,5 @@ export interface UserResponse {
   channel: string;
   channel_user_id: string;
   created_at?: string;
+  token?: string;  // Optional token for workspace authentication
 } 
