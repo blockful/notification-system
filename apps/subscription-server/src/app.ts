@@ -10,6 +10,8 @@ import { KnexUserRepository, KnexPreferenceRepository, KnexNotificationRepositor
 import { SubscriptionService, NotificationService } from './services';
 import { DaoHandler } from './handlers/dao.handlers';
 import { UserAddressController } from './controllers/user-address.controller';
+import { SlackOAuthController } from './controllers/slack-oauth.controller';
+import { WorkspaceService } from './services/workspace.service';
 
 export class App {
   private server: FastifyInstance;
@@ -26,19 +28,21 @@ export class App {
     const userAddressRepository = new KnexUserAddressRepository(db);
     
     // Service instances
-    const subscriptionService = new SubscriptionService(userRepository, preferenceRepository, userAddressRepository);
+    const workspaceService = new WorkspaceService(db);
+    const subscriptionService = new SubscriptionService(userRepository, preferenceRepository, userAddressRepository, workspaceService);
     const notificationService = new NotificationService(notificationRepository);
-    
+
     // Handler instances
     const daoHandler = new DaoHandler(subscriptionService);
-    
+
     // Controller instances
     const daoController = new DaoController(daoHandler);
     const notificationController = new NotificationController(notificationService);
     const userAddressController = new UserAddressController(subscriptionService);
+    const slackOAuthController = new SlackOAuthController(workspaceService);
 
     this.setupFastify();
-    this.setupRoutes(daoController, notificationController, userAddressController);
+    this.setupRoutes(daoController, notificationController, userAddressController, slackOAuthController);
   }
 
   private setupFastify(): void {
@@ -73,11 +77,17 @@ export class App {
     });
   }
 
-  private setupRoutes(daoController: DaoController, notificationController: NotificationController, userAddressController: UserAddressController): void {
+  private setupRoutes(
+    daoController: DaoController,
+    notificationController: NotificationController,
+    userAddressController: UserAddressController,
+    slackOAuthController: SlackOAuthController
+  ): void {
     this.server.register(initial_routes);
     this.server.register((app) => daoController.register(app));
     this.server.register((app) => notificationController.register(app));
     this.server.register((app) => userAddressController.register(app));
+    this.server.register((app) => slackOAuthController.register(app));
   }
 
   async start(): Promise<void> {
