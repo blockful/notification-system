@@ -5,27 +5,27 @@
  */
 
 import { Markup } from 'telegraf';
-import { WELCOME_MESSAGE, HELP_MESSAGE, DAOS_BUTTON_TEXT, LEARN_MORE_BUTTON_TEXT, MY_WALLETS_BUTTON_TEXT } from '../messages';
-import { DAOService } from '../services/dao.service';
-import { WalletService } from '../services/wallet.service';
-import { ExplorerService } from '../services/explorer.service';
-import { EnsResolverService } from '../services/ens-resolver.service';
-import { MatchedContext } from '../interfaces/bot.interface';
-import { NotificationPayload } from '../interfaces/notification.interface';
-import { TelegramClientInterface } from '../interfaces/telegram-client.interface';
-import { BotServiceInterface } from '../interfaces/bot-service.interface';
+import { WELCOME_MESSAGE, HELP_MESSAGE, DAOS_BUTTON_TEXT, LEARN_MORE_BUTTON_TEXT, MY_WALLETS_BUTTON_TEXT } from '../../messages';
+import { TelegramDAOService } from '../dao/telegram-dao.service';
+import { TelegramWalletService } from '../wallet/telegram-wallet.service';
+import { ExplorerService } from '../explorer.service';
+import { EnsResolverService } from '../ens-resolver.service';
+import { MatchedContext } from '../../interfaces/bot.interface';
+import { NotificationPayload } from '../../interfaces/notification.interface';
+import { TelegramClientInterface } from '../../interfaces/telegram-client.interface';
+import { BotServiceInterface } from '../../interfaces/bot-service.interface';
 
 export class TelegramBotService implements BotServiceInterface {
   private telegramClient: TelegramClientInterface;
-  private daoService: DAOService;
-  private walletService: WalletService;
+  private daoService: TelegramDAOService;
+  private walletService: TelegramWalletService;
   private explorerService: ExplorerService;
   private ensResolver: EnsResolverService;
 
   constructor(
     telegramClient: TelegramClientInterface,
-    daoService: DAOService, 
-    walletService: WalletService,
+    daoService: TelegramDAOService,
+    walletService: TelegramWalletService,
     explorerService: ExplorerService,
     ensResolver: EnsResolverService
   ) {

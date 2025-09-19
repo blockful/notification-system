@@ -4,10 +4,10 @@
 
 import { describe, it, expect, jest, beforeEach } from '@jest/globals';
 import { SlackBotService } from './slack-bot.service';
-import { SlackClientInterface } from '../interfaces/slack-client.interface';
-import { ExplorerService } from './explorer.service';
-import { EnsResolverService } from './ens-resolver.service';
-import { NotificationPayload } from '../interfaces/notification.interface';
+import { SlackClientInterface } from '../../interfaces/slack-client.interface';
+import { ExplorerService } from '../explorer.service';
+import { EnsResolverService } from '../ens-resolver.service';
+import { NotificationPayload } from '../../interfaces/notification.interface';
 
 describe('SlackBotService', () => {
   let slackBotService: SlackBotService;
@@ -17,7 +17,8 @@ describe('SlackBotService', () => {
 
   beforeEach(() => {
     mockSlackClient = {
-      sendMessage: jest.fn()
+      sendMessage: jest.fn(),
+      setupHandlers: jest.fn()
     };
 
     mockExplorerService = {

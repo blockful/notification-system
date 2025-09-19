@@ -18,18 +18,21 @@ query GetProposalById($id: String!) {
 
 query ListProposals($skip: NonNegativeInt, $limit: PositiveInt, $orderDirection: queryInput_proposals_orderDirection, $status: JSON, $fromDate: Float) {
   proposals(skip: $skip, limit: $limit, orderDirection: $orderDirection, status: $status, fromDate: $fromDate) {
-    id
-    daoId
-    proposerAccountId
-    title
-    description
-    startBlock
-    endBlock
-    endTimestamp
-    timestamp
-    status
-    forVotes
-    againstVotes
-    abstainVotes
+    items {
+      id
+      daoId
+      proposerAccountId
+      title
+      description
+      startBlock
+      endBlock
+      endTimestamp
+      timestamp
+      status
+      forVotes
+      againstVotes
+      abstainVotes
+    }
+    totalCount
   }
 }

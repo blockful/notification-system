@@ -2,218 +2,129 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
-## Recent Changes (2025-08-15)
+## Recent Changes
 
-### Migration from proposalsOnchains to proposals query
-- **GraphQL Queries Updated**: Migrated from `proposalsOnchains` to new `proposals` query endpoint
-- **New Features**: 
-  - Added native `title` field support (no longer extracting from description)
-  - Simplified response structure (direct array instead of `items` wrapper)
-- **API Changes**:
-  - Query parameters: `where` filters replaced with `status`, `fromDate`, `skip`, `limit`
-  - Response format: `proposals` returns array directly, not `{ items: [...] }`
-  - Field `proposalsOnchain` renamed to `proposal` for single queries
-- **Removed Fields**: `targets`, `values`, `signatures`, `calldatas` (not used by notification system)
+### Slack Integration (2025-09-17)
+- Added Socket Mode support for interactive Slack features in Consumer service
+- New service classes: SlackDAOService, SlackWalletService for command handling
+- Session management using InMemorySessionStorage (consider Redis for production)
+- Slack Block Kit UI implementation for rich interactive messages
 
-## Repository Overview
+### GraphQL Migration (2025-08-15)
+- **IMPORTANT**: Currently reverting some changes - `proposals` query now returns `{ items: [], totalCount }` structure
+- Native `title` field support (no longer extracted from description)
+- Query parameters: `status`, `fromDate`, `skip`, `limit` replaced `where` filters
+- Field `proposalsOnchain` renamed to `proposal` for single queries
 
-This is an event-driven notification system for DAO governance built with microservices architecture. The system monitors blockchain proposals and delivers notifications via Telegram (with extensibility for other channels).
+## Architecture Overview
 
-## Architecture
+Event-driven notification system with 4 microservices connected via RabbitMQ:
 
-The system consists of 4 microservices connected via RabbitMQ:
+1. **Logic System** (`apps/logic-system/`) - Monitors AntiCapture API, triggers events every 30 seconds
+2. **Dispatcher** (`apps/dispatcher/`) - Processes events, fetches subscribers, creates notifications
+3. **Subscription Server** (`apps/subscription-server/`) - REST API for user preferences, PostgreSQL persistence
+4. **Consumer** (`apps/consumers/`) - Delivers notifications via Telegram/Slack bots
 
-1. **Logic System** - Monitors AntiCapture API for proposal events and triggers notifications
-2. **Dispatcher** - Processes events, fetches subscribers, and creates notification messages
-3. **Subscription Server** - REST API for managing user preferences and tracking notifications
-4. **Consumer** - Telegram bot that delivers notifications and handles user interactions
+## Essential Commands
 
-## Key Commands
-
-### Development
 ```bash
-# Install dependencies (requires pnpm)
-pnpm install
+# Development
+pnpm install                    # Install all dependencies
+pnpm dev                        # Start all services with Docker Compose
+pnpm build                      # Build all services
+pnpm test                       # Run all tests
 
-# Start all services with Docker Compose
-pnpm dev
+# Service-specific shortcuts
+pnpm logic-system <cmd>         # Run commands in logic-system
+pnpm dispatcher <cmd>           # Run commands in dispatcher
+pnpm subscription-server <cmd>  # Run commands in subscription-server
+pnpm consumer <cmd>             # Run commands in consumer
 
-# Build all services
-pnpm build
-
-# Run tests across all services
-pnpm test
-
-# Format code
-pnpm format
-```
-
-### Service-Specific Commands
-```bash
-# Run commands for specific services
-pnpm logic-system <command>
-pnpm dispatcher <command>
-pnpm subscription-server <command>
-pnpm consumer <command>
-
-# Example: Run tests for logic-system
-pnpm logic-system test
-
-# Example: Start a single service in dev mode
-pnpm logic-system dev
-```
-
-### Testing
-```bash
-# Run all tests
-pnpm test
-
-# Run tests for a specific service
+# Testing patterns
 pnpm --filter @notification-system/logic-system test
+pnpm --filter @notification-system/integrated-tests test -- --testNamePattern="voting"
+NODE_ENV=test pnpm --filter @notification-system/integrated-tests test
 
-# Run a single test file
-pnpm --filter @notification-system/logic-system test -- path/to/test.spec.ts
+# Type checking and linting
+pnpm consumer check-types
+pnpm logic-system lint
+
+# GraphQL code generation
+pnpm client codegen
+ANTICAPTURE_GRAPHQL_ENDPOINT="https://api-gateway-production-0879.up.railway.app/graphql" pnpm client codegen
 ```
 
-## Project Structure
+## Message Flow Patterns
 
-```
-apps/
-├── logic-system/         # Event monitoring and triggering
-├── dispatcher/           # Message processing and routing  
-├── subscription-server/  # User preference API
-├── consumers/           # Telegram bot delivery
-└── integrated-tests/    # End-to-end testing
+### Notification Pipeline
+1. Logic System polls AntiCapture API → publishes `TriggerEvent` to RabbitMQ
+2. Dispatcher consumes trigger → fetches subscribers with temporal filtering → publishes notifications
+3. Consumer delivers via Telegram/Slack → tracks delivery in Subscription Server
 
-packages/
-├── anticapture-client/  # GraphQL client for DAO data
-└── rabbitmq-client/     # Shared RabbitMQ utilities
-```
+### Adding New Trigger Types
+1. Extend base `Trigger` class in `apps/logic-system/src/triggers/`
+2. Implement `fetchData()` and `process()` methods
+3. Register in `App.setupTriggers()` in Logic System
+4. Create handler in `apps/dispatcher/src/trigger-handlers/`
+5. Register handler in `TriggerProcessorService`
 
-## Key Technologies
+## Service Architectures
 
-- **Runtime**: Node.js 18+, TypeScript 5.8.2
-- **Frameworks**: Fastify (APIs), Express (legacy)
-- **Database**: PostgreSQL with Knex.js migrations
-- **Message Queue**: RabbitMQ for service communication
-- **Testing**: Jest with ts-jest
-- **Build**: Turbo monorepo with pnpm workspaces
+### Consumer Service (Telegram/Slack Bot)
+- **Telegram**: Uses telegraf with session management via telegraf-session-local
+- **Slack**: Uses @slack/bolt with Socket Mode for interactive features
+- **Pattern**: Service classes (TelegramBotService, SlackBotService) implement BotServiceInterface
+- **Session Storage**: InMemorySessionStorage for Slack (needs Redis for production scale)
 
-## Message Flow
+### Subscription Server API
+- **Framework**: Fastify with Swagger documentation
+- **Database**: PostgreSQL with Knex.js migrations in `db/migrations/`
+- **Deduplication**: Tracks notifications in `user_notifications` table
+- **Temporal Filtering**: Only notifies users subscribed before event timestamp
 
-1. Logic System polls AntiCapture API every 30 seconds
-2. On new proposals, sends `TriggerEvent` to dispatcher queue
-3. Dispatcher fetches relevant subscribers and creates notifications
-4. Consumer receives notifications and delivers via Telegram
-5. Delivery status tracked in Subscription Server
+### Logic System Triggers
+- **Base Class**: `Trigger` abstract class with `fetchData()` and `process()` lifecycle
+- **Polling**: 30-second intervals configured per trigger
+- **State Management**: Tracks last processed items to avoid duplicates
 
 ## Database Schema
 
-The Subscription Server manages:
-- `users`: User profiles with Telegram/Discord IDs
-- `daos`: DAO registry from AntiCapture
-- `user_dao_subscriptions`: Many-to-many subscription relationships
-- `user_notifications`: Notification delivery tracking for deduplication
+Key tables in Subscription Server:
+- `users`: User profiles with platform-specific IDs (telegram_id, slack_id)
+- `user_dao_subscriptions`: Many-to-many subscriptions with created_at for temporal filtering
+- `user_notifications`: Delivery tracking for deduplication
+- `user_wallets`: Wallet addresses for personalized notifications
+
+## Testing Strategies
+
+### Unit Tests
+- Mock RabbitMQ connections with `jest.mock('@notification-system/rabbitmq-client')`
+- Mock GraphQL responses in `integrated-tests/src/mocks/graphql-mock-setup.ts`
+
+### Integration Tests
+- Test helpers in `integrated-tests/src/helpers/` for each platform
+- Use `waitForMessage()` pattern for async message verification
+- Environment: `NODE_ENV=test` for test database isolation
+
+### End-to-End Tests
+- Full service orchestration tests in `apps/integrated-tests/tests/`
+- Docker Compose setup mimics production environment
 
 ## Environment Configuration
 
-Each service requires specific environment variables:
-- Copy `env.example` to `.env` at project root
-- Key variables: `DATABASE_URL`, `RABBITMQ_URL`, `TELEGRAM_BOT_TOKEN`
-- AntiCapture API endpoint configuration
-
-## Testing Strategy
-
-- Unit tests for business logic in each service
-- Integration tests for API endpoints
-- End-to-end tests in `integrated-tests` app
-- Jest configuration in each service's `jest.config.js`
+Required variables in `.env`:
+```
+DATABASE_URL=postgresql://user:pass@localhost/dbname
+RABBITMQ_URL=amqp://localhost
+TELEGRAM_BOT_TOKEN=your_bot_token
+SLACK_BOT_TOKEN=xoxb-your-token
+SLACK_APP_TOKEN=xapp-your-app-token  # For Socket Mode
+SLACK_SIGNING_SECRET=your-signing-secret
+ANTICAPTURE_GRAPHQL_ENDPOINT=https://api-gateway-production-0879.up.railway.app/graphql
+```
 
 ## Deployment
 
-- GitHub Actions workflow in `.github/workflows/`
-- Deploys to Railway on push to `dev` or `main`
-- Path-based deployment triggers for specific services
-- Docker Compose for local development mimics production
-=======
-## Project Overview
-
-This is an event-driven notification system for DAO governance built with microservices architecture. The system monitors blockchain data for DAO proposals and delivers real-time notifications to users via Telegram. It uses RabbitMQ for message queuing and PostgreSQL for persistence.
-
-## Architecture
-
-The system consists of 4 main microservices:
-
-1. **Logic System** (`apps/logic-system/`) - Monitors AntiCapture GraphQL API and triggers events
-2. **Dispatcher** (`apps/dispatcher/`) - Processes trigger events and coordinates notification delivery  
-3. **Subscription Server** (`apps/subscription-server/`) - REST API for user preferences and subscription management
-4. **Consumer** (`apps/consumers/`) - Telegram bot and notification delivery service
-
-## Development Commands
-
-### Root Level Commands
-- `pnpm dev` - Start all services with Docker Compose
-- `pnpm build` - Build all apps using Turbo
-- `pnpm test` - Run tests across all apps
-- `pnpm format` - Format code with Prettier
-
-### Per-Service Commands
-Use the filter pattern to run commands in specific services:
-- `pnpm --filter @notification-system/logic-system <command>`
-- `pnpm --filter @notification-system/dispatcher <command>`
-- `pnpm --filter @notification-system/subscription-server <command>`
-- `pnpm --filter @notification-system/consumer <command>`
-
-### Testing and Quality
-- **Tests**: Each service uses Jest with TypeScript (`jest.config.js` or `jest.config.ts`)
-- **Linting**: Logic system has ESLint configured (`pnpm logic-system lint`)
-- **Type Checking**: Consumers service has type checking (`pnpm consumer check-types`)
-
-## Message Flow Architecture
-
-1. **Logic System** polls AntiCapture API → sends trigger events to RabbitMQ
-2. **Dispatcher** consumes trigger events → fetches subscribers → creates notifications → publishes to Consumer queue
-3. **Consumer** delivers notifications via Telegram → tracks delivery status in Subscription Server
-
-## Key Implementation Patterns
-
-### Trigger System
-New trigger types follow this pattern:
-- Extend base `Trigger` class in Logic System
-- Implement `fetchData()` and `process()` methods
-- Register in Logic System's `App` class
-- Create corresponding handler in Dispatcher's trigger handlers
-- Register handler in `TriggerProcessorService`
-
-### RabbitMQ Integration
-- Logic System publishes trigger events
-- Dispatcher consumes trigger events and publishes notification events  
-- Consumer consumes notification events for delivery
-
-### Database Migrations
-Subscription Server uses Knex.js for database operations with migrations in `db/migrations/`
-
-## Technology Stack
-
-- **Runtime**: Node.js 18+ with pnpm workspaces
-- **Build Tool**: Turbo for monorepo builds
-- **Messaging**: RabbitMQ with custom client abstractions
-- **Database**: PostgreSQL with Knex.js migrations
-- **API**: Fastify for REST endpoints
-- **GraphQL**: Custom AntiCapture client in packages/
-- **Testing**: Jest with ts-jest preset
-- **Containerization**: Docker with multi-service compose
-
-## Environment Requirements
-
-Essential environment variables:
-- `TELEGRAM_BOT_TOKEN` - Telegram bot authentication
-- `ANTICAPTURE_GRAPHQL_ENDPOINT` - DAO data source
-- `DATABASE_URL` - PostgreSQL connection
-- `RABBITMQ_URL` - Message broker connection
-
-## Extension Points
-
-- **New Trigger Types**: Follow the pattern documented in `apps/logic-system/add-trigger-logic.md`
-- **Notification Channels**: Add new delivery mechanisms in Consumer service
-- **DAO Data Sources**: Extend AntiCapture client or add new data providers
+- GitHub Actions deploys to Railway on push to `dev` or `main`
+- Path-based triggers for selective service deployment
+- Docker Compose configuration in `docker-compose.yml` for local development

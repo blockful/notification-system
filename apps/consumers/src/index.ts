@@ -13,8 +13,8 @@ import axios from 'axios';
 import { App } from './app';
 import { loadConfig } from './config/env';
 import { EnsResolverService } from './services/ens-resolver.service';
-import { TelegramClient } from './telegram.client';
-import { SlackClient } from './slack.client';
+import { TelegramClient } from './clients/telegram.client';
+import { SlackClient } from './clients/slack.client';
 
 const config = loadConfig();
 
@@ -24,8 +24,12 @@ const ensResolver = new EnsResolverService();
 // Create Telegram client for production
 const telegramClient = new TelegramClient(config.telegramBotToken);
 
-// Create Slack client if token is available
-const slackClient = new SlackClient(config.slackBotToken);
+// Create Slack client 
+const slackClient = new SlackClient(
+  config.slackBotToken,
+  config.slackAppToken,
+  config.slackSigningSecret
+);
 
 // Create and start the application
 const app = new App(

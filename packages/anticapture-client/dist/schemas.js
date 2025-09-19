@@ -21,11 +21,14 @@ exports.SafeDaosResponseSchema = zod_1.z.object({
     return { daos: { items: data.daos.items } };
 });
 exports.SafeProposalsResponseSchema = zod_1.z.object({
-    proposals: zod_1.z.array(zod_1.z.any()).nullable()
+    proposals: zod_1.z.object({
+        items: zod_1.z.array(zod_1.z.any()),
+        totalCount: zod_1.z.number()
+    }).nullable()
 }).transform((data) => {
     if (!data.proposals) {
         console.warn('ProposalsResponse has null proposals:', data);
-        return { proposals: [] };
+        return { proposals: { items: [], totalCount: 0 } };
     }
     return { proposals: data.proposals };
 });
@@ -78,7 +81,7 @@ exports.SafeVotesOnchainsResponseSchema = zod_1.z.object({
 });
 // Internal helper function to process validated proposals
 function processProposals(validated, daoId) {
-    return validated.proposals.reduce((acc, proposal) => {
+    return validated.proposals.items.reduce((acc, proposal) => {
         if (proposal !== null) {
             acc.push({
                 ...proposal,

@@ -51,7 +51,12 @@ describe('AnticaptureClient', () => {
 
   describe('listProposals', () => {
     it('returns empty array for empty response', async () => {
-      mockQuery.mockResolvedValue({ proposals: [] });
+      mockQuery.mockResolvedValue({
+        proposals: {
+          items: [],
+          totalCount: 0
+        }
+      });
 
       const result = await client.listProposals({}, 'UNISWAP');
 
@@ -60,7 +65,10 @@ describe('AnticaptureClient', () => {
 
     it('adds daoId to each proposal', async () => {
       mockQuery.mockResolvedValue({
-        proposals: TEST_FIXTURES.proposals.basic
+        proposals: {
+          items: TEST_FIXTURES.proposals.basic,
+          totalCount: TEST_FIXTURES.proposals.basic.length
+        }
       });
 
       const result = await client.listProposals({}, 'UNISWAP');

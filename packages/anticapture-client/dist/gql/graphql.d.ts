@@ -137,7 +137,7 @@ export type Query = {
     /** Returns a single proposal by its ID */
     proposal?: Maybe<Proposal_200_Response>;
     /** Returns a list of proposal */
-    proposals?: Maybe<Array<Maybe<Query_Proposals_Items>>>;
+    proposals?: Maybe<Proposals_200_Response>;
     /** Returns proposal activity data including voting history, win rates, and detailed proposal information for the specified delegate within the given time window */
     proposalsActivity?: Maybe<ProposalsActivity_200_Response>;
     proposalsOnchain?: Maybe<ProposalsOnchain>;
@@ -155,6 +155,8 @@ export type Query = {
     votesOnchains: VotesOnchainPage;
     votingPowerHistory?: Maybe<VotingPowerHistory>;
     votingPowerHistorys: VotingPowerHistoryPage;
+    /** Returns a list of voting power changes */
+    votingPowers?: Maybe<VotingPowers_200_Response>;
 };
 export type Query_Args = {
     after?: InputMaybe<Scalars['String']['input']>;
@@ -373,6 +375,13 @@ export type QueryVotingPowerHistorysArgs = {
     orderBy?: InputMaybe<Scalars['String']['input']>;
     orderDirection?: InputMaybe<Scalars['String']['input']>;
     where?: InputMaybe<VotingPowerHistoryFilter>;
+};
+export type QueryVotingPowersArgs = {
+    account: Scalars['String']['input'];
+    limit?: InputMaybe<Scalars['PositiveInt']['input']>;
+    orderBy?: InputMaybe<QueryInput_VotingPowers_OrderBy>;
+    orderDirection?: InputMaybe<QueryInput_VotingPowers_OrderDirection>;
+    skip?: InputMaybe<Scalars['NonNegativeInt']['input']>;
 };
 export type Account = {
     __typename?: 'account';
@@ -1215,6 +1224,11 @@ export type ProposalsOnchainPage = {
     pageInfo: PageInfo;
     totalCount: Scalars['Int']['output'];
 };
+export type Proposals_200_Response = {
+    __typename?: 'proposals_200_response';
+    items: Array<Maybe<Query_Proposals_Items_Items>>;
+    totalCount: Scalars['Float']['output'];
+};
 export declare enum QueryInput_CompareActiveSupply_Days {
     '7d' = "_7d",
     '30d' = "_30d",
@@ -1342,6 +1356,14 @@ export declare enum QueryInput_Transactions_SortOrder {
     Asc = "asc",
     Desc = "desc"
 }
+export declare enum QueryInput_VotingPowers_OrderBy {
+    Delta = "delta",
+    Timestamp = "timestamp"
+}
+export declare enum QueryInput_VotingPowers_OrderDirection {
+    Asc = "asc",
+    Desc = "desc"
+}
 export type Query_HistoricalBalances_Items = {
     __typename?: 'query_historicalBalances_items';
     address: Scalars['String']['output'];
@@ -1383,8 +1405,8 @@ export type Query_ProposalsActivity_Proposals_Items_UserVote = {
     voterAccountId: Scalars['String']['output'];
     votingPower?: Maybe<Scalars['String']['output']>;
 };
-export type Query_Proposals_Items = {
-    __typename?: 'query_proposals_items';
+export type Query_Proposals_Items_Items = {
+    __typename?: 'query_proposals_items_items';
     abstainVotes: Scalars['String']['output'];
     againstVotes: Scalars['String']['output'];
     daoId: Scalars['String']['output'];
@@ -1449,6 +1471,30 @@ export type Query_Transactions_Transactions_Items_Transfers_Items = {
     toAccountId: Scalars['String']['output'];
     tokenId: Scalars['String']['output'];
     transactionHash: Scalars['String']['output'];
+};
+export type Query_VotingPowers_Items_Items = {
+    __typename?: 'query_votingPowers_items_items';
+    accountId: Scalars['String']['output'];
+    daoId: Scalars['String']['output'];
+    delegation?: Maybe<Query_VotingPowers_Items_Items_Delegation>;
+    delta: Scalars['String']['output'];
+    logIndex: Scalars['Float']['output'];
+    timestamp: Scalars['String']['output'];
+    transactionHash: Scalars['String']['output'];
+    transfer?: Maybe<Query_VotingPowers_Items_Items_Transfer>;
+    votingPower: Scalars['String']['output'];
+};
+export type Query_VotingPowers_Items_Items_Delegation = {
+    __typename?: 'query_votingPowers_items_items_delegation';
+    from: Scalars['String']['output'];
+    to: Scalars['String']['output'];
+    value: Scalars['String']['output'];
+};
+export type Query_VotingPowers_Items_Items_Transfer = {
+    __typename?: 'query_votingPowers_items_items_transfer';
+    from: Scalars['String']['output'];
+    to: Scalars['String']['output'];
+    value: Scalars['String']['output'];
 };
 export declare enum Timestamp_Const {
     Timestamp = "timestamp"
@@ -1962,6 +2008,11 @@ export type VotingPowerHistoryPage = {
     pageInfo: PageInfo;
     totalCount: Scalars['Int']['output'];
 };
+export type VotingPowers_200_Response = {
+    __typename?: 'votingPowers_200_response';
+    items: Array<Maybe<Query_VotingPowers_Items_Items>>;
+    totalCount: Scalars['Float']['output'];
+};
 export type GetDaOsQueryVariables = Exact<{
     [key: string]: never;
 }>;
@@ -2008,22 +2059,26 @@ export type ListProposalsQueryVariables = Exact<{
 }>;
 export type ListProposalsQuery = {
     __typename?: 'Query';
-    proposals?: Array<{
-        __typename?: 'query_proposals_items';
-        id: string;
-        daoId: string;
-        proposerAccountId: string;
-        title?: string | null;
-        description: string;
-        startBlock: number;
-        endBlock: number;
-        endTimestamp: string;
-        timestamp: string;
-        status: string;
-        forVotes: string;
-        againstVotes: string;
-        abstainVotes: string;
-    } | null> | null;
+    proposals?: {
+        __typename?: 'proposals_200_response';
+        totalCount: number;
+        items: Array<{
+            __typename?: 'query_proposals_items_items';
+            id: string;
+            daoId: string;
+            proposerAccountId: string;
+            title?: string | null;
+            description: string;
+            startBlock: number;
+            endBlock: number;
+            endTimestamp: string;
+            timestamp: string;
+            status: string;
+            forVotes: string;
+            againstVotes: string;
+            abstainVotes: string;
+        } | null>;
+    } | null;
 };
 export type ListVotesOnchainsQueryVariables = Exact<{
     daoId: Scalars['String']['input'];

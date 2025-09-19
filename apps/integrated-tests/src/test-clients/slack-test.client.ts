@@ -123,6 +123,14 @@ export class SlackTestClient implements SlackClientInterface {
   }
 
   /**
+   * Setup handlers - no-op in test client
+   * Implements the interface method but doesn't need to do anything in tests
+   */
+  setupHandlers(): void {
+    // No-op: Test client doesn't need interactive handlers
+  }
+
+  /**
    * Gets the mock function for test assertions
    * @returns The jest mock function
    */
