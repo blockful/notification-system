@@ -137,6 +137,7 @@ declare const VotingPowerHistoryItemSchema: z.ZodObject<{
     timestamp: string;
     votingPower: string | null;
     delta: string | null;
+    delta: string | null;
     transfer: {
         amount: string | null;
         fromAccountId: string;
@@ -149,6 +150,7 @@ declare const VotingPowerHistoryItemSchema: z.ZodObject<{
     timestamp: string;
     votingPower: string | null;
     delta: string | null;
+    accountId: string;
     accountId: string;
     transactionHash: string;
     delegation?: {
@@ -202,6 +204,7 @@ export declare const SafeVotingPowerHistoryResponseSchema: z.ZodEffects<z.ZodObj
             timestamp: string;
             votingPower: string | null;
             delta: string | null;
+            delta: string | null;
             transfer: {
                 amount: string | null;
                 fromAccountId: string;
@@ -214,6 +217,7 @@ export declare const SafeVotingPowerHistoryResponseSchema: z.ZodEffects<z.ZodObj
             timestamp: string;
             votingPower: string | null;
             delta: string | null;
+            accountId: string;
             accountId: string;
             transactionHash: string;
             delegation?: {
@@ -236,6 +240,7 @@ export declare const SafeVotingPowerHistoryResponseSchema: z.ZodEffects<z.ZodObj
             timestamp: string;
             votingPower: string | null;
             delta: string | null;
+            delta: string | null;
             transfer: {
                 amount: string | null;
                 fromAccountId: string;
@@ -250,6 +255,7 @@ export declare const SafeVotingPowerHistoryResponseSchema: z.ZodEffects<z.ZodObj
             timestamp: string;
             votingPower: string | null;
             delta: string | null;
+            accountId: string;
             accountId: string;
             transactionHash: string;
             delegation?: {
@@ -274,6 +280,7 @@ export declare const SafeVotingPowerHistoryResponseSchema: z.ZodEffects<z.ZodObj
             timestamp: string;
             votingPower: string | null;
             delta: string | null;
+            delta: string | null;
             transfer: {
                 amount: string | null;
                 fromAccountId: string;
@@ -290,6 +297,7 @@ export declare const SafeVotingPowerHistoryResponseSchema: z.ZodEffects<z.ZodObj
             timestamp: string;
             votingPower: string | null;
             delta: string | null;
+            accountId: string;
             accountId: string;
             transactionHash: string;
             delegation?: {
@@ -314,6 +322,7 @@ export declare const SafeVotingPowerHistoryResponseSchema: z.ZodEffects<z.ZodObj
             timestamp: string;
             votingPower: string | null;
             delta: string | null;
+            delta: string | null;
             transfer: {
                 amount: string | null;
                 fromAccountId: string;
@@ -330,6 +339,7 @@ export declare const SafeVotingPowerHistoryResponseSchema: z.ZodEffects<z.ZodObj
             timestamp: string;
             votingPower: string | null;
             delta: string | null;
+            accountId: string;
             accountId: string;
             transactionHash: string;
             delegation?: {
@@ -438,6 +448,6 @@ export type ProcessedVotingPowerHistory = z.infer<typeof VotingPowerHistoryItemS
     targetAccountId: string;
     chainId?: number;
 };
-export declare function processProposals(validated: SafeProposalsResponse, daoId: string): any;
+export declare function processProposals(validated: SafeProposalsResponse['proposals']['items'], daoId: string): any;
 export declare function processVotingPowerHistory(validated: SafeVotingPowerHistoryResponse, daoId: string, chainId?: number): ProcessedVotingPowerHistory[];
 export {};

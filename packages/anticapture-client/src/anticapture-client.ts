@@ -34,7 +34,7 @@ export class AnticaptureClient {
    */
   private normalizeAddresses(obj: any): any {
     if (obj == null) return obj;
-    
+
     if (typeof obj === 'string') {
       try {
         return isAddress(obj) ? getAddress(obj) : obj;
@@ -42,17 +42,17 @@ export class AnticaptureClient {
         return obj;
       }
     }
-    
+
     if (Array.isArray(obj)) {
       return obj.map(item => this.normalizeAddresses(item));
     }
-    
+
     if (typeof obj === 'object') {
       return Object.fromEntries(
         Object.entries(obj).map(([k, v]) => [k, this.normalizeAddresses(v)])
       );
     }
-    
+
     return obj;
   }
 
@@ -63,10 +63,10 @@ export class AnticaptureClient {
     daoId?: string
   ): Promise<z.infer<TSchema>> {
     const headers = this.buildHeaders(daoId);
-    
+
     // Normalize addresses in variables to EIP-55 checksum format
     const normalizedVariables = variables ? this.normalizeAddresses(variables) : variables;
-    
+
     const response = await this.httpClient.post('', {
       query: print(document),
       variables: normalizedVariables,
@@ -91,7 +91,7 @@ export class AnticaptureClient {
 
     return headers;
   }
-  
+
 
   /**
    * Fetches all DAOs from the anticapture GraphQL API with full type safety
@@ -108,7 +108,7 @@ export class AnticaptureClient {
         chainId: dao.chainId
       }));
     } catch (error) {
-      console.warn('Returning empty DAO list due to API error: ',  error instanceof Error ? error.message : error);
+      console.warn('Returning empty DAO list due to API error: ', error instanceof Error ? error.message : error);
       return [];
     }
   }
@@ -140,7 +140,10 @@ export class AnticaptureClient {
       for (const dao of allDAOs) {
         try {
           const validated = await this.query(ListProposalsDocument, SafeProposalsResponseSchema, variables, dao.id);
-          allProposals.push(...processProposals(validated, dao.id));
+          const processed = processProposals(validated.proposals.items, dao.id);
+          if (processed && processed.length > 0) {
+            allProposals.push(...processed);
+          }
         } catch (error) {
           console.warn(`Skipping ${dao.id} due to API error: ${error instanceof Error ? error.message : error}`);
         }
@@ -151,7 +154,7 @@ export class AnticaptureClient {
 
     try {
       const validated = await this.query(ListProposalsDocument, SafeProposalsResponseSchema, variables, daoId);
-      return processProposals(validated, daoId!);
+      return processProposals(validated.proposals.items, daoId!) || [];
     } catch (error) {
       console.warn(`Error querying proposals for DAO ${daoId}: ${error instanceof Error ? error.message : error}`);
       return [];
@@ -178,7 +181,7 @@ export class AnticaptureClient {
       });
 
       const results = await Promise.all(queryPromises);
-      return results.flat().sort((a: ProcessedVotingPowerHistory, b: ProcessedVotingPowerHistory) => 
+      return results.flat().sort((a: ProcessedVotingPowerHistory, b: ProcessedVotingPowerHistory) =>
         parseInt(a.timestamp) - parseInt(b.timestamp)
       );
     }
@@ -200,8 +203,8 @@ export class AnticaptureClient {
   async listVotesOnchains(variables: ListVotesOnchainsQueryVariables): Promise<VotesOnchain[]> {
     try {
       const validated = await this.query(
-        ListVotesOnchainsDocument, 
-        SafeVotesOnchainsResponseSchema, 
+        ListVotesOnchainsDocument,
+        SafeVotesOnchainsResponseSchema,
         variables,
         variables.daoId
       );
@@ -221,9 +224,9 @@ export class AnticaptureClient {
   async listRecentVotesFromAllDaos(timestampGt: string, limit: number = 100): Promise<VotesOnchain[]> {
     // First, fetch all DAOs
     const daos = await this.getDAOs();
-    
+
     // Fetch votes from each DAO in parallel
-    const votePromises = daos.map(dao => 
+    const votePromises = daos.map(dao =>
       this.listVotesOnchains({
         daoId: dao.id,
         timestamp_gt: timestampGt,
@@ -237,7 +240,7 @@ export class AnticaptureClient {
     );
 
     const voteArrays = await Promise.all(votePromises);
-    
+
     // Flatten and sort by timestamp
     const allVotes = voteArrays.flat();
     allVotes.sort((a: VotesOnchain, b: VotesOnchain) => {

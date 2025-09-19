@@ -1,6 +1,7 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.ListVotingPowerHistorysDocument = exports.ListVotesOnchainsDocument = exports.ListProposalsDocument = exports.GetProposalByIdDocument = exports.GetDaOsDocument = exports.Timestamp_Const = exports.QueryInput_VotingPowers_OrderDirection = exports.QueryInput_VotingPowers_OrderBy = exports.QueryInput_Transactions_SortOrder = exports.QueryInput_TotalAssets_Days = exports.QueryInput_Proposals_OrderDirection = exports.QueryInput_ProposalsActivity_UserVoteFilter = exports.QueryInput_ProposalsActivity_OrderDirection = exports.QueryInput_ProposalsActivity_OrderBy = exports.QueryInput_LastUpdate_Chart = exports.QueryInput_HistoricalVotingPower_Days = exports.QueryInput_HistoricalBalances_Days = exports.QueryInput_CompareVotes_Days = exports.QueryInput_CompareTreasury_Days = exports.QueryInput_CompareTotalSupply_Days = exports.QueryInput_CompareProposals_Days = exports.QueryInput_CompareLendingSupply_Days = exports.QueryInput_CompareDexSupply_Days = exports.QueryInput_CompareDelegatedSupply_Days = exports.QueryInput_CompareCirculatingSupply_Days = exports.QueryInput_CompareCexSupply_Days = exports.QueryInput_CompareAverageTurnout_Days = exports.QueryInput_CompareActiveSupply_Days = exports.MetricType = exports.HttpMethod = void 0;
+exports.ListVotingPowerHistorysDocument = exports.ListVotesOnchainsDocument = exports.ListProposalsDocument = exports.GetProposalByIdDocument = exports.GetDaOsDocument = exports.Timestamp_Const = exports.QueryInput_VotingPowers_OrderDirection = exports.QueryInput_VotingPowers_OrderBy = exports.QueryInput_Transactions_SortOrder = exports.QueryInput_TotalAssets_Days = exports.QueryInput_Proposals_OrderDirection = exports.QueryInput_ProposalsActivity_UserVoteFilter = exports.QueryInput_ProposalsActivity_OrderDirection = exports.QueryInput_ProposalsActivity_OrderBy = exports.QueryInput_LastUpdate_Chart = exports.QueryInput_HistoricalVotingPower_Days = exports.QueryInput_HistoricalBalances_Days = exports.QueryInput_CompareVotes_Days = exports.QueryInput_CompareTreasury_Days = exports.QueryInput_CompareTotalSupply_Days = exports.QueryInput_CompareProposals_Days = exports.QueryInput_CompareLendingSupply_Days = exports.QueryInput_CompareDexSupply_Days = exports.QueryInput_CompareDelegatedSupply_Days = exports.QueryInput_CompareCirculatingSupply_Days = exports.QueryInput_CompareCexSupply_Days = exports.QueryInput_CompareAverageTurnout_Days = exports.QueryInput_CompareActiveSupply_Days = exports.MetricType = exports.HttpMethod = void 0;
 var HttpMethod;
 (function (HttpMethod) {
     HttpMethod["Connect"] = "CONNECT";
@@ -170,6 +171,16 @@ var QueryInput_Transactions_SortOrder;
     QueryInput_Transactions_SortOrder["Asc"] = "asc";
     QueryInput_Transactions_SortOrder["Desc"] = "desc";
 })(QueryInput_Transactions_SortOrder || (exports.QueryInput_Transactions_SortOrder = QueryInput_Transactions_SortOrder = {}));
+var QueryInput_VotingPowers_OrderBy;
+(function (QueryInput_VotingPowers_OrderBy) {
+    QueryInput_VotingPowers_OrderBy["Delta"] = "delta";
+    QueryInput_VotingPowers_OrderBy["Timestamp"] = "timestamp";
+})(QueryInput_VotingPowers_OrderBy || (exports.QueryInput_VotingPowers_OrderBy = QueryInput_VotingPowers_OrderBy = {}));
+var QueryInput_VotingPowers_OrderDirection;
+(function (QueryInput_VotingPowers_OrderDirection) {
+    QueryInput_VotingPowers_OrderDirection["Asc"] = "asc";
+    QueryInput_VotingPowers_OrderDirection["Desc"] = "desc";
+})(QueryInput_VotingPowers_OrderDirection || (exports.QueryInput_VotingPowers_OrderDirection = QueryInput_VotingPowers_OrderDirection = {}));
 var QueryInput_VotingPowers_OrderBy;
 (function (QueryInput_VotingPowers_OrderBy) {
     QueryInput_VotingPowers_OrderBy["Delta"] = "delta";

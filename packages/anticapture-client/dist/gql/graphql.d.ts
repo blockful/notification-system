@@ -2059,26 +2059,22 @@ export type ListProposalsQueryVariables = Exact<{
 }>;
 export type ListProposalsQuery = {
     __typename?: 'Query';
-    proposals?: {
-        __typename?: 'proposals_200_response';
-        totalCount: number;
-        items: Array<{
-            __typename?: 'query_proposals_items_items';
-            id: string;
-            daoId: string;
-            proposerAccountId: string;
-            title?: string | null;
-            description: string;
-            startBlock: number;
-            endBlock: number;
-            endTimestamp: string;
-            timestamp: string;
-            status: string;
-            forVotes: string;
-            againstVotes: string;
-            abstainVotes: string;
-        } | null>;
-    } | null;
+    proposals?: Array<{
+        __typename?: 'query_proposals_items';
+        id: string;
+        daoId: string;
+        proposerAccountId: string;
+        title?: string | null;
+        description: string;
+        startBlock: number;
+        endBlock: number;
+        endTimestamp: string;
+        timestamp: string;
+        status: string;
+        forVotes: string;
+        againstVotes: string;
+        abstainVotes: string;
+    } | null> | null;
 };
 export type ListVotesOnchainsQueryVariables = Exact<{
     daoId: Scalars['String']['input'];

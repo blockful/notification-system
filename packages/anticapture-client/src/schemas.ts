@@ -3,7 +3,7 @@ import { z } from 'zod';
 // Schema with built-in transformation and fallbacks
 export const SafeDaosResponseSchema = z.object({
   daos: z.object({
-    items: z.array(z.object({ 
+    items: z.array(z.object({
       id: z.string(),
       votingDelay: z.string().optional(),
       chainId: z.number()
@@ -124,7 +124,7 @@ export function processVotingPowerHistory(validated: SafeVotingPowerHistoryRespo
         targetAccountId: item.accountId,
         ...(chainId !== undefined && { chainId })
       };
-      
+
       return processed;
     });
 }
