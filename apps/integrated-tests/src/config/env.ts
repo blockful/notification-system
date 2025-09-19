@@ -18,7 +18,6 @@ const envSchema = z.object({
   SEND_REAL_TELEGRAM: z.string().optional(),
 
   // Slack configuration
-  SLACK_BOT_TOKEN: z.string().optional(),
   SEND_REAL_SLACK: z.string().optional(),
   SLACK_TEST_CHANNEL_ID: z.string().optional(), // Channel ID like 'C1234567890'
 });

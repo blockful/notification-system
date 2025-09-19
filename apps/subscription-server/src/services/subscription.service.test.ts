@@ -45,7 +45,8 @@ const mockSubscribers = [
 const createMockUserRepo = (): jest.Mocked<IUserRepository> => ({
   findByChannelAndId: jest.fn(),
   create: jest.fn(),
-  findById: jest.fn()
+  findById: jest.fn(),
+  findByIds: jest.fn()
 });
 
 const createMockPrefRepo = (): jest.Mocked<IPreferenceRepository> => ({
@@ -202,33 +203,32 @@ describe('Subscription Service', () => {
         { user_id: '456', is_active: true }
       ] as UserPreference[];
 
-      // Mock user find method
-      userRepo.findById.mockImplementation((id) => {
-        if (id === '123') return Promise.resolve(mockSubscribers[0]);
-        if (id === '456') return Promise.resolve(mockSubscribers[1]);
-        return Promise.resolve(undefined);
-      });
+      // Mock findByIds to return users
+      userRepo.findByIds.mockResolvedValueOnce(mockSubscribers);
 
       prefRepo.findByDao.mockResolvedValueOnce(mockPreferences);
-      
+
       const result = await subscriptionService.getDaoSubscribers('dao123');
-      
+
       expect(result.subscribers.length).toBe(2);
-      
+
       expect(result.subscribers[0]).toHaveProperty('id');
       expect(result.subscribers[0]).toHaveProperty('channel');
       expect(result.subscribers[0]).toHaveProperty('channel_user_id');
       expect(result.subscribers[0]).toHaveProperty('is_active');
-      
+
       expect(prefRepo.findByDao).toHaveBeenCalledWith('dao123', undefined);
+      expect(userRepo.findByIds).toHaveBeenCalledWith(['123', '456']);
     });
-    
+
     test('should return empty array when no subscribers exist', async () => {
       prefRepo.findByDao.mockResolvedValueOnce([]);
-      
+      userRepo.findByIds.mockResolvedValueOnce([]);
+
       const result = await subscriptionService.getDaoSubscribers('unknown-dao');
-      
+
       expect(result.subscribers).toEqual([]);
+      expect(userRepo.findByIds).toHaveBeenCalledWith([]);
     });
     
     test('should handle errors properly', async () => {

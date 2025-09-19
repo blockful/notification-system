@@ -17,22 +17,17 @@ import { jest } from '@jest/globals';
  * Used for integration testing with controllable behavior
  */
 export class SlackTestClient implements SlackClientInterface {
-  private realClient?: WebClient;
   private mockSendMessage: jest.Mock;
   private isRealMode: boolean;
 
   /**
    * Creates a new Slack test client
    * @param mockSendMessage Jest mock function for assertions
-   * @param botToken Optional bot token for real Slack API calls
+   * @param isRealMode Whether to send real messages when token is provided
    */
-  constructor(mockSendMessage: jest.Mock, botToken?: string) {
+  constructor(mockSendMessage: jest.Mock, isRealMode: boolean = false) {
     this.mockSendMessage = mockSendMessage;
-    this.isRealMode = !!botToken;
-
-    if (botToken) {
-      this.realClient = new WebClient(botToken);
-    }
+    this.isRealMode = isRealMode;
   }
 
   /**
@@ -53,9 +48,11 @@ export class SlackTestClient implements SlackClientInterface {
     // Always call the mock for test assertions
     this.mockSendMessage(channel, slackText, options);
 
-    if (this.isRealMode && this.realClient) {
-      // Send real message to Slack
-      const result = await this.realClient.chat.postMessage({
+    // Send real message if in real mode and token is provided
+    if (this.isRealMode && options?.token) {
+
+      const realClient = new WebClient(options.token);
+      const result = await realClient.chat.postMessage({
         channel,
         text: slackText,
         parse: options?.parse || 'none',
@@ -87,26 +84,27 @@ export class SlackTestClient implements SlackClientInterface {
    * @param limit Number of messages to fetch
    * @returns Array of messages from the channel
    */
-  async getMessageHistory(channel: string, limit: number = 10): Promise<any[]> {
-    if (!this.isRealMode || !this.realClient) {
-      // In mock mode, return mock calls as history
-      return this.mockSendMessage.mock.calls
-        .filter(([ch]) => ch === channel)
-        .map(([ch, text, opts]) => ({
-          text,
-          channel: ch,
-          ts: `${Date.now()}.000000`, // ts is Slack's unique message identifier format combining Unix timestamp + microseconds for guaranteed uniqueness
-          type: 'message'
-        }));
+  async getMessageHistory(channel: string, limit: number = 10, token?: string): Promise<any[]> {
+    // In real mode with token, fetch actual history
+    if (this.isRealMode && token) {
+      const realClient = new WebClient(token);
+      const result = await realClient.conversations.history({
+        channel,
+        limit,
+        inclusive: true
+      });
+      return result.messages || [];
     }
 
-    const result = await this.realClient.conversations.history({
-      channel,
-      limit,
-      inclusive: true
-    });
-
-    return result.messages || [];
+    // In mock mode, return mock calls as history
+    return this.mockSendMessage.mock.calls
+      .filter(([ch]) => ch === channel)
+      .map(([ch, text, opts]) => ({
+        text,
+        channel: ch,
+        ts: `${Date.now()}.000000`, // ts is Slack's unique message identifier format combining Unix timestamp + microseconds for guaranteed uniqueness
+        type: 'message'
+      }));
   }
 
   /**

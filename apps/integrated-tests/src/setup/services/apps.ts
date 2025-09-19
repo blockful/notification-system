@@ -97,17 +97,8 @@ const createTelegramClient = () => {
  */
 const createSlackClient = () => {
   const mockSendMessage = mockSlackSendMessage;
-  let slackClient;
-  if (env.SEND_REAL_SLACK) {
-    const botToken = env.SLACK_BOT_TOKEN;
-    if (!botToken) {
-      throw new Error('SLACK_BOT_TOKEN is required when SEND_REAL_SLACK is enabled');
-    }
-    slackClient = new SlackTestClient(mockSendMessage, botToken);
-  } else {
-    // Use SlackTestClient in mock-only mode
-    slackClient = new SlackTestClient(mockSendMessage);
-  }
+  const isRealMode = env.SEND_REAL_SLACK === 'true';
+  const slackClient = new SlackTestClient(mockSendMessage, isRealMode);
 
   return { slackClient, mockSlackSendMessage: mockSendMessage };
 };

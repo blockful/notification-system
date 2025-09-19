@@ -29,10 +29,7 @@ describe('Slack New Proposal - Integration Test', () => {
     httpMockSetup = TestCleanup.getGlobalHttpMockSetup();
 
     // Create Slack client and helper
-    slackClient = new SlackTestClient(
-      global.mockSlackSendMessage,
-      env.SEND_REAL_SLACK ? env.SLACK_BOT_TOKEN : undefined
-    );
+    slackClient = new SlackTestClient(global.mockSlackSendMessage);
     slackHelper = new SlackTestHelper(global.mockSlackSendMessage, slackClient);
 
     dbHelper = new DatabaseTestHelper(db);
