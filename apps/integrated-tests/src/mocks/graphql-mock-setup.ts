@@ -63,7 +63,8 @@ export class GraphQLMockSetup {
           filtered = filtered.filter(p => statusFilter.includes(p.status));
         }
         if (data.variables?.fromDate) {
-          filtered = filtered.filter(p => parseInt(p.endTimestamp) >= data.variables.fromDate);
+          // Filter by creation timestamp, not end timestamp
+          filtered = filtered.filter(p => parseInt(p.timestamp) >= data.variables.fromDate);
         }
         if (config?.headers?.['anticapture-dao-id']) {
           filtered = filtered.filter(p => p.daoId === config.headers['anticapture-dao-id']);
@@ -74,7 +75,7 @@ export class GraphQLMockSetup {
           proposerAccountId: this.toChecksum(p.proposerAccountId)
         }));
         return Promise.resolve({
-          data: { data: { proposals: { items: checksummedProposals } } }
+          data: { data: { proposals: { items: checksummedProposals, totalCount: checksummedProposals.length } } }
         });
       }
 
@@ -178,7 +179,7 @@ export class GraphQLMockSetup {
         data: {
           data: {
             votingPowerHistorys: { items: [] },
-            proposals: [],
+            proposals: { items: [], totalCount: 0 },
             proposal: null,
             daos: { items: [] },
             votesOnchains: { items: [] }

@@ -10,8 +10,8 @@ import {
   TelegramClientInterface, 
   SendMessageOptions, 
   HandlerRegistration 
-} from './interfaces/telegram-client.interface';
-import { ContextWithSession } from './interfaces/bot.interface';
+} from '../interfaces/telegram-client.interface';
+import { ContextWithSession } from '../interfaces/bot.interface';
 
 export class TelegramClient implements TelegramClientInterface {
   private bot: Telegraf<ContextWithSession>;

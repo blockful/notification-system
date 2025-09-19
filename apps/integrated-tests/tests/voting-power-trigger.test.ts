@@ -14,7 +14,7 @@ describe('Voting Power Trigger - Integration Test', () => {
   beforeAll(async () => {
     apps = TestCleanup.getGlobalApps();
     httpMockSetup = TestCleanup.getGlobalHttpMockSetup();
-    telegramHelper = new TelegramTestHelper(global.mockSendMessage);
+    telegramHelper = new TelegramTestHelper(global.mockTelegramSendMessage);
     dbHelper = new DatabaseTestHelper(db);
   });
 

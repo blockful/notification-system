@@ -17,7 +17,7 @@ describe('Duplicate Prevention - Integration Test', () => {
   beforeAll(async () => {
     apps = TestCleanup.getGlobalApps();
     httpMockSetup = TestCleanup.getGlobalHttpMockSetup();
-    telegramHelper = new TelegramTestHelper(global.mockSendMessage);
+    telegramHelper = new TelegramTestHelper(global.mockTelegramSendMessage);
     dbHelper = new DatabaseTestHelper(db);
     
     const now = new Date().toISOString();
@@ -39,8 +39,8 @@ describe('Duplicate Prevention - Integration Test', () => {
 
   test('should not send duplicate notifications on repeated logic system triggers', async () => {
     // Clear any setup messages before starting the actual test
-    if (global.mockSendMessage) {
-      global.mockSendMessage.mockClear();
+    if (global.mockTelegramSendMessage) {
+      global.mockTelegramSendMessage.mockClear();
     }
     
     // Setup mock to return the same UNI proposal consistently

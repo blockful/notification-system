@@ -22,12 +22,13 @@ exports.SafeDaosResponseSchema = zod_1.z.object({
 });
 exports.SafeProposalsResponseSchema = zod_1.z.object({
     proposals: zod_1.z.object({
-        items: zod_1.z.array(zod_1.z.any()).nullable()
+        items: zod_1.z.array(zod_1.z.any()),
+        totalCount: zod_1.z.number()
     }).nullable()
 }).transform((data) => {
-    if (!data.proposals || !data.proposals.items) {
-        console.warn('ProposalsResponse has null proposals or items:', data);
-        return { proposals: { items: [] } };
+    if (!data.proposals) {
+        console.warn('ProposalsResponse has null proposals:', data);
+        return { proposals: { items: [], totalCount: 0 } };
     }
     return { proposals: data.proposals };
 });
@@ -80,7 +81,7 @@ exports.SafeVotesOnchainsResponseSchema = zod_1.z.object({
 });
 // Internal helper function to process validated proposals
 function processProposals(validated, daoId) {
-    return validated?.reduce((acc, proposal) => {
+    return validated.proposals.items.reduce((acc, proposal) => {
         if (proposal !== null) {
             acc.push({
                 ...proposal,
@@ -88,7 +89,7 @@ function processProposals(validated, daoId) {
             });
         }
         return acc;
-    }, []) || [];
+    }, []);
 }
 // Internal helper function to process validated voting power history
 function processVotingPowerHistory(validated, daoId, chainId) {

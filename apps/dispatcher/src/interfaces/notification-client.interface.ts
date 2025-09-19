@@ -6,6 +6,7 @@ export interface NotificationPayload {
   channel: string;
   channelUserId: string;
   message: string;
+  type?: string; // Optional type for routing (e.g., 'new_proposal', 'vote_confirmation')
   metadata?: {
     addresses?: Record<string, string>; // key: placeholder name, value: ethereum address
     transaction?: {
