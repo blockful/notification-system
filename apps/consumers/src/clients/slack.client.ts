@@ -21,29 +21,25 @@ import {
 } from '../interfaces/slack-context.interface';
 
 export class SlackClient implements SlackClientInterface {
-  private client: WebClient;
   private boltApp: App;
   private sessionStorage: SlackSessionStorage;
 
   constructor(
-    token: string,
     appToken: string,
     signingSecret: string
   ) {
-    this.client = new WebClient(token);
-
     // Initialize session storage
     this.sessionStorage = new InMemorySessionStorage();
 
     // Initialize Bolt app with Socket Mode
     this.boltApp = new App({
-      token,
       appToken,
       signingSecret,
       socketMode: true,
-      processBeforeResponse: true
+      processBeforeResponse: true,
+      token: undefined
     });
-    console.log('✅ Slack client initialized with Socket Mode support');
+    console.log('✅ Slack client initialized with Socket Mode support (OAuth mode)');
   }
 
   async sendMessage(
@@ -51,10 +47,16 @@ export class SlackClient implements SlackClientInterface {
     text: string,
     options?: SlackSendMessageOptions
   ): Promise<SlackMessage> {
+    // Token is required for OAuth multi-workspace support
+    if (!options?.token) {
+      throw new Error('Slack notification requires workspace OAuth token. No token provided in message options.');
+    }
+
     // Convert markdown to Slack mrkdwn format
     const slackText = this.convertMarkdownToSlackFormat(text);
+    const clientToUse = new WebClient(options.token);
 
-    const result = await this.client.chat.postMessage({
+    const result = await clientToUse.chat.postMessage({
       channel,
       text: slackText,
       parse: options?.parse || 'none',

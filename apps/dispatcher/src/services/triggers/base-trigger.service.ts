@@ -56,18 +56,20 @@ export abstract class BaseTriggerHandler<T = any> implements TriggerHandler<T> {
     daoId: string,
     metadata?: { transaction?: { hash: string; chainId: number }; [key: string]: any, addresses?: Record<string, string> }
   ): Promise<void> {
-    const supportedSubscribers = subscribers.filter(subscriber => 
+    const supportedSubscribers = subscribers.filter(subscriber =>
       this.notificationFactory.supportsChannel(subscriber.channel)
     );
 
     const results = await Promise.allSettled(
-      supportedSubscribers.map(subscriber => {
+      supportedSubscribers.map(async subscriber => {
         const notificationClient = this.notificationFactory.getClient(subscriber.channel);
+
         return notificationClient.sendNotification({
           userId: subscriber.id,
           channel: subscriber.channel,
           channelUserId: subscriber.channel_user_id,
           message,
+          bot_token: subscriber.token,
           metadata
         });
       })

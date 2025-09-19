@@ -29,6 +29,7 @@ export class RabbitMQNotificationService implements INotificationClient {
           channelUserId: payload.channelUserId,
           channel: payload.channel,
           message: payload.message,
+          bot_token: payload.bot_token,
           metadata: payload.metadata
         }
       }
