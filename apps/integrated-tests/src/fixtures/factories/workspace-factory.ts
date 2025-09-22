@@ -1,5 +1,6 @@
 import { db } from '../../setup';
 import { testConstants } from '../../config';
+import * as crypto from 'crypto';
 
 /**
  * Factory class for creating test workspace data (for Slack OAuth support)
@@ -15,17 +16,26 @@ export class WorkspaceFactory {
     workspaceId: string = 'T_DEFAULT',
     botToken: string = 'xoxb-test-workspace-token'
   ): Promise<void> {
+    // Set a test encryption key if not already set
+    if (!process.env.TOKEN_ENCRYPTION_KEY) {
+      // Generate a test key for testing purposes
+      process.env.TOKEN_ENCRYPTION_KEY = crypto.randomBytes(32).toString('hex');
+    }
+
     // Check if workspace already exists
     const existing = await db('channel_workspaces')
       .where({ workspace_id: workspaceId })
       .first();
 
     if (!existing) {
+      // Encrypt the token to match production behavior
+      const encryptedToken = this.encryptToken(botToken);
+
       await db('channel_workspaces').insert({
         workspace_id: workspaceId,
         workspace_name: 'Test Workspace',
         channel: 'slack',
-        bot_token: botToken, // In real app this would be encrypted
+        bot_token: encryptedToken,
         bot_user_id: 'U_BOT_TEST',
         is_active: true,
         installed_at: new Date().toISOString()
@@ -34,27 +44,18 @@ export class WorkspaceFactory {
   }
 
   /**
-   * Creates a workspace with encrypted token (for production-like testing)
-   * @param workspaceId The workspace identifier
-   * @param workspaceName The workspace name
-   * @param botToken The bot token to encrypt
-   * @return Promise that resolves when workspace is created
+   * Helper method to encrypt tokens for test storage
+   * Mimics the CryptoUtil.encrypt behavior
    */
-  static async createSlackWorkspaceWithEncryption(
-    workspaceId: string,
-    workspaceName: string,
-    botToken: string
-  ): Promise<void> {
-    // For tests, we'll just store the token as-is
-    // In production, this would use the crypto utilities
-    await db('channel_workspaces').insert({
-      workspace_id: workspaceId,
-      workspace_name: workspaceName,
-      channel: 'slack',
-      bot_token: botToken,
-      bot_user_id: `U_BOT_${workspaceId}`,
-      is_active: true,
-      installed_at: new Date().toISOString()
-    });
+  private static encryptToken(token: string): string {
+    const algorithm = 'aes-256-cbc';
+    const key = Buffer.from(process.env.TOKEN_ENCRYPTION_KEY!, 'hex');
+    const iv = crypto.randomBytes(16);
+
+    const cipher = crypto.createCipheriv(algorithm, key, iv);
+    let encrypted = cipher.update(token, 'utf8', 'hex');
+    encrypted += cipher.final('hex');
+
+    return `${iv.toString('hex')}:${encrypted}`;
   }
 }

@@ -252,7 +252,7 @@ describe('Slack New Proposal - Integration Test', () => {
 
     // Find notifications by user_id instead of channel
     const slackUser = await db(testConstants.tables.users).where({
-      channel_user_id: SLACK_CHANNEL_ID,
+      channel_user_id: `T_DEFAULT:${SLACK_CHANNEL_ID}`,
       channel: 'slack'
     }).first();
     const telegramUser = await db(testConstants.tables.users).where({
