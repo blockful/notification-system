@@ -82,13 +82,6 @@ export class SlackBotService implements BotServiceInterface {
           await this.walletService.confirmRemoval(ctx);
         }
       });
-
-      // Modal submission handler for wallet addition
-      handlers.view('wallet_add_modal', async (ctx) => {
-        if (this.walletService) {
-          await this.walletService.processWalletAddition(ctx);
-        }
-      });
     });
   }
 
@@ -156,7 +149,9 @@ export class SlackBotService implements BotServiceInterface {
     };
 
     const action = validSubcommands[subcommand] || 'list';
-    await this.walletService.initialize(context, action);
+    // Pass the wallet address if provided (for add command)
+    const walletAddress = args.slice(1).join(' ').trim();
+    await this.walletService.initialize(context, action, walletAddress);
   }
 
   /**
@@ -185,7 +180,7 @@ export class SlackBotService implements BotServiceInterface {
               '• `/dao-notify subscribe` - Subscribe to DAOs\n' +
               '• `/dao-notify unsubscribe` - Unsubscribe from DAOs\n' +
               '• `/dao-notify list` - List your subscriptions\n' +
-              '• `/dao-notify wallet add` - Add a wallet address\n' +
+              '• `/dao-notify wallet add [address]` - Add a wallet address\n' +
               '• `/dao-notify wallet remove` - Remove wallet addresses\n' +
               '• `/dao-notify wallet list` - List your wallets\n' +
               '• `/dao-notify help` - Show this help message'

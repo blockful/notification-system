@@ -21,6 +21,8 @@ export class SlackDAOService extends BaseDAOService {
    */
   async initialize(context: SlackCommandContext, action: 'subscribe' | 'unsubscribe' = 'subscribe'): Promise<void> {
     const userId = context.body.user_id;
+    const workspaceId = context.body.team_id;
+    const fullUserId = `${workspaceId}:${userId}`;
 
     try {
       await context.ack();
@@ -37,7 +39,7 @@ export class SlackDAOService extends BaseDAOService {
       }
 
       // Get user's current subscriptions
-      const userPreferences = await this.getUserSubscriptions(userId);
+      const userPreferences = await this.getUserSubscriptions(fullUserId);
       const currentSelections = new Set<string>(userPreferences);
 
       // For subscribe action, start with current subscriptions
@@ -77,11 +79,13 @@ export class SlackDAOService extends BaseDAOService {
    */
   async listSubscriptions(context: SlackCommandContext): Promise<void> {
     const userId = context.body.user_id;
+    const workspaceId = context.body.team_id;
+    const fullUserId = `${workspaceId}:${userId}`;
 
     try {
       await context.ack();
 
-      const userPreferences = await this.getUserSubscriptions(userId);
+      const userPreferences = await this.getUserSubscriptions(fullUserId);
 
       if (userPreferences.length === 0) {
         if (context.respond) {
@@ -133,8 +137,6 @@ export class SlackDAOService extends BaseDAOService {
    * Toggle DAO selection when user clicks a button
    */
   async toggle(context: SlackActionContext, daoName: string): Promise<void> {
-    const userId = context.body.user.id;
-
     try {
       await context.ack();
 
@@ -176,6 +178,8 @@ export class SlackDAOService extends BaseDAOService {
    */
   async confirm(context: SlackActionContext, action: 'subscribe' | 'unsubscribe'): Promise<void> {
     const userId = context.body.user.id;
+    const workspaceId = (context.body as any).team?.id || (context.body as any).user?.team_id;
+    const fullUserId = `${workspaceId}:${userId}`;
 
     try {
       await context.ack();
@@ -196,7 +200,7 @@ export class SlackDAOService extends BaseDAOService {
       }
 
       // Apply the subscription action to selected DAOs
-      await this.applySubscriptionAction(userId, selectedDAOs, action);
+      await this.applySubscriptionAction(fullUserId, selectedDAOs, action);
 
       // Show confirmation message
       const daoList = this.formatDAOList(selectedDAOs);
