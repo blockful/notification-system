@@ -1,22 +1,25 @@
 import type { Knex } from "knex";
 
 /**
- * Creates slack_workspaces table (will be renamed to channel_workspaces in next migration)
+ * Creates channel_workspaces table for multi-workspace OAuth support
+ * Supports multiple platforms (initially Slack) with workspace-specific tokens
  */
 export async function up(knex: Knex): Promise<void> {
-  // Check if table already exists
-  const hasSlackTable = await knex.schema.hasTable('slack_workspaces');
-  const hasChannelTable = await knex.schema.hasTable('channel_workspaces');
+  // Create the channel_workspaces table with final schema
+  const hasTable = await knex.schema.hasTable('channel_workspaces');
 
-  if (!hasSlackTable && !hasChannelTable) {
-    await knex.schema.createTable('slack_workspaces', (table) => {
+  if (!hasTable) {
+    await knex.schema.createTable('channel_workspaces', (table) => {
       table.string('workspace_id', 255).primary();
       table.string('workspace_name', 255);
+      table.string('channel', 50).notNullable().defaultTo('slack');
       table.text('bot_token').notNullable();
       table.string('bot_user_id', 255);
       table.boolean('is_active').defaultTo(true);
       table.timestamp('installed_at').defaultTo(knex.fn.now());
+
       table.index(['workspace_id', 'is_active']);
+      table.index('channel', 'idx_channel_workspaces_channel');
     });
   }
 
@@ -57,9 +60,9 @@ export async function down(knex: Knex): Promise<void> {
     }
   }
 
-  // Drop the slack_workspaces table
-  const hasTable = await knex.schema.hasTable('slack_workspaces');
+  // Drop the channel_workspaces table
+  const hasTable = await knex.schema.hasTable('channel_workspaces');
   if (hasTable) {
-    await knex.schema.dropTable('slack_workspaces');
+    await knex.schema.dropTable('channel_workspaces');
   }
 }
