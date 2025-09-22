@@ -14,7 +14,7 @@ const envSchema = z.object({
   TEST_RABBITMQ_URL: z.string().url().optional(),
 
   // Telegram configuration
-  TELEGRAM_BOT_TOKEN: z.string().min(1, "Telegram bot token is required").optional(),
+  TELEGRAM_BOT_TOKEN: z.string().optional(),
   SEND_REAL_TELEGRAM: z.string().optional(),
 
   // Slack configuration
