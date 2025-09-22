@@ -55,7 +55,6 @@ export class SlackClient implements SlackClientInterface {
     text: string,
     options?: SlackSendMessageOptions
   ): Promise<SlackMessage> {
-    // Token is required for OAuth multi-workspace support
     if (!options?.token) {
       throw new Error('Slack notification requires workspace OAuth token. No token provided in message options.');
     }

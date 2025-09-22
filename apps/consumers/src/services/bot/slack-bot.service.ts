@@ -260,23 +260,17 @@ export class SlackBotService implements BotServiceInterface {
       }
     }
 
-    // Parse workspace and user ID from channelUserId (format: workspace:user)
-    let targetChannel = String(payload.channelUserId);
-    let workspaceId: string | undefined;
-    let userId: string | undefined;
+    const [workspaceId, userId] = String(payload.channelUserId).split(':');
 
-    if (targetChannel.includes(':')) {
-      [workspaceId, userId] = targetChannel.split(':');
-      targetChannel = userId; // Use just the user ID for sending
+    if (!userId || !workspaceId) {
+      throw new Error('Invalid Slack channel format. Expected "workspace:user"');
     }
-
-    // Token is required from payload for OAuth multi-workspace support
     if (!payload.bot_token) {
       throw new Error('Slack notification requires workspace OAuth token. No bot_token provided in notification payload.');
     }
 
     const sentMessage = await this.slackClient.sendMessage(
-      targetChannel,
+      userId,
       processedMessage,
       {
         mrkdwn: true,
