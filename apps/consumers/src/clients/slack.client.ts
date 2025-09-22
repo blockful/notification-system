@@ -32,12 +32,20 @@ export class SlackClient implements SlackClientInterface {
     this.sessionStorage = new InMemorySessionStorage();
 
     // Initialize Bolt app with Socket Mode
+    // For OAuth multi-workspace support, we use an authorize function
+    // that returns empty credentials since we handle tokens per-message
     this.boltApp = new App({
       appToken,
       signingSecret,
       socketMode: true,
       processBeforeResponse: true,
-      token: undefined
+      authorize: async () => {
+        return {
+          botToken: '', 
+          botId: 'oauth-bot',
+          botUserId: 'oauth-bot-user'
+        };
+      }
     });
     console.log('✅ Slack client initialized with Socket Mode support (OAuth mode)');
   }

@@ -72,8 +72,8 @@ export class App {
     );
     console.log('✅ Slack consumer connected to RabbitMQ');
   
-    await this.telegramBotService.launch();
-    await this.slackBotService.launch();
+    this.telegramBotService.launch();
+    this.slackBotService.launch();
 
     console.log('🚀 All bot services have been initialized');
   }
