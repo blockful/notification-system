@@ -1,13 +1,6 @@
 import { FastifyInstance, FastifyReply, FastifyRequest } from 'fastify';
 import { WebClient } from '@slack/web-api';
 import { WorkspaceService, WorkspaceData } from '../services/workspace.service';
-import { z } from 'zod';
-
-// Schema for OAuth callback query parameters
-const OAuthCallbackSchema = z.object({
-  code: z.string(),
-  state: z.string().optional(),
-});
 
 /**
  * Controller handling Slack OAuth flow
@@ -23,68 +16,22 @@ export class SlackOAuthController {
   }
 
   /**
-   * Register OAuth routes 
+   * Register OAuth routes
    */
   register(app: FastifyInstance): FastifyInstance {
-    // Install endpoint - redirects to Slack OAuth page
-    app.get('/slack/install', {
-      schema: {
-        description: 'Initiate Slack OAuth flow',
-        tags: ['slack', 'oauth'],
-        response: {
-          302: {
-            type: 'null',
-            description: 'Redirect to Slack OAuth consent page'
-          }
-        }
-      }
-    }, this.handleInstall.bind(this));
+    // Create a new context without Zod type provider for these routes
+    app.register((instance, opts, done) => {
+      // Install endpoint - redirects to Slack OAuth page
+      instance.get('/slack/install', this.handleInstall.bind(this));
 
-    // OAuth callback endpoint
-    app.get('/slack/oauth/callback', {
-      schema: {
-        description: 'Handle Slack OAuth callback',
-        tags: ['slack', 'oauth'],
-        querystring: OAuthCallbackSchema,
-        response: {
-          200: {
-            type: 'object',
-            properties: {
-              success: { type: 'boolean' },
-              message: { type: 'string' },
-              workspace_name: { type: 'string' }
-            }
-          },
-          400: {
-            type: 'object',
-            properties: {
-              error: { type: 'string' }
-            }
-          }
-        }
-      }
-    }, this.handleOAuthCallback.bind(this));
+      // OAuth callback endpoint
+      instance.get('/slack/oauth/callback', this.handleOAuthCallback.bind(this));
 
-    // Status endpoint to check if workspace is installed
-    app.get('/slack/status/:workspaceId', {
-      schema: {
-        description: 'Check if a workspace has the app installed',
-        tags: ['slack'],
-        params: z.object({
-          workspaceId: z.string()
-        }),
-        response: {
-          200: {
-            type: 'object',
-            properties: {
-              installed: { type: 'boolean' },
-              workspace_name: { type: 'string', nullable: true },
-              is_active: { type: 'boolean', nullable: true }
-            }
-          }
-        }
-      }
-    }, this.handleStatus.bind(this));
+      // Status endpoint to check if workspace is installed
+      instance.get('/slack/status/:workspaceId', this.handleStatus.bind(this));
+
+      done();
+    });
 
     return app;
   }
@@ -132,7 +79,7 @@ export class SlackOAuthController {
     request: FastifyRequest,
     reply: FastifyReply
   ): Promise<void> {
-    const { code } = request.query as z.infer<typeof OAuthCallbackSchema>;
+    const { code } = request.query as { code: string; state?: string };
 
     if (!code) {
       return reply.code(400).send({
