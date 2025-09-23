@@ -6,12 +6,7 @@
 
 import { BaseDAOService } from './base-dao.service';
 import { ContextWithSession } from '../../interfaces/bot.interface';
-import {
-  CONFIRM_SELECTION_BUTTON,
-  SELECTED_DAOS_MESSAGE,
-  DAO_SELECTION_MESSAGE,
-  EDIT_DAOS_MESSAGE
-} from '../../messages';
+import { uiMessages } from '@notification-system/messages';
 
 export class TelegramDAOService extends BaseDAOService {
 
@@ -58,7 +53,7 @@ export class TelegramDAOService extends BaseDAOService {
       // Build inline keyboard
       const keyboard = this.buildInlineKeyboard(daos, currentSelections);
 
-      await ctx.reply(DAO_SELECTION_MESSAGE, {
+      await ctx.reply(uiMessages.daoSelection, {
         reply_markup: keyboard
       });
     } catch (error) {
@@ -168,7 +163,7 @@ export class TelegramDAOService extends BaseDAOService {
         }),
         // Confirm button row
         [
-          { text: CONFIRM_SELECTION_BUTTON, callback_data: 'dao_confirm' }
+          { text: uiMessages.confirmSelection, callback_data: 'dao_confirm' }
         ]
       ]
     };
@@ -181,10 +176,10 @@ export class TelegramDAOService extends BaseDAOService {
     if (selectedDAOs.size > 0) {
       const daoList = this.formatDAOListWithBullets(selectedDAOs);
 
-      const successMessage = `${SELECTED_DAOS_MESSAGE}
+      const successMessage = `${uiMessages.selectedDaos}
 ${daoList}
 
-${EDIT_DAOS_MESSAGE}`;
+${uiMessages.editDaos}`;
 
       await ctx.reply(successMessage, { parse_mode: 'HTML' });
     } else {
