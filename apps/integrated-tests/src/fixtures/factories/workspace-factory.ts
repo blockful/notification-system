@@ -1,5 +1,5 @@
 import { db } from '../../setup';
-import { testConstants } from '../../config';
+import { serviceConfig } from '../../config';
 import * as crypto from 'crypto';
 
 /**
@@ -16,10 +16,9 @@ export class WorkspaceFactory {
     workspaceId: string = 'T_DEFAULT',
     botToken: string = 'xoxb-test-workspace-token'
   ): Promise<void> {
-    // Set a test encryption key if not already set
+    // Use encryption key from test configuration
     if (!process.env.TOKEN_ENCRYPTION_KEY) {
-      // Generate a test key for testing purposes
-      process.env.TOKEN_ENCRYPTION_KEY = crypto.randomBytes(32).toString('hex');
+      process.env.TOKEN_ENCRYPTION_KEY = serviceConfig.oauth.tokenEncryptionKey;
     }
 
     // Check if workspace already exists
