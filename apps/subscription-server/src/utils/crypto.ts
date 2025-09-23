@@ -5,7 +5,7 @@ import * as crypto from 'crypto';
  * Uses AES-256-CBC algorithm for secure token storage
  */
 export class CryptoUtil {
-  private static algorithm = 'aes-256-cbc';
+  private static algorithm = 'aes-256-cbc'; //USA gov security standard
   private static keyLength = 32; // 256 bits
   private static ivLength = 16;  // 128 bits
 
