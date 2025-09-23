@@ -149,7 +149,6 @@ export class SlackBotService implements BotServiceInterface {
     };
 
     const action = validSubcommands[subcommand] || 'list';
-    // Pass the wallet address if provided (for add command)
     const walletAddress = args.slice(1).join(' ').trim();
     await this.walletService.initialize(context, action, walletAddress);
   }
