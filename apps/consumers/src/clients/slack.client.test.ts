@@ -163,7 +163,7 @@ describe('SlackClient', () => {
         signingSecret: 'signing-secret',
         socketMode: true,
         processBeforeResponse: true,
-        token: undefined
+        authorize: expect.any(Function)
       });
     });
 

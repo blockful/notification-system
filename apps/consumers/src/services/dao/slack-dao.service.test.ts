@@ -40,7 +40,7 @@ describe('SlackDAOService - User ID Validation', () => {
         subscriptionApiMock.getUserPreferences.mockResolvedValue([]);
 
         const context: any = {
-          body: { user_id: userId },
+          body: { user_id: userId, team_id: 'T_WORKSPACE' },
           session: { daoSelections: new Set() },
           ack: jest.fn(),
           respond: jest.fn(),
@@ -48,9 +48,9 @@ describe('SlackDAOService - User ID Validation', () => {
 
         await slackDAOService.initialize(context, 'subscribe');
 
-        // Verify getUserPreferences was called with the original string
+        // Verify getUserPreferences was called with the workspace:user format
         expect(subscriptionApiMock.getUserPreferences).toHaveBeenCalledWith(
-          userId,
+          `T_WORKSPACE:${userId}`,
           'slack',
           expect.any(Array)
         );

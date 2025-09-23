@@ -40,7 +40,7 @@ describe('SlackBotService', () => {
     const mockPayload: NotificationPayload = {
       userId: 'user123',
       channel: 'slack',
-      channelUserId: 'U1234567890',
+      channelUserId: 'T_WORKSPACE:U1234567890',
       message: 'Test notification message',
       bot_token: 'xoxb-test-workspace-token'
     };
