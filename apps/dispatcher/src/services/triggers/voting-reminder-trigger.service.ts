@@ -4,6 +4,7 @@ import { NotificationClientFactory } from '../notification/notification-factory.
 import { ISubscriptionClient } from '../../interfaces/subscription-client.interface';
 import { AnticaptureClient } from '@notification-system/anticapture-client';
 import { FormattingService } from '../formatting.service';
+import { votingReminderMessages, replacePlaceholders } from '@notification-system/messages';
 
 /**
  * Event data received from logic system for voting reminders
@@ -163,39 +164,26 @@ export class VotingReminderTriggerHandler extends BaseTriggerHandler<VotingRemin
    */
   private createReminderMessage(event: VotingReminderEvent): string {
     const timeRemaining = FormattingService.calculateTimeRemaining(event.endTimestamp);
-    
-    // Determine urgency level and emoji directly based on threshold
-    const urgencyLevel = event.thresholdPercentage >= 80 ? 'URGENT' :
-                        event.thresholdPercentage >= 50 ? 'Mid-Period' :
-                        event.thresholdPercentage >= 30 ? 'Early' : 'Voting';
-    
-    const emoji = event.thresholdPercentage >= 80 ? '🚨' :
-                  event.thresholdPercentage >= 50 ? '⏰' :
-                  event.thresholdPercentage >= 30 ? '🔔' : '🗳️';
-    
-    // Extract title from description if not available
     const title = event.title || FormattingService.extractTitle(event.description);
-    
-    let message = `${emoji} ${urgencyLevel} Voting Reminder - ${event.daoId}\n\n`;
-    
-    if (title) {
-      message += `Proposal: "${title}"\n\n`;
-    }
-    
-    message += `⏱️ Time remaining: ${timeRemaining}\n`;
-    message += `📊 ${event.thresholdPercentage}% of voting period has passed\n`;
-    message += `🗳️ Your vote hasn't been recorded yet\n\n`;
-    
-    if (event.thresholdPercentage >= 80) {
-      message += `⚠️ This proposal is closing soon! Don't miss your chance to participate in governance.\n\n`;
-    } else if (event.thresholdPercentage >= 50) {
-      message += `⏰ More than half of the voting period has passed. Consider casting your vote soon.\n\n`;
-    } else {
-      message += `🔔 The voting period is underway. Take your time to review and vote.\n\n`;
-    }
-    
-    message += `Participate in governance and make your voice heard!`;
-    
-    return message;
+    const urgencyLevel = votingReminderMessages.getUrgencyLevel(event.thresholdPercentage);
+
+    // Get the header message based on urgency
+    const header = replacePlaceholders(
+      votingReminderMessages.headers[urgencyLevel] || votingReminderMessages.headers.default,
+      { daoId: event.daoId }
+    );
+
+    // Get the urgency-specific message
+    const urgencyMessage = votingReminderMessages.urgencyMessages[urgencyLevel] || '';
+
+    // Build the full message
+    const body = replacePlaceholders(votingReminderMessages.body, {
+      title,
+      timeRemaining,
+      thresholdPercentage: event.thresholdPercentage.toString(),
+      urgencyMessage
+    });
+
+    return `${header}\n\n${body}`;
   }
 }

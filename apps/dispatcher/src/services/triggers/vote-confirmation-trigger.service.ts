@@ -4,6 +4,7 @@ import { NotificationClientFactory } from '../notification/notification-factory.
 import { ISubscriptionClient } from '../../interfaces/subscription-client.interface';
 import { AnticaptureClient } from '@notification-system/anticapture-client';
 import { formatTokenAmount } from '../../lib/number-formatter';
+import { voteConfirmationMessages, replacePlaceholders } from '@notification-system/messages';
 
 interface VoteEvent {
   daoId: string;
@@ -158,42 +159,32 @@ export class VoteConfirmationTriggerHandler extends BaseTriggerHandler<VoteEvent
     const position = this.getSupportText(vote.support);
     const emoji = this.getSupportEmoji(vote.support);
     const votingPower = formatTokenAmount(vote.votingPower, 18);
-    
-    let message = `${emoji} Your vote just went through on ${vote.daoId}!\n\nYou voted ${position} on proposal #${vote.proposalId.slice(0, 8)}... with ${votingPower} voting power.`;
-    
+
+    let message = replacePlaceholders(voteConfirmationMessages.voteSuccess, {
+      emoji,
+      daoId: vote.daoId,
+      position,
+      proposalIdShort: vote.proposalId.slice(0, 8) + '...',
+      votingPower
+    });
+
     if (vote.reason && vote.reason.trim()) {
-      message += `\n\nYour reason: "${vote.reason}"`;
+      message += replacePlaceholders(voteConfirmationMessages.withReason, {
+        reason: vote.reason
+      });
     }
-    
-    message += `\n\n{{txLink}}`;
-    
+
+    message += voteConfirmationMessages.transactionLink;
+
     return message;
   }
 
   private getSupportText(support: string): string {
-    switch (support) {
-      case '0':
-        return 'AGAINST';
-      case '1':
-        return 'FOR';
-      case '2':
-        return 'ABSTAIN';
-      default:
-        return 'UNKNOWN';
-    }
+    return voteConfirmationMessages.supportText[support] || voteConfirmationMessages.supportText.default;
   }
 
   private getSupportEmoji(support: string): string {
-    switch (support) {
-      case '0':
-        return '❌';
-      case '1':
-        return '✅';
-      case '2':
-        return '⚪';
-      default:
-        return '🗳️';
-    }
+    return voteConfirmationMessages.supportEmoji[support] || voteConfirmationMessages.supportEmoji.default;
   }
 
   private async getChainIdForDao(daoId: string): Promise<number> {
