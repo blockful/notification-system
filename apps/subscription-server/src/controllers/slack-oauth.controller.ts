@@ -1,7 +1,6 @@
 import { FastifyInstance, FastifyReply, FastifyRequest } from 'fastify';
 import { WebClient } from '@slack/web-api';
 import { WorkspaceService, WorkspaceData } from '../services/workspace.service';
-import { config } from '../config';
 
 /**
  * Controller handling Slack OAuth flow
@@ -11,7 +10,10 @@ export class SlackOAuthController {
   private slackClient: WebClient;
 
   constructor(
-    private workspaceService: WorkspaceService
+    private workspaceService: WorkspaceService,
+    private slackClientId: string,
+    private slackClientSecret: string,
+    private slackRedirectUri: string
   ) {
     this.slackClient = new WebClient();
   }
@@ -44,8 +46,8 @@ export class SlackOAuthController {
     request: FastifyRequest,
     reply: FastifyReply
   ): Promise<void> {
-    const clientId = config.slackClientId;
-    const redirectUri = config.slackRedirectUri;
+    const clientId = this.slackClientId;
+    const redirectUri = this.slackRedirectUri;
 
     if (!clientId || !redirectUri) {
       return reply.code(500).send({
@@ -88,9 +90,9 @@ export class SlackOAuthController {
       });
     }
 
-    const clientId = config.slackClientId;
-    const clientSecret = config.slackClientSecret;
-    const redirectUri = config.slackRedirectUri;
+    const clientId = this.slackClientId;
+    const clientSecret = this.slackClientSecret;
+    const redirectUri = this.slackRedirectUri;
 
     if (!clientId || !clientSecret || !redirectUri) {
       return reply.code(500).send({

@@ -1,5 +1,4 @@
 import * as crypto from 'crypto';
-import { config } from '../config';
 
 /**
  * Utility class for encrypting and decrypting sensitive data
@@ -11,16 +10,15 @@ export class CryptoUtil {
   private static ivLength = 16;  // 128 bits
 
   /**
-   * Get encryption key from environment or throw error
+   * Get encryption key from provided string or throw error
    */
-  private static getKey(): Buffer {
-    const key = config.tokenEncryptionKey;
-    if (!key) {
-      throw new Error('TOKEN_ENCRYPTION_KEY environment variable is not set');
+  private static getKey(encryptionKey: string): Buffer {
+    if (!encryptionKey) {
+      throw new Error('Encryption key is not provided');
     }
 
     // Convert hex string to buffer
-    const keyBuffer = Buffer.from(key, 'hex');
+    const keyBuffer = Buffer.from(encryptionKey, 'hex');
 
     if (keyBuffer.length !== this.keyLength) {
       throw new Error(`Encryption key must be ${this.keyLength * 2} hex characters (${this.keyLength} bytes)`);
@@ -32,14 +30,15 @@ export class CryptoUtil {
   /**
    * Encrypt a string value
    * @param text Plain text to encrypt
+   * @param encryptionKey Encryption key as hex string
    * @returns Encrypted text with IV prepended (format: iv:encryptedData)
    */
-  static encrypt(text: string): string {
+  static encrypt(text: string, encryptionKey: string): string {
     if (!text) {
       throw new Error('Cannot encrypt empty text');
     }
 
-    const key = this.getKey();
+    const key = this.getKey(encryptionKey);
     const iv = crypto.randomBytes(this.ivLength);
 
     const cipher = crypto.createCipheriv(this.algorithm, key, iv);
@@ -53,14 +52,15 @@ export class CryptoUtil {
   /**
    * Decrypt a string value
    * @param encryptedText Encrypted text with IV (format: iv:encryptedData)
+   * @param encryptionKey Encryption key as hex string
    * @returns Decrypted plain text
    */
-  static decrypt(encryptedText: string): string {
+  static decrypt(encryptedText: string, encryptionKey: string): string {
     if (!encryptedText) {
       throw new Error('Cannot decrypt empty text');
     }
 
-    const key = this.getKey();
+    const key = this.getKey(encryptionKey);
 
     // Split IV and encrypted data
     const parts = encryptedText.split(':');

@@ -15,24 +15,21 @@ const envSchema = z.object({
   TOKEN_ENCRYPTION_KEY: z.string(),
 });
 
-const env = envSchema.safeParse(process.env);
-if (!env.success) {
-  console.error('Invalid environment variables:', env.error.format());
-  process.exit(1);
-}
+export function loadConfig() {
+  const env = envSchema.safeParse(process.env);
+  if (!env.success) {
+    console.error('Invalid environment variables:', env.error.format());
+    process.exit(1);
+  }
 
-export function setupDatabaseConnection(client: string, connection: string | object): KnexType {
-  return Knex({
-    client,
-    connection,
-  });
-}
-
-export const config = {
+  const config = {
   databaseUrl: env.data.DATABASE_URL,
   port: env.data.PORT,
-  slackClientId: env.data.SLACK_CLIENT_ID,
-  slackClientSecret: env.data.SLACK_CLIENT_SECRET,
-  slackRedirectUri: env.data.SLACK_REDIRECT_URI,
-  tokenEncryptionKey: env.data.TOKEN_ENCRYPTION_KEY,
-}; 
+    slackClientId: env.data.SLACK_CLIENT_ID,
+    slackClientSecret: env.data.SLACK_CLIENT_SECRET,
+    slackRedirectUri: env.data.SLACK_REDIRECT_URI,
+    tokenEncryptionKey: env.data.TOKEN_ENCRYPTION_KEY,
+  }; 
+
+  return config;
+}

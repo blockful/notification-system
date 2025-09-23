@@ -24,14 +24,14 @@ export interface WorkspaceData {
  * Handles encryption/decryption and database operations
  */
 export class WorkspaceService {
-  constructor(private db: Knex) {}
+  constructor(private db: Knex, private tokenEncryptionKey: string) {}
 
   /**
    * Save or update workspace credentials
    * @param workspaceData Workspace information from OAuth
    */
   async saveWorkspace(workspaceData: WorkspaceData): Promise<void> {
-    const encryptedToken = CryptoUtil.encrypt(workspaceData.botToken);
+    const encryptedToken = CryptoUtil.encrypt(workspaceData.botToken, this.tokenEncryptionKey);
 
     const workspace: Partial<ChannelWorkspace> = {
       workspace_id: workspaceData.workspaceId,
@@ -70,7 +70,7 @@ export class WorkspaceService {
     }
 
     try {
-      return CryptoUtil.decrypt(workspace.bot_token);
+      return CryptoUtil.decrypt(workspace.bot_token, this.tokenEncryptionKey);
     } catch (error) {
       console.error(`Failed to decrypt token for workspace ${workspaceId}:`, error);
       return null;
