@@ -88,25 +88,4 @@ export class WorkspaceService {
 
     return workspace || null;
   }
-
-  // /**
-  //  * Mark workspace as inactive (soft delete)
-  //  * @param workspaceId Workspace/team ID
-  //  */
-  // async deactivateWorkspace(workspaceId: string): Promise<void> {
-  //   await this.db('channel_workspaces')
-  //     .where({ workspace_id: workspaceId })
-  //     .update({ is_active: false });
-  // }
-
-  // /**
-  //  * List all active workspaces
-  //  * @returns Array of active workspace metadata (without tokens)
-  //  */
-  // async listActiveWorkspaces(): Promise<Array<Omit<ChannelWorkspace, 'bot_token'>>> {
-  //   return await this.db<ChannelWorkspace>('channel_workspaces')
-  //     .where({ is_active: true })
-  //     .select('workspace_id', 'workspace_name', 'bot_user_id', 'is_active', 'installed_at')
-  //     .orderBy('installed_at', 'desc');
-  // }
 }
