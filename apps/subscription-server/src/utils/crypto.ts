@@ -1,4 +1,5 @@
 import * as crypto from 'crypto';
+import { config } from '../config';
 
 /**
  * Utility class for encrypting and decrypting sensitive data
@@ -13,7 +14,7 @@ export class CryptoUtil {
    * Get encryption key from environment or throw error
    */
   private static getKey(): Buffer {
-    const key = process.env.TOKEN_ENCRYPTION_KEY;
+    const key = config.tokenEncryptionKey;
     if (!key) {
       throw new Error('TOKEN_ENCRYPTION_KEY environment variable is not set');
     }
