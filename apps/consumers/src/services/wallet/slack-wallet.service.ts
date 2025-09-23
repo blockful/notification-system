@@ -12,6 +12,7 @@ import {
   SlackActionContext,
   SlackViewContext
 } from '../../interfaces/slack-context.interface';
+import { slackMessages } from '@notification-system/messages';
 
 export class SlackWalletService extends BaseWalletService {
 
@@ -45,7 +46,7 @@ export class SlackWalletService extends BaseWalletService {
       console.error('Error in wallet initialization:', error);
       if (context.respond) {
         await context.respond({
-          text: 'Sorry, there was an error. Please try again later.',
+          text: slackMessages.genericError,
           response_type: 'ephemeral'
         });
       }
@@ -111,7 +112,7 @@ export class SlackWalletService extends BaseWalletService {
       console.error('Error listing wallets:', error);
       if (context.respond) {
         await context.respond({
-          text: 'Sorry, there was an error loading your wallets. Please try again later.',
+          text: slackMessages.genericError,
           response_type: 'ephemeral'
         });
       }
@@ -209,7 +210,7 @@ export class SlackWalletService extends BaseWalletService {
       console.error('Error starting wallet removal:', error);
       if (context.respond) {
         await context.respond({
-          text: 'Sorry, there was an error. Please try again later.',
+          text: slackMessages.genericError,
           response_type: 'ephemeral'
         });
       }
@@ -367,7 +368,7 @@ export class SlackWalletService extends BaseWalletService {
       if (context.respond) {
         await context.respond({
           replace_original: true,
-          text: '❌ Sorry, there was an error removing your wallets. Please try again later.',
+          text: slackMessages.genericError,
           response_type: 'ephemeral'
         });
       }
