@@ -6,43 +6,28 @@ import fastifySwaggerUi from '@fastify/swagger-ui';
 import { Knex } from 'knex';
 import { initial_routes } from './controllers/initial_routes';
 import { DaoController, NotificationController } from './controllers';
-import { KnexUserRepository, KnexPreferenceRepository, KnexNotificationRepository, KnexUserAddressRepository } from './repositories/knex.repository';
-import { SubscriptionService, NotificationService } from './services';
-import { DaoHandler } from './handlers/dao.handlers';
 import { UserAddressController } from './controllers/user-address.controller';
 import { SlackOAuthController } from './controllers/slack-oauth.controller';
-import { WorkspaceService } from './services/workspace.service';
 
 export class App {
   private server: FastifyInstance;
   private port: number;
+  private db: Knex;
 
-  constructor(db: Knex, port: number) {
+  constructor(
+    db: Knex,
+    port: number,
+    private daoController: DaoController,
+    private notificationController: NotificationController,
+    private userAddressController: UserAddressController,
+    private slackOAuthController: SlackOAuthController
+  ) {
+    this.db = db;
     this.port = port;
     this.server = fastify();
-    
-    // Repository instances
-    const userRepository = new KnexUserRepository(db);
-    const preferenceRepository = new KnexPreferenceRepository(db);
-    const notificationRepository = new KnexNotificationRepository(db);
-    const userAddressRepository = new KnexUserAddressRepository(db);
-    
-    // Service instances
-    const workspaceService = new WorkspaceService(db);
-    const subscriptionService = new SubscriptionService(userRepository, preferenceRepository, userAddressRepository, workspaceService);
-    const notificationService = new NotificationService(notificationRepository);
-
-    // Handler instances
-    const daoHandler = new DaoHandler(subscriptionService);
-
-    // Controller instances
-    const daoController = new DaoController(daoHandler);
-    const notificationController = new NotificationController(notificationService);
-    const userAddressController = new UserAddressController(subscriptionService);
-    const slackOAuthController = new SlackOAuthController(workspaceService);
 
     this.setupFastify();
-    this.setupRoutes(daoController, notificationController, userAddressController, slackOAuthController);
+    this.setupRoutes();
   }
 
   private setupFastify(): void {
@@ -77,17 +62,12 @@ export class App {
     });
   }
 
-  private setupRoutes(
-    daoController: DaoController,
-    notificationController: NotificationController,
-    userAddressController: UserAddressController,
-    slackOAuthController: SlackOAuthController
-  ): void {
+  private setupRoutes(): void {
     this.server.register(initial_routes);
-    this.server.register((app) => daoController.register(app));
-    this.server.register((app) => notificationController.register(app));
-    this.server.register((app) => userAddressController.register(app));
-    this.server.register((app) => slackOAuthController.register(app));
+    this.server.register((app) => this.daoController.register(app));
+    this.server.register((app) => this.notificationController.register(app));
+    this.server.register((app) => this.userAddressController.register(app));
+    this.server.register((app) => this.slackOAuthController.register(app));
   }
 
   async start(): Promise<void> {
