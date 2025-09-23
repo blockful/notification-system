@@ -4,7 +4,7 @@ import { CryptoUtil } from '../utils/crypto';
 export interface ChannelWorkspace {
   workspace_id: string;
   workspace_name?: string;
-  channel?: string;  // Platform identifier (slack, discord, etc)
+  channel: string;  // Platform identifier (slack, discord, etc)
   bot_token: string;
   bot_user_id?: string;
   is_active: boolean;
@@ -14,6 +14,7 @@ export interface ChannelWorkspace {
 export interface WorkspaceData {
   workspaceId: string;
   workspaceName?: string;
+  channel: string;  // Platform identifier (slack, discord, etc)
   botToken: string;
   botUserId?: string;
 }
@@ -35,6 +36,7 @@ export class WorkspaceService {
     const workspace: Partial<ChannelWorkspace> = {
       workspace_id: workspaceData.workspaceId,
       workspace_name: workspaceData.workspaceName,
+      channel: workspaceData.channel,
       bot_token: encryptedToken,
       bot_user_id: workspaceData.botUserId,
       is_active: true,
@@ -83,7 +85,7 @@ export class WorkspaceService {
   async getWorkspace(workspaceId: string): Promise<Omit<ChannelWorkspace, 'bot_token'> | null> {
     const workspace = await this.db<ChannelWorkspace>('channel_workspaces')
       .where({ workspace_id: workspaceId })
-      .select('workspace_id', 'workspace_name', 'bot_user_id', 'is_active', 'installed_at')
+      .select('workspace_id', 'workspace_name', 'channel', 'bot_user_id', 'is_active', 'installed_at')
       .first();
 
     return workspace || null;

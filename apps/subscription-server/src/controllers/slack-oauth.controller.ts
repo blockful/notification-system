@@ -114,6 +114,7 @@ export class SlackOAuthController {
       const workspaceData: WorkspaceData = {
         workspaceId: oauthResponse.team?.id as string,
         workspaceName: oauthResponse.team?.name as string,
+        channel: 'slack',
         botToken: oauthResponse.access_token,
         botUserId: oauthResponse.bot_user_id as string,
       };
