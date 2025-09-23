@@ -165,59 +165,23 @@ export class SlackOAuthController {
    * Generate success HTML page
    */
   private generateSuccessPage(workspaceName: string): string {
-    return `
-<!DOCTYPE html>
-<html lang="en">
+    return `<html>
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Installation Successful</title>
-    <style>
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 100vh;
-            margin: 0;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-        }
-        .container {
-            background: white;
-            padding: 3rem;
-            border-radius: 10px;
-            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
-            text-align: center;
-            max-width: 500px;
-        }
-        h1 { color: #2d3748; margin-bottom: 1rem; }
-        .success-icon {
-            font-size: 4rem;
-            color: #48bb78;
-            margin-bottom: 1rem;
-        }
-        p { color: #4a5568; line-height: 1.6; }
-        .button {
-            display: inline-block;
-            margin-top: 2rem;
-            padding: 0.75rem 1.5rem;
-            background: #4c1d95;
-            color: white;
-            text-decoration: none;
-            border-radius: 5px;
-            transition: background 0.3s;
-        }
-        .button:hover { background: #5b21b6; }
-    </style>
+  <meta http-equiv="refresh" content="0; URL=slack://open">
+  <style>
+    body {
+      padding: 10px 15px;
+      font-family: verdana;
+      text-align: center;
+    }
+  </style>
 </head>
 <body>
-    <div class="container">
-        <div class="success-icon">✓</div>
-        <h1>Installation Successful!</h1>
-        <p>The DAO Notification Bot has been successfully installed to <strong>${workspaceName}</strong>.</p>
-        <p>You can now close this window and return to Slack. Use <code>/dao-notify help</code> to get started.</p>
-        <a href="slack://open" class="button">Open Slack</a>
-    </div>
+  <h2>Thank you!</h2>
+  <p>The DAO Notification Bot has been successfully installed to <strong>${workspaceName}</strong>.</p>
+  <p>Redirecting to Slack... click <a href="slack://open">here</a>.
+     If you use the browser version, click <a href="https://app.slack.com" target="_blank">this link</a> instead.</p>
+  <p>Use <code>/dao-notify help</code> to get started.</p>
 </body>
 </html>`;
   }
@@ -226,67 +190,21 @@ export class SlackOAuthController {
    * Generate error HTML page
    */
   private generateErrorPage(error: string): string {
-    return `
-<!DOCTYPE html>
-<html lang="en">
+    return `<html>
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Installation Failed</title>
-    <style>
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 100vh;
-            margin: 0;
-            background: linear-gradient(135deg, #f56565 0%, #c53030 100%);
-        }
-        .container {
-            background: white;
-            padding: 3rem;
-            border-radius: 10px;
-            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
-            text-align: center;
-            max-width: 500px;
-        }
-        h1 { color: #2d3748; margin-bottom: 1rem; }
-        .error-icon {
-            font-size: 4rem;
-            color: #f56565;
-            margin-bottom: 1rem;
-        }
-        p { color: #4a5568; line-height: 1.6; }
-        .error-details {
-            background: #fed7d7;
-            color: #742a2a;
-            padding: 1rem;
-            border-radius: 5px;
-            margin-top: 1rem;
-            font-size: 0.9rem;
-        }
-        .button {
-            display: inline-block;
-            margin-top: 2rem;
-            padding: 0.75rem 1.5rem;
-            background: #e53e3e;
-            color: white;
-            text-decoration: none;
-            border-radius: 5px;
-            transition: background 0.3s;
-        }
-        .button:hover { background: #c53030; }
-    </style>
+  <style>
+    body {
+      padding: 10px 15px;
+      font-family: verdana;
+      text-align: center;
+    }
+  </style>
 </head>
 <body>
-    <div class="container">
-        <div class="error-icon">✕</div>
-        <h1>Installation Failed</h1>
-        <p>There was an error installing the DAO Notification Bot.</p>
-        <div class="error-details">${error}</div>
-        <a href="/slack/install" class="button">Try Again</a>
-    </div>
+  <h2>Oops, Something Went Wrong!</h2>
+  <p>The installation was not completed.</p>
+  <p>Error: ${error}</p>
+  <p><a href="/slack/install">Try Again</a> or contact the app owner.</p>
 </body>
 </html>`;
   }
