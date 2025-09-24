@@ -51,5 +51,51 @@ You'll be notified when things get spicy:`,
     removeConfirmation: 'Select the wallets you want to remove:',
     removeSuccess: '✅ Selected wallets have been removed.',
     noWallets: 'You haven\'t added any wallets yet. Click "Add wallet" to get started.'
+  },
+
+  // Status indicators (centralized emojis)
+  status: {
+    success: '✅',
+    error: '❌',
+    warning: '⚠️',
+    processing: '⏱️',
+    delete: '🗑️'
+  },
+
+  // Selection UI elements
+  selection: {
+    checked: '☑️',
+    unchecked: '☐',
+    selected: 'Selected',
+    select: 'Select'
+  },
+
+  // Common error messages
+  errors: {
+    generic: 'Sorry, there was an error. Please try again later.',
+    loadingWallets: 'Sorry, there was an error loading your wallets. Please try again later.',
+    loadingDaos: 'Sorry, there was an error loading the DAOs. Please try again later.',
+    loadingSubscriptions: 'Sorry, there was an error loading your subscriptions. Please try again later.',
+    updateFailed: 'Failed to update selection. Please try again.',
+    invalidAddress: 'Invalid address or ENS name. Please enter a valid Ethereum address or ENS name.',
+    walletDuplicate: 'This wallet has already been added.',
+    noWalletsSelected: 'No wallets selected for removal.',
+    noDaosAvailable: 'No DAOs available at the moment. Please try again later.',
+    somethingWrong: 'Something went wrong. Please try again.',
+    updateSubscriptionsFailed: 'Sorry, there was an error updating your subscriptions. Please try again later.'
+  },
+
+  // Common success messages
+  success: {
+    walletAdded: 'Wallet added successfully!',
+    walletsRemoved: 'Successfully removed {{count}} wallet(s).',
+    subscriptionUpdated: 'Your subscriptions have been updated successfully.'
+  },
+
+  // Warning messages
+  warnings: {
+    selectAtLeastOne: 'Please select at least one item.',
+    selectAtLeastOneDao: 'Please select at least one DAO.',
+    selectAtLeastOneWallet: 'Please select at least one wallet to remove.'
   }
 };

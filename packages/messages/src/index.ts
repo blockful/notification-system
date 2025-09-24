@@ -14,6 +14,7 @@ export { delegationChangeMessages } from './triggers/delegation-change';
 // Export UI messages
 export { uiMessages } from './ui/common';
 export { slackMessages } from './ui/slack';
+export { telegramMessages } from './ui/telegram';
 
 // Export formatters and utilities
 export { replacePlaceholders } from './formatters/placeholders';
