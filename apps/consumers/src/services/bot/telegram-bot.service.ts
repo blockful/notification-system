@@ -5,7 +5,7 @@
  */
 
 import { Markup } from 'telegraf';
-import { uiMessages } from '@notification-system/messages';
+import { telegramMessages, uiMessages } from '@notification-system/messages';
 import { TelegramDAOService } from '../dao/telegram-dao.service';
 import { TelegramWalletService } from '../wallet/telegram-wallet.service';
 import { ExplorerService } from '../explorer.service';
@@ -127,7 +127,7 @@ export class TelegramBotService implements BotServiceInterface {
           return;
         }
         
-        await ctx.reply('Please use the buttons below or type /learn_more for more information.', 
+        await ctx.reply(telegramMessages.bot.unknownCommand, 
           this.createPersistentKeyboard());
       }
       return next();
