@@ -1,48 +1,48 @@
 export const voteConfirmationMessages = {
   // Complete messages with reason
   withReason: {
-    FOR: `✅ Your vote just went through on {{daoId}}!
+    FOR: `✅ {{address}} just voted on {{daoId}}!
 
-You voted FOR on proposal #{{proposalIdShort}} with {{votingPower}} voting power.
+{{address}} voted FOR on proposal #{{proposalIdShort}} with {{votingPower}} voting power.
 
-Your reason: "{{reason}}"
-
-{{txLink}}`,
-
-    AGAINST: `❌ Your vote just went through on {{daoId}}!
-
-You voted AGAINST on proposal #{{proposalIdShort}} with {{votingPower}} voting power.
-
-Your reason: "{{reason}}"
+Reason: "{{reason}}"
 
 {{txLink}}`,
 
-    ABSTAIN: `⚪ Your vote just went through on {{daoId}}!
+    AGAINST: `❌ {{address}} just voted on {{daoId}}!
 
-You voted ABSTAIN on proposal #{{proposalIdShort}} with {{votingPower}} voting power.
+{{address}} voted AGAINST on proposal #{{proposalIdShort}} with {{votingPower}} voting power.
 
-Your reason: "{{reason}}"
+Reason: "{{reason}}"
+
+{{txLink}}`,
+
+    ABSTAIN: `⚪ {{address}} just voted on {{daoId}}!
+
+{{address}} voted ABSTAIN on proposal #{{proposalIdShort}} with {{votingPower}} voting power.
+
+Reason: "{{reason}}"
 
 {{txLink}}`
   },
 
   // Complete messages without reason
   withoutReason: {
-    FOR: `✅ Your vote just went through on {{daoId}}!
+    FOR: `✅ {{address}} just voted on {{daoId}}!
 
-You voted FOR on proposal #{{proposalIdShort}} with {{votingPower}} voting power.
-
-{{txLink}}`,
-
-    AGAINST: `❌ Your vote just went through on {{daoId}}!
-
-You voted AGAINST on proposal #{{proposalIdShort}} with {{votingPower}} voting power.
+{{address}} voted FOR on proposal #{{proposalIdShort}} with {{votingPower}} voting power.
 
 {{txLink}}`,
 
-    ABSTAIN: `⚪ Your vote just went through on {{daoId}}!
+    AGAINST: `❌ {{address}} just voted on {{daoId}}!
 
-You voted ABSTAIN on proposal #{{proposalIdShort}} with {{votingPower}} voting power.
+{{address}} voted AGAINST on proposal #{{proposalIdShort}} with {{votingPower}} voting power.
+
+{{txLink}}`,
+
+    ABSTAIN: `⚪ {{address}} just voted on {{daoId}}!
+
+{{address}} voted ABSTAIN on proposal #{{proposalIdShort}} with {{votingPower}} voting power.
 
 {{txLink}}`
   },

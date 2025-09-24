@@ -2,46 +2,46 @@ export const delegationChangeMessages = {
   // Regular delegation confirmation
   confirmed: `✅ Delegation confirmed on DAO {{daoId}}
 
-You delegated {{delegatedAmount}} voting power to {{delegate}}.
+{{address}} delegated {{delegatedAmount}} voting power to {{delegate}}.
 
-Your remaining voting power: {{remainingPower}}
-Total delegation from you: {{totalDelegated}}
+Remaining voting power: {{remainingPower}}
+Total delegation from {{address}}: {{totalDelegated}}
 
 Transaction: {{txLink}}`,
 
   // Self-delegation confirmation
   selfDelegation: `🔄 Self-delegation confirmed on DAO {{daoId}}
 
-You delegated {{delegatedAmount}} voting power to yourself.
+{{address}} delegated {{delegatedAmount}} voting power to themselves.
 
-Your total voting power is now: {{totalPower}}
+Total voting power is now: {{totalPower}}
 
 Transaction: {{txLink}}`,
 
   // Undelegation confirmation (when removing delegation)
   undelegation: `↩️ Undelegation confirmed on DAO {{daoId}}
 
-You removed {{undelegatedAmount}} voting power delegation from {{previousDelegate}}.
+{{address}} removed {{undelegatedAmount}} voting power delegation from {{previousDelegate}}.
 
-Your voting power is now: {{currentPower}}
+Voting power is now: {{currentPower}}
 
 Transaction: {{txLink}}`,
 
   // When someone delegates TO you
   receivedDelegation: `📨 New delegation received on DAO {{daoId}}
 
-{{delegator}} has delegated {{delegatedAmount}} voting power to you!
+{{delegator}} has delegated {{delegatedAmount}} voting power to {{address}}!
 
-Your total voting power is now: {{totalPower}}
+Total voting power is now: {{totalPower}}
 
 Transaction: {{txLink}}`,
 
   // When someone removes delegation FROM you
   lostDelegation: `📤 Delegation removed on DAO {{daoId}}
 
-{{delegator}} has removed {{undelegatedAmount}} voting power delegation from you.
+{{delegator}} has removed {{undelegatedAmount}} voting power delegation from {{address}}.
 
-Your total voting power is now: {{totalPower}}
+Total voting power is now: {{totalPower}}
 
 Transaction: {{txLink}}`
 };
