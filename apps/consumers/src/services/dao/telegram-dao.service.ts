@@ -6,7 +6,7 @@
 
 import { BaseDAOService } from './base-dao.service';
 import { ContextWithSession } from '../../interfaces/bot.interface';
-import { uiMessages, getDaoWithEmoji } from '@notification-system/messages';
+import { uiMessages, telegramMessages, getDaoWithEmoji } from '@notification-system/messages';
 
 export class TelegramDAOService extends BaseDAOService {
 
@@ -41,7 +41,7 @@ export class TelegramDAOService extends BaseDAOService {
     try {
       const daos = await this.fetchAvailableDAOs();
       if (daos.length === 0) {
-        await ctx.reply('No DAOs available at the moment. Please try again later.');
+        await ctx.reply(uiMessages.errors.noDaosAvailable);
         return;
       }
 
@@ -58,7 +58,7 @@ export class TelegramDAOService extends BaseDAOService {
       });
     } catch (error) {
       console.error('Error loading DAOs:', error);
-      await ctx.reply('Sorry, there was an error loading the DAOs. Please try again later.');
+      await ctx.reply(uiMessages.errors.loadingDaos);
     }
   }
 
@@ -73,15 +73,15 @@ export class TelegramDAOService extends BaseDAOService {
       const userPreferences = await this.getUserSubscriptions(String(chatId));
 
       if (userPreferences.length === 0) {
-        await ctx.reply("You're not subscribed to any DAOs yet. Use /daos to get started!");
+        await ctx.reply(telegramMessages.dao.emptyList);
         return;
       }
 
       const daoList = this.formatDAOListWithBullets(userPreferences);
-      await ctx.reply(`Your DAO Subscriptions:\n\n${daoList}`, { parse_mode: 'HTML' });
+      await ctx.reply(`${telegramMessages.dao.listHeader}\n\n${daoList}`, { parse_mode: 'HTML' });
     } catch (error) {
       console.error('Error listing subscriptions:', error);
-      await ctx.reply('Sorry, there was an error loading your subscriptions. Please try again later.');
+      await ctx.reply(uiMessages.errors.loadingSubscriptions);
     }
   }
 
@@ -110,7 +110,7 @@ export class TelegramDAOService extends BaseDAOService {
       await ctx.editMessageReplyMarkup(keyboard);
     } catch (error) {
       console.error('Error updating keyboard:', error);
-      await ctx.answerCbQuery('Failed to update selection. Please try again.');
+      await ctx.answerCbQuery(uiMessages.errors.updateFailed);
     }
   }
 
@@ -125,7 +125,7 @@ export class TelegramDAOService extends BaseDAOService {
 
     const selectedDAOs = ctx.session.daoSelections;
     if (!selectedDAOs) {
-      await ctx.reply('Something went wrong. Please try again.');
+      await ctx.reply(uiMessages.errors.somethingWrong);
       return;
     }
 
@@ -140,7 +140,7 @@ export class TelegramDAOService extends BaseDAOService {
       ctx.session.daoSelections = new Set<string>();
     } catch (error) {
       console.error('Error updating subscriptions:', error);
-      await ctx.reply('Sorry, there was an error updating your subscriptions. Please try again later.');
+      await ctx.reply(uiMessages.errors.updateSubscriptionsFailed);
     }
   }
 
@@ -157,7 +157,7 @@ export class TelegramDAOService extends BaseDAOService {
           const isSelected = selections.has(normalizedDao);
 
           return {
-            text: isSelected ? `✅ ${daoWithEmoji}` : daoWithEmoji,
+            text: isSelected ? `${uiMessages.status.success} ${daoWithEmoji}` : daoWithEmoji,
             callback_data: `dao_toggle_${normalizedDao}`
           };
         }),
@@ -183,7 +183,7 @@ ${uiMessages.editDaos}`;
 
       await ctx.reply(successMessage, { parse_mode: 'HTML' });
     } else {
-      await ctx.reply('You have unsubscribed from all DAOs. You can subscribe again anytime by clicking on DAOs',
+      await ctx.reply(telegramMessages.dao.allUnsubscribed,
         { parse_mode: 'HTML' });
     }
   }
