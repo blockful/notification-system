@@ -22,7 +22,7 @@ export const slackMessages = {
   },
 
   // Learn more link
-  learnMore: 'Learn more at <https://anticapture.ai|anticapture.ai>',
+  learnMore: 'Learn more at <https://anticapture.ai|anticapture.com>',
 
   // Error message template
   error: '❌ {{message}}',
