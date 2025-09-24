@@ -29,6 +29,9 @@ importers:
       '@notification-system/anticapture-client':
         specifier: workspace:*
         version: link:../../packages/anticapture-client
+      '@notification-system/messages':
+        specifier: workspace:*
+        version: link:../../packages/messages
       '@notification-system/rabbitmq-client':
         specifier: workspace:*
         version: link:../../packages/rabbitmq-client
@@ -87,6 +90,9 @@ importers:
       '@notification-system/anticapture-client':
         specifier: workspace:*
         version: link:../../packages/anticapture-client
+      '@notification-system/messages':
+        specifier: workspace:*
+        version: link:../../packages/messages
       '@notification-system/rabbitmq-client':
         specifier: workspace:*
         version: link:../../packages/rabbitmq-client
@@ -139,6 +145,9 @@ importers:
       '@notification-system/logic-system':
         specifier: workspace:*
         version: link:../logic-system
+      '@notification-system/messages':
+        specifier: workspace:*
+        version: link:../../packages/messages
       '@notification-system/rabbitmq-client':
         specifier: workspace:*
         version: link:../../packages/rabbitmq-client
@@ -357,6 +366,15 @@ importers:
         version: 29.3.2(@babel/core@7.27.1)(@jest/transform@29.7.0)(@jest/types@29.6.3)(babel-jest@29.7.0(@babel/core@7.27.1))(jest@29.7.0(@types/node@20.17.46)(ts-node@10.9.2(@swc/core@1.11.24)(@types/node@24.3.1)(typescript@5.8.2)))(typescript@5.8.3)
       typescript:
         specifier: ^5.8.3
+        version: 5.8.3
+
+  packages/messages:
+    devDependencies:
+      '@types/node':
+        specifier: ^20.0.0
+        version: 20.17.46
+      typescript:
+        specifier: ^5.0.0
         version: 5.8.3
 
   packages/rabbitmq-client:

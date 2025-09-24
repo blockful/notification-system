@@ -10,6 +10,7 @@ import { UserFactory, ProposalFactory } from '../src/fixtures';
 import { TelegramTestHelper, DatabaseTestHelper, TestCleanup } from '../src/helpers';
 import { testConstants, timeouts } from '../src/config';
 import { waitForCondition } from '../src/helpers/utilities/wait-for';
+import { votingReminderMessages, replacePlaceholders } from '@notification-system/messages';
 
 describe('Voting Reminder Integration Tests', () => {
   let apps: TestApps;
@@ -94,10 +95,19 @@ describe('Voting Reminder Integration Tests', () => {
 
       // Verify message content
       expect(message.chatId).toBe(testUser.chatId);
-      expect(message.text).toContain('🔔 Early Voting Reminder');
+
+      // Check header with actual DAO ID
+      const expectedHeader = replacePlaceholders(
+        votingReminderMessages.headers.early,
+        { daoId: testDaoId }
+      );
+      expect(message.text).toContain(expectedHeader);
+
+      // Check percentage in body
       expect(message.text).toContain('30% of voting period has passed');
-      expect(message.text).toContain('Take your time to review and vote');
-      expect(message.text).toContain(testDaoId);
+
+      // Check urgency message
+      expect(message.text).toContain(votingReminderMessages.urgencyMessages.early);
       
       // Verify database record for deduplication
       const notifications = await dbHelper.getNotifications();
@@ -209,9 +219,19 @@ describe('Voting Reminder Integration Tests', () => {
 
       // Verify message content
       expect(message.chatId).toBe(testUser.chatId);
-      expect(message.text).toContain('⏰ Mid-Period Voting Reminder');
+
+      // Check header with actual DAO ID
+      const expectedHeader = replacePlaceholders(
+        votingReminderMessages.headers.midPeriod,
+        { daoId: testDaoId }
+      );
+      expect(message.text).toContain(expectedHeader);
+
+      // Check percentage in body
       expect(message.text).toContain('60% of voting period has passed');
-      expect(message.text).toContain('More than half of the voting period has passed');
+
+      // Check urgency message
+      expect(message.text).toContain(votingReminderMessages.urgencyMessages.midPeriod);
       
       // Verify database record
       const notifications = await dbHelper.getNotifications();
@@ -243,9 +263,19 @@ describe('Voting Reminder Integration Tests', () => {
 
       // Verify message content
       expect(message.chatId).toBe(testUser.chatId);
-      expect(message.text).toContain('🚨 URGENT Voting Reminder');
+
+      // Check header with actual DAO ID
+      const expectedHeader = replacePlaceholders(
+        votingReminderMessages.headers.urgent,
+        { daoId: testDaoId }
+      );
+      expect(message.text).toContain(expectedHeader);
+
+      // Check percentage in body
       expect(message.text).toContain('90% of voting period has passed');
-      expect(message.text).toContain('This proposal is closing soon!');
+
+      // Check urgency message
+      expect(message.text).toContain(votingReminderMessages.urgencyMessages.urgent);
       
       // Verify database record
       const notifications = await dbHelper.getNotifications();

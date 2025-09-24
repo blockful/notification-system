@@ -4,6 +4,7 @@ import { HttpClientMockSetup, GraphQLMockSetup } from '../src/mocks';
 import { UserFactory, ProposalFactory, VoteFactory, VoteData } from '../src/fixtures';
 import { TelegramTestHelper, DatabaseTestHelper, TestCleanup } from '../src/helpers';
 import { testConstants, timeouts } from '../src/config';
+import { nonVotingMessages, replacePlaceholders } from '@notification-system/messages';
 
 describe('Non-Voting Trigger - Integration Test', () => {
   let apps: TestApps;
@@ -39,23 +40,6 @@ describe('Non-Voting Trigger - Integration Test', () => {
         endTimestamp: Math.floor(proposalEndTime / 1000).toString()
       });
     });
-  };
-
-  // Helper to format expected non-voting message
-  const formatNonVotingMessage = (address: string, daoId: string, proposals: any[]) => {
-    const fullAddress = address;
-    const proposalList = proposals
-      .slice(0, 3)
-      .map(p => `• ${p.title}`)
-      .join('\n');
-    
-    return `⚠️ Non-Voting Alert for DAO ${daoId.toUpperCase()}
-
-The address ${fullAddress} that you follow hasn't voted in the last 3 proposals:
-
-${proposalList}
-
-Consider reaching out to encourage participation!`;
   };
 
   beforeAll(async () => {
@@ -120,7 +104,7 @@ Consider reaching out to encourage participation!`;
     );
 
     expect(message.chatId).toBe(testConstants.profiles.p1.chatId);
-    expect(message.text).toContain('hasn\'t voted in the last 3 proposals');
+    expect(message.text).toContain(nonVotingMessages.alert.substring(0, 23));
     expect(message.text).not.toContain(ADDRESS_ACTIVE);
     expect(message.text).not.toContain(ADDRESS_PARTIAL);
   });
@@ -196,7 +180,7 @@ Consider reaching out to encourage participation!`;
     // Verify content - should show nick.eth
     messages.forEach(message => {
       expect(message.text).toContain('nick.eth');
-      expect(message.text).toContain('hasn\'t voted in the last 3 proposals');
+      expect(message.text).toContain(nonVotingMessages.alert.substring(0, 23));
     });
   });
 
