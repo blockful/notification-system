@@ -165,25 +165,19 @@ export class VotingReminderTriggerHandler extends BaseTriggerHandler<VotingRemin
   private createReminderMessage(event: VotingReminderEvent): string {
     const timeRemaining = FormattingService.calculateTimeRemaining(event.endTimestamp);
     const title = event.title || FormattingService.extractTitle(event.description);
-    const urgencyLevel = votingReminderMessages.getUrgencyLevel(event.thresholdPercentage);
 
-    // Get the header message based on urgency
-    const header = replacePlaceholders(
-      votingReminderMessages.headers[urgencyLevel] || votingReminderMessages.headers.default,
-      { daoId: event.daoId }
-    );
+    // Get the message key based on threshold
+    const messageKey = votingReminderMessages.getMessageKey(event.thresholdPercentage);
 
-    // Get the urgency-specific message
-    const urgencyMessage = votingReminderMessages.urgencyMessages[urgencyLevel] || '';
+    // Get the complete message template
+    const messageTemplate = votingReminderMessages[messageKey];
 
-    // Build the full message
-    const body = replacePlaceholders(votingReminderMessages.body, {
+    // Replace all placeholders
+    return replacePlaceholders(messageTemplate, {
+      daoId: event.daoId,
       title,
       timeRemaining,
-      thresholdPercentage: event.thresholdPercentage.toString(),
-      urgencyMessage
+      thresholdPercentage: event.thresholdPercentage.toString()
     });
-
-    return `${header}\n\n${body}`;
   }
 }

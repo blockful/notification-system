@@ -3,8 +3,7 @@ import { db, TestApps } from '../src/setup';
 import { HttpClientMockSetup, GraphQLMockSetup } from '../src/mocks';
 import { UserFactory, ProposalFactory } from '../src/fixtures';
 import { TelegramTestHelper, DatabaseTestHelper, TestCleanup } from '../src/helpers';
-import { testConstants, timeouts } from '../src/config';
-import { proposalFinishedMessages, replacePlaceholders } from '@notification-system/messages';
+import { testConstants, timeouts } from '../src/config';  
 
 describe('Proposal Finished Trigger - Integration Test', () => {
   let apps: TestApps;
@@ -251,13 +250,9 @@ describe('Proposal Finished Trigger - Integration Test', () => {
     expect(dao1Message).toBeDefined();
     expect(dao1Message?.text).toContain('has ended');
     expect(dao1Message?.text).toContain(dao1Id);
-
-    expect(dao1Message?.text).toContain(proposalFinishedMessages.header.substring(0, 2));
-
     expect(dao2Message).toBeDefined();
     expect(dao2Message?.text).toContain('has ended');
     expect(dao2Message?.text).toContain(dao2Id);
-    expect(dao2Message?.text).toContain(proposalFinishedMessages.header.substring(0, 2));
     
     // Verify database records
     await dbHelper.waitForRecordCount(testConstants.tables.notifications, 2);

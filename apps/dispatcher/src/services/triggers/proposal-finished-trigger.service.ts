@@ -52,25 +52,16 @@ export class ProposalFinishedTriggerHandler extends BaseTriggerHandler<ProposalF
 
   private generateNotificationMessage(proposal: ProposalFinishedNotification): string {
     const proposalTitle = proposal.title || FormattingService.extractTitle(proposal.description);
-    const emoji = proposalFinishedMessages.statusEmoji[proposal.status] || proposalFinishedMessages.statusEmoji.default;
-    const statusFormatted = proposal.status.charAt(0) + proposal.status.slice(1).toLowerCase();
-    const header = proposalTitle
-      ? replacePlaceholders(proposalFinishedMessages.header, {
-          title: proposalTitle,
-          daoId: proposal.daoId.toUpperCase()
-        })
-      : replacePlaceholders(proposalFinishedMessages.headerNoTitle, {
-          daoId: proposal.daoId.toUpperCase()
-        });
+    const hasTitle = !!proposalTitle;
 
-    const body = replacePlaceholders(proposalFinishedMessages.body, {
-      status: statusFormatted,
-      emoji,
+    const messageTemplate = proposalFinishedMessages.getMessageTemplate(hasTitle, proposal.status);
+
+    return replacePlaceholders(messageTemplate, {
+      ...(hasTitle && { title: proposalTitle }),
+      daoId: proposal.daoId.toUpperCase(),
       forVotes: formatTokenAmount(proposal.forVotes),
       againstVotes: formatTokenAmount(proposal.againstVotes),
       abstainVotes: formatTokenAmount(proposal.abstainVotes)
     });
-
-    return `${header}${body}`;
   }
 }

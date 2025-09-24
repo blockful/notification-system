@@ -156,35 +156,20 @@ export class VoteConfirmationTriggerHandler extends BaseTriggerHandler<VoteEvent
   }
 
   private formatVoteMessage(vote: VoteEvent): string {
-    const position = this.getSupportText(vote.support);
-    const emoji = this.getSupportEmoji(vote.support);
+    const supportKey = voteConfirmationMessages.getSupportKey(vote.support);
     const votingPower = formatTokenAmount(vote.votingPower, 18);
+    const hasReason = vote.reason && vote.reason.trim();
 
-    let message = replacePlaceholders(voteConfirmationMessages.voteSuccess, {
-      emoji,
+    const messageTemplate = hasReason
+      ? voteConfirmationMessages.withReason[supportKey]
+      : voteConfirmationMessages.withoutReason[supportKey];
+
+    return replacePlaceholders(messageTemplate, {
       daoId: vote.daoId,
-      position,
       proposalIdShort: vote.proposalId.slice(0, 8) + '...',
-      votingPower
+      votingPower,
+      ...(hasReason && { reason: vote.reason! })
     });
-
-    if (vote.reason && vote.reason.trim()) {
-      message += replacePlaceholders(voteConfirmationMessages.withReason, {
-        reason: vote.reason
-      });
-    }
-
-    message += voteConfirmationMessages.transactionLink;
-
-    return message;
-  }
-
-  private getSupportText(support: string): string {
-    return voteConfirmationMessages.supportText[support] || voteConfirmationMessages.supportText.default;
-  }
-
-  private getSupportEmoji(support: string): string {
-    return voteConfirmationMessages.supportEmoji[support] || voteConfirmationMessages.supportEmoji.default;
   }
 
   private async getChainIdForDao(daoId: string): Promise<number> {

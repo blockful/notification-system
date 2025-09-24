@@ -116,12 +116,10 @@ export class VotingPowerTriggerHandler extends BaseTriggerHandler {
       ? votingPowerMessages.delegationReceived.new
       : votingPowerMessages.delegationReceived.removed;
 
-    let notificationMessage = replacePlaceholders(messageTemplate, {
+    const notificationMessage = replacePlaceholders(messageTemplate, {
       daoId,
       delta: formattedDelta
     });
-
-    notificationMessage += votingPowerMessages.transactionLink;
     
     const metadata = this.buildNotificationMetadata(chainId, transactionHash, {
       delegator: sourceAccountId
@@ -186,8 +184,6 @@ export class VotingPowerTriggerHandler extends BaseTriggerHandler {
         delta: formattedDelta
       });
     }
-
-    notificationMessage += votingPowerMessages.transactionLink;
     
     const metadata = this.buildNotificationMetadata(chainId, transactionHash, {
       delegatorAccount: sourceAccountId,
@@ -241,8 +237,6 @@ export class VotingPowerTriggerHandler extends BaseTriggerHandler {
         delta: formattedDelta
       });
     }
-
-    notificationMessage += votingPowerMessages.transactionLink;
     
     const metadata = this.buildNotificationMetadata(chainId, transactionHash);
     
