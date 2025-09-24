@@ -5,6 +5,7 @@ import { ISubscriptionClient } from '../../interfaces/subscription-client.interf
 import { AnticaptureClient } from '@notification-system/anticapture-client';
 import { FormattingService } from '../formatting.service';
 import { votingReminderMessages, replacePlaceholders } from '@notification-system/messages';
+import { BatchNotificationService } from '../batch-notification.service';
 
 /**
  * Event data received from logic system for voting reminders
@@ -34,6 +35,7 @@ interface ProcessingResult {
  * Processes proposals and sends reminders to subscribed users who haven't voted yet.
  */
 export class VotingReminderTriggerHandler extends BaseTriggerHandler<VotingReminderEvent> {
+  private readonly batchNotificationService: BatchNotificationService;
 
   constructor(
     protected readonly subscriptionClient: ISubscriptionClient,
@@ -41,6 +43,7 @@ export class VotingReminderTriggerHandler extends BaseTriggerHandler<VotingRemin
     private readonly anticaptureClient: AnticaptureClient
   ) {
     super(subscriptionClient, notificationFactory);
+    this.batchNotificationService = new BatchNotificationService(subscriptionClient, notificationFactory);
   }
 
   async handleMessage(message: DispatcherMessage<VotingReminderEvent>): Promise<MessageProcessingResult> {
@@ -96,45 +99,24 @@ export class VotingReminderTriggerHandler extends BaseTriggerHandler<VotingRemin
       return { sent: 0, skipped: 1, failed: 0 };
     }
 
-    // Get user information for non-voting addresses
-    const nonVotingUsers = await this.subscriptionClient.getWalletOwnersBatch(nonVotingAddresses);
-    const allUsers = Object.values(nonVotingUsers).flat();
-
-    if (allUsers.length === 0) {
-      return { sent: 0, skipped: 1, failed: 0 };
-    }
-
-    // Filter users who should receive notifications (deduplication check)
-    const eventId = `${event.id}-${event.thresholdPercentage}-reminder`;
-    const filteredNotifications = await this.subscriptionClient.shouldSend(allUsers, eventId, event.daoId);
-    
-    const usersToNotify = allUsers.filter(user => 
-      filteredNotifications.some(notification => notification.user_id === user.id)
-    );
-
-    if (usersToNotify.length === 0) {
-      return { sent: 0, skipped: 1, failed: 0 };
-    }
-
-    // Send reminders to users
-    const message = this.createReminderMessage(event);
-    await this.sendNotificationsToSubscribers(
-      usersToNotify,
-      message,
-      eventId,
+    // Send reminders using batch notification service
+    await this.batchNotificationService.sendBatchNotifications(
+      nonVotingAddresses,
       event.daoId,
-      {
+      () => `${event.id}-${event.thresholdPercentage}-reminder`,
+      (address) => this.createReminderMessage(event, address),
+      (address) => ({
         proposalId: event.id,
         thresholdPercentage: event.thresholdPercentage,
         timeElapsedPercentage: event.timeElapsedPercentage,
-        timeRemaining: FormattingService.calculateTimeRemaining(event.endTimestamp)
-      }
+        timeRemaining: FormattingService.calculateTimeRemaining(event.endTimestamp),
+        addresses: { voterAddress: address }
+      })
     );
-    
-    return { 
-      sent: usersToNotify.length, 
-      skipped: allUsers.length - usersToNotify.length, 
-      failed: 0 
+    return {
+      sent: 1,
+      skipped: 0,
+      failed: 0
     };
   }
 
@@ -162,7 +144,7 @@ export class VotingReminderTriggerHandler extends BaseTriggerHandler<VotingRemin
   /**
    * Creates the reminder message based on proposal data and urgency level
    */
-  private createReminderMessage(event: VotingReminderEvent): string {
+  private createReminderMessage(event: VotingReminderEvent, address?: string): string {
     const timeRemaining = FormattingService.calculateTimeRemaining(event.endTimestamp);
     const title = event.title || FormattingService.extractTitle(event.description);
 
@@ -177,7 +159,8 @@ export class VotingReminderTriggerHandler extends BaseTriggerHandler<VotingRemin
       daoId: event.daoId,
       title,
       timeRemaining,
-      thresholdPercentage: event.thresholdPercentage.toString()
+      thresholdPercentage: event.thresholdPercentage.toString(),
+      address: address || 'Your wallet'
     });
   }
 }
