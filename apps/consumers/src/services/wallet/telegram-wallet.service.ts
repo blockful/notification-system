@@ -68,7 +68,7 @@ export class TelegramWalletService extends BaseWalletService {
       await ctx.reply(message, { reply_markup: keyboard });
     } catch (error) {
       console.error('Error loading wallets:', error);
-      await ctx.reply('Sorry, there was an error loading your wallets. Please try again later.');
+      await ctx.reply(uiMessages.errors.loadingWallets);
     }
   }
 
@@ -108,7 +108,7 @@ export class TelegramWalletService extends BaseWalletService {
         inline_keyboard: [
           // Create checkboxes for each wallet with ENS names when available
           ...wallets.map(wallet => [{
-            text: `☐ ${wallet.displayName || wallet.address}`,
+            text: `${uiMessages.selection.unchecked} ${wallet.displayName || wallet.address}`,
             callback_data: `wallet_toggle_${wallet.address}`
           }]),
           [
@@ -120,7 +120,7 @@ export class TelegramWalletService extends BaseWalletService {
       await ctx.reply(uiMessages.wallet.removeConfirmation, { reply_markup: keyboard });
     } catch (error) {
       console.error('Error loading wallets for removal:', error);
-      await ctx.reply('Sorry, there was an error loading your wallets. Please try again later.');
+      await ctx.reply(uiMessages.errors.loadingWallets);
     }
   }
 
@@ -146,7 +146,7 @@ export class TelegramWalletService extends BaseWalletService {
       if (result.success) {
         await ctx.reply(uiMessages.wallet.success);
       } else {
-        await ctx.reply(`❌ ${result.message}`);
+        await ctx.reply(`${uiMessages.status.error} ${result.message}`);
       }
 
       // Reset session state
@@ -155,7 +155,7 @@ export class TelegramWalletService extends BaseWalletService {
 
     } catch (error) {
       console.error('Error adding wallet:', error);
-      await ctx.reply(uiMessages.wallet.error);
+      await ctx.reply(uiMessages.errors.generic);
     }
   }
 
@@ -189,7 +189,7 @@ export class TelegramWalletService extends BaseWalletService {
           ...wallets.map(wallet => {
             const isSelected = ctx.session.walletsToRemove?.has(wallet.address);
             return [{
-              text: `${isSelected ? '☑️' : '☐'} ${wallet.displayName || wallet.address}`,
+              text: `${isSelected ? uiMessages.selection.checked : uiMessages.selection.unchecked} ${wallet.displayName || wallet.address}`,
               callback_data: `wallet_toggle_${wallet.address}`
             }];
           }),
@@ -202,7 +202,7 @@ export class TelegramWalletService extends BaseWalletService {
       await ctx.editMessageReplyMarkup(keyboard);
     } catch (error) {
       console.error('Error toggling wallet selection:', error);
-      await ctx.answerCbQuery('Failed to update selection. Please try again.');
+      await ctx.answerCbQuery(uiMessages.errors.updateFailed);
     }
   }
 
@@ -217,7 +217,7 @@ export class TelegramWalletService extends BaseWalletService {
 
     const walletsToRemove = ctx.session.walletsToRemove;
     if (!walletsToRemove || walletsToRemove.size === 0) {
-      await ctx.reply('Please select at least one wallet to remove.');
+      await ctx.reply(uiMessages.warnings.selectAtLeastOneWallet);
       return;
     }
 
@@ -232,7 +232,7 @@ export class TelegramWalletService extends BaseWalletService {
       if (result.success) {
         await ctx.reply(uiMessages.wallet.removeSuccess);
       } else {
-        await ctx.reply(`❌ ${result.message}`);
+        await ctx.reply(`${uiMessages.status.error} ${result.message}`);
       }
 
       // Reset session state
@@ -241,7 +241,7 @@ export class TelegramWalletService extends BaseWalletService {
 
     } catch (error) {
       console.error('Error removing wallets:', error);
-      await ctx.reply('Sorry, there was an error removing your wallets. Please try again later.');
+      await ctx.reply(uiMessages.errors.generic);
     }
   }
 }
