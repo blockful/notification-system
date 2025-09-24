@@ -144,11 +144,13 @@ export class NonVotingHandler extends BaseTriggerHandler<ProposalFinishedNotific
       nonVoters,
       daoId,
       (address) => `${address}-non-voting-${lastProposals[0].id}`,
-      (address) => replacePlaceholders(nonVotingMessages.alert, {
-        daoId: daoId.toUpperCase(),
-        proposalsCount: NonVotingHandler.PROPOSALS_TO_CHECK.toString(),
-        proposalsList: proposalTitles
-      }),
+      (address) => {
+        return replacePlaceholders(nonVotingMessages.alert, {
+          daoId: daoId.toUpperCase(),
+          proposalsCount: NonVotingHandler.PROPOSALS_TO_CHECK.toString(),
+          proposalsList: proposalTitles
+        });
+      },
       (address) => ({
         addresses: {
           'nonVoterAddress': address
