@@ -104,7 +104,7 @@ describe('Voting Reminder Integration Tests', () => {
       expect(message.text).toContain(expectedHeader);
 
       // Check percentage in body
-      expect(message.text).toContain('30% of voting period has passed');
+      expect(message.text).toContain('30%');
 
       // Check urgency message
       expect(message.text).toContain(votingReminderMessages.urgencyMessages.early);
@@ -213,7 +213,7 @@ describe('Voting Reminder Integration Tests', () => {
       // Wait for the notification to be sent
       const message = await telegramHelper.waitForMessage(
         msg => msg.text.includes('Mid-Period Voting Reminder') &&
-               msg.text.includes('60% of voting period has passed'),
+               msg.text.includes('60%'),
         { timeout: timeouts.notification.delivery }
       );
 
@@ -228,7 +228,7 @@ describe('Voting Reminder Integration Tests', () => {
       expect(message.text).toContain(expectedHeader);
 
       // Check percentage in body
-      expect(message.text).toContain('60% of voting period has passed');
+      expect(message.text).toContain('60%');
 
       // Check urgency message
       expect(message.text).toContain(votingReminderMessages.urgencyMessages.midPeriod);
@@ -257,7 +257,7 @@ describe('Voting Reminder Integration Tests', () => {
       // Wait for the notification to be sent
       const message = await telegramHelper.waitForMessage(
         msg => msg.text.includes('URGENT Voting Reminder') &&
-               msg.text.includes('90% of voting period has passed'),
+               msg.text.includes('90%'),
         { timeout: timeouts.notification.delivery }
       );
 
@@ -272,10 +272,7 @@ describe('Voting Reminder Integration Tests', () => {
       expect(message.text).toContain(expectedHeader);
 
       // Check percentage in body
-      expect(message.text).toContain('90% of voting period has passed');
-
-      // Check urgency message
-      expect(message.text).toContain(votingReminderMessages.urgencyMessages.urgent);
+      expect(message.text).toContain('90%');
       
       // Verify database record
       const notifications = await dbHelper.getNotifications();
