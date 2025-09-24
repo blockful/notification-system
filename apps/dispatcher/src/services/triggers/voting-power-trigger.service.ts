@@ -118,7 +118,9 @@ export class VotingPowerTriggerHandler extends BaseTriggerHandler {
 
     const notificationMessage = replacePlaceholders(messageTemplate, {
       daoId,
-      delta: formattedDelta
+      delta: formattedDelta,
+      address: accountId,
+      delegator: sourceAccountId
     });
     
     const metadata = this.buildNotificationMetadata(chainId, transactionHash, {
@@ -172,7 +174,8 @@ export class VotingPowerTriggerHandler extends BaseTriggerHandler {
       notificationMessage = replacePlaceholders(messageTemplate, {
         daoId,
         delta: formattedDelta,
-        votingPower: formattedVotingPower
+        votingPower: formattedVotingPower,
+        address: sourceAccountId
       });
     } else {
       const messageTemplate = deltaValue > 0
@@ -181,10 +184,13 @@ export class VotingPowerTriggerHandler extends BaseTriggerHandler {
 
       notificationMessage = replacePlaceholders(messageTemplate, {
         daoId,
-        delta: formattedDelta
+        delta: formattedDelta,
+        address: sourceAccountId,
+        delegate: targetAccountId || accountId,
+        delegatorAccount: sourceAccountId
       });
     }
-    
+
     const metadata = this.buildNotificationMetadata(chainId, transactionHash, {
       delegatorAccount: sourceAccountId,
       delegate: targetAccountId || accountId
@@ -224,7 +230,8 @@ export class VotingPowerTriggerHandler extends BaseTriggerHandler {
 
       notificationMessage = replacePlaceholders(messageTemplate, {
         daoId,
-        delta: formattedDelta
+        delta: formattedDelta,
+        address: accountId
       });
     } else {
       // Generic voting power change
@@ -234,10 +241,11 @@ export class VotingPowerTriggerHandler extends BaseTriggerHandler {
 
       notificationMessage = replacePlaceholders(messageTemplate, {
         daoId,
-        delta: formattedDelta
+        delta: formattedDelta,
+        address: accountId
       });
     }
-    
+
     const metadata = this.buildNotificationMetadata(chainId, transactionHash);
     
     await this.sendNotificationsToSubscribers(subscribers, notificationMessage, transactionHash, daoId, metadata);
