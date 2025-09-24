@@ -6,7 +6,7 @@
 
 import { BaseDAOService } from './base-dao.service';
 import { ContextWithSession } from '../../interfaces/bot.interface';
-import { uiMessages } from '@notification-system/messages';
+import { uiMessages, getDaoWithEmoji } from '@notification-system/messages';
 
 export class TelegramDAOService extends BaseDAOService {
 
@@ -153,7 +153,7 @@ export class TelegramDAOService extends BaseDAOService {
         // DAO buttons row
         daos.map(dao => {
           const normalizedDao = dao.id.toUpperCase();
-          const daoWithEmoji = this.getDaoWithEmoji(dao.id);
+          const daoWithEmoji = getDaoWithEmoji(dao.id);
           const isSelected = selections.has(normalizedDao);
 
           return {

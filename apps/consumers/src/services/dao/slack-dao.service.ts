@@ -6,6 +6,7 @@
 
 import { BaseDAOService } from './base-dao.service';
 import { SlackCommandContext, SlackActionContext } from '../../interfaces/slack-context.interface';
+import { getDaoWithEmoji } from '@notification-system/messages';
 
 export class SlackDAOService extends BaseDAOService {
 
@@ -265,7 +266,7 @@ export class SlackDAOService extends BaseDAOService {
     for (const dao of daos) {
       const normalizedDao = dao.id.toUpperCase();
       const isSelected = selections.has(normalizedDao);
-      const daoWithEmoji = this.getDaoWithEmoji(dao.id);
+      const daoWithEmoji = getDaoWithEmoji(dao.id);
 
       blocks.push({
         type: 'section',
