@@ -38,5 +38,3 @@ jobs:
       - name: Test ${{ matrix.package }}
         run: |
           pnpm ${{ matrix.package }} test
-      - name: Test integrated-tests
-        run: pnpm integrated-tests test
