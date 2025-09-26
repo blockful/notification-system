@@ -89,12 +89,14 @@ export class SlackClient implements SlackClientInterface {
    * @param text Text with Telegram markdown formatting
    * @returns Text with Slack mrkdwn formatting
    */
-  private convertMarkdownToSlackFormat(text: string): string {
+  public convertMarkdownToSlackFormat(text: string): string {
     return text
       // Convert [text](url) links to <url|text> format
       .replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<$2|$1>')
       // Convert **bold** to *bold*
-      .replace(/\*\*([^*]+)\*\*/g, '*$1*');
+      .replace(/\*\*([^*]+)\*\*/g, '*$1*')
+      // Convert __underline__ to _underline_
+      .replace(/__(.*?)__/g, '_$1_');
   }
 
   /**

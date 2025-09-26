@@ -240,6 +240,9 @@ export class SlackBotService implements BotServiceInterface {
   public async sendNotification(payload: NotificationPayload): Promise<string> {
     let processedMessage = payload.message;
 
+    // Convert Telegram markdown to Slack mrkdwn format
+    processedMessage = this.slackClient.convertMarkdownToSlackFormat(processedMessage);
+
     // Process transaction link placeholder
     if (processedMessage.includes('{{txLink}}')) {
       const txUrl = payload.metadata?.transaction
