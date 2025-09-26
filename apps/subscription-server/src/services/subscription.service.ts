@@ -279,15 +279,18 @@ export class SubscriptionService {
     
     // Fetch all users in one batch
     const users = await this.userRepository.findByIds(userIds);
-    const userMap = new Map(users.map(user => [user.id, user]));
-    
+
+    // Attach workspace tokens for channels that support them (like Slack)
+    const usersWithTokens = await this.attachWorkspaceTokens(users);
+    const userMap = new Map(usersWithTokens.map(user => [user.id, user]));
+
     // Build result mapping addresses to users
     Object.entries(addressGroups).forEach(([address, userIdList]) => {
       result[address] = userIdList
         .map(userId => userMap.get(userId))
         .filter((user): user is User => user !== undefined);
     });
-    
+
     return result;
   }
 
