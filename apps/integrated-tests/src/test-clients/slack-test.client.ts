@@ -117,7 +117,9 @@ export class SlackTestClient implements SlackClientInterface {
       // Convert [text](url) links to <url|text> format
       .replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<$2|$1>')
       // Convert **bold** to *bold*
-      .replace(/\*\*([^*]+)\*\*/g, '*$1*');
+      .replace(/\*\*([^*]+)\*\*/g, '*$1*')
+      // Convert __underline__ to _underline_
+      .replace(/__(.*?)__/g, '_$1_');
   }
 
   /**

@@ -52,18 +52,18 @@ export class GraphQLMockSetup {
     return (url: string, data: any, config: any) => {
       // Handle proposals
       if (data.query?.includes('ListProposals')) {
-        console.log('[Mock] ListProposals called with variables:', JSON.stringify(data.variables));
-        console.log('[Mock] Headers:', JSON.stringify(config?.headers));
+
         let filtered = proposals;
         if (data.variables?.status) {
           // Status can be string or array (JSON type in GraphQL)
-          const statusFilter = Array.isArray(data.variables.status) 
-            ? data.variables.status 
+          const statusFilter = Array.isArray(data.variables.status)
+            ? data.variables.status
             : [data.variables.status];
           filtered = filtered.filter(p => statusFilter.includes(p.status));
         }
         if (data.variables?.fromDate) {
           // Filter by creation timestamp, not end timestamp
+          const beforeCount = filtered.length;
           filtered = filtered.filter(p => parseInt(p.timestamp) >= data.variables.fromDate);
         }
         if (config?.headers?.['anticapture-dao-id']) {
