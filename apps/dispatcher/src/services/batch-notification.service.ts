@@ -123,6 +123,7 @@ export class BatchNotificationService {
             channel: follower.channel,
             channelUserId: follower.channel_user_id,
             message,
+            bot_token: follower.token,
             metadata
           })
           .catch(error => {
