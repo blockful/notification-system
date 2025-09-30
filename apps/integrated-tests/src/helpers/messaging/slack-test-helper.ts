@@ -52,7 +52,7 @@ export class SlackTestHelper {
    */
   async waitForMessage(
     predicate: (message: SlackTestMessage) => boolean,
-    options?: { timeout?: number; errorMessage?: string; useHistory?: boolean; channel?: string }
+    options?: { timeout?: number; errorMessage?: string; useHistory?: boolean; channel?: string; token?: string }
   ): Promise<SlackTestMessage> {
     const startCount = this.mockSendMessage.mock.calls.length;
 
@@ -82,7 +82,7 @@ export class SlackTestHelper {
    */
   private async waitForMessageInHistory(
     predicate: (message: SlackTestMessage) => boolean,
-    options?: { timeout?: number; errorMessage?: string; channel?: string }
+    options?: { timeout?: number; errorMessage?: string; channel?: string; token?: string }
   ): Promise<SlackTestMessage> {
     if (!this.slackClient) {
       throw new Error('SlackTestClient required for history mode');
@@ -96,7 +96,7 @@ export class SlackTestHelper {
 
     return waitFor(
       async () => {
-        const history = await this.slackClient!.getMessageHistory(channel, 20);
+        const history = await this.slackClient!.getMessageHistory(channel, 20, options?.token);
         const messages = history.map(msg => ({
           channel,
           text: msg.text || '',

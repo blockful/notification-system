@@ -28,9 +28,9 @@ export const serviceConfig = {
 
   // OAuth configuration for tests
   oauth: {
-    slackClientId: 'test-client-id',
-    slackClientSecret: 'test-client-secret',
-    slackRedirectUri: 'http://localhost/oauth/callback',
-    tokenEncryptionKey: 'e10981ff87b7483d85cdbf8b1ae0618236a37afe8cc082853183b6283c470e22'
+    slackClientId: process.env.SLACK_CLIENT_ID || 'test-client-id',
+    slackClientSecret: process.env.SLACK_CLIENT_SECRET || 'test-client-secret',
+    slackRedirectUri: process.env.SLACK_REDIRECT_URI || 'http://localhost/oauth/callback',
+    tokenEncryptionKey: process.env.TOKEN_ENCRYPTION_KEY || 'e10981ff87b7483d85cdbf8b1ae0618236a37afe8cc082853183b6283c470e22'
   }
 };

@@ -11,6 +11,7 @@ import {
   SlackMessage
 } from '@notification-system/consumer/src/interfaces/slack-client.interface';
 import { jest } from '@jest/globals';
+import { env } from '../config/env';
 
 /**
  * Test implementation of Slack client that can operate in mock or real mode
@@ -23,17 +24,17 @@ export class SlackTestClient implements SlackClientInterface {
   /**
    * Creates a new Slack test client
    * @param mockSendMessage Jest mock function for assertions
-   * @param isRealMode Whether to send real messages when token is provided
+   * @param realBotToken Optional real bot token (presence enables real mode)
    */
-  constructor(mockSendMessage: jest.Mock, isRealMode: boolean = false) {
+  constructor(mockSendMessage: jest.Mock, private realBotToken?: string) {
     this.mockSendMessage = mockSendMessage;
-    this.isRealMode = isRealMode;
+    this.isRealMode = !!realBotToken;
   }
 
   /**
-   * Sends a message to Slack channel or user
-   * @param channel Channel ID or user ID to send to
-   * @param text Message text with Telegram markdown
+   * Sends a message to Slack channel or DM
+   * @param channel Channel ID (can be channel ID like C123... or user DM ID like D123...)
+   * @param text Message text with markdown formatting
    * @param options Additional Slack message options
    * @returns Promise resolving to sent message details
    */
@@ -48,12 +49,15 @@ export class SlackTestClient implements SlackClientInterface {
     // Always call the mock for test assertions
     this.mockSendMessage(channel, slackText, options);
 
-    // Send real message if in real mode and token is provided
-    if (this.isRealMode && options?.token) {
+    const token = options?.token || this.realBotToken;
 
-      const realClient = new WebClient(options.token);
+    if (this.isRealMode && token) {
+      // In real mode, use the actual test channel from env instead of test channel IDs
+      const realChannel = env.SLACK_TEST_CHANNEL_ID || channel;
+      const realClient = new WebClient(token);
+
       const result = await realClient.chat.postMessage({
-        channel,
+        channel: realChannel,
         text: slackText,
         parse: options?.parse || 'none',
         link_names: options?.link_names ?? true,
@@ -62,16 +66,20 @@ export class SlackTestClient implements SlackClientInterface {
         mrkdwn: options?.mrkdwn ?? true
       });
 
+      if (!result.ok) {
+        console.error('[SlackTestClient] Slack API returned ok=false:', result);
+      }
+
       return {
-        ts: result.ts as string, // ts is Slack's unique message identifier format combining Unix timestamp + microseconds for guaranteed uniqueness
+        ts: result.ts as string,
         channel: result.channel as string,
         text: slackText
       };
     } else {
       // Return mock response
-      const ts = `${Date.now()}.000000`; // ts is Slack's unique message identifier format combining Unix timestamp + microseconds for guaranteed uniqueness
+      const ts = `${Date.now()}.000000`; // Slack timestamp format
       return {
-        ts, 
+        ts,
         channel,
         text: slackText
       };
@@ -85,9 +93,10 @@ export class SlackTestClient implements SlackClientInterface {
    * @returns Array of messages from the channel
    */
   async getMessageHistory(channel: string, limit: number = 10, token?: string): Promise<any[]> {
-    // In real mode with token, fetch actual history
-    if (this.isRealMode && token) {
-      const realClient = new WebClient(token);
+    const finalToken = token || this.realBotToken;
+
+    if (this.isRealMode && finalToken) {
+      const realClient = new WebClient(finalToken);
       const result = await realClient.conversations.history({
         channel,
         limit,
@@ -102,14 +111,14 @@ export class SlackTestClient implements SlackClientInterface {
       .map(([ch, text, opts]) => ({
         text,
         channel: ch,
-        ts: `${Date.now()}.000000`, // ts is Slack's unique message identifier format combining Unix timestamp + microseconds for guaranteed uniqueness
+        ts: `${Date.now()}.000000`,
         type: 'message'
       }));
   }
 
   /**
-   * Convert Telegram markdown to Slack mrkdwn format
-   * @param text Text with Telegram markdown formatting
+   * Convert markdown to Slack mrkdwn format
+   * @param text Text with markdown formatting
    * @returns Text with Slack mrkdwn formatting
    */
   private convertMarkdownToSlackFormat(text: string): string {

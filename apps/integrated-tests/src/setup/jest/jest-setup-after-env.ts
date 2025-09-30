@@ -25,6 +25,8 @@ beforeAll(async () => {
     fs.unlinkSync(`/tmp/${file}`);
   });
   await setupDatabase();
+  const { WorkspaceFactory } = await import('../../fixtures/factories/workspace-factory');
+  await WorkspaceFactory.createDefaultSlackWorkspace();
   const httpMockSetup = new HttpClientMockSetup();
   GraphQLMockSetup.setupMock(httpMockSetup.getMockClient());
   const rabbitmqUrl = process.env.TEST_RABBITMQ_URL;
