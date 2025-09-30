@@ -20,9 +20,9 @@ export class SlackDAOService extends BaseDAOService {
    * Initialize DAO selection interface with Block Kit UI
    */
   async initialize(context: SlackCommandContext, action: 'subscribe' | 'unsubscribe' = 'subscribe'): Promise<void> {
-    const userId = context.body.user_id;
+    const channelId = context.body.channel_id;
     const workspaceId = context.body.team_id;
-    const fullUserId = `${workspaceId}:${userId}`;
+    const fullUserId = `${workspaceId}:${channelId}`;
 
     try {
       await context.ack();
@@ -78,9 +78,9 @@ export class SlackDAOService extends BaseDAOService {
    * List user's current DAO subscriptions
    */
   async listSubscriptions(context: SlackCommandContext): Promise<void> {
-    const userId = context.body.user_id;
+    const channelId = context.body.channel_id;
     const workspaceId = context.body.team_id;
-    const fullUserId = `${workspaceId}:${userId}`;
+    const fullUserId = `${workspaceId}:${channelId}`;
 
     try {
       await context.ack();
@@ -177,9 +177,9 @@ export class SlackDAOService extends BaseDAOService {
    * Confirm DAO selection changes
    */
   async confirm(context: SlackActionContext, action: 'subscribe' | 'unsubscribe'): Promise<void> {
-    const userId = context.body.user.id;
+    const channelId = (context.body as any).channel?.id;
     const workspaceId = (context.body as any).team?.id || (context.body as any).user?.team_id;
-    const fullUserId = `${workspaceId}:${userId}`;
+    const fullUserId = `${workspaceId}:${channelId}`;
 
     try {
       await context.ack();
