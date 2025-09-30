@@ -105,9 +105,9 @@ export class BatchNotificationService {
    * @param sendPromises - Array to collect send promises
    */
   private queueNotificationSends(
-    notificationsToSend: Notification[], 
-    followerMap: Map<string, User>, 
-    message: string, 
+    notificationsToSend: Notification[],
+    followerMap: Map<string, User>,
+    message: string,
     metadata: Record<string, any> | undefined,
     sendPromises: Promise<void>[]
   ): void {

@@ -112,11 +112,16 @@ export class SubscriptionService {
   private async attachWorkspaceTokens(users: User[]): Promise<User[]> {
     return Promise.all(users.map(async user => {
       // Check if channel supports workspaces
-      if (!CHANNELS_WITH_WORKSPACES.includes(user.channel)) return user;
+      if (!CHANNELS_WITH_WORKSPACES.includes(user.channel)) {
+        return user;
+      }
 
       // Parse workspace ID from format "workspace:user"
       const [workspaceId, userId] = user.channel_user_id.split(':');
-      if (!userId) return user;
+
+      if (!userId) {
+        return user;
+      }
 
       // Fetch and attach token
       const token = await this.workspaceService?.getWorkspaceToken(workspaceId);
