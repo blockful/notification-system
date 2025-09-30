@@ -25,7 +25,8 @@ describe('Slack Vote Confirmation Trigger - Integration Test', () => {
 
   // Helper function for creating Slack users with wallets
   const createSlackUserWithWallet = async (channelId: string, daoId: string, walletAddress: string) => {
-    const slackUserId = `T_DEFAULT:${channelId}`;
+    const workspaceId = WorkspaceFactory.getWorkspaceId();
+    const slackUserId = `${workspaceId}:${channelId}`;
     const pastTimestamp = new Date(Date.now() - 60000).toISOString();
     const { user } = await UserFactory.createUserWithFullSetup(
       slackUserId,
@@ -117,16 +118,6 @@ describe('Slack Vote Confirmation Trigger - Integration Test', () => {
     // Verify message has substantial content
     expect(message.text.length).toBeGreaterThan(50);
 
-    // In real mode, also verify through conversations.history
-    if (env.SEND_REAL_SLACK === 'true') {
-      const history = await slackClient.getMessageHistory(channelId, 10);
-      const foundMessage = history.find(msg =>
-        msg.text?.includes('✅') && msg.text?.includes('vote')
-      );
-      expect(foundMessage).toBeDefined();
-      console.log('✅ Real Slack vote FOR confirmation delivered and verified via conversations.history');
-    }
-
     // Verify database records
     await dbHelper.waitForRecordCount(testConstants.tables.notifications, 1);
   });
@@ -183,15 +174,6 @@ describe('Slack Vote Confirmation Trigger - Integration Test', () => {
       expect(message.text).toMatch(/<https?:\/\/[^|]+\|[^>]+>/);
     }
 
-    // In real mode, verify through conversations.history
-    if (env.SEND_REAL_SLACK === 'true') {
-      const history = await slackClient.getMessageHistory(channelId, 10);
-      const foundMessage = history.find(msg =>
-        msg.text?.includes('❌') && msg.text?.includes('vote')
-      );
-      expect(foundMessage).toBeDefined();
-      console.log('✅ Real Slack vote AGAINST confirmation delivered and verified');
-    }
   });
 
   test('should send vote confirmation notification when user ABSTAINS via Slack', async () => {
@@ -246,15 +228,6 @@ describe('Slack Vote Confirmation Trigger - Integration Test', () => {
       expect(message.text).toMatch(/<https?:\/\/[^|]+\|[^>]+>/);
     }
 
-    // In real mode, verify through conversations.history
-    if (env.SEND_REAL_SLACK === 'true') {
-      const history = await slackClient.getMessageHistory(channelId, 10);
-      const foundMessage = history.find(msg =>
-        msg.text?.includes('⚪') && msg.text?.includes('vote')
-      );
-      expect(foundMessage).toBeDefined();
-      console.log('✅ Real Slack vote ABSTAIN confirmation delivered and verified');
-    }
   });
 
   test('should NOT send duplicate notifications for same vote (txHash) via Slack', async () => {

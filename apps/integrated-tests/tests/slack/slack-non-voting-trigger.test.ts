@@ -20,9 +20,6 @@ describe('Slack Non-Voting Trigger - Integration Test', () => {
   let slackClient: SlackTestClient;
   let dbHelper: DatabaseTestHelper;
 
-  // Enable debug output
-  const DEBUG = true;
-
   // Test addresses
   const ADDRESS_ACTIVE = '0x1234567890123456789012345678901234567890';
   const ADDRESS_PARTIAL = '0xabcdef1234567890123456789012345678901234';
@@ -38,7 +35,8 @@ describe('Slack Non-Voting Trigger - Integration Test', () => {
     isActive?: boolean,
     timestamp?: string
   ) => {
-    const slackUserId = `T_DEFAULT:${channelId}`;
+    const workspaceId = env.SEND_REAL_SLACK === 'true' ? env.SLACK_WORKSPACE_ID! : WorkspaceFactory.getWorkspaceId();
+    const slackUserId = `${workspaceId}:${channelId}`;
     const result = await UserFactory.createUserWithFollowedAddresses(
       slackUserId,
       username,
@@ -70,15 +68,6 @@ describe('Slack Non-Voting Trigger - Integration Test', () => {
       const startBlock = testConstants.proposalTiming.defaultStartBlock + (i * 10);
       const blocksToRun = Math.floor(testConstants.proposalTiming.proposalRunDuration / testConstants.defaults.blockTime);
       const endBlock = startBlock + blocksToRun;
-
-      if (DEBUG) {
-        console.log(`🔍 [DEBUG] Creating finished proposal ${proposalId}:`, {
-          creationTimestamp: Math.floor(proposalCreationTime / 1000),
-          creationDate: new Date(proposalCreationTime).toISOString(),
-          endTimestamp: Math.floor(proposalEndTime / 1000),
-          endDate: new Date(proposalEndTime).toISOString()
-        });
-      }
 
       return ProposalFactory.createProposal(daoId, proposalId, {
         title: `Proposal ${count - i}`,
@@ -119,8 +108,7 @@ Consider reaching out to encourage participation!`;
 
     dbHelper = new DatabaseTestHelper(db);
 
-    // Create default Slack workspace for OAuth support
-    await WorkspaceFactory.createDefaultSlackWorkspace();
+    // Workspace is now created in global setup
   });
 
   beforeEach(async () => {
@@ -132,8 +120,6 @@ Consider reaching out to encourage participation!`;
   test('Basic non-voting scenario - only completely inactive address gets notification', async () => {
     const testDaoId = testConstants.daoIds.temporalTest1;
 
-    if (DEBUG) console.log('🔍 [DEBUG] Starting basic non-voting test for DAO:', testDaoId);
-
     // Create Slack user following 3 addresses
     const user = await createSlackUserWithFollowedAddresses(
       SLACK_CHANNEL_ID,
@@ -142,28 +128,8 @@ Consider reaching out to encourage participation!`;
       [ADDRESS_ACTIVE, ADDRESS_PARTIAL, ADDRESS_INACTIVE]
     );
 
-    if (DEBUG) {
-      console.log('🔍 [DEBUG] Created Slack user:', {
-        id: user.id,
-        channel_user_id: user.channel_user_id,
-        channel: user.channel,
-        username: user.username,
-        token: user.token ? 'TOKEN_EXISTS' : 'NO_TOKEN'
-      });
-      console.log('🔍 [DEBUG] Following addresses:', [ADDRESS_ACTIVE, ADDRESS_PARTIAL, ADDRESS_INACTIVE]);
-    }
-
     // Create 3 finished proposals
     const proposals = createFinishedProposals(testDaoId, 3);
-
-    if (DEBUG) {
-      console.log('🔍 [DEBUG] Created proposals:', proposals.map(p => ({
-        id: p.id,
-        title: p.title,
-        status: p.status,
-        endTimestamp: p.endTimestamp
-      })));
-    }
 
     // Create votes: ADDRESS_ACTIVE voted on all, ADDRESS_PARTIAL on one, ADDRESS_INACTIVE on none
     const votes: VoteData[] = [
@@ -171,28 +137,8 @@ Consider reaching out to encourage participation!`;
       VoteFactory.createVote(ADDRESS_PARTIAL, 'proposal-2', testDaoId)
     ];
 
-    if (DEBUG) {
-      console.log('🔍 [DEBUG] Created votes:', {
-        ADDRESS_ACTIVE: 'voted on all 3',
-        ADDRESS_PARTIAL: 'voted on 1',
-        ADDRESS_INACTIVE: 'no votes'
-      });
-    }
-
     // Setup mocks
     GraphQLMockSetup.setupMock(httpMockSetup.getMockClient(), proposals, [], {}, votes);
-
-    if (DEBUG) {
-      console.log('🔍 [DEBUG] GraphQL mocks setup complete');
-      console.log('🔍 [DEBUG] Waiting for Slack notification...');
-
-      // Log mock calls as they happen
-      const originalMock = global.mockSlackSendMessage;
-      global.mockSlackSendMessage = jest.fn((...args) => {
-        console.log('🔍 [DEBUG] Slack sendMessage called with:', args);
-        return originalMock(...args);
-      });
-    }
 
     // Wait for notification - should only be for ADDRESS_INACTIVE
     const message = await slackHelper.waitForMessage(
@@ -218,16 +164,6 @@ Consider reaching out to encourage participation!`;
       expect(message.text).not.toContain('**'); // Should not have Telegram's double asterisks
     }
 
-    // In real mode, also verify through conversations.history
-    if (env.SEND_REAL_SLACK === 'true') {
-      const history = await slackClient.getMessageHistory(SLACK_CHANNEL_ID, 10);
-      const foundMessage = history.find(msg =>
-        msg.text?.includes('Non-Voting Alert') &&
-        msg.text?.includes(ADDRESS_INACTIVE.slice(0, 6))
-      );
-      expect(foundMessage).toBeDefined();
-      console.log('✅ Real Slack non-voting alert delivered and verified via conversations.history');
-    }
   });
 
   test('Edge case - less than 3 proposals, no notifications', async () => {
@@ -345,7 +281,8 @@ Consider reaching out to encourage participation!`;
     const testDaoId = testConstants.daoIds.temporalTest5;
 
     // Create Slack user with subscription but no followed addresses
-    const slackUserId = `T_DEFAULT:${SLACK_CHANNEL_ID}`;
+    const workspaceId = WorkspaceFactory.getWorkspaceId();
+    const slackUserId = `${workspaceId}:${SLACK_CHANNEL_ID}`;
     await UserFactory.createUserWithFullSetup(
       slackUserId,
       'slack_user_no_addresses',

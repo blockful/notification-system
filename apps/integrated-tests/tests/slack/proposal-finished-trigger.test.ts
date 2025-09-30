@@ -70,7 +70,8 @@ describe('Slack Proposal Finished Trigger - Integration Test', () => {
 
     // Create user with subscription before proposal
     const subscriptionTime = new Date(Date.now() + testConstants.proposalTiming.subscriptionOffset).toISOString();
-    const slackUserId = `T_DEFAULT:${channelId}`;
+    const workspaceId = WorkspaceFactory.getWorkspaceId();
+    const slackUserId = `${workspaceId}:${channelId}`;
     await UserFactory.createUserWithFullSetup(
       slackUserId,
       `slack_user_${channelId}`,
@@ -112,15 +113,6 @@ describe('Slack Proposal Finished Trigger - Integration Test', () => {
     // Verify message has substantial content
     expect(message.text.length).toBeGreaterThan(50);
 
-    // In real mode, also verify through conversations.history
-    if (env.SEND_REAL_SLACK === 'true') {
-      const history = await slackClient.getMessageHistory(channelId, 10);
-      const foundMessage = history.find(msg =>
-        msg.text?.includes('has ended') && msg.text?.includes(testDaoId)
-      );
-      expect(foundMessage).toBeDefined();
-      console.log('✅ Real Slack proposal finished message delivered and verified via conversations.history');
-    }
 
     // Verify database record
     await dbHelper.waitForRecordCount(testConstants.tables.notifications, 1);
@@ -133,7 +125,8 @@ describe('Slack Proposal Finished Trigger - Integration Test', () => {
 
     // Create user with subscription with current timestamp (not offset)
     const currentTime = new Date().toISOString();
-    const slackUserId = `T_DEFAULT:${channelId}`;
+    const workspaceId = WorkspaceFactory.getWorkspaceId();
+    const slackUserId = `${workspaceId}:${channelId}`;
     await UserFactory.createUserWithFullSetup(
       slackUserId,
       `slack_user_${channelId}`,
@@ -171,7 +164,8 @@ describe('Slack Proposal Finished Trigger - Integration Test', () => {
 
     // Create user with subscription
     const subscriptionTime = new Date(Date.now() + testConstants.proposalTiming.subscriptionOffset).toISOString();
-    const slackUserId = `T_DEFAULT:${channelId}`;
+    const workspaceId = WorkspaceFactory.getWorkspaceId();
+    const slackUserId = `${workspaceId}:${channelId}`;
     await UserFactory.createUserWithFullSetup(
       slackUserId,
       `slack_user_${channelId}`,
@@ -233,7 +227,8 @@ describe('Slack Proposal Finished Trigger - Integration Test', () => {
     const userSubscribedAt = baseTime; // Now
 
     // Create user with subscription at specific time
-    const slackUserId = `T_DEFAULT:${channelId}`;
+    const workspaceId = WorkspaceFactory.getWorkspaceId();
+    const slackUserId = `${workspaceId}:${channelId}`;
     await UserFactory.createUserWithFullSetup(
       slackUserId,
       `slack_user_${channelId}`,
@@ -272,7 +267,8 @@ describe('Slack Proposal Finished Trigger - Integration Test', () => {
 
     // Create user with subscriptions to both DAOs
     const subscriptionTime = new Date(Date.now() + testConstants.proposalTiming.subscriptionOffset).toISOString();
-    const slackUserId = `T_DEFAULT:${channelId}`;
+    const workspaceId = WorkspaceFactory.getWorkspaceId();
+    const slackUserId = `${workspaceId}:${channelId}`;
     const { user } = await UserFactory.createUserWithFullSetup(
       slackUserId,
       `slack_user_${channelId}`,

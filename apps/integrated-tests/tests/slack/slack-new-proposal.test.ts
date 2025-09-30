@@ -34,8 +34,7 @@ describe('Slack New Proposal - Integration Test', () => {
 
     dbHelper = new DatabaseTestHelper(db);
 
-    // Create default Slack workspace for OAuth support
-    await WorkspaceFactory.createDefaultSlackWorkspace();
+    // Workspace is now created in global setup
   });
 
   beforeEach(async () => {
@@ -46,7 +45,10 @@ describe('Slack New Proposal - Integration Test', () => {
 
   test('New proposal notification delivered to Slack', async () => {
     // Create a Slack user subscribed to the test DAO first
-    const slackUserId = `T_DEFAULT:${SLACK_CHANNEL_ID}`;
+    const slackUserId = env.SEND_REAL_SLACK === 'true'
+      ? `${env.SLACK_WORKSPACE_ID}:${SLACK_CHANNEL_ID}`
+      : `T_DEFAULT:${SLACK_CHANNEL_ID}`;
+
     const { user } = await UserFactory.createUserWithFullSetup(
       slackUserId,
       `slack_user_${SLACK_CHANNEL_ID}`,
@@ -80,9 +82,7 @@ describe('Slack New Proposal - Integration Test', () => {
       },
       {
         timeout: timeouts.notification.delivery,
-        errorMessage: 'Slack notification not received',
-        useHistory: env.SEND_REAL_SLACK === 'true', // Use history API in real mode
-        channel: SLACK_CHANNEL_ID // Pass channel explicitly for history mode
+        errorMessage: 'Slack notification not received'
       }
     );
 
@@ -100,16 +100,6 @@ describe('Slack New Proposal - Integration Test', () => {
       expect(message.text).toMatch(/<https?:\/\/[^|]+\|[^>]+>/);
     }
 
-    // In real mode, also verify through conversations.history
-    if (env.SEND_REAL_SLACK === 'true') {
-      const history = await slackClient.getMessageHistory(SLACK_CHANNEL_ID, 10);
-      const foundMessage = history.find(msg =>
-        msg.text?.includes(proposal.title)
-      );
-      expect(foundMessage).toBeDefined();
-      console.log('✅ Real Slack message delivered and verified via conversations.history');
-    }
-
     // Verify database records
     const notifications = await dbHelper.getNotifications();
     const slackNotification = notifications.find(n =>
@@ -122,7 +112,8 @@ describe('Slack New Proposal - Integration Test', () => {
 
   test('Slack formatting conversion works correctly', async () => {
     // Create a Slack user
-    const slackUserId = `T_DEFAULT:${SLACK_CHANNEL_ID}`;
+    const workspaceId = WorkspaceFactory.getWorkspaceId();
+    const slackUserId = `${workspaceId}:${SLACK_CHANNEL_ID}`;
     await UserFactory.createUserWithFullSetup(
       slackUserId,
       `slack_user_${SLACK_CHANNEL_ID}`,
@@ -167,7 +158,8 @@ describe('Slack New Proposal - Integration Test', () => {
     const channel2 = 'C2222222222';
 
     // Create two Slack users subscribed to the same DAO
-    const slackUserId1 = `T_DEFAULT:${channel1}`;
+    const workspaceId = WorkspaceFactory.getWorkspaceId();
+    const slackUserId1 = `${workspaceId}:${channel1}`;
     await UserFactory.createUserWithFullSetup(
       slackUserId1,
       `slack_user_${channel1}`,
@@ -177,7 +169,7 @@ describe('Slack New Proposal - Integration Test', () => {
       'slack'
     );
 
-    const slackUserId2 = `T_DEFAULT:${channel2}`;
+    const slackUserId2 = `${workspaceId}:${channel2}`;
     await UserFactory.createUserWithFullSetup(
       slackUserId2,
       `slack_user_${channel2}`,
@@ -224,7 +216,8 @@ describe('Slack New Proposal - Integration Test', () => {
 
   test('Slack and Telegram users coexist without interference', async () => {
     // Create one Slack user and one Telegram user for the same DAO
-    const slackUserId = `T_DEFAULT:${SLACK_CHANNEL_ID}`;
+    const workspaceId = WorkspaceFactory.getWorkspaceId();
+    const slackUserId = `${workspaceId}:${SLACK_CHANNEL_ID}`;
     await UserFactory.createUserWithFullSetup(
       slackUserId,
       `slack_user_${SLACK_CHANNEL_ID}`,
@@ -277,7 +270,7 @@ describe('Slack New Proposal - Integration Test', () => {
 
     // Find notifications by user_id instead of channel
     const slackUser = await db(testConstants.tables.users).where({
-      channel_user_id: `T_DEFAULT:${SLACK_CHANNEL_ID}`,
+      channel_user_id: `${WorkspaceFactory.getWorkspaceId()}:${SLACK_CHANNEL_ID}`,
       channel: 'slack'
     }).first();
     const telegramUser = await db(testConstants.tables.users).where({

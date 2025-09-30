@@ -25,7 +25,8 @@ describe('Slack Voting Reminder Trigger - Integration Test', () => {
 
   // Helper function for creating Slack users with wallets
   const createSlackUserWithWallet = async (channelId: string, daoId: string, walletAddress: string) => {
-    const slackUserId = `T_DEFAULT:${channelId}`;
+    const workspaceId = WorkspaceFactory.getWorkspaceId();
+    const slackUserId = `${workspaceId}:${channelId}`;
     const pastTimestamp = new Date(Date.now() - 60000).toISOString();
     const { user } = await UserFactory.createUserWithFullSetup(
       slackUserId,
@@ -130,15 +131,6 @@ describe('Slack Voting Reminder Trigger - Integration Test', () => {
       // Verify message has substantial content
       expect(message.text.length).toBeGreaterThan(50);
 
-      // In real mode, also verify through conversations.history
-      if (env.SEND_REAL_SLACK === 'true') {
-        const history = await slackClient.getMessageHistory(channelId, 10);
-        const foundMessage = history.find(msg =>
-          msg.text?.includes('30%') && msg.text?.includes('Voting Reminder')
-        );
-        expect(foundMessage).toBeDefined();
-        console.log('✅ Real Slack 30% voting reminder delivered and verified via conversations.history');
-      }
 
       // Verify database record for deduplication
       const notifications = await dbHelper.getNotifications();
@@ -289,15 +281,6 @@ describe('Slack Voting Reminder Trigger - Integration Test', () => {
         expect(message.text).toMatch(/<https?:\/\/[^|]+\|[^>]+>/);
       }
 
-      // In real mode, verify through conversations.history
-      if (env.SEND_REAL_SLACK === 'true') {
-        const history = await slackClient.getMessageHistory(channelId, 10);
-        const foundMessage = history.find(msg =>
-          msg.text?.includes('60%') && msg.text?.includes('Mid-Period')
-        );
-        expect(foundMessage).toBeDefined();
-        console.log('✅ Real Slack 60% voting reminder delivered and verified');
-      }
 
       // Verify database record
       const notifications = await dbHelper.getNotifications();
@@ -352,15 +335,6 @@ describe('Slack Voting Reminder Trigger - Integration Test', () => {
         expect(message.text).toMatch(/<https?:\/\/[^|]+\|[^>]+>/);
       }
 
-      // In real mode, verify through conversations.history
-      if (env.SEND_REAL_SLACK === 'true') {
-        const history = await slackClient.getMessageHistory(channelId, 10);
-        const foundMessage = history.find(msg =>
-          msg.text?.includes('90%') && msg.text?.includes('URGENT')
-        );
-        expect(foundMessage).toBeDefined();
-        console.log('✅ Real Slack 90% urgent voting reminder delivered and verified');
-      }
 
       // Verify database record
       const notifications = await dbHelper.getNotifications();

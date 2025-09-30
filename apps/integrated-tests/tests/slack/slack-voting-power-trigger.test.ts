@@ -26,7 +26,8 @@ describe('Slack Voting Power Trigger - Integration Test', () => {
 
   // Helper function for creating Slack users with wallets
   const createSlackUserWithWallet = async (channelId: string, daoId: string, walletAddress: string) => {
-    const slackUserId = `T_DEFAULT:${channelId}`;
+    const workspaceId = WorkspaceFactory.getWorkspaceId();
+    const slackUserId = `${workspaceId}:${channelId}`;
     const pastTimestamp = new Date(Date.now() - 60000).toISOString();
     const { user } = await UserFactory.createUserWithFullSetup(
       slackUserId,

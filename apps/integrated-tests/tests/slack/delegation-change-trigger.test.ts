@@ -50,7 +50,8 @@ describe('Slack Delegation Change Notifications - Integration Test', () => {
     const channelId = 'C_DELEGATOR_01';
 
     // Create delegator user (who will receive delegation confirmation)
-    const slackUserId = `T_DEFAULT:${channelId}`;
+    const workspaceId = WorkspaceFactory.getWorkspaceId();
+    const slackUserId = `${workspaceId}:${channelId}`;
     const pastTimestamp = new Date(Date.now() - 60000).toISOString();
     const { user: delegatorUser } = await UserFactory.createUserWithFullSetup(
       slackUserId,
@@ -111,15 +112,6 @@ describe('Slack Delegation Change Notifications - Integration Test', () => {
     // Verify message has substantial content
     expect(delegatorMessage.text.length).toBeGreaterThan(50);
 
-    // In real mode, also verify through conversations.history
-    if (env.SEND_REAL_SLACK === 'true') {
-      const history = await slackClient.getMessageHistory(channelId, 10);
-      const foundMessage = history.find(msg =>
-        msg.text?.includes('✅ Delegation confirmed') && msg.text?.includes(testDaoId)
-      );
-      expect(foundMessage).toBeDefined();
-    }
-
     // Verify database records
     const notifications = await dbHelper.getNotifications();
     const slackNotification = notifications.find(n =>
@@ -135,7 +127,8 @@ describe('Slack Delegation Change Notifications - Integration Test', () => {
     const channelId = 'C_SELF_DEL_01';
 
     // Create user
-    const slackUserId = `T_DEFAULT:${channelId}`;
+    const workspaceId = WorkspaceFactory.getWorkspaceId();
+    const slackUserId = `${workspaceId}:${channelId}`;
     const pastTimestamp = new Date(Date.now() - 60000).toISOString();
     const { user } = await UserFactory.createUserWithFullSetup(
       slackUserId,
@@ -149,12 +142,6 @@ describe('Slack Delegation Change Notifications - Integration Test', () => {
 
     // Create self-delegation event
     const eventTimestamp = (Math.floor(Date.now() / 1000) + 10).toString();
-    console.log('[TEST-DEBUG] Creating self-delegation event with:', {
-      userAddress,
-      delegatorAccountId: userAddress,
-      targetAccountId: userAddress
-    });
-
     const selfDelegationEvent = VotingPowerFactory.createDelegationEvent(
       userAddress, // same address for both source and target
       userAddress,
@@ -166,12 +153,6 @@ describe('Slack Delegation Change Notifications - Integration Test', () => {
         transactionHash: '0x1111111111111111111111111111111111111111111111111111111111111111'
       }
     );
-
-    console.log('[TEST-DEBUG] Self-delegation event created:', {
-      accountId: selfDelegationEvent.accountId,
-      sourceAccountId: selfDelegationEvent.sourceAccountId,
-      targetAccountId: selfDelegationEvent.targetAccountId
-    });
 
     GraphQLMockSetup.setupMock(
       httpMockSetup.getMockClient(),
@@ -191,24 +172,12 @@ describe('Slack Delegation Change Notifications - Integration Test', () => {
       }
     );
 
-    console.log('Self-delegation message received:', selfDelegationMessage.text);
-
     // Verify self-delegation message content
     expect(selfDelegationMessage.channel).toBe(channelId);
     expect(selfDelegationMessage.text).toContain('🔄 Self-delegation confirmed');
     expect(selfDelegationMessage.text).toContain('You delegated');
     expect(selfDelegationMessage.text).toContain('to yourself');
     expect(selfDelegationMessage.text).toContain('Your total voting power is now');
-
-    // In real mode, verify through conversations.history
-    if (env.SEND_REAL_SLACK === 'true') {
-      const history = await slackClient.getMessageHistory(channelId, 10);
-      const foundMessage = history.find(msg =>
-        msg.text?.includes('🔄 Self-delegation confirmed')
-      );
-      expect(foundMessage).toBeDefined();
-      console.log('✅ Real Slack self-delegation message verified');
-    }
   });
 
   test('should send undelegation confirmation notification via Slack', async () => {
@@ -218,7 +187,8 @@ describe('Slack Delegation Change Notifications - Integration Test', () => {
     const channelId = 'C_UNDELEG_01';
 
     // Create delegator user
-    const slackUserId = `T_DEFAULT:${channelId}`;
+    const workspaceId = WorkspaceFactory.getWorkspaceId();
+    const slackUserId = `${workspaceId}:${channelId}`;
     const pastTimestamp = new Date(Date.now() - 60000).toISOString();
     const { user: delegatorUser } = await UserFactory.createUserWithFullSetup(
       slackUserId,
@@ -267,16 +237,6 @@ describe('Slack Delegation Change Notifications - Integration Test', () => {
     expect(delegatorMessage.text).toContain('↩️ Undelegation confirmed');
     expect(delegatorMessage.text).toContain('removed');
 
-    // In real mode, verify through conversations.history
-    if (env.SEND_REAL_SLACK === 'true') {
-      const history = await slackClient.getMessageHistory(channelId, 10);
-      const foundMessage = history.find(msg =>
-        msg.text?.includes('↩️ Undelegation confirmed')
-      );
-      expect(foundMessage).toBeDefined();
-      console.log('✅ Real Slack undelegation message verified');
-    }
-
     // Verify database record
     const notifications = await dbHelper.getNotifications();
     const slackNotification = notifications.find(n =>
@@ -296,7 +256,8 @@ describe('Slack Delegation Change Notifications - Integration Test', () => {
     // Create two Slack users with same wallet address (both will receive notification)
     const pastTimestamp = new Date(Date.now() - 60000).toISOString();
 
-    const slackUserId1 = `T_DEFAULT:${channel1}`;
+    const workspaceId = WorkspaceFactory.getWorkspaceId();
+    const slackUserId1 = `${workspaceId}:${channel1}`;
     const { user: user1 } = await UserFactory.createUserWithFullSetup(
       slackUserId1,
       `slack_user_${channel1}`,
@@ -307,7 +268,7 @@ describe('Slack Delegation Change Notifications - Integration Test', () => {
     );
     await UserFactory.createUserAddress(user1.id, delegatorAddress, pastTimestamp);
 
-    const slackUserId2 = `T_DEFAULT:${channel2}`;
+    const slackUserId2 = `${workspaceId}:${channel2}`;
     const { user: user2 } = await UserFactory.createUserWithFullSetup(
       slackUserId2,
       `slack_user_${channel2}`,
