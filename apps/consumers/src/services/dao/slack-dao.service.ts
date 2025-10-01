@@ -151,7 +151,7 @@ export class SlackDAOService extends BaseDAOService {
 
       // Get action from session or infer from button callback
       const action = context.session.daoAction ||
-        ((context.body as any).actions?.[0]?.action_id?.includes('unsubscribe')
+        (context.body.actions[0].action_id?.includes('unsubscribe')
           ? 'unsubscribe'
           : 'subscribe');
 
@@ -177,8 +177,8 @@ export class SlackDAOService extends BaseDAOService {
    * Confirm DAO selection changes
    */
   async confirm(context: SlackActionContext, action: 'subscribe' | 'unsubscribe'): Promise<void> {
-    const channelId = (context.body as any).channel?.id;
-    const workspaceId = (context.body as any).team?.id || (context.body as any).user?.team_id;
+    const channelId = context.body.channel?.id;
+    const workspaceId = context.body.team?.id || context.body.user?.team_id;
     const fullUserId = `${workspaceId}:${channelId}`;
 
     try {

@@ -259,8 +259,8 @@ export class SlackWalletService extends BaseWalletService {
    * Toggle wallet selection for removal
    */
   async toggleWalletForRemoval(context: SlackActionContext, address: string): Promise<void> {
-    const channelId = (context.body as any).channel?.id;
-    const workspaceId = (context.body as any).team?.id || (context.body as any).user?.team_id;
+    const channelId = context.body.channel?.id;
+    const workspaceId = context.body.team?.id || context.body.user?.team_id;
     const fullUserId = `${workspaceId}:${channelId}`;
 
     try {
@@ -297,8 +297,8 @@ export class SlackWalletService extends BaseWalletService {
    * Confirm wallet removal
    */
   async confirmRemoval(context: SlackActionContext): Promise<void> {
-    const channelId = (context.body as any).channel?.id;
-    const workspaceId = (context.body as any).team?.id || (context.body as any).user?.team_id;
+    const channelId = context.body.channel?.id;
+    const workspaceId = context.body.team?.id || context.body.user?.team_id;
     const fullUserId = `${workspaceId}:${channelId}`;
 
     try {
