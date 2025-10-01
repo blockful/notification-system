@@ -17,7 +17,7 @@ const db = Knex({
 });
 
 // Repository instances
-const userRepository = new KnexUserRepository(db);
+const userRepository = new KnexUserRepository(db, config.tokenEncryptionKey);
 const preferenceRepository = new KnexPreferenceRepository(db);
 const notificationRepository = new KnexNotificationRepository(db);
 const userAddressRepository = new KnexUserAddressRepository(db);

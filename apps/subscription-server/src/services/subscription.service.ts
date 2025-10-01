@@ -7,10 +7,6 @@ import { IUserRepository, IPreferenceRepository, User } from '../interfaces';
 import { IUserAddressRepository, UserAddress } from '../interfaces/user-address.interface';
 import { WorkspaceService } from './workspace.service';
 
-// Channels that support workspace-based authentication
-const CHANNELS_WITH_WORKSPACES = ['slack'];
-const DEFAULT_WORKSPACE_PREFIX = 'T_DEFAULT';
-
 /**
  * Service class for handling subscription operations
  */
@@ -97,32 +93,12 @@ export class SubscriptionService {
   async getDaoSubscribers(dao: string, eventTimestamp?: string) {
     const preferences = await this.preferenceRepository.findByDao(dao, eventTimestamp);
     const userIds = preferences.map(p => p.user_id);
-    const users = await this.userRepository.findByIds(userIds);
 
-    const subscribers = await this.attachWorkspaceTokens(users);
+    const subscribers = await this.userRepository.findByIdsWithWorkspaceTokens(userIds);
 
     return { subscribers };
   }
 
-  /**
-   * Attaches workspace tokens to users when applicable
-   * @param users - Array of users to process
-   * @returns Users with tokens attached for workspace-enabled channels
-   */
-  private async attachWorkspaceTokens(users: User[]): Promise<User[]> {
-    return Promise.all(users.map(async user => {
-      // Check if channel supports workspaces
-      if (!CHANNELS_WITH_WORKSPACES.includes(user.channel)) return user;
-
-      // Parse workspace ID from format "workspace:user"
-      const [workspaceId, userId] = user.channel_user_id.split(':');
-      if (!userId) return user;
-
-      // Fetch and attach token
-      const token = await this.workspaceService?.getWorkspaceToken(workspaceId);
-      return token ? { ...user, token } : user;
-    }));
-  }
 
   /**
    * Add a wallet address to a user (create new or reactivate existing)
