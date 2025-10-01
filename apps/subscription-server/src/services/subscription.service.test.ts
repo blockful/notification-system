@@ -204,8 +204,8 @@ describe('Subscription Service', () => {
         { user_id: '456', is_active: true }
       ] as UserPreference[];
 
-      // Mock findByIdsWithWorkspaceTokens to return users
-      userRepo.findByIdsWithWorkspaceTokens.mockResolvedValueOnce(mockSubscribers);
+      // Mock findByIds to return users
+      userRepo.findByIds.mockResolvedValueOnce(mockSubscribers);
 
       prefRepo.findByDao.mockResolvedValueOnce(mockPreferences);
 
@@ -219,17 +219,17 @@ describe('Subscription Service', () => {
       expect(result.subscribers[0]).toHaveProperty('is_active');
 
       expect(prefRepo.findByDao).toHaveBeenCalledWith('dao123', undefined);
-      expect(userRepo.findByIdsWithWorkspaceTokens).toHaveBeenCalledWith(['123', '456']);
+      expect(userRepo.findByIds).toHaveBeenCalledWith(['123', '456']);
     });
 
     test('should return empty array when no subscribers exist', async () => {
       prefRepo.findByDao.mockResolvedValueOnce([]);
-      userRepo.findByIdsWithWorkspaceTokens.mockResolvedValueOnce([]);
+      userRepo.findByIds.mockResolvedValueOnce([]);
 
       const result = await subscriptionService.getDaoSubscribers('unknown-dao');
 
       expect(result.subscribers).toEqual([]);
-      expect(userRepo.findByIdsWithWorkspaceTokens).toHaveBeenCalledWith([]);
+      expect(userRepo.findByIds).toHaveBeenCalledWith([]);
     });
     
     test('should handle errors properly', async () => {
