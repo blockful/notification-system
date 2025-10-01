@@ -241,6 +241,9 @@ export class SlackBotService implements BotServiceInterface {
   public async sendNotification(payload: NotificationPayload): Promise<string> {
     let processedMessage = payload.message;
 
+    // Convert Telegram markdown to Slack mrkdwn format
+    processedMessage = this.slackClient.convertMarkdownToSlackFormat(processedMessage);
+
     // Process transaction link placeholder
     if (processedMessage.includes('{{txLink}}')) {
       const txUrl = payload.metadata?.transaction
@@ -260,17 +263,17 @@ export class SlackBotService implements BotServiceInterface {
       }
     }
 
-    const [workspaceId, userId] = String(payload.channelUserId).split(':');
+    const [workspaceId, channelId] = String(payload.channelUserId).split(':');
 
-    if (!userId || !workspaceId) {
-      throw new Error('Invalid Slack channel format. Expected "workspace:user"');
+    if (!channelId || !workspaceId) {
+      throw new Error('Invalid Slack channel format. Expected "workspace:channel"');
     }
     if (!payload.bot_token) {
       throw new Error('Slack notification requires workspace OAuth token. No bot_token provided in notification payload.');
     }
 
     const sentMessage = await this.slackClient.sendMessage(
-      userId,
+      channelId,
       processedMessage,
       {
         mrkdwn: true,

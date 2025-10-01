@@ -7,6 +7,9 @@ import { IUserRepository, IPreferenceRepository, User } from '../interfaces';
 import { IUserAddressRepository, UserAddress } from '../interfaces/user-address.interface';
 import { WorkspaceService } from './workspace.service';
 
+// Channels that support workspace-based authentication
+const CHANNELS_WITH_WORKSPACES = ['slack'];
+
 /**
  * Service class for handling subscription operations
  */
@@ -99,6 +102,30 @@ export class SubscriptionService {
     return { subscribers };
   }
 
+  /**
+   * Attaches workspace tokens to users when applicable
+   * @param users - Array of users to process
+   * @returns Users with tokens attached for workspace-enabled channels
+   */
+  private async attachWorkspaceTokens(users: User[]): Promise<User[]> {
+    return Promise.all(users.map(async user => {
+      // Check if channel supports workspaces
+      if (!CHANNELS_WITH_WORKSPACES.includes(user.channel)) {
+        return user;
+      }
+
+      // Parse workspace ID from format "workspace:user"
+      const [workspaceId, userId] = user.channel_user_id.split(':');
+
+      if (!userId) {
+        return user;
+      }
+
+      // Fetch and attach token
+      const token = await this.workspaceService?.getWorkspaceToken(workspaceId);
+      return token ? { ...user, token } : user;
+    }));
+  }
 
   /**
    * Add a wallet address to a user (create new or reactivate existing)
@@ -255,15 +282,18 @@ export class SubscriptionService {
     
     // Fetch all users in one batch
     const users = await this.userRepository.findByIds(userIds);
-    const userMap = new Map(users.map(user => [user.id, user]));
-    
+
+    // Attach workspace tokens for channels that support them (like Slack)
+    const usersWithTokens = await this.attachWorkspaceTokens(users);
+    const userMap = new Map(usersWithTokens.map(user => [user.id, user]));
+
     // Build result mapping addresses to users
     Object.entries(addressGroups).forEach(([address, userIdList]) => {
       result[address] = userIdList
         .map(userId => userMap.get(userId))
         .filter((user): user is User => user !== undefined);
     });
-    
+
     return result;
   }
 
