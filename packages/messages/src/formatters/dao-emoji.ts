@@ -11,7 +11,8 @@ export const daoEmojis = new Map<string, string>([
   ['NOUNS', '🕶️'],   // Nouns
   ['OBOL', '♾️'],    // Obol
   ['LIDO', '💧'],    // Lido
-  ['VIRTUAL', '🤖']  // Virtual
+  ['VIRTUAL', '🤖'],  // Virtual
+  ['SCROLL', '📜']    // Scroll
 ]);
 
 export const defaultDaoEmoji = '🏛️';
