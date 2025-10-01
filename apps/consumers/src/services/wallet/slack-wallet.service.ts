@@ -545,7 +545,7 @@ export class SlackWalletService extends BaseWalletService {
           type: 'button',
           text: {
             type: 'plain_text',
-            text: isSelected ? uiMessages.selection.selected : uiMessages.selection.select,
+            text: isSelected ? 'Selected' : 'Select',
             emoji: true
           },
           style: isSelected ? 'danger' : undefined,
@@ -567,7 +567,7 @@ export class SlackWalletService extends BaseWalletService {
             type: 'button',
             text: {
               type: 'plain_text',
-              text: slackMessages.wallet.confirmRemoval,
+              text: '🗑️ Confirm Removal',
               emoji: true
             },
             style: 'danger',
