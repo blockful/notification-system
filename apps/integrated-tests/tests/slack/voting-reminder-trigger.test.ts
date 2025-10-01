@@ -71,9 +71,6 @@ describe('Slack Voting Reminder Trigger - Integration Test', () => {
     slackHelper = new SlackTestHelper(global.mockSlackSendMessage, slackClient);
 
     dbHelper = new DatabaseTestHelper(db);
-
-    // Create default Slack workspace for OAuth support
-    await WorkspaceFactory.createDefaultSlackWorkspace();
   });
 
   afterEach(async () => {
@@ -82,8 +79,6 @@ describe('Slack Voting Reminder Trigger - Integration Test', () => {
 
   describe('30% Reminder Threshold', () => {
     test('should send reminder when 30% of voting period has elapsed and user has not voted via Slack', async () => {
-      // Create default Slack workspace for OAuth support
-
       const channelId = 'C_REM_30_01';
       const userAddress = '0x1234567890abcdef1234567890abcdef12345678';
 
@@ -139,8 +134,6 @@ describe('Slack Voting Reminder Trigger - Integration Test', () => {
     });
 
     test('should NOT send reminder when user has already voted via Slack', async () => {
-      // Create default Slack workspace for OAuth support
-
       const channelId = 'C_REM_30_VTD';
       const userAddress = '0x1234567890abcdef1234567890abcdef12345678';
 
@@ -189,8 +182,6 @@ describe('Slack Voting Reminder Trigger - Integration Test', () => {
     });
 
     test('should NOT send duplicate reminder for same threshold via Slack', async () => {
-      // Create default Slack workspace for OAuth support
-
       const channelId = 'C_REM_30_DUP';
       const userAddress = '0x1234567890abcdef1234567890abcdef12345678';
 
@@ -237,8 +228,6 @@ describe('Slack Voting Reminder Trigger - Integration Test', () => {
 
   describe('60% Reminder Threshold', () => {
     test('should send reminder when 60% of voting period has elapsed via Slack', async () => {
-      // Create default Slack workspace for OAuth support
-
       const channelId = 'C_REM_60_01';
       const userAddress = '0x1234567890abcdef1234567890abcdef12345678';
 
@@ -291,8 +280,6 @@ describe('Slack Voting Reminder Trigger - Integration Test', () => {
 
   describe('90% Reminder Threshold', () => {
     test('should send urgent reminder when 90% of voting period has elapsed via Slack', async () => {
-      // Create default Slack workspace for OAuth support
-
       const channelId = 'C_REM_90_01';
       const userAddress = '0x1234567890abcdef1234567890abcdef12345678';
 
@@ -343,8 +330,6 @@ describe('Slack Voting Reminder Trigger - Integration Test', () => {
     });
 
     test('should calculate and display time remaining correctly via Slack', async () => {
-      // Create default Slack workspace for OAuth support
-
       const channelId = 'C_REM_TIME';
       const userAddress = '0x1234567890abcdef1234567890abcdef12345678';
 
@@ -393,8 +378,6 @@ describe('Slack Voting Reminder Trigger - Integration Test', () => {
 
   describe('Multiple Thresholds', () => {
     test('should send different reminders at different thresholds for same proposal via Slack', async () => {
-      // Create default Slack workspace for OAuth support
-
       const channelId = 'C_REM_MULTI';
       const userAddress = '0x1234567890abcdef1234567890abcdef12345678';
 
@@ -464,8 +447,6 @@ describe('Slack Voting Reminder Trigger - Integration Test', () => {
 
   describe('Edge Cases', () => {
     test('should handle proposals with no title gracefully via Slack', async () => {
-      // Create default Slack workspace for OAuth support
-
       const channelId = 'C_REM_NOTIT';
       const userAddress = '0x1234567890abcdef1234567890abcdef12345678';
 
@@ -500,8 +481,6 @@ describe('Slack Voting Reminder Trigger - Integration Test', () => {
     });
 
     test('should not send reminder for proposals below threshold via Slack', async () => {
-      // Create default Slack workspace for OAuth support
-
       const channelId = 'C_REM_BELOW';
       const userAddress = '0x1234567890abcdef1234567890abcdef12345678';
 
@@ -540,8 +519,6 @@ describe('Slack Voting Reminder Trigger - Integration Test', () => {
     });
 
     test('should not send reminder for non-subscribed users via Slack', async () => {
-      // Create default Slack workspace for OAuth support
-
       const subscribedChannelId = 'C_REM_SUB';
       const nonSubscribedChannelId = 'C_REM_NOSUB';
       const subscribedAddress = '0x1234567890abcdef1234567890abcdef12345678';

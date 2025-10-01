@@ -21,7 +21,6 @@ describe('Slack Delegation Change Notifications - Integration Test', () => {
   let dbHelper: DatabaseTestHelper;
 
   // Test configuration
-  const SLACK_CHANNEL_ID = env.SLACK_TEST_CHANNEL_ID || 'C1234567890';
   const testDaoId = testConstants.daoIds.votingPowerTest;
 
   beforeAll(async () => {
@@ -33,9 +32,6 @@ describe('Slack Delegation Change Notifications - Integration Test', () => {
     slackHelper = new SlackTestHelper(global.mockSlackSendMessage, slackClient);
 
     dbHelper = new DatabaseTestHelper(db);
-
-    // Create default Slack workspace for OAuth support
-    await WorkspaceFactory.createDefaultSlackWorkspace();
   });
 
   afterEach(async () => {

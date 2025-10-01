@@ -113,8 +113,6 @@ Consider reaching out to encourage participation!`;
 
   beforeEach(async () => {
     await TestCleanup.cleanupBetweenTests();
-
-    // Create default Slack workspace for OAuth support
   });
 
   test('Basic non-voting scenario - only completely inactive address gets notification', async () => {

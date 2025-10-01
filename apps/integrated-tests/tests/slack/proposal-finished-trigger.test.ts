@@ -54,9 +54,6 @@ describe('Slack Proposal Finished Trigger - Integration Test', () => {
     slackHelper = new SlackTestHelper(global.mockSlackSendMessage, slackClient);
 
     dbHelper = new DatabaseTestHelper(db);
-
-    // Create default Slack workspace for OAuth support
-    await WorkspaceFactory.createDefaultSlackWorkspace();
   });
 
   afterEach(async () => {
