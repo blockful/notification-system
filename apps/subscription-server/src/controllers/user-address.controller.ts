@@ -177,8 +177,7 @@ export class UserAddressController {
             id: z.string(),
             channel: z.string(),
             channel_user_id: z.string(),
-            created_at: z.string(),
-            token: z.string().optional()
+            created_at: z.string()
           })))
         }
       }

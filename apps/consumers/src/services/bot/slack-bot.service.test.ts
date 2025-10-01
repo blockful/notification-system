@@ -18,8 +18,7 @@ describe('SlackBotService', () => {
   beforeEach(() => {
     mockSlackClient = {
       sendMessage: jest.fn(),
-      setupHandlers: jest.fn(),
-      convertMarkdownToSlackFormat: jest.fn()
+      setupHandlers: jest.fn()
     };
 
     mockExplorerService = {
@@ -52,9 +51,6 @@ describe('SlackBotService', () => {
         channel: 'U1234567890',
         text: 'Test notification message'
       });
-
-      // Mock the markdown conversion function to return processed text
-      mockSlackClient.convertMarkdownToSlackFormat.mockImplementation((text: string) => text);
     });
 
     it('should send notification successfully', async () => {

@@ -60,9 +60,9 @@ export class SlackWalletService extends BaseWalletService {
    * List user's current wallets
    */
   async listWallets(context: SlackCommandContext): Promise<void> {
-    const channelId = context.body.channel_id;
+    const userId = context.body.user_id;
     const workspaceId = context.body.team_id;
-    const fullUserId = `${workspaceId}:${channelId}`;
+    const fullUserId = `${workspaceId}:${userId}`;
 
     try {
       const wallets = await this.getUserWalletsWithDisplayNames(fullUserId, 'slack');
@@ -165,9 +165,9 @@ export class SlackWalletService extends BaseWalletService {
    * Supports adding multiple addresses at once (max 10)
    */
   async processInlineWalletAdd(context: SlackCommandContext, walletAddress: string): Promise<void> {
-    const channelId = context.body.channel_id;
+    const userId = context.body.user_id;
     const workspaceId = context.body.team_id;
-    const fullUserId = `${workspaceId}:${channelId}`;
+    const fullUserId = `${workspaceId}:${userId}`;
     const inputs = walletAddress.trim().split(/\s+/).filter(a => a.length > 0);
 
     // Validate limit
@@ -311,9 +311,9 @@ export class SlackWalletService extends BaseWalletService {
    * Start the remove wallet flow
    */
   async startRemoveWallet(context: SlackCommandContext): Promise<void> {
-    const channelId = context.body.channel_id;
+    const userId = context.body.user_id;
     const workspaceId = context.body.team_id;
-    const fullUserId = `${workspaceId}:${channelId}`;
+    const fullUserId = `${workspaceId}:${userId}`;
 
     try {
       const wallets = await this.getUserWalletsWithDisplayNames(fullUserId, 'slack');
@@ -418,9 +418,9 @@ export class SlackWalletService extends BaseWalletService {
    * Toggle wallet selection for removal
    */
   async toggleWalletForRemoval(context: SlackActionContext, address: string): Promise<void> {
-    const channelId = context.body.channel?.id;
-    const workspaceId = context.body.team?.id || context.body.user?.team_id;
-    const fullUserId = `${workspaceId}:${channelId}`;
+    const userId = context.body.user.id;
+    const workspaceId = (context.body as any).team?.id || (context.body as any).user?.team_id;
+    const fullUserId = `${workspaceId}:${userId}`;
 
     try {
       await context.ack();
@@ -456,9 +456,9 @@ export class SlackWalletService extends BaseWalletService {
    * Confirm wallet removal
    */
   async confirmRemoval(context: SlackActionContext): Promise<void> {
-    const channelId = context.body.channel?.id;
-    const workspaceId = context.body.team?.id || context.body.user?.team_id;
-    const fullUserId = `${workspaceId}:${channelId}`;
+    const userId = context.body.user.id;
+    const workspaceId = (context.body as any).team?.id || (context.body as any).user?.team_id;
+    const fullUserId = `${workspaceId}:${userId}`;
 
     try {
       await context.ack();

@@ -1,5 +1,5 @@
-import { SlackDAOService } from './slack-dao.service';
-import { SubscriptionAPIService } from '../subscription-api.service';
+import { SlackDAOService } from './dao/slack-dao.service';
+import { SubscriptionAPIService } from './subscription-api.service';
 import { AnticaptureClient } from '@notification-system/anticapture-client';
 
 describe('SlackDAOService - User ID Validation', () => {
@@ -8,7 +8,7 @@ describe('SlackDAOService - User ID Validation', () => {
   let anticaptureClientMock: jest.Mocked<AnticaptureClient>;
   let subscriptionApi: SubscriptionAPIService;
   let axiosPostMock: jest.Mock;
-  
+
   beforeEach(() => {
     // Create mocks
     subscriptionApiMock = {

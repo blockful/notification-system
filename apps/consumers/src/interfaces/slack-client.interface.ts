@@ -59,11 +59,4 @@ export interface SlackClientInterface {
    * @returns true if bot is active
    */
   isRunning?(): boolean;
-
-  /**
-   * Convert Telegram markdown to Slack mrkdwn format
-   * @param text Text with Telegram markdown formatting
-   * @returns Text with Slack mrkdwn formatting
-   */
-  convertMarkdownToSlackFormat(text: string): string;
 }

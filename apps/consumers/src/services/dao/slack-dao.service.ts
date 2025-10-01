@@ -21,9 +21,9 @@ export class SlackDAOService extends BaseDAOService {
    * Initialize DAO selection interface with Block Kit UI
    */
   async initialize(context: SlackCommandContext, action: 'subscribe' | 'unsubscribe' = 'subscribe'): Promise<void> {
-    const channelId = context.body.channel_id;
+    const userId = context.body.user_id;
     const workspaceId = context.body.team_id;
-    const fullUserId = `${workspaceId}:${channelId}`;
+    const fullUserId = `${workspaceId}:${userId}`;
 
     try {
       await context.ack();
@@ -79,9 +79,9 @@ export class SlackDAOService extends BaseDAOService {
    * List user's current DAO subscriptions
    */
   async listSubscriptions(context: SlackCommandContext): Promise<void> {
-    const channelId = context.body.channel_id;
+    const userId = context.body.user_id;
     const workspaceId = context.body.team_id;
-    const fullUserId = `${workspaceId}:${channelId}`;
+    const fullUserId = `${workspaceId}:${userId}`;
 
     try {
       await context.ack();
@@ -152,7 +152,7 @@ export class SlackDAOService extends BaseDAOService {
 
       // Get action from session or infer from button callback
       const action = context.session.daoAction ||
-        (context.body.actions[0].action_id?.includes('unsubscribe')
+        ((context.body as any).actions?.[0]?.action_id?.includes('unsubscribe')
           ? 'unsubscribe'
           : 'subscribe');
 
@@ -178,9 +178,9 @@ export class SlackDAOService extends BaseDAOService {
    * Confirm DAO selection changes
    */
   async confirm(context: SlackActionContext, action: 'subscribe' | 'unsubscribe'): Promise<void> {
-    const channelId = context.body.channel?.id;
-    const workspaceId = context.body.team?.id || context.body.user?.team_id;
-    const fullUserId = `${workspaceId}:${channelId}`;
+    const userId = context.body.user.id;
+    const workspaceId = (context.body as any).team?.id || (context.body as any).user?.team_id;
+    const fullUserId = `${workspaceId}:${userId}`;
 
     try {
       await context.ack();

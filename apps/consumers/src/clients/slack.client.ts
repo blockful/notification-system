@@ -89,14 +89,12 @@ export class SlackClient implements SlackClientInterface {
    * @param text Text with Telegram markdown formatting
    * @returns Text with Slack mrkdwn formatting
    */
-  public convertMarkdownToSlackFormat(text: string): string {
+  private convertMarkdownToSlackFormat(text: string): string {
     return text
       // Convert [text](url) links to <url|text> format
       .replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<$2|$1>')
       // Convert **bold** to *bold*
-      .replace(/\*\*([^*]+)\*\*/g, '*$1*')
-      // Convert __underline__ to _underline_
-      .replace(/__(.*?)__/g, '_$1_');
+      .replace(/\*\*([^*]+)\*\*/g, '*$1*');
   }
 
   /**
@@ -107,8 +105,8 @@ export class SlackClient implements SlackClientInterface {
     handler: (context: SlackCommandContext) => Promise<void>
   ): void {
     this.boltApp.command(command, async (args) => {
-      const channelId = args.body.channel_id;
-      const session = this.sessionStorage.get(channelId);
+      const userId = args.body.user_id;
+      const session = this.sessionStorage.get(userId);
       const context: SlackCommandContext = {
         body: args.body,
         session,
@@ -120,7 +118,7 @@ export class SlackClient implements SlackClientInterface {
 
       try {
         await handler(context);
-        this.sessionStorage.set(channelId, context.session);
+        this.sessionStorage.set(userId, context.session);
       } catch (error) {
         console.error(`Error handling command ${command}:`, error);
         await args.ack();
@@ -140,8 +138,8 @@ export class SlackClient implements SlackClientInterface {
     handler: (context: SlackActionContext) => Promise<void>
   ): void {
     this.boltApp.action(actionId, async (args) => {
-      const channelId = args.body.channel?.id || args.body.user.id;
-      const session = this.sessionStorage.get(channelId);
+      const userId = args.body.user.id;
+      const session = this.sessionStorage.get(userId);
       const context: SlackActionContext = {
         body: args.body,
         session,
@@ -153,7 +151,7 @@ export class SlackClient implements SlackClientInterface {
 
       try {
         await handler(context);
-        this.sessionStorage.set(channelId, context.session);
+        this.sessionStorage.set(userId, context.session);
       } catch (error) {
         console.error(`Error handling action ${actionId}:`, error);
         await args.ack();
@@ -169,8 +167,8 @@ export class SlackClient implements SlackClientInterface {
     handler: (context: SlackViewContext) => Promise<void>
   ): void {
     this.boltApp.view(callbackId, async (args) => {
-      const channelId = args.context.channelId || args.body.user.id;
-      const session = this.sessionStorage.get(channelId);
+      const userId = args.body.user.id;
+      const session = this.sessionStorage.get(userId);
       const context: SlackViewContext = {
         body: args.body,
         view: args.view,
@@ -181,7 +179,7 @@ export class SlackClient implements SlackClientInterface {
 
       try {
         await handler(context);
-        this.sessionStorage.set(channelId, context.session);
+        this.sessionStorage.set(userId, context.session);
       } catch (error) {
         console.error(`Error handling view ${callbackId}:`, error);
         await args.ack();
@@ -197,8 +195,8 @@ export class SlackClient implements SlackClientInterface {
     handler: (context: SlackCommandContext) => Promise<void>
   ): void {
     this.boltApp.message(pattern, async (args) => {
-      const channelId = (args.message as any).channel;
-      const session = this.sessionStorage.get(channelId);
+      const userId = (args.message as any).user;
+      const session = this.sessionStorage.get(userId);
       const context: SlackCommandContext = {
         body: args.message as any,
         session,
@@ -210,7 +208,7 @@ export class SlackClient implements SlackClientInterface {
 
       try {
         await handler(context);
-        this.sessionStorage.set(channelId, context.session);
+        this.sessionStorage.set(userId, context.session);
       } catch (error) {
         console.error(`Error handling message pattern ${pattern}:`, error);
       }
@@ -268,27 +266,27 @@ export class SlackClient implements SlackClientInterface {
 class InMemorySessionStorage implements SlackSessionStorage {
   private sessions: Map<string, SlackSession> = new Map();
 
-  get(sessionKey: string): SlackSession {
-    if (!this.sessions.has(sessionKey)) {
-      this.sessions.set(sessionKey, {
+  get(userId: string): SlackSession {
+    if (!this.sessions.has(userId)) {
+      this.sessions.set(userId, {
         daoSelections: new Set<string>(),
         walletAction: undefined,
         walletsToRemove: undefined,
         awaitingInput: undefined
       });
     }
-    return this.sessions.get(sessionKey)!;
+    return this.sessions.get(userId)!;
   }
 
-  set(sessionKey: string, session: SlackSession): void {
-    this.sessions.set(sessionKey, session);
+  set(userId: string, session: SlackSession): void {
+    this.sessions.set(userId, session);
   }
 
-  clear(sessionKey: string): void {
-    this.sessions.delete(sessionKey);
+  clear(userId: string): void {
+    this.sessions.delete(userId);
   }
 
-  has(sessionKey: string): boolean {
-    return this.sessions.has(sessionKey);
+  has(userId: string): boolean {
+    return this.sessions.has(userId);
   }
 }

@@ -67,13 +67,13 @@ export interface SlackViewContext extends SlackBaseContext<any, void | any> {
 
 /**
  * Session storage interface
- * Provides methods for managing channel sessions
+ * Provides methods for managing user sessions
  */
 export interface SlackSessionStorage {
-  get(sessionKey: string): SlackSession;
-  set(sessionKey: string, session: SlackSession): void;
-  clear(sessionKey: string): void;
-  has(sessionKey: string): boolean;
+  get(userId: string): SlackSession;
+  set(userId: string, session: SlackSession): void;
+  clear(userId: string): void;
+  has(userId: string): boolean;
 }
 
 /**
