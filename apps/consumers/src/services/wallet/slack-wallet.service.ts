@@ -161,48 +161,81 @@ export class SlackWalletService extends BaseWalletService {
 
   /**
    * Process wallet addition from inline command
+   * Supports adding multiple addresses at once (max 10)
    */
   async processInlineWalletAdd(context: SlackCommandContext, walletAddress: string): Promise<void> {
     const userId = context.body.user_id;
     const workspaceId = context.body.team_id;
     const fullUserId = `${workspaceId}:${userId}`;
+    const inputs = walletAddress.trim().split(/\s+/).filter(a => a.length > 0);
+
+    // Validate limit
+    if (inputs.length > 10) {
+      if (context.respond) {
+        await context.respond({
+          text: '❌ Maximum 10 addresses per command',
+          response_type: 'ephemeral'
+        });
+      }
+      return;
+    }
 
     try {
-      // Use base service for validation and addition
-      const result = await this.addUserWallet(fullUserId, walletAddress, 'slack');
+      const existingWallets = await this.subscriptionApi.getUserWallets(fullUserId, 'slack');
+      const existingSet = new Set(existingWallets.map(w => w.address.toLowerCase()));
+      const validationPromises = inputs.map(async (input) => ({
+        input,
+        address: await this.validateAndResolveAddress(input)
+      }));
+      const validations = await Promise.all(validationPromises);
+      const toAdd: string[] = [];
+      const invalid: string[] = [];
+      const duplicates: string[] = [];
 
-      if (!result.success) {
-        if (context.respond) {
-          await context.respond({
-            text: `❌ ${result.message}`,
-            response_type: 'ephemeral'
-          });
+      for (const { input, address } of validations) {
+        if (!address) {
+          invalid.push(input);
+        } else if (existingSet.has(address.toLowerCase())) {
+          duplicates.push(input);
+        } else {
+          toAdd.push(address);
         }
-        return;
       }
 
-      // Get display name for the added address
-      const displayName = await this.ensResolver.resolveDisplayName(result.address!);
+      // Add all valid addresses
+      if (toAdd.length > 0) {
+        const addPromises = toAdd.map(addr =>
+          this.subscriptionApi.addUserWallet(fullUserId, addr, 'slack')
+        );
+
+        await Promise.all(addPromises);
+      }
+
+      let message = '';
+      if (toAdd.length > 0) {
+        message += `✅ ${toAdd.length} wallet(s) added successfully\n`;
+      }
+      if (duplicates.length > 0) {
+        message += `⚠️ ${duplicates.length} already exist\n`;
+      }
+      if (invalid.length > 0) {
+        message += `❌ ${invalid.length} invalid: ${invalid.slice(0, 3).join(', ')}`;
+        if (invalid.length > 3) {
+          message += ` and ${invalid.length - 3} more`;
+        }
+      }
 
       if (context.respond) {
         await context.respond({
-          blocks: [
-            {
-              type: 'section',
-              text: {
-                type: 'mrkdwn',
-                text: `✅ *Wallet added successfully!*\n${displayName}`
-              }
-            }
-          ],
+          text: message || '✅ Done',
           response_type: 'ephemeral'
         });
       }
     } catch (error) {
-      console.error('Error adding wallet:', error);
+      console.error('Error adding wallet(s):', error);
       if (context.respond) {
         await context.respond({
-          text: '❌ An error occurred while adding the wallet. Please try again.',
+          text: '❌ An error occurred while adding the wallet(s). Please try again.',
           response_type: 'ephemeral'
         });
       }
