@@ -5,7 +5,6 @@
 
 import { SubscriptionAPIService } from '../subscription-api.service';
 import { EnsResolverService } from '../ens-resolver.service';
-import { uiMessages } from '@notification-system/messages';
 
 export interface WalletInfo {
   address: string;
@@ -96,7 +95,7 @@ export class BaseWalletService {
     if (!address) {
       return {
         success: false,
-        message: uiMessages.errors.invalidAddress
+        message: 'Invalid address or ENS name. Please enter a valid Ethereum address or ENS name.'
       };
     }
 
@@ -105,7 +104,7 @@ export class BaseWalletService {
     if (exists) {
       return {
         success: false,
-        message: uiMessages.errors.walletDuplicate
+        message: 'This wallet has already been added.'
       };
     }
 
@@ -114,14 +113,14 @@ export class BaseWalletService {
       await this.subscriptionApi.addUserWallet(userId, address, platform);
       return {
         success: true,
-        message: uiMessages.success.walletAdded,
+        message: 'Wallet added successfully!',
         address
       };
     } catch (error) {
       console.error('Error adding wallet:', error);
       return {
         success: false,
-        message: uiMessages.errors.generic
+        message: 'An error occurred while adding the wallet. Please try again later.'
       };
     }
   }
@@ -137,7 +136,7 @@ export class BaseWalletService {
     if (addresses.length === 0) {
       return {
         success: false,
-        message: uiMessages.errors.noWalletsSelected
+        message: 'No wallets selected for removal.'
       };
     }
 
@@ -150,14 +149,14 @@ export class BaseWalletService {
 
       return {
         success: true,
-        message: uiMessages.success.walletsRemoved.replace('{{count}}', addresses.length.toString()),
+        message: `Successfully removed ${addresses.length} wallet(s).`,
         removedCount: addresses.length
       };
     } catch (error) {
       console.error('Error removing wallets:', error);
       return {
         success: false,
-        message: uiMessages.errors.generic
+        message: 'An error occurred while removing wallets. Please try again later.'
       };
     }
   }

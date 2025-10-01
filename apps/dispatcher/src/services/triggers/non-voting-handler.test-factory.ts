@@ -78,10 +78,10 @@ export const TestAddresses = {
 
 // Expected Messages
 export const ExpectedMessages = {
-  createNonVotingAlert: (daoId: string) =>
+  createNonVotingAlert: (address: string, formattedAddress: string, daoId: string) => 
     `⚠️ Non-Voting Alert for DAO ${daoId}
 
-The address {{nonVoterAddress}} that you follow hasn't voted in the last 3 proposals:
+The address ${formattedAddress} that you follow hasn't voted in the last 3 proposals:
 
 • Proposal 3
 • Proposal 2

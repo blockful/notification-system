@@ -5,7 +5,6 @@ import { NotificationClientFactory } from '../notification/notification-factory.
 import { ProposalFinishedNotification } from '../../interfaces/notification-client.interface';
 import { formatTokenAmount } from '../../lib/number-formatter';
 import { FormattingService } from '../formatting.service';
-import { proposalFinishedMessages, replacePlaceholders } from '@notification-system/messages';
 
 /**
  * Handler for proposal finished trigger events
@@ -52,16 +51,27 @@ export class ProposalFinishedTriggerHandler extends BaseTriggerHandler<ProposalF
 
   private generateNotificationMessage(proposal: ProposalFinishedNotification): string {
     const proposalTitle = proposal.title || FormattingService.extractTitle(proposal.description);
-    const hasTitle = !!proposalTitle;
+    
+    const statusEmoji: Record<string, string> = {
+      'EXECUTED': '✅',
+      'SUCCEEDED': '✅',
+      'DEFEATED': '❌',
+      'EXPIRED': '⏰',
+      'CANCELED': '🚫'
+    };
+    
+    const emoji = statusEmoji[proposal.status] || '📊';
+    const statusFormatted = proposal.status.charAt(0) + proposal.status.slice(1).toLowerCase();
+    
+    const votes = `${formatTokenAmount(proposal.forVotes)} FOR | ${formatTokenAmount(proposal.againstVotes)} AGAINST | ${formatTokenAmount(proposal.abstainVotes)} ABSTAIN`;
+    
+    const header = proposalTitle 
+      ? `📊 Proposal "${proposalTitle}" has ended on DAO ${proposal.daoId.toUpperCase()}`
+      : `📊 A proposal has ended on DAO ${proposal.daoId.toUpperCase()}`;
+    
+    return `${header}
 
-    const messageTemplate = proposalFinishedMessages.getMessageTemplate(hasTitle, proposal.status);
-
-    return replacePlaceholders(messageTemplate, {
-      ...(hasTitle && { title: proposalTitle }),
-      daoId: proposal.daoId.toUpperCase(),
-      forVotes: formatTokenAmount(proposal.forVotes),
-      againstVotes: formatTokenAmount(proposal.againstVotes),
-      abstainVotes: formatTokenAmount(proposal.abstainVotes)
-    });
+Status: ${statusFormatted} ${emoji}
+Votes: ${votes}`;
   }
 }

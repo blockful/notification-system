@@ -5,7 +5,7 @@
  */
 
 import { Markup } from 'telegraf';
-import { telegramMessages, uiMessages } from '@notification-system/messages';
+import { WELCOME_MESSAGE, HELP_MESSAGE, DAOS_BUTTON_TEXT, LEARN_MORE_BUTTON_TEXT, MY_WALLETS_BUTTON_TEXT } from '../../messages';
 import { TelegramDAOService } from '../dao/telegram-dao.service';
 import { TelegramWalletService } from '../wallet/telegram-wallet.service';
 import { ExplorerService } from '../explorer.service';
@@ -42,8 +42,8 @@ export class TelegramBotService implements BotServiceInterface {
    */
   private createPersistentKeyboard() {
     return Markup.keyboard([
-      [uiMessages.buttons.daos, uiMessages.buttons.myWallets],
-      [uiMessages.buttons.learnMore]
+      [DAOS_BUTTON_TEXT, MY_WALLETS_BUTTON_TEXT],
+      [LEARN_MORE_BUTTON_TEXT]
     ])
     .resize()
     .persistent();
@@ -52,13 +52,13 @@ export class TelegramBotService implements BotServiceInterface {
   private setupCommands(): void {
     this.telegramClient.setupHandlers((handlers) => {
       handlers.command(/^start$/i, async (ctx) => {
-        await ctx.reply(uiMessages.welcome, this.createPersistentKeyboard());
+        await ctx.reply(WELCOME_MESSAGE, this.createPersistentKeyboard());
       });
 
       handlers.command(/^learn_more$/i, async (ctx) => {
-        await ctx.reply(uiMessages.help, {
+        await ctx.reply(HELP_MESSAGE, { 
           parse_mode: 'HTML',
-          ...this.createPersistentKeyboard()
+          ...this.createPersistentKeyboard() 
         });
       });
 
@@ -70,18 +70,18 @@ export class TelegramBotService implements BotServiceInterface {
         await this.walletService.initialize(ctx);
       });
 
-      handlers.hears(uiMessages.buttons.daos, async (ctx) => {
+      handlers.hears(DAOS_BUTTON_TEXT, async (ctx) => {
         await this.daoService.initialize(ctx);
       });
 
-      handlers.hears(uiMessages.buttons.myWallets, async (ctx) => {
+      handlers.hears(MY_WALLETS_BUTTON_TEXT, async (ctx) => {
         await this.walletService.initialize(ctx);
       });
 
-      handlers.hears(uiMessages.buttons.learnMore, async (ctx) => {
-        await ctx.reply(uiMessages.help, {
+      handlers.hears(LEARN_MORE_BUTTON_TEXT, async (ctx) => {
+        await ctx.reply(HELP_MESSAGE, { 
           parse_mode: 'HTML',
-          ...this.createPersistentKeyboard()
+          ...this.createPersistentKeyboard() 
         });
       });
 
@@ -127,7 +127,7 @@ export class TelegramBotService implements BotServiceInterface {
           return;
         }
         
-        await ctx.reply(telegramMessages.bot.unknownCommand, 
+        await ctx.reply('Please use the buttons below or type /learn_more for more information.', 
           this.createPersistentKeyboard());
       }
       return next();

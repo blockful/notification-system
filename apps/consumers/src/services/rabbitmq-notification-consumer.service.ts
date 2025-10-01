@@ -69,7 +69,6 @@ export class RabbitMQNotificationConsumerService<T extends BotServiceInterface> 
   private async processNotification(message: RabbitMQMessage<NotificationPayload>): Promise<void> {
     // Validate message type
     if (message.type !== 'NOTIFICATION_EVENT') {
-      console.log(`[${this.channel}] Skipping non-notification message type: ${message.type}`);
       return;
     }
 
@@ -89,6 +88,5 @@ export class RabbitMQNotificationConsumerService<T extends BotServiceInterface> 
 
     // Send notification using the bot service
     await this.botService.sendNotification(payload);
-    console.log(`[${this.channel}] Notification sent successfully to user ${payload.userId}`);
   }
 }

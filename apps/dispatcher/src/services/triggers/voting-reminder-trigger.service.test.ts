@@ -112,7 +112,11 @@ describe('VotingReminderTriggerHandler', () => {
         proposalId_in: ['proposal-123'],
         voterAccountId_in: ['0x123', '0x456']
       });
-      expect(mockSubscriptionClient.getWalletOwnersBatch).toHaveBeenCalledWith(['0x456']);
+      expect(mockSubscriptionClient.shouldSend).toHaveBeenCalledWith(
+        [mockUser], 
+        'proposal-123-90-reminder', 
+        'test-dao'
+      );
     });
 
     it('should skip when no subscribed addresses found', async () => {
@@ -181,7 +185,7 @@ describe('VotingReminderTriggerHandler', () => {
 
       expect(message30).toContain('🔔 Early Voting Reminder');
       expect(message30).toContain('30% of voting period has passed');
-      expect(message30).toContain('Take time to review and vote');
+      expect(message30).toContain('Take your time to review and vote');
 
       expect(message60).toContain('⏰ Mid-Period Voting Reminder');
       expect(message60).toContain('60% of voting period has passed');

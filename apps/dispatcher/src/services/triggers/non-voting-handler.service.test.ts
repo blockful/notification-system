@@ -261,7 +261,7 @@ describe('NonVotingHandler', () => {
       userId: 'user-1',
       channel: 'telegram',
       channelUserId: '12345',
-      message: ExpectedMessages.createNonVotingAlert('ENS'),
+      message: ExpectedMessages.createNonVotingAlert(TestAddresses.ADDRESS_LONG, '0x1234...7890', 'ENS'),
       metadata: {
         addresses: {
           'nonVoterAddress': TestAddresses.ADDRESS_LONG

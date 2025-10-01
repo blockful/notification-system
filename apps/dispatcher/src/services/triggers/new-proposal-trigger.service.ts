@@ -3,7 +3,6 @@ import { ISubscriptionClient } from "../../interfaces/subscription-client.interf
 import { NotificationClientFactory } from "../notification/notification-factory.service";
 import { BaseTriggerHandler } from "./base-trigger.service";
 import { FormattingService } from "../formatting.service";
-import { newProposalMessages, replacePlaceholders } from '@notification-system/messages';
 import crypto from 'crypto';
 
 /**
@@ -31,10 +30,7 @@ export class NewProposalTriggerHandler extends BaseTriggerHandler {
       const { daoId, id: proposalId, title, description, timestamp } = proposal;
       const proposalTitle = title || FormattingService.extractTitle(description, 'Unnamed Proposal');
       const subscribers = await this.getSubscribers(daoId, proposalId, timestamp);
-      const notificationMessage = replacePlaceholders(newProposalMessages.notification, {
-        daoId,
-        title: proposalTitle
-      });
+      const notificationMessage = `🗳️ New governance proposal in ${daoId}: "${proposalTitle}"`;
       await this.sendNotificationsToSubscribers(subscribers, notificationMessage, proposalId, daoId);
     }
     

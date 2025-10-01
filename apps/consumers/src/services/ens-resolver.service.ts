@@ -53,6 +53,7 @@ export class EnsResolverService {
       console.error(`Failed to lookup ENS for address ${address}:`, error);
     }
     
-    return address;
+    // Fallback to shortened address format
+    return `${address.substring(0, 6)}...${address.substring(address.length - 4)}`;
   }
 }

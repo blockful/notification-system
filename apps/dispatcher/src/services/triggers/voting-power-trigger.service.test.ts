@@ -50,9 +50,9 @@ describe('VotingPowerTriggerHandler', () => {
     mockSubscriptionClient.shouldSend.mockResolvedValue(mockNotifications);
     mockSubscriptionClient.markAsSent.mockResolvedValue();
     mockSubscriptionClient.getWalletOwnersBatch.mockResolvedValue({
-      '0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045': [mockUsers[0]],
-      '0xbBbBBBBbbBBBbbbBbbBbbbbBBbBbbbbBbBbbBBbB': [mockUsers[1]],
-      '0xEF8305E140ac520225DAf050e2f71d5fBcC543e7': [mockUsers[0]]
+      'alice.eth': [mockUsers[0]],
+      'bob.eth': [mockUsers[1]],
+      'delegator.eth': [mockUsers[0]]
     });
     mockNotificationClient.sendNotification.mockResolvedValue();
     
@@ -82,7 +82,7 @@ describe('VotingPowerTriggerHandler', () => {
         events: [
           // Missing daoId
           {
-            accountId: '0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045',
+            accountId: 'alice.eth',
             transactionHash: 'tx123',
             changeType: 'delegation'
           },
@@ -94,7 +94,7 @@ describe('VotingPowerTriggerHandler', () => {
           },
           // Missing transactionHash
           {
-            accountId: '0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045',
+            accountId: 'alice.eth',
             daoId: 'test-dao',
             changeType: 'delegation'
           }
@@ -112,12 +112,12 @@ describe('VotingPowerTriggerHandler', () => {
         triggerId: 'voting-power-changed',
         events: [
           {
-            accountId: '0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045',
+            accountId: 'alice.eth',
             daoId: 'test-dao',
             transactionHash: 'tx123',
             changeType: 'delegation',
-            sourceAccountId: '0xEF8305E140ac520225DAf050e2f71d5fBcC543e7',
-            targetAccountId: '0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045',
+            sourceAccountId: 'delegator.eth',
+            targetAccountId: 'alice.eth',
             delta: '1000'
           }
         ]
@@ -126,8 +126,8 @@ describe('VotingPowerTriggerHandler', () => {
       await handler.handleMessage(mockMessage);
       
       expect(mockSubscriptionClient.getWalletOwnersBatch).toHaveBeenCalledWith([
-        '0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045',
-        '0xEF8305E140ac520225DAf050e2f71d5fBcC543e7'
+        'alice.eth',
+        'delegator.eth'
       ]);
     });
   });
@@ -135,12 +135,12 @@ describe('VotingPowerTriggerHandler', () => {
   describe('delegation notifications', () => {
     it('should send delegation received notification', async () => {
       const delegationEvent = {
-        accountId: '0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045',
+        accountId: 'alice.eth',
         daoId: 'test-dao',
         transactionHash: 'tx123',
         changeType: 'delegation',
-        sourceAccountId: '0xEF8305E140ac520225DAf050e2f71d5fBcC543e7',
-        targetAccountId: '0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045',
+        sourceAccountId: 'delegator.eth',
+        targetAccountId: 'alice.eth',
         delta: '1000',
         chainId: 1,
         timestamp: '2023-01-01T00:00:00Z'
@@ -155,25 +155,25 @@ describe('VotingPowerTriggerHandler', () => {
       
       expect(mockNotificationClient.sendNotification).toHaveBeenCalledWith(
         expect.objectContaining({
-          message: expect.stringContaining('🥳 0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045 received a new delegation in test-dao!')
+          message: expect.stringContaining('🥳 You\'ve received a new delegation in test-dao!')
         })
       );
       
       expect(mockNotificationClient.sendNotification).toHaveBeenCalledWith(
         expect.objectContaining({
-          message: expect.stringContaining('delegated to 0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045')
+          message: expect.stringContaining('{{delegator}} delegated to you')
         })
       );
     });
 
     it('should send delegation sent notification', async () => {
       const delegationEvent = {
-        accountId: '0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045',
+        accountId: 'alice.eth',
         daoId: 'test-dao',
         transactionHash: 'tx123',
         changeType: 'delegation',
-        sourceAccountId: '0xEF8305E140ac520225DAf050e2f71d5fBcC543e7',
-        targetAccountId: '0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045',
+        sourceAccountId: 'delegator.eth',
+        targetAccountId: 'alice.eth',
         delta: '1000',
         chainId: 1,
         timestamp: '2023-01-01T00:00:00Z'
@@ -194,19 +194,19 @@ describe('VotingPowerTriggerHandler', () => {
       
       expect(mockNotificationClient.sendNotification).toHaveBeenCalledWith(
         expect.objectContaining({
-          message: expect.stringContaining('Account 0xEF8305E140ac520225DAf050e2f71d5fBcC543e7 delegated')
+          message: expect.stringContaining('{{delegatorAccount}} delegated')
         })
       );
     });
 
     it('should send undelegation received notification', async () => {
       const undelegationEvent = {
-        accountId: '0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045',
+        accountId: 'alice.eth',
         daoId: 'test-dao',
         transactionHash: 'tx123',
         changeType: 'delegation',
-        sourceAccountId: '0xEF8305E140ac520225DAf050e2f71d5fBcC543e7',
-        targetAccountId: '0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045',
+        sourceAccountId: 'delegator.eth',
+        targetAccountId: 'alice.eth',
         delta: '-1000',
         chainId: 1,
         timestamp: '2023-01-01T00:00:00Z'
@@ -227,19 +227,19 @@ describe('VotingPowerTriggerHandler', () => {
       
       expect(mockNotificationClient.sendNotification).toHaveBeenCalledWith(
         expect.objectContaining({
-          message: expect.stringContaining('removed their delegation from 0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045')
+          message: expect.stringContaining('{{delegator}} removed their delegation')
         })
       );
     });
 
     it('should send undelegation sent notification', async () => {
       const undelegationEvent = {
-        accountId: '0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045',
+        accountId: 'alice.eth',
         daoId: 'test-dao',
         transactionHash: 'tx123',
         changeType: 'delegation',
-        sourceAccountId: '0xEF8305E140ac520225DAf050e2f71d5fBcC543e7',
-        targetAccountId: '0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045',
+        sourceAccountId: 'delegator.eth',
+        targetAccountId: 'alice.eth',
         delta: '-1000',
         chainId: 1,
         timestamp: '2023-01-01T00:00:00Z'
@@ -260,19 +260,19 @@ describe('VotingPowerTriggerHandler', () => {
       
       expect(mockNotificationClient.sendNotification).toHaveBeenCalledWith(
         expect.objectContaining({
-          message: expect.stringContaining('Account 0xEF8305E140ac520225DAf050e2f71d5fBcC543e7 removed')
+          message: expect.stringContaining('{{delegatorAccount}} removed')
         })
       );
     });
 
     it('should handle self-delegation with special message (single notification)', async () => {
       const selfDelegationEvent = {
-        accountId: '0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045',
+        accountId: 'alice.eth',
         daoId: 'test-dao',
         transactionHash: 'tx123',
         changeType: 'delegation',
-        sourceAccountId: '0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045',
-        targetAccountId: '0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045',
+        sourceAccountId: 'alice.eth',
+        targetAccountId: 'alice.eth',
         delta: '1000',
         votingPower: '5000',
         chainId: 1,
@@ -295,19 +295,19 @@ describe('VotingPowerTriggerHandler', () => {
       
       expect(mockNotificationClient.sendNotification).toHaveBeenCalledWith(
         expect.objectContaining({
-          message: expect.stringContaining('Total voting power is now')
+          message: expect.stringContaining('Your total voting power is now')
         })
       );
     });
 
     it('should handle self-undelegation with special message (single notification)', async () => {
       const selfUndelegationEvent = {
-        accountId: '0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045',
+        accountId: 'alice.eth',
         daoId: 'test-dao',
         transactionHash: 'tx123',
         changeType: 'delegation',
-        sourceAccountId: '0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045',
-        targetAccountId: '0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045',
+        sourceAccountId: 'alice.eth',
+        targetAccountId: 'alice.eth',
         delta: '-1000',
         votingPower: '3000',
         chainId: 1,
@@ -330,19 +330,19 @@ describe('VotingPowerTriggerHandler', () => {
       
       expect(mockNotificationClient.sendNotification).toHaveBeenCalledWith(
         expect.objectContaining({
-          message: expect.stringContaining('Total voting power is now')
+          message: expect.stringContaining('Your total voting power is now')
         })
       );
     });
 
     it('should skip delegation sent notification when sourceAccountId is missing', async () => {
       const delegationEvent = {
-        accountId: '0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045',
+        accountId: 'alice.eth',
         daoId: 'test-dao',
         transactionHash: 'tx123',
         changeType: 'delegation',
         sourceAccountId: undefined,
-        targetAccountId: '0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045',
+        targetAccountId: 'alice.eth',
         delta: '1000',
         chainId: 1,
         timestamp: '2023-01-01T00:00:00Z'
@@ -359,19 +359,19 @@ describe('VotingPowerTriggerHandler', () => {
       expect(mockNotificationClient.sendNotification).toHaveBeenCalledTimes(1);
       expect(mockNotificationClient.sendNotification).toHaveBeenCalledWith(
         expect.objectContaining({
-          message: expect.stringContaining('🥳 0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045 received a new delegation')
+          message: expect.stringContaining('🥳 You\'ve received a new delegation')
         })
       );
     });
 
     it('should include addresses metadata for ENS resolution', async () => {
       const delegationEvent = {
-        accountId: '0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045',
+        accountId: 'alice.eth',
         daoId: 'test-dao',
         transactionHash: 'tx123',
         changeType: 'delegation',
-        sourceAccountId: '0xEF8305E140ac520225DAf050e2f71d5fBcC543e7',
-        targetAccountId: '0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045',
+        sourceAccountId: 'delegator.eth',
+        targetAccountId: 'alice.eth',
         delta: '1000',
         chainId: 1,
         timestamp: '2023-01-01T00:00:00Z'
@@ -389,7 +389,7 @@ describe('VotingPowerTriggerHandler', () => {
         expect.objectContaining({
           metadata: expect.objectContaining({
             addresses: expect.objectContaining({
-              delegator: '0xEF8305E140ac520225DAf050e2f71d5fBcC543e7'
+              delegator: 'delegator.eth'
             })
           })
         })
@@ -400,8 +400,8 @@ describe('VotingPowerTriggerHandler', () => {
         expect.objectContaining({
           metadata: expect.objectContaining({
             addresses: expect.objectContaining({
-              delegatorAccount: '0xEF8305E140ac520225DAf050e2f71d5fBcC543e7',
-              delegate: '0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045'
+              delegatorAccount: 'delegator.eth',
+              delegate: 'alice.eth'
             })
           })
         })
@@ -412,7 +412,7 @@ describe('VotingPowerTriggerHandler', () => {
   describe('transfer notifications', () => {
     it('should send transfer increase notification', async () => {
       const transferEvent = {
-        accountId: '0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045',
+        accountId: 'alice.eth',
         daoId: 'test-dao',
         transactionHash: 'tx123',
         changeType: 'transfer',
@@ -430,14 +430,14 @@ describe('VotingPowerTriggerHandler', () => {
       
       expect(mockNotificationClient.sendNotification).toHaveBeenCalledWith(
         expect.objectContaining({
-          message: expect.stringContaining('📈 Voting power increased in test-dao!')
+          message: expect.stringContaining('📈 Your voting power increased in test-dao!')
         })
       );
     });
 
     it('should send transfer decrease notification', async () => {
       const transferEvent = {
-        accountId: '0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045',
+        accountId: 'alice.eth',
         daoId: 'test-dao',
         transactionHash: 'tx123',
         changeType: 'transfer',
@@ -455,7 +455,7 @@ describe('VotingPowerTriggerHandler', () => {
       
       expect(mockNotificationClient.sendNotification).toHaveBeenCalledWith(
         expect.objectContaining({
-          message: expect.stringContaining('📉 Voting power decreased in test-dao!')
+          message: expect.stringContaining('📉 Your voting power decreased in test-dao!')
         })
       );
     });
@@ -464,7 +464,7 @@ describe('VotingPowerTriggerHandler', () => {
   describe('other voting power change notifications', () => {
     it('should send generic voting power change notification with delta', async () => {
       const otherEvent = {
-        accountId: '0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045',
+        accountId: 'alice.eth',
         daoId: 'test-dao',
         transactionHash: 'tx123',
         changeType: 'other',
@@ -482,14 +482,14 @@ describe('VotingPowerTriggerHandler', () => {
       
       expect(mockNotificationClient.sendNotification).toHaveBeenCalledWith(
         expect.objectContaining({
-          message: expect.stringContaining('⚡ Voting power changed for 0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045 in test-dao!')
+          message: expect.stringContaining('⚡ Your voting power has changed in test-dao!')
         })
       );
     });
 
     it('should send generic voting power change notification without delta', async () => {
       const otherEvent = {
-        accountId: '0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045',
+        accountId: 'alice.eth',
         daoId: 'test-dao',
         transactionHash: 'tx123',
         changeType: 'other',
@@ -507,7 +507,7 @@ describe('VotingPowerTriggerHandler', () => {
       
       expect(mockNotificationClient.sendNotification).toHaveBeenCalledWith(
         expect.objectContaining({
-          message: expect.stringContaining('⚡ Voting power changed for 0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045 in test-dao!')
+          message: expect.stringContaining('⚡ Your voting power has changed in test-dao!')
         })
       );
       
@@ -524,11 +524,11 @@ describe('VotingPowerTriggerHandler', () => {
       mockSubscriptionClient.getWalletOwnersBatch.mockResolvedValue({});
       
       const delegationEvent = {
-        accountId: '0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045',
+        accountId: 'alice.eth',
         daoId: 'test-dao',
         transactionHash: 'tx123',
         changeType: 'delegation',
-        sourceAccountId: '0xEF8305E140ac520225DAf050e2f71d5fBcC543e7',
+        sourceAccountId: 'delegator.eth',
         delta: '1000'
       };
 
@@ -546,11 +546,11 @@ describe('VotingPowerTriggerHandler', () => {
       mockSubscriptionClient.getDaoSubscribers.mockResolvedValue([]);
       
       const delegationEvent = {
-        accountId: '0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045',
+        accountId: 'alice.eth',
         daoId: 'test-dao',
         transactionHash: 'tx123',
         changeType: 'delegation',
-        sourceAccountId: '0xEF8305E140ac520225DAf050e2f71d5fBcC543e7',
+        sourceAccountId: 'delegator.eth',
         delta: '1000'
       };
 
@@ -568,11 +568,11 @@ describe('VotingPowerTriggerHandler', () => {
       mockSubscriptionClient.shouldSend.mockResolvedValue([]);
       
       const delegationEvent = {
-        accountId: '0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045',
+        accountId: 'alice.eth',
         daoId: 'test-dao',
         transactionHash: 'tx123',
         changeType: 'delegation',
-        sourceAccountId: '0xEF8305E140ac520225DAf050e2f71d5fBcC543e7',
+        sourceAccountId: 'delegator.eth',
         delta: '1000'
       };
 

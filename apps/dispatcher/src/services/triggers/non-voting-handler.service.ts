@@ -7,7 +7,6 @@ import { AnticaptureClient, QueryInput_Proposals_OrderDirection } from '@notific
 import { BatchNotificationService } from '../batch-notification.service';
 import { FormattingService } from '../formatting.service';
 import { ValidationService } from '../validation.service';
-import { nonVotingMessages, replacePlaceholders } from '@notification-system/messages';
 
 /**
  * Handler for detecting non-voting addresses on proposal finished events
@@ -144,13 +143,12 @@ export class NonVotingHandler extends BaseTriggerHandler<ProposalFinishedNotific
       nonVoters,
       daoId,
       (address) => `${address}-non-voting-${lastProposals[0].id}`,
-      (address) => {
-        return replacePlaceholders(nonVotingMessages.alert, {
-          daoId: daoId.toUpperCase(),
-          proposalsCount: NonVotingHandler.PROPOSALS_TO_CHECK.toString(),
-          proposalsList: proposalTitles
-        });
-      },
+      (address) => FormattingService.createNonVotingAlertMessage(
+        address, 
+        daoId, 
+        NonVotingHandler.PROPOSALS_TO_CHECK,
+        proposalTitles
+      ),
       (address) => ({
         addresses: {
           'nonVoterAddress': address
@@ -175,11 +173,6 @@ export class NonVotingHandler extends BaseTriggerHandler<ProposalFinishedNotific
       limit: NonVotingHandler.PROPOSALS_TO_CHECK * NonVotingHandler.FETCH_MARGIN_MULTIPLIER,
       orderDirection: QueryInput_Proposals_OrderDirection.Desc
     }, daoId);
-
-    // If proposals is undefined or empty, return empty array
-    if (!proposals || !Array.isArray(proposals)) {
-      return [];
-    }
 
     // Sort by endTimestamp (most recent first)
     const sortedByEndTime = proposals.sort((a, b) => {

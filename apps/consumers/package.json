@@ -26,7 +26,6 @@
   },
   "dependencies": {
     "@notification-system/anticapture-client": "workspace:*",
-    "@notification-system/messages": "workspace:*",
     "@notification-system/rabbitmq-client": "workspace:*",
     "@slack/bolt": "^4.4.0",
     "@slack/web-api": "^7.10.0",

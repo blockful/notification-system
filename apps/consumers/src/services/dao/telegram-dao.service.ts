@@ -6,7 +6,12 @@
 
 import { BaseDAOService } from './base-dao.service';
 import { ContextWithSession } from '../../interfaces/bot.interface';
-import { uiMessages, telegramMessages, getDaoWithEmoji } from '@notification-system/messages';
+import {
+  CONFIRM_SELECTION_BUTTON,
+  SELECTED_DAOS_MESSAGE,
+  DAO_SELECTION_MESSAGE,
+  EDIT_DAOS_MESSAGE
+} from '../../messages';
 
 export class TelegramDAOService extends BaseDAOService {
 
@@ -41,7 +46,7 @@ export class TelegramDAOService extends BaseDAOService {
     try {
       const daos = await this.fetchAvailableDAOs();
       if (daos.length === 0) {
-        await ctx.reply(uiMessages.errors.noDaosAvailable);
+        await ctx.reply('No DAOs available at the moment. Please try again later.');
         return;
       }
 
@@ -53,12 +58,12 @@ export class TelegramDAOService extends BaseDAOService {
       // Build inline keyboard
       const keyboard = this.buildInlineKeyboard(daos, currentSelections);
 
-      await ctx.reply(uiMessages.daoSelection, {
+      await ctx.reply(DAO_SELECTION_MESSAGE, {
         reply_markup: keyboard
       });
     } catch (error) {
       console.error('Error loading DAOs:', error);
-      await ctx.reply(uiMessages.errors.loadingDaos);
+      await ctx.reply('Sorry, there was an error loading the DAOs. Please try again later.');
     }
   }
 
@@ -73,15 +78,15 @@ export class TelegramDAOService extends BaseDAOService {
       const userPreferences = await this.getUserSubscriptions(String(chatId));
 
       if (userPreferences.length === 0) {
-        await ctx.reply(telegramMessages.dao.emptyList);
+        await ctx.reply("You're not subscribed to any DAOs yet. Use /daos to get started!");
         return;
       }
 
       const daoList = this.formatDAOListWithBullets(userPreferences);
-      await ctx.reply(`${telegramMessages.dao.listHeader}\n\n${daoList}`, { parse_mode: 'HTML' });
+      await ctx.reply(`Your DAO Subscriptions:\n\n${daoList}`, { parse_mode: 'HTML' });
     } catch (error) {
       console.error('Error listing subscriptions:', error);
-      await ctx.reply(uiMessages.errors.loadingSubscriptions);
+      await ctx.reply('Sorry, there was an error loading your subscriptions. Please try again later.');
     }
   }
 
@@ -110,7 +115,7 @@ export class TelegramDAOService extends BaseDAOService {
       await ctx.editMessageReplyMarkup(keyboard);
     } catch (error) {
       console.error('Error updating keyboard:', error);
-      await ctx.answerCbQuery(uiMessages.errors.updateFailed);
+      await ctx.answerCbQuery('Failed to update selection. Please try again.');
     }
   }
 
@@ -125,7 +130,7 @@ export class TelegramDAOService extends BaseDAOService {
 
     const selectedDAOs = ctx.session.daoSelections;
     if (!selectedDAOs) {
-      await ctx.reply(uiMessages.errors.somethingWrong);
+      await ctx.reply('Something went wrong. Please try again.');
       return;
     }
 
@@ -140,7 +145,7 @@ export class TelegramDAOService extends BaseDAOService {
       ctx.session.daoSelections = new Set<string>();
     } catch (error) {
       console.error('Error updating subscriptions:', error);
-      await ctx.reply(uiMessages.errors.updateSubscriptionsFailed);
+      await ctx.reply('Sorry, there was an error updating your subscriptions. Please try again later.');
     }
   }
 
@@ -153,17 +158,17 @@ export class TelegramDAOService extends BaseDAOService {
         // DAO buttons row
         daos.map(dao => {
           const normalizedDao = dao.id.toUpperCase();
-          const daoWithEmoji = getDaoWithEmoji(dao.id);
+          const daoWithEmoji = this.getDaoWithEmoji(dao.id);
           const isSelected = selections.has(normalizedDao);
 
           return {
-            text: isSelected ? `${uiMessages.status.success} ${daoWithEmoji}` : daoWithEmoji,
+            text: isSelected ? `✅ ${daoWithEmoji}` : daoWithEmoji,
             callback_data: `dao_toggle_${normalizedDao}`
           };
         }),
         // Confirm button row
         [
-          { text: uiMessages.confirmSelection, callback_data: 'dao_confirm' }
+          { text: CONFIRM_SELECTION_BUTTON, callback_data: 'dao_confirm' }
         ]
       ]
     };
@@ -176,14 +181,14 @@ export class TelegramDAOService extends BaseDAOService {
     if (selectedDAOs.size > 0) {
       const daoList = this.formatDAOListWithBullets(selectedDAOs);
 
-      const successMessage = `${uiMessages.selectedDaos}
+      const successMessage = `${SELECTED_DAOS_MESSAGE}
 ${daoList}
 
-${uiMessages.editDaos}`;
+${EDIT_DAOS_MESSAGE}`;
 
       await ctx.reply(successMessage, { parse_mode: 'HTML' });
     } else {
-      await ctx.reply(telegramMessages.dao.allUnsubscribed,
+      await ctx.reply('You have unsubscribed from all DAOs. You can subscribe again anytime by clicking on DAOs',
         { parse_mode: 'HTML' });
     }
   }
