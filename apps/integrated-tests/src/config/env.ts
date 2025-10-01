@@ -19,13 +19,13 @@ const envSchema = z.object({
 
   // Slack configuration
   SEND_REAL_SLACK: z.string().optional(),
-  SLACK_TEST_CHANNEL_ID: z.string().optional(), // Channel ID (for channel: 'C1234...', for DM: 'D1234...')
-  SLACK_WORKSPACE_ID: z.string().optional(), // Workspace ID like 'T1234567890'
-  SLACK_BOT_TOKEN: z.string().optional(), // Bot token like 'xoxb-...'
-  SLACK_TEST_USER_ID: z.string().optional(), // Deprecated: Use SLACK_TEST_CHANNEL_ID instead
+  SLACK_TEST_CHANNEL_ID: z.string().optional(), 
+  SLACK_WORKSPACE_ID: z.string().optional(),
+  SLACK_BOT_TOKEN: z.string().optional(),
+  SLACK_TEST_USER_ID: z.string().optional(),
 
   // Encryption key for OAuth tokens
-  TOKEN_ENCRYPTION_KEY: z.string().optional()
+  TOKEN_ENCRYPTION_KEY: z.string().default('e10981ff87b7483d85cdbf8b1ae0618236a37afe8cc082853183b6283c470e22')
 });
 
 const _env = envSchema.safeParse(process.env);
