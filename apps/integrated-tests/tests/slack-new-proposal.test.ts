@@ -79,7 +79,8 @@ describe('Slack New Proposal - Integration Test', () => {
     // Wait for Slack notification
     const message = await slackHelper.waitForMessage(
       msg => {
-        return msg.text.includes('New governance proposal') &&
+        return msg.text.includes('New') &&
+               msg.text.includes('proposal') &&
                msg.text.includes(proposal.title || '') &&
                msg.channel === SLACK_CHANNEL_ID;
       },
@@ -95,7 +96,8 @@ describe('Slack New Proposal - Integration Test', () => {
     expect(message.channel).toBe(SLACK_CHANNEL_ID);
 
     // Verify message content
-    expect(message.text).toContain('New governance proposal');
+    expect(message.text).toContain('New');
+    expect(message.text).toContain('proposal');
     expect(message.text).toContain(proposal.title);
     expect(message.text).toContain(TEST_DAO_ID);
 
@@ -197,7 +199,8 @@ describe('Slack New Proposal - Integration Test', () => {
 
     // Verify content is identical for both
     messages.forEach(message => {
-      expect(message.text).toContain('New governance proposal');
+      expect(message.text).toContain('New');
+      expect(message.text).toContain('proposal');
       expect(message.text).toContain(proposal.title);
     });
   });

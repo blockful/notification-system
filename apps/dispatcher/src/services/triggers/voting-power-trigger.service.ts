@@ -3,6 +3,7 @@ import { ISubscriptionClient, User } from "../../interfaces/subscription-client.
 import { NotificationClientFactory } from "../notification/notification-factory.service";
 import { BaseTriggerHandler } from "./base-trigger.service";
 import { formatTokenAmount } from "../../lib/number-formatter";
+import { votingPowerMessages, replacePlaceholders } from '@notification-system/messages';
 import crypto from 'crypto';
 
 /**
@@ -111,14 +112,16 @@ export class VotingPowerTriggerHandler extends BaseTriggerHandler {
     const deltaValue = delta ? parseInt(delta) : 0;
     const formattedDelta = formatTokenAmount(Math.abs(deltaValue));
     
-    let notificationMessage = '';
-    if (deltaValue >= 0) {
-      notificationMessage = `🥳 You've received a new delegation in ${daoId}!\n{{delegator}} delegated to you, increasing your voting power by ${formattedDelta}.`;
-    } else {
-      notificationMessage = `🥺 A delegator just undelegated in ${daoId}!\n{{delegator}} removed their delegation, reducing your voting power by ${formattedDelta}.`;
-    }
-    
-    notificationMessage += '\n\n{{txLink}}';
+    const messageTemplate = deltaValue >= 0
+      ? votingPowerMessages.delegationReceived.new
+      : votingPowerMessages.delegationReceived.removed;
+
+    const notificationMessage = replacePlaceholders(messageTemplate, {
+      daoId,
+      delta: formattedDelta,
+      address: accountId,
+      delegator: sourceAccountId
+    });
     
     const metadata = this.buildNotificationMetadata(chainId, transactionHash, {
       delegator: sourceAccountId
@@ -158,27 +161,36 @@ export class VotingPowerTriggerHandler extends BaseTriggerHandler {
     const formattedDelta = formatTokenAmount(Math.abs(deltaValue));
     
     let notificationMessage = '';
-    
+
     // Check for self-delegation
     if (sourceAccountId === accountId) {
       const { votingPower } = votingPowerEvent;
       const formattedVotingPower = votingPower ? formatTokenAmount(parseInt(votingPower)) : formattedDelta;
-      
-      if (deltaValue > 0) {
-        notificationMessage = `🔄 Self-delegation confirmed in ${daoId}!\nYou delegated ${formattedDelta} voting power to yourself.\n\n💪 Your total voting power is now ${formattedVotingPower}.`;
-      } else {
-        notificationMessage = `🔄 Self-undelegation confirmed in ${daoId}!\nYou removed ${formattedDelta} voting power from yourself.\n\n💪 Your total voting power is now ${formattedVotingPower}.`;
-      }
+
+      const messageTemplate = deltaValue > 0
+        ? votingPowerMessages.selfDelegation.confirmed
+        : votingPowerMessages.selfDelegation.removed;
+
+      notificationMessage = replacePlaceholders(messageTemplate, {
+        daoId,
+        delta: formattedDelta,
+        votingPower: formattedVotingPower,
+        address: sourceAccountId
+      });
     } else {
-      if (deltaValue > 0) {
-        notificationMessage = `✅ Delegation confirmed in ${daoId}!\nAccount {{delegatorAccount}} delegated ${formattedDelta} voting power to {{delegate}}.`;
-      } else {
-        notificationMessage = `↩️ Undelegation confirmed in ${daoId}!\nAccount {{delegatorAccount}} removed ${formattedDelta} voting power from {{delegate}}.`;
-      }
+      const messageTemplate = deltaValue > 0
+        ? votingPowerMessages.delegationSent.confirmed
+        : votingPowerMessages.delegationSent.removed;
+
+      notificationMessage = replacePlaceholders(messageTemplate, {
+        daoId,
+        delta: formattedDelta,
+        address: sourceAccountId,
+        delegate: targetAccountId || accountId,
+        delegatorAccount: sourceAccountId
+      });
     }
-    
-    notificationMessage += '\n\n{{txLink}}';
-    
+
     const metadata = this.buildNotificationMetadata(chainId, transactionHash, {
       delegatorAccount: sourceAccountId,
       delegate: targetAccountId || accountId
@@ -212,22 +224,28 @@ export class VotingPowerTriggerHandler extends BaseTriggerHandler {
     
     let notificationMessage = '';
     if (changeType === 'transfer') {
-      if (deltaValue >= 0) {
-        notificationMessage = `📈 Your voting power increased in ${daoId}!\nYou gained ${formattedDelta} voting power from token transfer activity.`;
-      } else {
-        notificationMessage = `📉 Your voting power decreased in ${daoId}!\nYou lost ${formattedDelta} voting power from token transfer activity.`;
-      }
+      const messageTemplate = deltaValue >= 0
+        ? votingPowerMessages.transfer.increased
+        : votingPowerMessages.transfer.decreased;
+
+      notificationMessage = replacePlaceholders(messageTemplate, {
+        daoId,
+        delta: formattedDelta,
+        address: accountId
+      });
     } else {
       // Generic voting power change
-      if (deltaValue !== 0) {
-        notificationMessage = `⚡ Your voting power has changed in ${daoId}!\nVoting power updated by ${formattedDelta}.`;
-      } else {
-        notificationMessage = `⚡ Your voting power has changed in ${daoId}!\nVoting power activity detected.`;
-      }
+      const messageTemplate = deltaValue !== 0
+        ? votingPowerMessages.generic.changed
+        : votingPowerMessages.generic.activity;
+
+      notificationMessage = replacePlaceholders(messageTemplate, {
+        daoId,
+        delta: formattedDelta,
+        address: accountId
+      });
     }
-    
-    notificationMessage += '\n\n{{txLink}}';
-    
+
     const metadata = this.buildNotificationMetadata(chainId, transactionHash);
     
     await this.sendNotificationsToSubscribers(subscribers, notificationMessage, transactionHash, daoId, metadata);
