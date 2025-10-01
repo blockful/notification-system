@@ -140,7 +140,7 @@ export class SlackClient implements SlackClientInterface {
     handler: (context: SlackActionContext) => Promise<void>
   ): void {
     this.boltApp.action(actionId, async (args) => {
-      const channelId = (args.body as any).channel?.id || (args.body as any).channel_id;
+      const channelId = args.body.channel?.id || args.body.user.id;
       const session = this.sessionStorage.get(channelId);
       const context: SlackActionContext = {
         body: args.body,
@@ -169,8 +169,7 @@ export class SlackClient implements SlackClientInterface {
     handler: (context: SlackViewContext) => Promise<void>
   ): void {
     this.boltApp.view(callbackId, async (args) => {
-      // Views don't have direct channel access - use private_metadata if set, fallback to user.id
-      const channelId = args.view.private_metadata || args.body.user.id;
+      const channelId = args.context.channelId || args.body.user.id;
       const session = this.sessionStorage.get(channelId);
       const context: SlackViewContext = {
         body: args.body,
