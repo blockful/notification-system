@@ -52,30 +52,6 @@ export class FormattingService {
       .join('\n');
   }
 
-  /**
-   * Creates a formatted non-voting alert message
-   * @param address - Non-voting address
-   * @param daoId - DAO identifier
-   * @param proposalsCount - Number of proposals checked
-   * @param proposalTitles - Formatted list of proposal titles
-   * @returns Formatted alert message
-   */
-  static createNonVotingAlertMessage(
-    address: string,
-    daoId: string,
-    proposalsCount: number,
-    proposalTitles: string
-  ): string {
-    const formattedAddress = FormattingService.formatAddress(address);
-    
-    return `⚠️ Non-Voting Alert for DAO ${daoId.toUpperCase()}
-
-The address ${formattedAddress} that you follow hasn't voted in the last ${proposalsCount} proposals:
-
-${proposalTitles}
-
-Consider reaching out to encourage participation!`;
-  }
 
   /**
    * Calculates human-readable time remaining

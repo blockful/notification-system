@@ -4,6 +4,7 @@ import { HttpClientMockSetup, GraphQLMockSetup } from '../src/mocks';
 import { UserFactory, ProposalFactory, VoteFactory, VoteData } from '../src/fixtures';
 import { TelegramTestHelper, DatabaseTestHelper, TestCleanup } from '../src/helpers';
 import { testConstants, timeouts } from '../src/config';
+import { nonVotingMessages, replacePlaceholders } from '@notification-system/messages';
 
 describe('Non-Voting Trigger - Integration Test', () => {
   let apps: TestApps;
@@ -14,8 +15,8 @@ describe('Non-Voting Trigger - Integration Test', () => {
   // Test addresses
   const ADDRESS_ACTIVE = '0x1234567890123456789012345678901234567890';
   const ADDRESS_PARTIAL = '0xabcdef1234567890123456789012345678901234';
-  const ADDRESS_INACTIVE = '0x9876543210987654321098765432109876543210';
-  const ADDRESS_ZERO_VOTES = '0x1111111111111111111111111111111111111111';
+  const ADDRESS_INACTIVE = '0xb8c2C29ee19D8307cb7255e1Cd9CbDE883A267d5'.toLowerCase(); // nick.eth
+  const ADDRESS_ZERO_VOTES = '0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045'; // vitalik.eth
 
   // Helper to create finished proposals (similar to proposal-finished test)
   const createFinishedProposals = (daoId: string, count: number) => {
@@ -41,23 +42,6 @@ describe('Non-Voting Trigger - Integration Test', () => {
     });
   };
 
-  // Helper to format expected non-voting message
-  const formatNonVotingMessage = (address: string, daoId: string, proposals: any[]) => {
-    const shortAddress = `${address.slice(0, 6)}...${address.slice(-4)}`;
-    const proposalList = proposals
-      .slice(0, 3)
-      .map(p => `• ${p.title}`)
-      .join('\n');
-    
-    return `⚠️ Non-Voting Alert for DAO ${daoId.toUpperCase()}
-
-The address ${shortAddress} that you follow hasn't voted in the last 3 proposals:
-
-${proposalList}
-
-Consider reaching out to encourage participation!`;
-  };
-
   beforeAll(async () => {
     apps = TestCleanup.getGlobalApps();
     httpMockSetup = TestCleanup.getGlobalHttpMockSetup();
@@ -72,14 +56,33 @@ Consider reaching out to encourage participation!`;
   test('Basic non-voting scenario - only completely inactive address gets notification', async () => {
     const testDaoId = testConstants.daoIds.temporalTest1;
     
-    // Create user following 3 addresses
-    await UserFactory.createUserWithFollowedAddresses(
+    // Create a user who owns the ADDRESS_INACTIVE wallet
+    const { user: inactiveUser } = await UserFactory.createUserWithFullSetup(
       testConstants.profiles.p1.chatId,
-      'test_user',
+      'inactive_user',
       testDaoId,
-      [ADDRESS_ACTIVE, ADDRESS_PARTIAL, ADDRESS_INACTIVE],
       true
     );
+    
+    // Associate ADDRESS_INACTIVE with this user
+    await UserFactory.createUserAddress(inactiveUser.id, ADDRESS_INACTIVE);
+    
+    // Create other users for ADDRESS_ACTIVE and ADDRESS_PARTIAL (but we don't care about them)
+    const { user: activeUser } = await UserFactory.createUserWithFullSetup(
+      '999991',
+      'active_user',
+      testDaoId,
+      true
+    );
+    await UserFactory.createUserAddress(activeUser.id, ADDRESS_ACTIVE);
+    
+    const { user: partialUser } = await UserFactory.createUserWithFullSetup(
+      '999992',
+      'partial_user',
+      testDaoId,
+      true  
+    );
+    await UserFactory.createUserAddress(partialUser.id, ADDRESS_PARTIAL);
 
     // Create 3 finished proposals
     const proposals = createFinishedProposals(testDaoId, 3);
@@ -93,17 +96,17 @@ Consider reaching out to encourage participation!`;
     // Setup mocks
     GraphQLMockSetup.setupMock(httpMockSetup.getMockClient(), proposals, [], {}, votes);
 
-    // Wait for notification - should only be for ADDRESS_INACTIVE
+    // Wait for notification - should only be for ADDRESS_INACTIVE (nick.eth)
     const message = await telegramHelper.waitForMessage(
       msg => msg.text.includes('Non-Voting Alert') && 
-             msg.text.includes(ADDRESS_INACTIVE.slice(0, 6)),
+             msg.text.includes('nick.eth'),
       { timeout: timeouts.notification.delivery }
     );
 
     expect(message.chatId).toBe(testConstants.profiles.p1.chatId);
-    expect(message.text).toContain('hasn\'t voted in the last 3 proposals');
-    expect(message.text).not.toContain(ADDRESS_ACTIVE.slice(0, 6));
-    expect(message.text).not.toContain(ADDRESS_PARTIAL.slice(0, 6));
+    expect(message.text).toContain(nonVotingMessages.alert.substring(0, 23));
+    expect(message.text).not.toContain(ADDRESS_ACTIVE);
+    expect(message.text).not.toContain(ADDRESS_PARTIAL);
   });
 
   test('Edge case - less than 3 proposals, no notifications', async () => {
@@ -174,10 +177,10 @@ Consider reaching out to encourage participation!`;
     expect(chatIds).toContain(testConstants.profiles.p3.chatId);
     expect(chatIds).toContain(testConstants.profiles.p4.chatId);
     
-    // Verify content
+    // Verify content - should show nick.eth
     messages.forEach(message => {
-      expect(message.text).toContain(ADDRESS_INACTIVE.slice(0, 6));
-      expect(message.text).toContain('hasn\'t voted in the last 3 proposals');
+      expect(message.text).toContain('nick.eth');
+      expect(message.text).toContain(nonVotingMessages.alert.substring(0, 23));
     });
   });
 
@@ -209,15 +212,15 @@ Consider reaching out to encourage participation!`;
     // Setup mocks
     GraphQLMockSetup.setupMock(httpMockSetup.getMockClient(), proposals, [], {}, votes);
 
-    // Should only get notification for ADDRESS_ZERO_VOTES
+    // Should only get notification for ADDRESS_ZERO_VOTES (vitalik.eth)
     const message = await telegramHelper.waitForMessage(
       msg => msg.text.includes('Non-Voting Alert'),
       { timeout: timeouts.notification.delivery }
     );
 
-    expect(message.text).toContain(ADDRESS_ZERO_VOTES.slice(0, 6));
-    expect(message.text).not.toContain(ADDRESS_ACTIVE.slice(0, 6));
-    expect(message.text).not.toContain(ADDRESS_PARTIAL.slice(0, 6));
+    expect(message.text).toContain('vitalik.eth');
+    expect(message.text).not.toContain(ADDRESS_ACTIVE);
+    expect(message.text).not.toContain(ADDRESS_PARTIAL);
   });
 
   test('No followed addresses - no processing', async () => {
@@ -293,10 +296,10 @@ Consider reaching out to encourage participation!`;
     const dao2Message = messages.find(m => m.chatId === testConstants.profiles.p9.chatId);
 
     expect(dao1Message?.text).toContain('DAO UNI');
-    expect(dao1Message?.text).toContain(ADDRESS_INACTIVE.slice(0, 6));
+    expect(dao1Message?.text).toContain('nick.eth');
     
     expect(dao2Message?.text).toContain('DAO ENS');
-    expect(dao2Message?.text).toContain(ADDRESS_ZERO_VOTES.slice(0, 6));
+    expect(dao2Message?.text).toContain('vitalik.eth');
   });
 
   test('Duplicate prevention - same address in multiple events', async () => {
@@ -347,8 +350,8 @@ Consider reaching out to encourage participation!`;
     
     // Verify event IDs contain the address and are unique
     const eventIds = nonVotingNotifications.map(n => n.event_id);
-    expect(eventIds[0]).toContain(ADDRESS_INACTIVE);
-    expect(eventIds[1]).toContain(ADDRESS_INACTIVE);
+    expect(eventIds[0]).toContain(ADDRESS_INACTIVE.toLowerCase());
+    expect(eventIds[1]).toContain(ADDRESS_INACTIVE.toLowerCase());
     expect(eventIds[0]).toContain('non-voting');
     expect(eventIds[1]).toContain('non-voting');
     

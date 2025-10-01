@@ -6,6 +6,7 @@
 
 import { AnticaptureClient } from '@notification-system/anticapture-client';
 import { SubscriptionAPIService } from '../subscription-api.service';
+import { getDaoWithEmoji } from '@notification-system/messages';
 
 export interface DAOSelectionState {
   selections: Set<string>;
@@ -13,13 +14,6 @@ export interface DAOSelectionState {
 }
 
 export abstract class BaseDAOService {
-  // DAO emojis mapping (shared across all platforms)
-  protected readonly daoEmojis = new Map<string, string>([
-    ['UNI', '🦄'],
-    ['ENS', '🌐'],
-    ['OP', '🔴'],
-  ]);
-
   constructor(
     protected readonly anticaptureClient: AnticaptureClient,
     protected readonly subscriptionApi: SubscriptionAPIService
@@ -30,15 +24,6 @@ export abstract class BaseDAOService {
    * Each implementation must return its platform name
    */
   protected abstract getPlatformId(): string;
-
-  /**
-   * Get DAO display name with emoji
-   */
-  protected getDaoWithEmoji(dao: string): string {
-    const normalizedDao = dao.toUpperCase();
-    const emoji = this.daoEmojis.get(normalizedDao) || '🏛️';
-    return `${emoji} ${dao}`;
-  }
 
   /**
    * Fetch available DAOs from AntiCapture
@@ -126,7 +111,7 @@ export abstract class BaseDAOService {
   protected formatDAOList(daos: string[] | Set<string>): string {
     const daoArray = Array.isArray(daos) ? daos : Array.from(daos);
     return daoArray
-      .map(dao => this.getDaoWithEmoji(dao))
+      .map(dao => getDaoWithEmoji(dao))
       .join(', ');
   }
 
@@ -136,7 +121,7 @@ export abstract class BaseDAOService {
   protected formatDAOListWithBullets(daos: string[] | Set<string>): string {
     const daoArray = Array.isArray(daos) ? daos : Array.from(daos);
     return daoArray
-      .map(dao => `• ${this.getDaoWithEmoji(dao)}`)
+      .map(dao => `• ${getDaoWithEmoji(dao)}`)
       .join('\n');
   }
 

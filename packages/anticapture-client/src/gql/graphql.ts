@@ -1142,6 +1142,7 @@ export type Proposal_200_Response = {
   __typename?: 'proposal_200_response';
   abstainVotes: Scalars['String']['output'];
   againstVotes: Scalars['String']['output'];
+  calldatas: Array<Maybe<Scalars['String']['output']>>;
   daoId: Scalars['String']['output'];
   description: Scalars['String']['output'];
   endBlock: Scalars['Float']['output'];
@@ -1153,9 +1154,11 @@ export type Proposal_200_Response = {
   startBlock: Scalars['Float']['output'];
   startTimestamp: Scalars['String']['output'];
   status: Scalars['String']['output'];
+  targets: Array<Maybe<Scalars['String']['output']>>;
   timestamp: Scalars['String']['output'];
   title?: Maybe<Scalars['String']['output']>;
   txHash: Scalars['String']['output'];
+  values: Array<Maybe<Scalars['String']['output']>>;
 };
 
 export type ProposalsActivity_200_Response = {
@@ -1544,6 +1547,7 @@ export type Query_Proposals_Items_Items = {
   __typename?: 'query_proposals_items_items';
   abstainVotes: Scalars['String']['output'];
   againstVotes: Scalars['String']['output'];
+  calldatas: Array<Maybe<Scalars['String']['output']>>;
   daoId: Scalars['String']['output'];
   description: Scalars['String']['output'];
   endBlock: Scalars['Float']['output'];
@@ -1555,9 +1559,11 @@ export type Query_Proposals_Items_Items = {
   startBlock: Scalars['Float']['output'];
   startTimestamp: Scalars['String']['output'];
   status: Scalars['String']['output'];
+  targets: Array<Maybe<Scalars['String']['output']>>;
   timestamp: Scalars['String']['output'];
   title?: Maybe<Scalars['String']['output']>;
   txHash: Scalars['String']['output'];
+  values: Array<Maybe<Scalars['String']['output']>>;
 };
 
 export type Query_TotalAssets_Items = {

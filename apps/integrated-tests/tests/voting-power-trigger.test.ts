@@ -77,7 +77,7 @@ describe('Voting Power Trigger - Integration Test', () => {
     // Verify the message contains the expected content
     expect(message.text).toContain('voting power');
     expect(message.text).toContain(testDaoId);
-    
+
     // Verify that the placeholder was replaced with the actual link
     expect(message.text).not.toContain('{{txLink}}');
     

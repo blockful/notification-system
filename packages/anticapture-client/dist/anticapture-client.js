@@ -100,7 +100,10 @@ class AnticaptureClient {
             for (const dao of allDAOs) {
                 try {
                     const validated = await this.query(graphql_2.ListProposalsDocument, schemas_1.SafeProposalsResponseSchema, variables, dao.id);
-                    allProposals.push(...(0, schemas_1.processProposals)(validated, dao.id));
+                    const processed = (0, schemas_1.processProposals)(validated, dao.id);
+                    if (processed && processed.length > 0) {
+                        allProposals.push(...processed);
+                    }
                 }
                 catch (error) {
                     console.warn(`Skipping ${dao.id} due to API error: ${error instanceof Error ? error.message : error}`);
@@ -110,7 +113,7 @@ class AnticaptureClient {
         }
         try {
             const validated = await this.query(graphql_2.ListProposalsDocument, schemas_1.SafeProposalsResponseSchema, variables, daoId);
-            return (0, schemas_1.processProposals)(validated, daoId);
+            return (0, schemas_1.processProposals)(validated, daoId) || [];
         }
         catch (error) {
             console.warn(`Error querying proposals for DAO ${daoId}: ${error instanceof Error ? error.message : error}`);

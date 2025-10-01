@@ -116,7 +116,7 @@ export class SlackWalletService extends BaseWalletService {
       console.error('Error listing wallets:', error);
       if (context.respond) {
         await context.respond({
-          text: 'Sorry, there was an error loading your wallets. Please try again later.',
+          text: 'Sorry, there was an error. Please try again later.',
           response_type: 'ephemeral'
         });
       }
@@ -243,6 +243,67 @@ export class SlackWalletService extends BaseWalletService {
   }
 
   /**
+   * Show help message for adding wallet
+   */
+  async startAddWallet(context: SlackCommandContext): Promise<void> {
+    try {
+      // Open modal for wallet input
+      await context.client.views.open({
+        trigger_id: context.body.trigger_id,
+        view: {
+          type: 'modal',
+          callback_id: 'wallet_add_modal',
+          title: {
+            type: 'plain_text',
+            text: 'Add Wallet'
+          },
+          submit: {
+            type: 'plain_text',
+            text: 'Add'
+          },
+          close: {
+            type: 'plain_text',
+            text: 'Cancel'
+          },
+          blocks: [
+            {
+              type: 'section',
+              text: {
+                type: 'mrkdwn',
+                text: 'Enter your wallet address or ENS name to receive custom notifications.'
+              }
+            },
+            {
+              type: 'input',
+              block_id: 'wallet_input',
+              element: {
+                type: 'plain_text_input',
+                action_id: 'wallet_address',
+                placeholder: {
+                  type: 'plain_text',
+                  text: '0x... or name.eth'
+                }
+              },
+              label: {
+                type: 'plain_text',
+                text: 'Wallet Address or ENS'
+              }
+            }
+          ]
+        }
+      });
+    } catch (error) {
+      console.error('Error adding wallet(s):', error);
+      if (context.respond) {
+        await context.respond({
+          text: '❌ An error occurred while adding the wallet(s). Please try again.',
+          response_type: 'ephemeral'
+        });
+      }
+    }
+  }
+
+  /**
    * Start the remove wallet flow
    */
   async startRemoveWallet(context: SlackCommandContext): Promise<void> {
@@ -287,6 +348,67 @@ export class SlackWalletService extends BaseWalletService {
     }
   }
 
+  /**
+   * Process wallet addition from modal submission
+   */
+  async processWalletAddition(context: SlackViewContext): Promise<void> {
+    const userId = context.body.user.id;
+    const values = context.view.state.values;
+    const input = values.wallet_input.wallet_address.value?.trim();
+
+    try {
+      if (!input) {
+        await context.ack({
+          response_action: 'errors',
+          errors: {
+            wallet_input: 'Please enter a wallet address or ENS name'
+          }
+        });
+        return;
+      }
+
+      // Use base service for validation and addition
+      const result = await this.addUserWallet(userId, input, 'slack');
+
+      if (!result.success) {
+        await context.ack({
+          response_action: 'errors',
+          errors: {
+            wallet_input: result.message
+          }
+        });
+        return;
+      }
+
+      // Success - close modal and send message
+      await context.ack();
+
+      // Get display name for the added address
+      const displayName = await this.ensResolver.resolveDisplayName(result.address!);
+
+      await context.client.chat.postMessage({
+        channel: userId,
+        text: `✅ Wallet added successfully: ${displayName}`,
+        blocks: [
+          {
+            type: 'section',
+            text: {
+              type: 'mrkdwn',
+              text: `✅ *Wallet added successfully!*\n${displayName}`
+            }
+          }
+        ]
+      });
+    } catch (error) {
+      console.error('Error adding wallet:', error);
+      await context.ack({
+        response_action: 'errors',
+        errors: {
+          wallet_input: 'An error occurred. Please try again.'
+        }
+      });
+    }
+  }
 
   /**
    * Toggle wallet selection for removal
@@ -381,7 +503,7 @@ export class SlackWalletService extends BaseWalletService {
       if (context.respond) {
         await context.respond({
           replace_original: true,
-          text: '❌ Sorry, there was an error removing your wallets. Please try again later.',
+          text: 'Sorry, there was an error. Please try again later.',
           response_type: 'ephemeral'
         });
       }
@@ -423,7 +545,7 @@ export class SlackWalletService extends BaseWalletService {
           type: 'button',
           text: {
             type: 'plain_text',
-            text: isSelected ? 'Selected' : 'Select',
+            text: isSelected ? uiMessages.selection.selected : uiMessages.selection.select,
             emoji: true
           },
           style: isSelected ? 'danger' : undefined,
@@ -445,7 +567,7 @@ export class SlackWalletService extends BaseWalletService {
             type: 'button',
             text: {
               type: 'plain_text',
-              text: '🗑️ Confirm Removal',
+              text: slackMessages.wallet.confirmRemoval,
               emoji: true
             },
             style: 'danger',

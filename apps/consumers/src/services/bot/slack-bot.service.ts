@@ -13,6 +13,7 @@ import { EnsResolverService } from '../ens-resolver.service';
 import { SlackDAOService } from '../dao/slack-dao.service';
 import { SlackWalletService } from '../wallet/slack-wallet.service';
 import { SlackCommandContext } from '../../interfaces/slack-context.interface';
+import { slackMessages, replacePlaceholders } from '@notification-system/messages';
 
 type CommandHandler = (context: SlackCommandContext, args: string[]) => Promise<void>;
 
@@ -165,7 +166,7 @@ export class SlackBotService implements BotServiceInterface {
           type: 'section',
           text: {
             type: 'mrkdwn',
-            text: '*🔔 Anticapture Notification System*\n_Spotting the "oh no" before it hits your treasury_'
+            text: `${slackMessages.header.title}\n${slackMessages.header.subtitle}`
           }
         },
         {
@@ -190,7 +191,7 @@ export class SlackBotService implements BotServiceInterface {
           elements: [
             {
               type: 'mrkdwn',
-              text: 'Learn more at <https://anticapture.ai|anticapture.ai>'
+              text: slackMessages.learnMore
             }
           ]
         }
@@ -207,7 +208,7 @@ export class SlackBotService implements BotServiceInterface {
     await context.ack();
     if (context.respond) {
       await context.respond({
-        text: `❌ ${message}`,
+        text: replacePlaceholders(slackMessages.error, { message }),
         response_type: 'ephemeral'
       });
     }

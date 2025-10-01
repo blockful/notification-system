@@ -4,6 +4,7 @@ import { HttpClientMockSetup, GraphQLMockSetup } from '../src/mocks';
 import { UserFactory, VotingPowerFactory } from '../src/fixtures';
 import { TelegramTestHelper, DatabaseTestHelper, TestCleanup } from '../src/helpers';
 import { testConstants, timeouts } from '../src/config';
+import { delegationChangeMessages } from '@notification-system/messages';
 
 describe('Delegation Change Notifications - Integration Test', () => {
   let apps: TestApps;
@@ -67,10 +68,10 @@ describe('Delegation Change Notifications - Integration Test', () => {
     );
 
     // Verify delegator confirmation notification
-    expect(delegatorMessage.text).toContain('✅ Delegation confirmed');
+    expect(delegatorMessage.chatId).toBe(testConstants.profiles.p1.chatId);
+    expect(delegatorMessage.text).toContain(delegationChangeMessages.confirmed.substring(0, 23));
     expect(delegatorMessage.text).toContain(testDaoId);
     expect(delegatorMessage.text).toContain('delegated');
-    expect(delegatorMessage.chatId).toBe(testConstants.profiles.p1.chatId);
     
     // Verify transaction link and placeholders are replaced
     expect(delegatorMessage.text).not.toContain('{{txLink}}');
@@ -138,11 +139,10 @@ describe('Delegation Change Notifications - Integration Test', () => {
     console.log('Self-delegation message received:', selfDelegationMessage.text);
 
     // Verify self-delegation message content
-    expect(selfDelegationMessage.text).toContain('🔄 Self-delegation confirmed');
-    expect(selfDelegationMessage.text).toContain('You delegated');
-    expect(selfDelegationMessage.text).toContain('to yourself');
-    expect(selfDelegationMessage.text).toContain('Your total voting power is now');
     expect(selfDelegationMessage.chatId).toBe(testConstants.profiles.p1.chatId);
+    expect(selfDelegationMessage.text).toContain(delegationChangeMessages.selfDelegation.substring(0, 29));
+    expect(selfDelegationMessage.text).toContain('to themselves');
+    expect(selfDelegationMessage.text).toContain('Total voting power is now');
   });
 
   test('should send undelegation confirmation notification', async () => {
@@ -189,8 +189,8 @@ describe('Delegation Change Notifications - Integration Test', () => {
     );
 
     // Verify undelegation confirmation notification
-    expect(delegatorMessage.text).toContain('↩️ Undelegation confirmed');
-    expect(delegatorMessage.text).toContain('removed');
     expect(delegatorMessage.chatId).toBe(testConstants.profiles.p1.chatId);
+    expect(delegatorMessage.text).toContain(delegationChangeMessages.undelegation.substring(0, 25));
+    expect(delegatorMessage.text).toContain('removed');
   });
 });
