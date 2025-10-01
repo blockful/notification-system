@@ -12,6 +12,7 @@ import {
   SlackActionContext,
   SlackViewContext
 } from '../../interfaces/slack-context.interface';
+import { slackMessages, uiMessages, replacePlaceholders } from '@notification-system/messages';
 
 export class SlackWalletService extends BaseWalletService {
 
@@ -48,7 +49,7 @@ export class SlackWalletService extends BaseWalletService {
       console.error('Error in wallet initialization:', error);
       if (context.respond) {
         await context.respond({
-          text: 'Sorry, there was an error. Please try again later.',
+          text: slackMessages.genericError,
           response_type: 'ephemeral'
         });
       }
@@ -69,7 +70,7 @@ export class SlackWalletService extends BaseWalletService {
       if (wallets.length === 0) {
         if (context.respond) {
           await context.respond({
-            text: "You haven't added any wallets yet. Use `/dao-notify wallet add` to get started!",
+            text: slackMessages.wallet.emptyList,
             response_type: 'ephemeral'
           });
         }
@@ -92,7 +93,7 @@ export class SlackWalletService extends BaseWalletService {
               type: 'section',
               text: {
                 type: 'mrkdwn',
-                text: '*Your Wallet Addresses:*'
+                text: slackMessages.wallet.listHeader
               }
             },
             {
@@ -104,7 +105,7 @@ export class SlackWalletService extends BaseWalletService {
               elements: [
                 {
                   type: 'mrkdwn',
-                  text: 'Use `/dao-notify wallet add` or `/dao-notify wallet remove` to manage your wallets'
+                  text: slackMessages.wallet.instructions
                 }
               ]
             }
@@ -116,7 +117,7 @@ export class SlackWalletService extends BaseWalletService {
       console.error('Error listing wallets:', error);
       if (context.respond) {
         await context.respond({
-          text: 'Sorry, there was an error. Please try again later.',
+          text: slackMessages.genericError,
           response_type: 'ephemeral'
         });
       }
@@ -317,7 +318,7 @@ export class SlackWalletService extends BaseWalletService {
       if (wallets.length === 0) {
         if (context.respond) {
           await context.respond({
-            text: "You don't have any wallets to remove.",
+            text: slackMessages.wallet.noWalletsToRemove,
             response_type: 'ephemeral'
           });
         }
@@ -332,7 +333,7 @@ export class SlackWalletService extends BaseWalletService {
 
       if (context.respond) {
         await context.respond({
-          text: 'Select the wallets you want to remove:',
+          text: slackMessages.wallet.removeInstructions,
           blocks,
           response_type: 'ephemeral'
         });
@@ -341,7 +342,7 @@ export class SlackWalletService extends BaseWalletService {
       console.error('Error starting wallet removal:', error);
       if (context.respond) {
         await context.respond({
-          text: 'Sorry, there was an error. Please try again later.',
+          text: slackMessages.genericError,
           response_type: 'ephemeral'
         });
       }
@@ -439,7 +440,7 @@ export class SlackWalletService extends BaseWalletService {
       if (context.respond) {
         await context.respond({
           replace_original: true,
-          text: 'Select the wallets you want to remove:',
+          text: slackMessages.wallet.removeInstructions,
           blocks
         });
       }
@@ -465,7 +466,7 @@ export class SlackWalletService extends BaseWalletService {
         if (context.respond) {
           await context.respond({
             replace_original: true,
-            text: '⚠️ Please select at least one wallet to remove.',
+            text: uiMessages.warnings.selectAtLeastOneWallet,
             response_type: 'ephemeral'
           });
         }
@@ -488,8 +489,8 @@ export class SlackWalletService extends BaseWalletService {
               text: {
                 type: 'mrkdwn',
                 text: result.success
-                  ? `✅ *Success!* ${result.message}`
-                  : `❌ ${result.message}`
+                  ? replacePlaceholders(slackMessages.wallet.removedSuccess, { message: result.message })
+                  : `${uiMessages.status.error} ${result.message}`
               }
             }
           ]
@@ -503,7 +504,7 @@ export class SlackWalletService extends BaseWalletService {
       if (context.respond) {
         await context.respond({
           replace_original: true,
-          text: 'Sorry, there was an error. Please try again later.',
+          text: slackMessages.genericError,
           response_type: 'ephemeral'
         });
       }
@@ -522,7 +523,7 @@ export class SlackWalletService extends BaseWalletService {
         type: 'section',
         text: {
           type: 'mrkdwn',
-          text: '*Select wallets to remove:*'
+          text: slackMessages.wallet.removeHeader
         }
       },
       {
@@ -539,13 +540,13 @@ export class SlackWalletService extends BaseWalletService {
         type: 'section',
         text: {
           type: 'mrkdwn',
-          text: `${isSelected ? '☑️' : '☐'} ${displayName}`
+          text: `${isSelected ? uiMessages.selection.checked : uiMessages.selection.unchecked} ${displayName}`
         },
         accessory: {
           type: 'button',
           text: {
             type: 'plain_text',
-            text: isSelected ? 'Selected' : 'Select',
+            text: isSelected ? uiMessages.selection.selected : uiMessages.selection.select,
             emoji: true
           },
           style: isSelected ? 'danger' : undefined,
@@ -567,7 +568,7 @@ export class SlackWalletService extends BaseWalletService {
             type: 'button',
             text: {
               type: 'plain_text',
-              text: '🗑️ Confirm Removal',
+              text: slackMessages.wallet.confirmRemoval,
               emoji: true
             },
             style: 'danger',
