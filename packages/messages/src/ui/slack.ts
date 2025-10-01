@@ -56,7 +56,24 @@ export const slackMessages = {
     confirmRemoval: '🗑️ Confirm Removal',
     addedSuccess: '✅ *Wallet added successfully!*\n{{displayName}}',
     removedSuccess: '✅ *Success!* {{message}}',
-    addError: 'An error occurred. Please try again.'
+    addError: 'An error occurred. Please try again.',
+    // Help messages
+    help: {
+      title: '*Add a Wallet Address*',
+      instructions: 'To add a wallet, use the command with your address or ENS name:',
+      examples: '```/dao-notify wallet add 0x1234...abcd```\nor\n```/dao-notify wallet add vitalik.eth```',
+      privacy: '💡 Your wallet address will be kept private'
+    },
+    // Inline addition messages
+    inline: {
+      maxAddressesError: '❌ Maximum 10 addresses per command',
+      addedSuccess: '✅ {{count}} wallet(s) added successfully\n',
+      duplicatesWarning: '⚠️ {{count}} already exist\n',
+      invalidError: '❌ {{count}} invalid: {{list}}',
+      andMore: ' and {{count}} more',
+      done: '✅ Done',
+      addError: '❌ An error occurred while adding the wallet(s). Please try again.'
+    }
   },
 
   // DAO management messages

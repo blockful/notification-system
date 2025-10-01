@@ -135,14 +135,14 @@ export class SlackWalletService extends BaseWalletService {
             type: 'section',
             text: {
               type: 'mrkdwn',
-              text: '*Add a Wallet Address*\n\nTo add a wallet, use the command with your address or ENS name:'
+              text: `${slackMessages.wallet.help.title}\n\n${slackMessages.wallet.help.instructions}`
             }
           },
           {
             type: 'section',
             text: {
               type: 'mrkdwn',
-              text: '```/dao-notify wallet add 0x1234...abcd```\nor\n```/dao-notify wallet add vitalik.eth```'
+              text: slackMessages.wallet.help.examples
             }
           },
           {
@@ -150,7 +150,7 @@ export class SlackWalletService extends BaseWalletService {
             elements: [
               {
                 type: 'mrkdwn',
-                text: '💡 Your wallet address will be kept private'
+                text: slackMessages.wallet.help.privacy
               }
             ]
           }
@@ -174,7 +174,7 @@ export class SlackWalletService extends BaseWalletService {
     if (inputs.length > 10) {
       if (context.respond) {
         await context.respond({
-          text: '❌ Maximum 10 addresses per command',
+          text: slackMessages.wallet.inline.maxAddressesError,
           response_type: 'ephemeral'
         });
       }
@@ -214,21 +214,24 @@ export class SlackWalletService extends BaseWalletService {
 
       let message = '';
       if (toAdd.length > 0) {
-        message += `✅ ${toAdd.length} wallet(s) added successfully\n`;
+        message += replacePlaceholders(slackMessages.wallet.inline.addedSuccess, { count: toAdd.length });
       }
       if (duplicates.length > 0) {
-        message += `⚠️ ${duplicates.length} already exist\n`;
+        message += replacePlaceholders(slackMessages.wallet.inline.duplicatesWarning, { count: duplicates.length });
       }
       if (invalid.length > 0) {
-        message += `❌ ${invalid.length} invalid: ${invalid.slice(0, 3).join(', ')}`;
+        message += replacePlaceholders(slackMessages.wallet.inline.invalidError, { 
+          count: invalid.length, 
+          list: invalid.slice(0, 3).join(', ') 
+        });
         if (invalid.length > 3) {
-          message += ` and ${invalid.length - 3} more`;
+          message += replacePlaceholders(slackMessages.wallet.inline.andMore, { count: invalid.length - 3 });
         }
       }
 
       if (context.respond) {
         await context.respond({
-          text: message || '✅ Done',
+          text: message || slackMessages.wallet.inline.done,
           response_type: 'ephemeral'
         });
       }
@@ -236,7 +239,7 @@ export class SlackWalletService extends BaseWalletService {
       console.error('Error adding wallet(s):', error);
       if (context.respond) {
         await context.respond({
-          text: '❌ An error occurred while adding the wallet(s). Please try again.',
+          text: slackMessages.wallet.inline.addError,
           response_type: 'ephemeral'
         });
       }
@@ -256,22 +259,22 @@ export class SlackWalletService extends BaseWalletService {
           callback_id: 'wallet_add_modal',
           title: {
             type: 'plain_text',
-            text: 'Add Wallet'
+            text: slackMessages.wallet.addModal.title
           },
           submit: {
             type: 'plain_text',
-            text: 'Add'
+            text: slackMessages.wallet.addModal.submit
           },
           close: {
             type: 'plain_text',
-            text: 'Cancel'
+            text: slackMessages.wallet.addModal.cancel
           },
           blocks: [
             {
               type: 'section',
               text: {
                 type: 'mrkdwn',
-                text: 'Enter your wallet address or ENS name to receive custom notifications.'
+                text: slackMessages.wallet.addModal.hint
               }
             },
             {
@@ -282,12 +285,12 @@ export class SlackWalletService extends BaseWalletService {
                 action_id: 'wallet_address',
                 placeholder: {
                   type: 'plain_text',
-                  text: '0x... or name.eth'
+                  text: slackMessages.wallet.addModal.placeholder
                 }
               },
               label: {
                 type: 'plain_text',
-                text: 'Wallet Address or ENS'
+                text: slackMessages.wallet.addModal.label
               }
             }
           ]
@@ -297,7 +300,7 @@ export class SlackWalletService extends BaseWalletService {
       console.error('Error adding wallet(s):', error);
       if (context.respond) {
         await context.respond({
-          text: '❌ An error occurred while adding the wallet(s). Please try again.',
+          text: slackMessages.wallet.addError,
           response_type: 'ephemeral'
         });
       }
@@ -362,7 +365,7 @@ export class SlackWalletService extends BaseWalletService {
         await context.ack({
           response_action: 'errors',
           errors: {
-            wallet_input: 'Please enter a wallet address or ENS name'
+            wallet_input: slackMessages.wallet.addModal.validationError
           }
         });
         return;
@@ -395,7 +398,7 @@ export class SlackWalletService extends BaseWalletService {
             type: 'section',
             text: {
               type: 'mrkdwn',
-              text: `✅ *Wallet added successfully!*\n${displayName}`
+              text: replacePlaceholders(slackMessages.wallet.addedSuccess, { displayName })
             }
           }
         ]
@@ -405,7 +408,7 @@ export class SlackWalletService extends BaseWalletService {
       await context.ack({
         response_action: 'errors',
         errors: {
-          wallet_input: 'An error occurred. Please try again.'
+          wallet_input: slackMessages.wallet.addError
         }
       });
     }
