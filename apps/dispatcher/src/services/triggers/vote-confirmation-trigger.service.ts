@@ -168,6 +168,7 @@ export class VoteConfirmationTriggerHandler extends BaseTriggerHandler<VoteEvent
       daoId: vote.daoId,
       proposalIdShort: vote.proposalId.slice(0, 8) + '...',
       votingPower,
+      address: vote.voterAccountId,
       ...(hasReason && { reason: vote.reason! })
     });
   }

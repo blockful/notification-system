@@ -6,11 +6,11 @@ Proposal: "{{title}}"
 
 ⏱️ Time remaining: {{timeRemaining}}
 📊 {{thresholdPercentage}}% of voting period has passed
-🗳️ Your vote hasn't been recorded yet
+🗳️ {{address}}'s vote hasn't been recorded yet
 
-⚠️ This proposal is closing soon! Don't miss your chance to participate in governance.
+⚠️ This proposal is closing soon!
 
-Participate in governance and make your voice heard!`,
+Participate in governance!`,
 
   midPeriod: `⏰ Mid-Period Voting Reminder - {{daoId}}
 
@@ -18,11 +18,11 @@ Proposal: "{{title}}"
 
 ⏱️ Time remaining: {{timeRemaining}}
 📊 {{thresholdPercentage}}% of voting period has passed
-🗳️ Your vote hasn't been recorded yet
+🗳️ {{address}}'s vote hasn't been recorded yet
 
-⏰ More than half of the voting period has passed. Consider casting your vote soon.
+⏰ More than half of the voting period has passed.
 
-Participate in governance and make your voice heard!`,
+Participate in governance!`,
 
   early: `🔔 Early Voting Reminder - {{daoId}}
 
@@ -30,11 +30,11 @@ Proposal: "{{title}}"
 
 ⏱️ Time remaining: {{timeRemaining}}
 📊 {{thresholdPercentage}}% of voting period has passed
-🗳️ Your vote hasn't been recorded yet
+🗳️ {{address}}'s vote hasn't been recorded yet
 
-🔔 The voting period is underway. Take your time to review and vote.
+🔔 The voting period is underway. Take time to review and vote.
 
-Participate in governance and make your voice heard!`,
+Participate in governance!`,
 
   default: `🗳️ Voting Reminder - {{daoId}}
 
@@ -42,9 +42,9 @@ Proposal: "{{title}}"
 
 ⏱️ Time remaining: {{timeRemaining}}
 📊 {{thresholdPercentage}}% of voting period has passed
-🗳️ Your vote hasn't been recorded yet
+🗳️ {{address}}'s vote hasn't been recorded yet
 
-Participate in governance and make your voice heard!`,
+Participate in governance!`,
 
   // Helper function to get message key based on threshold
   getMessageKey(thresholdPercentage: number): 'urgent' | 'midPeriod' | 'early' | 'default' {
@@ -63,8 +63,8 @@ Participate in governance and make your voice heard!`,
 
   urgencyMessages: {
     urgent: '⚠️ This proposal is closing soon! Don\'t miss your chance to participate in governance.',
-    midPeriod: '⏰ More than half of the voting period has passed. Consider casting your vote soon.',
-    early: '🔔 The voting period is underway. Take your time to review and vote.',
+    midPeriod: '⏰ More than half of the voting period has passed.',
+    early: '🔔 The voting period is underway. Take time to review and vote.',
     default: ''
   }
 };

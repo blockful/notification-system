@@ -8,7 +8,7 @@ export const uiMessages = {
 Spotting the "oh no" before it hits your treasury.
 
 ➡️ To start using the system, you'll need to add the DAOs you want to receive notifications from by clicking on "DAOs".
-➡️ After that, click on "My Wallets" and add your wallet address to receive custom notifications.`,
+➡️ After that, click on "Tracked Wallets" and add your wallet address to receive custom notifications.`,
 
   help: `<b>What is Anticapture?</b>
 A governance security research, notification system and dashboard that tracks social dynamics, governance models, and contracts, ensuring security and preventing malicious capture.
@@ -35,7 +35,7 @@ You'll be notified when things get spicy:`,
   buttons: {
     daos: '🌐 DAOs',
     learnMore: '💡 Learn More',
-    myWallets: '📝 My Wallets',
+    myWallets: '📝 Tracked Wallets',
     addWallet: '➕ Add wallet',
     removeWallet: '❌ Remove wallet',
     confirmRemoval: '🗑️ Confirm removal'

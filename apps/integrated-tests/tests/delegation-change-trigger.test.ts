@@ -141,8 +141,8 @@ describe('Delegation Change Notifications - Integration Test', () => {
     // Verify self-delegation message content
     expect(selfDelegationMessage.chatId).toBe(testConstants.profiles.p1.chatId);
     expect(selfDelegationMessage.text).toContain(delegationChangeMessages.selfDelegation.substring(0, 29));
-    expect(selfDelegationMessage.text).toContain('to yourself');
-    expect(selfDelegationMessage.text).toContain('Your total voting power is now');
+    expect(selfDelegationMessage.text).toContain('to themselves');
+    expect(selfDelegationMessage.text).toContain('Total voting power is now');
   });
 
   test('should send undelegation confirmation notification', async () => {
