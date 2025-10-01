@@ -107,8 +107,8 @@ export class SlackClient implements SlackClientInterface {
     handler: (context: SlackCommandContext) => Promise<void>
   ): void {
     this.boltApp.command(command, async (args) => {
-      const userId = args.body.user_id;
-      const session = this.sessionStorage.get(userId);
+      const channelId = args.body.channel_id;
+      const session = this.sessionStorage.get(channelId);
       const context: SlackCommandContext = {
         body: args.body,
         session,
@@ -120,7 +120,7 @@ export class SlackClient implements SlackClientInterface {
 
       try {
         await handler(context);
-        this.sessionStorage.set(userId, context.session);
+        this.sessionStorage.set(channelId, context.session);
       } catch (error) {
         console.error(`Error handling command ${command}:`, error);
         await args.ack();
@@ -140,8 +140,8 @@ export class SlackClient implements SlackClientInterface {
     handler: (context: SlackActionContext) => Promise<void>
   ): void {
     this.boltApp.action(actionId, async (args) => {
-      const userId = args.body.user.id;
-      const session = this.sessionStorage.get(userId);
+      const channelId = (args.body as any).channel?.id || (args.body as any).channel_id;
+      const session = this.sessionStorage.get(channelId);
       const context: SlackActionContext = {
         body: args.body,
         session,
@@ -153,7 +153,7 @@ export class SlackClient implements SlackClientInterface {
 
       try {
         await handler(context);
-        this.sessionStorage.set(userId, context.session);
+        this.sessionStorage.set(channelId, context.session);
       } catch (error) {
         console.error(`Error handling action ${actionId}:`, error);
         await args.ack();
@@ -169,8 +169,9 @@ export class SlackClient implements SlackClientInterface {
     handler: (context: SlackViewContext) => Promise<void>
   ): void {
     this.boltApp.view(callbackId, async (args) => {
-      const userId = args.body.user.id;
-      const session = this.sessionStorage.get(userId);
+      // Views don't have direct channel access - use private_metadata if set, fallback to user.id
+      const channelId = args.view.private_metadata || args.body.user.id;
+      const session = this.sessionStorage.get(channelId);
       const context: SlackViewContext = {
         body: args.body,
         view: args.view,
@@ -181,7 +182,7 @@ export class SlackClient implements SlackClientInterface {
 
       try {
         await handler(context);
-        this.sessionStorage.set(userId, context.session);
+        this.sessionStorage.set(channelId, context.session);
       } catch (error) {
         console.error(`Error handling view ${callbackId}:`, error);
         await args.ack();
@@ -197,8 +198,8 @@ export class SlackClient implements SlackClientInterface {
     handler: (context: SlackCommandContext) => Promise<void>
   ): void {
     this.boltApp.message(pattern, async (args) => {
-      const userId = (args.message as any).user;
-      const session = this.sessionStorage.get(userId);
+      const channelId = (args.message as any).channel;
+      const session = this.sessionStorage.get(channelId);
       const context: SlackCommandContext = {
         body: args.message as any,
         session,
@@ -210,7 +211,7 @@ export class SlackClient implements SlackClientInterface {
 
       try {
         await handler(context);
-        this.sessionStorage.set(userId, context.session);
+        this.sessionStorage.set(channelId, context.session);
       } catch (error) {
         console.error(`Error handling message pattern ${pattern}:`, error);
       }
@@ -268,27 +269,27 @@ export class SlackClient implements SlackClientInterface {
 class InMemorySessionStorage implements SlackSessionStorage {
   private sessions: Map<string, SlackSession> = new Map();
 
-  get(userId: string): SlackSession {
-    if (!this.sessions.has(userId)) {
-      this.sessions.set(userId, {
+  get(sessionKey: string): SlackSession {
+    if (!this.sessions.has(sessionKey)) {
+      this.sessions.set(sessionKey, {
         daoSelections: new Set<string>(),
         walletAction: undefined,
         walletsToRemove: undefined,
         awaitingInput: undefined
       });
     }
-    return this.sessions.get(userId)!;
+    return this.sessions.get(sessionKey)!;
   }
 
-  set(userId: string, session: SlackSession): void {
-    this.sessions.set(userId, session);
+  set(sessionKey: string, session: SlackSession): void {
+    this.sessions.set(sessionKey, session);
   }
 
-  clear(userId: string): void {
-    this.sessions.delete(userId);
+  clear(sessionKey: string): void {
+    this.sessions.delete(sessionKey);
   }
 
-  has(userId: string): boolean {
-    return this.sessions.has(userId);
+  has(sessionKey: string): boolean {
+    return this.sessions.has(sessionKey);
   }
 }
