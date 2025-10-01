@@ -104,7 +104,7 @@ const createTelegramClient = () => {
  */
 const createSlackClient = () => {
   const mockSendMessage = mockSlackSendMessage;
-  const botToken = env.SEND_REAL_SLACK === 'true' ? env.SLACK_BOT_TOKEN : undefined;
+  const botToken = env.SLACK_BOT_TOKEN;
   const slackClient = new SlackTestClient(mockSendMessage, botToken);
 
   return { slackClient, mockSlackSendMessage: mockSendMessage };
