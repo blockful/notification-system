@@ -46,15 +46,6 @@ export class SlackOAuthController {
     request: FastifyRequest,
     reply: FastifyReply
   ): Promise<void> {
-    const clientId = this.slackClientId;
-    const redirectUri = this.slackRedirectUri;
-
-    if (!clientId || !redirectUri) {
-      return reply.code(500).send({
-        error: 'OAuth configuration missing. Please set SLACK_CLIENT_ID and SLACK_REDIRECT_URI.'
-      });
-    }
-
     // Build Slack OAuth URL
     const scopes = [
       'chat:write',
@@ -67,9 +58,9 @@ export class SlackOAuthController {
     ].join(',');
 
     const oauthUrl = new URL('https://slack.com/oauth/v2/authorize');
-    oauthUrl.searchParams.append('client_id', clientId);
+    oauthUrl.searchParams.append('client_id', this.slackClientId);
     oauthUrl.searchParams.append('scope', scopes);
-    oauthUrl.searchParams.append('redirect_uri', redirectUri);
+    oauthUrl.searchParams.append('redirect_uri', this.slackRedirectUri);
 
     // Redirect to Slack OAuth page
     return reply.redirect(oauthUrl.toString());
@@ -90,23 +81,13 @@ export class SlackOAuthController {
       });
     }
 
-    const clientId = this.slackClientId;
-    const clientSecret = this.slackClientSecret;
-    const redirectUri = this.slackRedirectUri;
-
-    if (!clientId || !clientSecret || !redirectUri) {
-      return reply.code(500).send({
-        error: 'OAuth configuration incomplete'
-      });
-    }
-
     try {
       // Exchange code for access token
       const oauthResponse = await this.slackClient.oauth.v2.access({
-        client_id: clientId,
-        client_secret: clientSecret,
+        client_id: this.slackClientId,
+        client_secret: this.slackClientSecret,
         code: code,
-        redirect_uri: redirectUri,
+        redirect_uri: this.slackRedirectUri,
       });
 
       if (!oauthResponse.ok || !oauthResponse.access_token) {
