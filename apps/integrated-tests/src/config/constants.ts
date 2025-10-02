@@ -33,6 +33,8 @@ export const testConstants = {
   // External addresses for events (actors not necessarily using the bot)
   eventActors: {
     delegator1: 'delegator1.eth',
+    delegator2: 'delegator2.eth',
+    delegator3: 'delegator3.eth',
     delegator: 'delegator.eth',
     recipient: 'recipient.eth',
     sender: 'sender.eth',
@@ -58,10 +60,11 @@ export const testConstants = {
     voteTest: 'test-dao-vote',
   },
   
-  // Voting power test values 
+  // Voting power test values
   votingPower: {
     default: '1000',
     small: '100',
+    medium: '500',
   },
   
   // Proposal timing constants
