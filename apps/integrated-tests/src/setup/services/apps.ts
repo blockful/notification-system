@@ -2,6 +2,13 @@ import { App as ConsumerApp } from '@notification-system/consumer';
 import { App as LogicSystemApp } from '@notification-system/logic-system';
 import { App as DispatcherApp } from '@notification-system/dispatcher';
 import { App as SubscriptionServerApp } from '@notification-system/subscription-server';
+import { DaoController, NotificationController } from '@notification-system/subscription-server/dist/controllers';
+import { UserAddressController } from '@notification-system/subscription-server/dist/controllers/user-address.controller';
+import { SlackOAuthController } from '@notification-system/subscription-server/dist/controllers/slack-oauth.controller';
+import { KnexUserRepository, KnexPreferenceRepository, KnexNotificationRepository, KnexUserAddressRepository } from '@notification-system/subscription-server/dist/repositories/knex.repository';
+import { SubscriptionService, NotificationService } from '@notification-system/subscription-server/dist/services';
+import { DaoHandler } from '@notification-system/subscription-server/dist/handlers/dao.handlers';
+import { WorkspaceService } from '@notification-system/subscription-server/dist/services/workspace.service';
 import { Knex } from 'knex';
 import { RabbitMQTestSetup } from '../rabbitmq-setup';
 import { serviceConfig, timeouts } from '../../config';
@@ -97,17 +104,8 @@ const createTelegramClient = () => {
  */
 const createSlackClient = () => {
   const mockSendMessage = mockSlackSendMessage;
-  let slackClient;
-  if (env.SEND_REAL_SLACK) {
-    const botToken = env.SLACK_BOT_TOKEN;
-    if (!botToken) {
-      throw new Error('SLACK_BOT_TOKEN is required when SEND_REAL_SLACK is enabled');
-    }
-    slackClient = new SlackTestClient(mockSendMessage, botToken);
-  } else {
-    // Use SlackTestClient in mock-only mode
-    slackClient = new SlackTestClient(mockSendMessage);
-  }
+  const isRealMode = env.SEND_REAL_SLACK === 'true';
+  const slackClient = new SlackTestClient(mockSendMessage, isRealMode);
 
   return { slackClient, mockSlackSendMessage: mockSendMessage };
 };
@@ -119,7 +117,39 @@ const createSlackClient = () => {
  * @return Started subscription server application instance
  */
 const startSubscriptionServer = async (db: Knex): Promise<SubscriptionServerApp> => {
-  const subscriptionServerApp = new SubscriptionServerApp(db, TEST_CONFIG.ports.subscriptionServer);
+  // Repository instances
+  const userRepository = new KnexUserRepository(db, serviceConfig.oauth.tokenEncryptionKey);
+  const preferenceRepository = new KnexPreferenceRepository(db);
+  const notificationRepository = new KnexNotificationRepository(db);
+  const userAddressRepository = new KnexUserAddressRepository(db);
+
+  // Service instances
+  const workspaceService = new WorkspaceService(db, serviceConfig.oauth.tokenEncryptionKey);
+  const subscriptionService = new SubscriptionService(userRepository, preferenceRepository, userAddressRepository, workspaceService);
+  const notificationService = new NotificationService(notificationRepository);
+
+  // Handler instances
+  const daoHandler = new DaoHandler(subscriptionService);
+
+  // Controller instances
+  const daoController = new DaoController(daoHandler);
+  const notificationController = new NotificationController(notificationService);
+  const userAddressController = new UserAddressController(subscriptionService);
+  const slackOAuthController = new SlackOAuthController(
+    workspaceService,
+    serviceConfig.oauth.slackClientId,
+    serviceConfig.oauth.slackClientSecret,
+    serviceConfig.oauth.slackRedirectUri
+  );
+
+  const subscriptionServerApp = new SubscriptionServerApp(
+    db,
+    TEST_CONFIG.ports.subscriptionServer,
+    daoController,
+    notificationController,
+    userAddressController,
+    slackOAuthController
+  );
   await subscriptionServerApp.start();
   return subscriptionServerApp;
 };

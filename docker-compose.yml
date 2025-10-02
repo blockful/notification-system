@@ -39,6 +39,11 @@ services:
     environment:
       DATABASE_URL: postgresql://postgres:postgres@subscription-db:5432/postgres
       PORT: 3003
+      # OAuth configuration for Slack
+      SLACK_CLIENT_ID: ${SLACK_CLIENT_ID:-}
+      SLACK_CLIENT_SECRET: ${SLACK_CLIENT_SECRET:-}
+      SLACK_REDIRECT_URI: ${SLACK_REDIRECT_URI:-}
+      TOKEN_ENCRYPTION_KEY: ${TOKEN_ENCRYPTION_KEY:-}
     networks:
       - notification-network
     restart: unless-stopped
@@ -105,6 +110,20 @@ services:
     networks:
       - notification-network
     restart: unless-stopped
+
+  # Caddy reverse proxy for HTTPS (local development only)
+  caddy:
+    image: caddy:alpine
+    container_name: caddy-https
+    ports:
+      - "443:443"  # HTTPS
+      - "80:80"    # HTTP (optional, redirects to HTTPS)
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile
+    networks:
+      - notification-network
+    depends_on:
+      - subscription-server
 
 networks:
   notification-network:

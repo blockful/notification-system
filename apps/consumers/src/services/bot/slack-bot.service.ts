@@ -83,13 +83,6 @@ export class SlackBotService implements BotServiceInterface {
           await this.walletService.confirmRemoval(ctx);
         }
       });
-
-      // Modal submission handler for wallet addition
-      handlers.view('wallet_add_modal', async (ctx) => {
-        if (this.walletService) {
-          await this.walletService.processWalletAddition(ctx);
-        }
-      });
     });
   }
 
@@ -157,7 +150,8 @@ export class SlackBotService implements BotServiceInterface {
     };
 
     const action = validSubcommands[subcommand] || 'list';
-    await this.walletService.initialize(context, action);
+    const walletAddress = args.slice(1).join(' ').trim();
+    await this.walletService.initialize(context, action, walletAddress);
   }
 
   /**
@@ -182,7 +176,14 @@ export class SlackBotService implements BotServiceInterface {
           type: 'section',
           text: {
             type: 'mrkdwn',
-            text: `${slackMessages.commands.header}\n${slackMessages.commands.list}`
+            text: '*Available Commands:*\n' +
+              '• `/dao-notify subscribe` - Subscribe to DAOs\n' +
+              '• `/dao-notify unsubscribe` - Unsubscribe from DAOs\n' +
+              '• `/dao-notify list` - List your subscriptions\n' +
+              '• `/dao-notify wallet add [address]` - Add a wallet address\n' +
+              '• `/dao-notify wallet remove` - Remove wallet addresses\n' +
+              '• `/dao-notify wallet list` - List your wallets\n' +
+              '• `/dao-notify help` - Show this help message'
           }
         },
         {
@@ -259,12 +260,22 @@ export class SlackBotService implements BotServiceInterface {
       }
     }
 
+    const [workspaceId, userId] = String(payload.channelUserId).split(':');
+
+    if (!userId || !workspaceId) {
+      throw new Error('Invalid Slack channel format. Expected "workspace:user"');
+    }
+    if (!payload.bot_token) {
+      throw new Error('Slack notification requires workspace OAuth token. No bot_token provided in notification payload.');
+    }
+
     const sentMessage = await this.slackClient.sendMessage(
-      String(payload.channelUserId),
+      userId,
       processedMessage,
       {
         mrkdwn: true,
-        unfurl_links: false
+        unfurl_links: false,
+        token: payload.bot_token // Pass the workspace-specific token
       }
     );
 

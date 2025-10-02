@@ -6,7 +6,7 @@
 
 import { BaseDAOService } from './base-dao.service';
 import { SlackCommandContext, SlackActionContext } from '../../interfaces/slack-context.interface';
-import { getDaoWithEmoji, slackMessages, uiMessages, replacePlaceholders } from '@notification-system/messages';
+import { getDaoWithEmoji, slackMessages, replacePlaceholders } from '@notification-system/messages';
 
 export class SlackDAOService extends BaseDAOService {
 
@@ -21,7 +21,9 @@ export class SlackDAOService extends BaseDAOService {
    * Initialize DAO selection interface with Block Kit UI
    */
   async initialize(context: SlackCommandContext, action: 'subscribe' | 'unsubscribe' = 'subscribe'): Promise<void> {
-    const userId = context.body.user_id;
+    const channelId = context.body.channel_id;
+    const workspaceId = context.body.team_id;
+    const fullUserId = `${workspaceId}:${channelId}`;
 
     try {
       await context.ack();
@@ -30,7 +32,7 @@ export class SlackDAOService extends BaseDAOService {
       if (daos.length === 0) {
         if (context.respond) {
           await context.respond({
-            text: uiMessages.errors.noDaosAvailable,
+            text: slackMessages.dao.noDaosAvailable,
             response_type: 'ephemeral'
           });
         }
@@ -38,7 +40,7 @@ export class SlackDAOService extends BaseDAOService {
       }
 
       // Get user's current subscriptions
-      const userPreferences = await this.getUserSubscriptions(userId);
+      const userPreferences = await this.getUserSubscriptions(fullUserId);
       const currentSelections = new Set<string>(userPreferences);
 
       // For subscribe action, start with current subscriptions
@@ -66,7 +68,7 @@ export class SlackDAOService extends BaseDAOService {
       console.error('Error loading DAOs:', error);
       if (context.respond) {
         await context.respond({
-          text: uiMessages.errors.loadingDaos,
+          text: slackMessages.dao.loadError,
           response_type: 'ephemeral'
         });
       }
@@ -77,12 +79,14 @@ export class SlackDAOService extends BaseDAOService {
    * List user's current DAO subscriptions
    */
   async listSubscriptions(context: SlackCommandContext): Promise<void> {
-    const userId = context.body.user_id;
+    const channelId = context.body.channel_id;
+    const workspaceId = context.body.team_id;
+    const fullUserId = `${workspaceId}:${channelId}`;
 
     try {
       await context.ack();
 
-      const userPreferences = await this.getUserSubscriptions(userId);
+      const userPreferences = await this.getUserSubscriptions(fullUserId);
 
       if (userPreferences.length === 0) {
         if (context.respond) {
@@ -123,7 +127,7 @@ export class SlackDAOService extends BaseDAOService {
       console.error('Error listing subscriptions:', error);
       if (context.respond) {
         await context.respond({
-          text: uiMessages.errors.loadingSubscriptions,
+          text: slackMessages.dao.listError,
           response_type: 'ephemeral'
         });
       }
@@ -134,8 +138,6 @@ export class SlackDAOService extends BaseDAOService {
    * Toggle DAO selection when user clicks a button
    */
   async toggle(context: SlackActionContext, daoName: string): Promise<void> {
-    const userId = context.body.user.id;
-
     try {
       await context.ack();
 
@@ -150,7 +152,7 @@ export class SlackDAOService extends BaseDAOService {
 
       // Get action from session or infer from button callback
       const action = context.session.daoAction ||
-        ((context.body as any).actions?.[0]?.action_id?.includes('unsubscribe')
+        (context.body.actions[0].action_id?.includes('unsubscribe')
           ? 'unsubscribe'
           : 'subscribe');
 
@@ -176,7 +178,9 @@ export class SlackDAOService extends BaseDAOService {
    * Confirm DAO selection changes
    */
   async confirm(context: SlackActionContext, action: 'subscribe' | 'unsubscribe'): Promise<void> {
-    const userId = context.body.user.id;
+    const channelId = context.body.channel?.id;
+    const workspaceId = context.body.team?.id || context.body.user?.team_id;
+    const fullUserId = `${workspaceId}:${channelId}`;
 
     try {
       await context.ack();
@@ -197,10 +201,13 @@ export class SlackDAOService extends BaseDAOService {
       }
 
       // Apply the subscription action to selected DAOs
-      await this.applySubscriptionAction(userId, selectedDAOs, action);
+      await this.applySubscriptionAction(fullUserId, selectedDAOs, action);
 
       // Show confirmation message
       const daoList = this.formatDAOList(selectedDAOs);
+      const successMessage = action === 'subscribe'
+        ? replacePlaceholders(slackMessages.dao.subscribeSuccess, { daoList })
+        : replacePlaceholders(slackMessages.dao.unsubscribeSuccess, { daoList });
 
       if (context.respond) {
         await context.respond({
@@ -210,9 +217,7 @@ export class SlackDAOService extends BaseDAOService {
               type: 'section',
               text: {
                 type: 'mrkdwn',
-                text: action === 'subscribe'
-                  ? replacePlaceholders(slackMessages.dao.subscribeSuccess, { daoList })
-                  : replacePlaceholders(slackMessages.dao.unsubscribeSuccess, { daoList })
+                text: successMessage
               }
             },
             {
@@ -236,7 +241,7 @@ export class SlackDAOService extends BaseDAOService {
       if (context.respond) {
         await context.respond({
           replace_original: true,
-          text: `${uiMessages.status.error} ${uiMessages.errors.updateSubscriptionsFailed}`,
+          text: slackMessages.dao.updateError,
           response_type: 'ephemeral'
         });
       }
@@ -272,13 +277,13 @@ export class SlackDAOService extends BaseDAOService {
         type: 'section',
         text: {
           type: 'mrkdwn',
-          text: `${isSelected ? uiMessages.selection.checked : uiMessages.selection.unchecked} *${daoWithEmoji}*`
+          text: `${isSelected ? '☑️' : '☐'} *${daoWithEmoji}*`
         },
         accessory: {
           type: 'button',
           text: {
             type: 'plain_text',
-            text: isSelected ? uiMessages.selection.selected : uiMessages.selection.select,
+            text: isSelected ? slackMessages.dao.buttonSelected : slackMessages.dao.buttonSelect,
             emoji: true
           },
           style: isSelected ? 'primary' : undefined,

@@ -13,6 +13,7 @@ export interface SlackSendMessageOptions {
   mrkdwn?: boolean;
   blocks?: any[];
   attachments?: any[];
+  token?: string; // Optional token for multi-workspace support
 }
 
 export interface SlackMessage {

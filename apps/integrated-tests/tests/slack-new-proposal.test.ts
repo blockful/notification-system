@@ -7,7 +7,7 @@
 import { describe, test, expect, beforeEach, beforeAll } from '@jest/globals';
 import { db, TestApps } from '../src/setup';
 import { HttpClientMockSetup, GraphQLMockSetup } from '../src/mocks';
-import { UserFactory, ProposalFactory } from '../src/fixtures';
+import { UserFactory, ProposalFactory, WorkspaceFactory } from '../src/fixtures';
 import { SlackTestHelper, DatabaseTestHelper, TestCleanup } from '../src/helpers';
 import { SlackTestClient } from '../src/test-clients/slack-test.client';
 import { testConstants, timeouts } from '../src/config';
@@ -29,10 +29,7 @@ describe('Slack New Proposal - Integration Test', () => {
     httpMockSetup = TestCleanup.getGlobalHttpMockSetup();
 
     // Create Slack client and helper
-    slackClient = new SlackTestClient(
-      global.mockSlackSendMessage,
-      env.SEND_REAL_SLACK ? env.SLACK_BOT_TOKEN : undefined
-    );
+    slackClient = new SlackTestClient(global.mockSlackSendMessage);
     slackHelper = new SlackTestHelper(global.mockSlackSendMessage, slackClient);
 
     dbHelper = new DatabaseTestHelper(db);
@@ -40,14 +37,20 @@ describe('Slack New Proposal - Integration Test', () => {
 
   beforeEach(async () => {
     await TestCleanup.cleanupBetweenTests();
+
+    // Create default Slack workspace for OAuth support
+    await WorkspaceFactory.createDefaultSlackWorkspace();
   });
 
   /**
    * Helper to create a Slack user with subscription
    */
   const createSlackUser = async (channelId: string, daoId: string) => {
+    // Use workspace:user format for Slack OAuth support
+    const slackUserId = `T_DEFAULT:${channelId}`;
+
     const result = await UserFactory.createUserWithFullSetup(
-      channelId,
+      slackUserId,
       `slack_user_${channelId}`,
       daoId,
       true,
@@ -252,7 +255,7 @@ describe('Slack New Proposal - Integration Test', () => {
 
     // Find notifications by user_id instead of channel
     const slackUser = await db(testConstants.tables.users).where({
-      channel_user_id: SLACK_CHANNEL_ID,
+      channel_user_id: `T_DEFAULT:${SLACK_CHANNEL_ID}`,
       channel: 'slack'
     }).first();
     const telegramUser = await db(testConstants.tables.users).where({

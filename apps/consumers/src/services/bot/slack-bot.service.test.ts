@@ -40,8 +40,9 @@ describe('SlackBotService', () => {
     const mockPayload: NotificationPayload = {
       userId: 'user123',
       channel: 'slack',
-      channelUserId: 'U1234567890',
-      message: 'Test notification message'
+      channelUserId: 'T_WORKSPACE:U1234567890',
+      message: 'Test notification message',
+      bot_token: 'xoxb-test-workspace-token'
     };
 
     beforeEach(() => {
@@ -59,6 +60,7 @@ describe('SlackBotService', () => {
         'U1234567890',
         'Test notification message',
         {
+          token: 'xoxb-test-workspace-token',
           mrkdwn: true,
           unfurl_links: false
         }
@@ -71,6 +73,7 @@ describe('SlackBotService', () => {
       const payloadWithTx: NotificationPayload = {
         ...mockPayload,
         message: 'New proposal created!\n\n{{txLink}}',
+        bot_token: 'xoxb-test-workspace-token',
         metadata: {
           transaction: {
             hash: '0x123abc',
@@ -87,6 +90,7 @@ describe('SlackBotService', () => {
         'U1234567890',
         'New proposal created!\n\n<https://etherscan.io/tx/0x123abc|Transaction details>',
         {
+          token: 'xoxb-test-workspace-token',
           mrkdwn: true,
           unfurl_links: false
         }
@@ -96,7 +100,8 @@ describe('SlackBotService', () => {
     it('should remove transaction link placeholder when no transaction metadata', async () => {
       const payloadWithTx: NotificationPayload = {
         ...mockPayload,
-        message: 'New proposal created!\n\n{{txLink}}'
+        message: 'New proposal created!\n\n{{txLink}}',
+        bot_token: 'xoxb-test-workspace-token'
       };
 
       await slackBotService.sendNotification(payloadWithTx);
@@ -105,6 +110,7 @@ describe('SlackBotService', () => {
         'U1234567890',
         'New proposal created!',
         {
+          token: 'xoxb-test-workspace-token',
           mrkdwn: true,
           unfurl_links: false
         }
@@ -115,6 +121,7 @@ describe('SlackBotService', () => {
       const payloadWithAddresses: NotificationPayload = {
         ...mockPayload,
         message: 'Proposal by {{proposer}} in {{dao}}',
+        bot_token: 'xoxb-test-workspace-token',
         metadata: {
           addresses: {
             proposer: '0x742d35Cc6634C0532925a3b8D76be9D5B65F6a',
@@ -136,6 +143,7 @@ describe('SlackBotService', () => {
         'U1234567890',
         'Proposal by alice.eth in coolDAO.eth',
         {
+          token: 'xoxb-test-workspace-token',
           mrkdwn: true,
           unfurl_links: false
         }
@@ -146,6 +154,7 @@ describe('SlackBotService', () => {
       const complexPayload: NotificationPayload = {
         ...mockPayload,
         message: 'New proposal by {{proposer}}!\n\n{{txLink}}',
+        bot_token: 'xoxb-test-workspace-token',
         metadata: {
           addresses: {
             proposer: '0x742d35Cc6634C0532925a3b8D76be9D5B65F6a'
@@ -166,6 +175,7 @@ describe('SlackBotService', () => {
         'U1234567890',
         'New proposal by alice.eth!\n\n<https://etherscan.io/tx/0x123abc|Transaction details>',
         {
+          token: 'xoxb-test-workspace-token',
           mrkdwn: true,
           unfurl_links: false
         }

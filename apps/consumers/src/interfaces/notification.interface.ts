@@ -8,6 +8,7 @@ export interface NotificationPayload {
   channel: string;
   channelUserId: string | number;
   message: string;
+  bot_token?: string; // Optional bot token for multi-workspace
   metadata?: {
     addresses?: Record<string, string>; // key: placeholder name, value: ethereum address
     transaction?: {

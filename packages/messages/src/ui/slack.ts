@@ -56,7 +56,24 @@ export const slackMessages = {
     confirmRemoval: '🗑️ Confirm Removal',
     addedSuccess: '✅ *Wallet added successfully!*\n{{displayName}}',
     removedSuccess: '✅ *Success!* {{message}}',
-    addError: 'An error occurred. Please try again.'
+    addError: 'An error occurred. Please try again.',
+    // Help messages
+    help: {
+      title: '*Add a Wallet Address*',
+      instructions: 'To add a wallet, use the command with your address or ENS name:',
+      examples: '```/dao-notify wallet add 0x1234...abcd```\nor\n```/dao-notify wallet add vitalik.eth```',
+      privacy: '💡 Your wallet address will be kept private'
+    },
+    // Inline addition messages
+    inline: {
+      maxAddressesError: '❌ Maximum 10 addresses per command',
+      addedSuccess: '✅ {{count}} wallet(s) added successfully\n',
+      duplicatesWarning: '⚠️ {{count}} already exist\n',
+      invalidError: '❌ {{count}} invalid: {{list}}',
+      andMore: ' and {{count}} more',
+      done: '✅ Done',
+      addError: '❌ An error occurred while adding the wallet(s). Please try again.'
+    }
   },
 
   // DAO management messages
@@ -73,7 +90,13 @@ export const slackMessages = {
     subscribeSuccess: '✅ *Success!* You\'re now tracking: {{daoList}}',
     unsubscribeSuccess: '✅ *Success!* You\'ve unsubscribed from: {{daoList}}',
     subscribeWarning: '⚠️ Please select at least one DAO to subscribe to.',
-    unsubscribeWarning: '⚠️ Please select at least one DAO to unsubscribe from.'
+    unsubscribeWarning: '⚠️ Please select at least one DAO to unsubscribe from.',
+    noDaosAvailable: 'No DAOs available at the moment. Please try again later.',
+    loadError: 'Sorry, there was an error loading the DAOs. Please try again later.',
+    listError: 'Sorry, there was an error loading your subscriptions. Please try again later.',
+    updateError: '❌ Sorry, there was an error updating your subscriptions. Please try again later.',
+    buttonSelected: 'Selected',
+    buttonSelect: 'Select'
   },
 
   // Service availability errors

@@ -7,6 +7,7 @@ export interface NotificationPayload {
   channelUserId: string;
   message: string;
   type?: string; // Optional type for routing (e.g., 'new_proposal', 'vote_confirmation')
+  bot_token?: string; // Optional bot token for multi-workspace
   metadata?: {
     addresses?: Record<string, string>; // key: placeholder name, value: ethereum address
     transaction?: {

@@ -36,11 +36,11 @@ describe('SlackDAOService - User ID Validation', () => {
     it('should handle alphanumeric Slack IDs correctly', async () => {
       const alphanumericIds = ['U024BE7LH', 'W012A3CDE', 'U9Z8Y7X6W'];
 
-      for (const userId of alphanumericIds) {
+      for (const channelId of alphanumericIds) {
         subscriptionApiMock.getUserPreferences.mockResolvedValue([]);
 
         const context: any = {
-          body: { user_id: userId },
+          body: { channel_id: channelId, team_id: 'T_WORKSPACE' },
           session: { daoSelections: new Set() },
           ack: jest.fn(),
           respond: jest.fn(),
@@ -48,9 +48,9 @@ describe('SlackDAOService - User ID Validation', () => {
 
         await slackDAOService.initialize(context, 'subscribe');
 
-        // Verify getUserPreferences was called with the original string
+        // Verify getUserPreferences was called with the workspace:channel format
         expect(subscriptionApiMock.getUserPreferences).toHaveBeenCalledWith(
-          userId,
+          `T_WORKSPACE:${channelId}`,
           'slack',
           expect.any(Array)
         );

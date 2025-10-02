@@ -5,6 +5,11 @@
 
 import { IUserRepository, IPreferenceRepository, User } from '../interfaces';
 import { IUserAddressRepository, UserAddress } from '../interfaces/user-address.interface';
+import { WorkspaceService } from './workspace.service';
+
+// Channels that support workspace-based authentication
+const CHANNELS_WITH_WORKSPACES = ['slack'];
+const DEFAULT_WORKSPACE_PREFIX = 'T_DEFAULT';
 
 /**
  * Service class for handling subscription operations
@@ -13,7 +18,8 @@ export class SubscriptionService {
   constructor(
     private userRepository: IUserRepository,
     private preferenceRepository: IPreferenceRepository,
-    private userAddressRepository: IUserAddressRepository
+    private userAddressRepository: IUserAddressRepository,
+    private workspaceService?: WorkspaceService
   ) {}
 
   /**
@@ -83,26 +89,44 @@ export class SubscriptionService {
 
   /**
    * Gets all subscribers for a specific DAO
-   * 
+   *
    * @param {string} dao - The DAO identifier
    * @param {string} eventTimestamp - Optional timestamp to filter subscribers by subscription date
    * @returns {Promise<{subscribers: Array<User>}>} The list of subscribers
    */
   async getDaoSubscribers(dao: string, eventTimestamp?: string) {
     const preferences = await this.preferenceRepository.findByDao(dao, eventTimestamp);
-    const subscribers: User[] = [];
-    
-    // Fetch user details for each preference
-    for (const pref of preferences) {
-      const user = await this.userRepository.findById(pref.user_id);
-      if (user) {
-        subscribers.push(user);
+    const userIds = preferences.map(p => p.user_id);
+    const users = await this.userRepository.findByIds(userIds);
+
+    const subscribers = await this.attachWorkspaceTokens(users);
+
+    return { subscribers };
+  }
+
+  /**
+   * Attaches workspace tokens to users when applicable
+   * @param users - Array of users to process
+   * @returns Users with tokens attached for workspace-enabled channels
+   */
+  private async attachWorkspaceTokens(users: User[]): Promise<User[]> {
+    return Promise.all(users.map(async user => {
+      // Check if channel supports workspaces
+      if (!CHANNELS_WITH_WORKSPACES.includes(user.channel)) {
+        return user;
       }
-    }
-    
-    return {
-      subscribers
-    };
+
+      // Parse workspace ID from format "workspace:user"
+      const [workspaceId, userId] = user.channel_user_id.split(':');
+
+      if (!userId) {
+        return user;
+      }
+
+      // Fetch and attach token
+      const token = await this.workspaceService?.getWorkspaceToken(workspaceId);
+      return token ? { ...user, token } : user;
+    }));
   }
 
   /**
@@ -260,15 +284,18 @@ export class SubscriptionService {
     
     // Fetch all users in one batch
     const users = await this.userRepository.findByIds(userIds);
-    const userMap = new Map(users.map(user => [user.id, user]));
-    
+
+    // Attach workspace tokens for channels that support them (like Slack)
+    const usersWithTokens = await this.attachWorkspaceTokens(users);
+    const userMap = new Map(usersWithTokens.map(user => [user.id, user]));
+
     // Build result mapping addresses to users
     Object.entries(addressGroups).forEach(([address, userIdList]) => {
       result[address] = userIdList
         .map(userId => userMap.get(userId))
         .filter((user): user is User => user !== undefined);
     });
-    
+
     return result;
   }
 

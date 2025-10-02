@@ -14,5 +14,6 @@ export const toUserResponse = (user: User): UserResponse => ({
   id: user.id,
   channel: user.channel,
   channel_user_id: user.channel_user_id,
-  created_at: user.created_at
+  created_at: user.created_at,
+  token: user.token
 });
