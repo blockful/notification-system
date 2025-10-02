@@ -7,12 +7,12 @@ export const daoEmojis = new Map<string, string>([
   ['UNI', '🦄'],     // Uniswap
   ['ENS', '🌐'],     // ENS
   ['OP', '🔴'],      // Optimism
-  ['GIT', '🪖'],     // Gitcoin
+  ['GTC', '🪖'],     // Gitcoin
   ['NOUNS', '🕶️'],   // Nouns
   ['OBOL', '♾️'],    // Obol
-  ['LIDO', '💧'],    // Lido
-  ['VIRTUAL', '🤖'],  // Virtual
-  ['SCROLL', '📜']    // Scroll
+  ['LDO', '💧'],     // Lido
+  ['VIRTUAL', '🤖'], // Virtual
+  ['SCR', '📜']      // Scroll
 ]);
 
 export const defaultDaoEmoji = '🏛️';
