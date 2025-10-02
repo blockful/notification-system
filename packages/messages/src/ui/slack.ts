@@ -90,7 +90,13 @@ export const slackMessages = {
     subscribeSuccess: '✅ *Success!* You\'re now tracking: {{daoList}}',
     unsubscribeSuccess: '✅ *Success!* You\'ve unsubscribed from: {{daoList}}',
     subscribeWarning: '⚠️ Please select at least one DAO to subscribe to.',
-    unsubscribeWarning: '⚠️ Please select at least one DAO to unsubscribe from.'
+    unsubscribeWarning: '⚠️ Please select at least one DAO to unsubscribe from.',
+    noDaosAvailable: 'No DAOs available at the moment. Please try again later.',
+    loadError: 'Sorry, there was an error loading the DAOs. Please try again later.',
+    listError: 'Sorry, there was an error loading your subscriptions. Please try again later.',
+    updateError: '❌ Sorry, there was an error updating your subscriptions. Please try again later.',
+    buttonSelected: 'Selected',
+    buttonSelect: 'Select'
   },
 
   // Service availability errors

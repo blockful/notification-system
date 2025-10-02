@@ -6,7 +6,7 @@
 
 import { BaseDAOService } from './base-dao.service';
 import { SlackCommandContext, SlackActionContext } from '../../interfaces/slack-context.interface';
-import { getDaoWithEmoji } from '@notification-system/messages';
+import { getDaoWithEmoji, slackMessages, replacePlaceholders } from '@notification-system/messages';
 
 export class SlackDAOService extends BaseDAOService {
 
@@ -32,7 +32,7 @@ export class SlackDAOService extends BaseDAOService {
       if (daos.length === 0) {
         if (context.respond) {
           await context.respond({
-            text: 'No DAOs available at the moment. Please try again later.',
+            text: slackMessages.dao.noDaosAvailable,
             response_type: 'ephemeral'
           });
         }
@@ -58,8 +58,8 @@ export class SlackDAOService extends BaseDAOService {
       if (context.respond) {
         await context.respond({
           text: action === 'subscribe'
-            ? 'Select the DAOs you want to track:'
-            : 'Select the DAOs you want to unsubscribe from:',
+            ? slackMessages.dao.subscribeInstructions
+            : slackMessages.dao.unsubscribeInstructions,
           blocks,
           response_type: 'ephemeral'
         });
@@ -68,7 +68,7 @@ export class SlackDAOService extends BaseDAOService {
       console.error('Error loading DAOs:', error);
       if (context.respond) {
         await context.respond({
-          text: 'Sorry, there was an error loading the DAOs. Please try again later.',
+          text: slackMessages.dao.loadError,
           response_type: 'ephemeral'
         });
       }
@@ -91,7 +91,7 @@ export class SlackDAOService extends BaseDAOService {
       if (userPreferences.length === 0) {
         if (context.respond) {
           await context.respond({
-            text: "You're not subscribed to any DAOs yet. Use `/dao-notify subscribe` to get started!",
+            text: slackMessages.dao.emptyList,
             response_type: 'ephemeral'
           });
         }
@@ -107,7 +107,7 @@ export class SlackDAOService extends BaseDAOService {
               type: 'section',
               text: {
                 type: 'mrkdwn',
-                text: '*Your DAO Subscriptions:*\n' + daoList
+                text: slackMessages.dao.listHeader + '\n' + daoList
               }
             },
             {
@@ -115,7 +115,7 @@ export class SlackDAOService extends BaseDAOService {
               elements: [
                 {
                   type: 'mrkdwn',
-                  text: 'Use `/dao-notify subscribe` to add more or `/dao-notify unsubscribe` to remove'
+                  text: slackMessages.dao.instructions
                 }
               ]
             }
@@ -127,7 +127,7 @@ export class SlackDAOService extends BaseDAOService {
       console.error('Error listing subscriptions:', error);
       if (context.respond) {
         await context.respond({
-          text: 'Sorry, there was an error loading your subscriptions. Please try again later.',
+          text: slackMessages.dao.listError,
           response_type: 'ephemeral'
         });
       }
@@ -164,8 +164,8 @@ export class SlackDAOService extends BaseDAOService {
         await context.respond({
           replace_original: true,
           text: action === 'subscribe'
-            ? 'Select the DAOs you want to track:'
-            : 'Select the DAOs you want to unsubscribe from:',
+            ? slackMessages.dao.subscribeInstructions
+            : slackMessages.dao.unsubscribeInstructions,
           blocks
         });
       }
@@ -192,8 +192,8 @@ export class SlackDAOService extends BaseDAOService {
           await context.respond({
             replace_original: true,
             text: action === 'subscribe'
-              ? '⚠️ Please select at least one DAO to subscribe to.'
-              : '⚠️ Please select at least one DAO to unsubscribe from.',
+              ? slackMessages.dao.subscribeWarning
+              : slackMessages.dao.unsubscribeWarning,
             response_type: 'ephemeral'
           });
         }
@@ -205,6 +205,9 @@ export class SlackDAOService extends BaseDAOService {
 
       // Show confirmation message
       const daoList = this.formatDAOList(selectedDAOs);
+      const successMessage = action === 'subscribe'
+        ? replacePlaceholders(slackMessages.dao.subscribeSuccess, { daoList })
+        : replacePlaceholders(slackMessages.dao.unsubscribeSuccess, { daoList });
 
       if (context.respond) {
         await context.respond({
@@ -214,9 +217,7 @@ export class SlackDAOService extends BaseDAOService {
               type: 'section',
               text: {
                 type: 'mrkdwn',
-                text: action === 'subscribe'
-                  ? `✅ *Success!* You're now tracking: ${daoList}`
-                  : `✅ *Success!* You've unsubscribed from: ${daoList}`
+                text: successMessage
               }
             },
             {
@@ -224,7 +225,7 @@ export class SlackDAOService extends BaseDAOService {
               elements: [
                 {
                   type: 'mrkdwn',
-                  text: 'You can update your subscriptions anytime with `/dao-notify`'
+                  text: slackMessages.dao.updateInstructions
                 }
               ]
             }
@@ -240,7 +241,7 @@ export class SlackDAOService extends BaseDAOService {
       if (context.respond) {
         await context.respond({
           replace_original: true,
-          text: '❌ Sorry, there was an error updating your subscriptions. Please try again later.',
+          text: slackMessages.dao.updateError,
           response_type: 'ephemeral'
         });
       }
@@ -257,8 +258,8 @@ export class SlackDAOService extends BaseDAOService {
         text: {
           type: 'mrkdwn',
           text: action === 'subscribe'
-            ? '*Select the DAOs you want to track:*'
-            : '*Select the DAOs you want to unsubscribe from:*'
+            ? slackMessages.dao.subscribeHeader
+            : slackMessages.dao.unsubscribeHeader
         }
       },
       {
@@ -282,7 +283,7 @@ export class SlackDAOService extends BaseDAOService {
           type: 'button',
           text: {
             type: 'plain_text',
-            text: isSelected ? 'Selected' : 'Select',
+            text: isSelected ? slackMessages.dao.buttonSelected : slackMessages.dao.buttonSelect,
             emoji: true
           },
           style: isSelected ? 'primary' : undefined,
@@ -304,7 +305,7 @@ export class SlackDAOService extends BaseDAOService {
             type: 'button',
             text: {
               type: 'plain_text',
-              text: '✅ Confirm Selection',
+              text: slackMessages.dao.confirmButton,
               emoji: true
             },
             style: 'primary',
