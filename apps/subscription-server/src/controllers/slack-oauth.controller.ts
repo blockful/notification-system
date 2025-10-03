@@ -164,7 +164,7 @@ export class SlackOAuthController {
   <p>The DAO Notification Bot has been successfully installed to <strong>${workspaceName}</strong>.</p>
   <p>Redirecting to Slack... click <a href="slack://open">here</a>.
      If you use the browser version, click <a href="https://app.slack.com" target="_blank">this link</a> instead.</p>
-  <p>Use <code>/dao-notify help</code> to get started.</p>
+  <p>Use <code>/anticapture help</code> to get started.</p>
 </body>
 </html>`;
   }
