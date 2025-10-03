@@ -118,14 +118,14 @@ const createSlackClient = () => {
  */
 const startSubscriptionServer = async (db: Knex): Promise<SubscriptionServerApp> => {
   // Repository instances
-  const userRepository = new KnexUserRepository(db);
+  const userRepository = new KnexUserRepository(db, serviceConfig.oauth.tokenEncryptionKey);
   const preferenceRepository = new KnexPreferenceRepository(db);
   const notificationRepository = new KnexNotificationRepository(db);
   const userAddressRepository = new KnexUserAddressRepository(db);
 
   // Service instances
   const workspaceService = new WorkspaceService(db, serviceConfig.oauth.tokenEncryptionKey);
-  const subscriptionService = new SubscriptionService(userRepository, preferenceRepository, userAddressRepository, workspaceService);
+  const subscriptionService = new SubscriptionService(userRepository, preferenceRepository, userAddressRepository);
   const notificationService = new NotificationService(notificationRepository);
 
   // Handler instances
