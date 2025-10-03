@@ -95,7 +95,7 @@ describe('Slack Voting Power Trigger - Integration Test', () => {
     // Wait for the voting power notification to be sent
     const message = await slackHelper.waitForMessage(
       msg => {
-        return msg.text.includes('voting power') &&
+        return msg.text.includes('received a new delegation') &&
                msg.text.includes(TEST_DAO_ID) &&
                msg.channel === SLACK_CHANNEL_ID;
       },
@@ -109,7 +109,7 @@ describe('Slack Voting Power Trigger - Integration Test', () => {
     expect(message.channel).toBe(SLACK_CHANNEL_ID);
 
     // Verify the message contains expected content
-    expect(message.text).toContain('voting power');
+    expect(message.text).toContain('received a new delegation');
     expect(message.text).toContain(TEST_DAO_ID);
 
     // Verify Slack-specific formatting (links should be in Slack format)
@@ -166,8 +166,7 @@ describe('Slack Voting Power Trigger - Integration Test', () => {
     // Wait for delegation notification
     const message = await slackHelper.waitForMessage(
       msg => {
-        return msg.text.includes('delegated') &&
-               msg.text.includes('voting power') &&
+        return msg.text.includes('received a new delegation') &&
                msg.channel === SLACK_CHANNEL_ID;
       },
       {
@@ -177,12 +176,12 @@ describe('Slack Voting Power Trigger - Integration Test', () => {
     );
 
     // Verify delegation-specific content
-    expect(message.text).toContain('delegated');
-    expect(message.text).toContain('voting power');
+    expect(message.text).toContain('received a new delegation');
 
-    // Should mention the delegator address
-    const delegatorShort = `${delegatorAddress.slice(0, 6)}...${delegatorAddress.slice(-4)}`;
-    expect(message.text.toLowerCase()).toMatch(new RegExp(delegatorShort.toLowerCase()));
+    // Should mention the delegator (either as ENS name or address)
+    const hasDelegatorMention = message.text.includes('delegator1.eth') ||
+                                message.text.toLowerCase().includes(delegatorAddress.toLowerCase().slice(0, 8));
+    expect(hasDelegatorMention).toBe(true);
   });
 
   test('Transfer event notification for Slack user', async () => {
@@ -222,7 +221,7 @@ describe('Slack Voting Power Trigger - Integration Test', () => {
     // Wait for transfer notification
     const message = await slackHelper.waitForMessage(
       msg => {
-        return msg.text.includes('voting power') &&
+        return (msg.text.includes('Voting power increased') || msg.text.includes('Voting power decreased')) &&
                msg.text.includes(TEST_DAO_ID) &&
                msg.channel === SLACK_CHANNEL_ID;
       },
@@ -233,7 +232,7 @@ describe('Slack Voting Power Trigger - Integration Test', () => {
     );
 
     // Verify it's a voting power change notification
-    expect(message.text).toContain('voting power');
+    expect(message.text).toMatch(/Voting power (increased|decreased)/);
     expect(message.channel).toBe(SLACK_CHANNEL_ID);
   });
 
@@ -296,10 +295,10 @@ describe('Slack Voting Power Trigger - Integration Test', () => {
     // Wait for multiple messages
     const messages = await slackHelper.waitForMessageCount(
       3,
-      msg => msg.text.includes('voting power') && msg.channel === SLACK_CHANNEL_ID,
       {
         timeout: timeouts.notification.delivery,
-        errorMessage: 'Not all Slack voting power notifications received'
+        toChannel: SLACK_CHANNEL_ID,
+        containing: 'received a new delegation'
       }
     );
 
@@ -309,7 +308,7 @@ describe('Slack Voting Power Trigger - Integration Test', () => {
     // All should be to the correct channel
     messages.forEach(msg => {
       expect(msg.channel).toBe(SLACK_CHANNEL_ID);
-      expect(msg.text).toContain('voting power');
+      expect(msg.text).toContain('received a new delegation');
     });
   });
 
@@ -357,7 +356,7 @@ describe('Slack Voting Power Trigger - Integration Test', () => {
     // Wait for notification (should only receive one)
     const message = await slackHelper.waitForMessage(
       msg => {
-        return msg.text.includes('voting power') &&
+        return msg.text.includes('received a new delegation') &&
                msg.text.includes(DAO1) &&
                msg.channel === SLACK_CHANNEL_ID;
       },
@@ -377,7 +376,7 @@ describe('Slack Voting Power Trigger - Integration Test', () => {
     // Verify only DAO1 notifications were sent
     const allMessages = slackHelper.getAllMessages();
     const votingPowerMessages = allMessages.filter(msg =>
-      msg.text.includes('voting power')
+      msg.text.includes('received a new delegation')
     );
 
     // All notifications should be for DAO1, none for DAO2
@@ -424,7 +423,7 @@ describe('Slack Voting Power Trigger - Integration Test', () => {
     // Wait for formatted message
     const message = await slackHelper.waitForMessage(
       msg => {
-        return msg.text.includes('voting power') &&
+        return msg.text.includes('received a new delegation') &&
                msg.channel === SLACK_CHANNEL_ID;
       },
       {

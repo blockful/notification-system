@@ -91,7 +91,7 @@ describe('Slack Vote Confirmation Trigger - Integration Test', () => {
 
     // Wait for notification
     const message = await slackHelper.waitForMessage(
-      msg => (msg.text.includes('Your vote just went through') || msg.text.includes('Your vote')) &&
+      msg => msg.text.includes('just voted on') &&
              msg.channel === channelId,
       {
         timeout: timeouts.notification.delivery,
@@ -104,7 +104,7 @@ describe('Slack Vote Confirmation Trigger - Integration Test', () => {
     // Verify message content for FOR vote
     expect(message.channel).toBe(channelId);
     expect(message.text).toContain('✅'); // FOR emoji
-    expect(message.text).toMatch(/FOR|Your vote just went through/i);
+    expect(message.text).toMatch(/voted FOR|just voted on/i);
 
     // Verify Slack link formatting
     if (message.text.includes('http')) {
@@ -151,7 +151,7 @@ describe('Slack Vote Confirmation Trigger - Integration Test', () => {
     );
 
     const message = await slackHelper.waitForMessage(
-      msg => (msg.text.includes('Your vote just went through') || msg.text.includes('Your vote')) &&
+      msg => msg.text.includes('just voted on') &&
              msg.channel === channelId,
       {
         timeout: timeouts.notification.delivery,
@@ -164,7 +164,7 @@ describe('Slack Vote Confirmation Trigger - Integration Test', () => {
     // Verify message content for AGAINST vote
     expect(message.channel).toBe(channelId);
     expect(message.text).toContain('❌'); // AGAINST emoji
-    expect(message.text).toMatch(/AGAINST|Your vote just went through/i);
+    expect(message.text).toMatch(/voted AGAINST|just voted on/i);
 
     // Verify Slack link formatting
     if (message.text.includes('http')) {
@@ -205,7 +205,7 @@ describe('Slack Vote Confirmation Trigger - Integration Test', () => {
     );
 
     const message = await slackHelper.waitForMessage(
-      msg => (msg.text.includes('Your vote just went through') || msg.text.includes('Your vote')) &&
+      msg => msg.text.includes('just voted on') &&
              msg.channel === channelId,
       {
         timeout: timeouts.notification.delivery,
@@ -218,7 +218,7 @@ describe('Slack Vote Confirmation Trigger - Integration Test', () => {
     // Verify message content for ABSTAIN vote
     expect(message.channel).toBe(channelId);
     expect(message.text).toContain('⚪'); // ABSTAIN emoji
-    expect(message.text).toMatch(/ABSTAIN|Your vote just went through/i);
+    expect(message.text).toMatch(/voted ABSTAIN|just voted on/i);
 
     // Verify Slack link formatting
     if (message.text.includes('http')) {
@@ -261,7 +261,7 @@ describe('Slack Vote Confirmation Trigger - Integration Test', () => {
 
     // Wait for first notification
     const firstMessage = await slackHelper.waitForMessage(
-      msg => (msg.text.includes('Your vote just went through') || msg.text.includes('Your vote')) &&
+      msg => msg.text.includes('just voted on') &&
              msg.channel === channelId,
       {
         timeout: timeouts.notification.delivery,

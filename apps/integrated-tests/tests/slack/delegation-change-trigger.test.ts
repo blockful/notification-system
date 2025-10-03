@@ -171,9 +171,9 @@ describe('Slack Delegation Change Notifications - Integration Test', () => {
     // Verify self-delegation message content
     expect(selfDelegationMessage.channel).toBe(channelId);
     expect(selfDelegationMessage.text).toContain('🔄 Self-delegation confirmed');
-    expect(selfDelegationMessage.text).toContain('You delegated');
-    expect(selfDelegationMessage.text).toContain('to yourself');
-    expect(selfDelegationMessage.text).toContain('Your total voting power is now');
+    expect(selfDelegationMessage.text).toContain('delegated');
+    expect(selfDelegationMessage.text).toContain('to themselves');
+    expect(selfDelegationMessage.text).toContain('Total voting power is now');
   });
 
   test('should send undelegation confirmation notification via Slack', async () => {

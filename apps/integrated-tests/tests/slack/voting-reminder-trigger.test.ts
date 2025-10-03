@@ -115,7 +115,7 @@ describe('Slack Voting Reminder Trigger - Integration Test', () => {
       expect(message.channel).toBe(channelId);
       expect(message.text).toContain('🔔 Early Voting Reminder');
       expect(message.text).toContain('30% of voting period has passed');
-      expect(message.text).toContain('Take your time to review and vote');
+      expect(message.text).toContain('Take time to review and vote');
       expect(message.text).toContain(testDaoId);
 
       // Verify Slack link formatting

@@ -96,7 +96,7 @@ describe('Voting Reminder Integration Tests', () => {
       expect(message.chatId).toBe(testUser.chatId);
       expect(message.text).toContain('🔔 Early Voting Reminder');
       expect(message.text).toContain('30% of voting period has passed');
-      expect(message.text).toContain('Take your time to review and vote');
+      expect(message.text).toContain('Take time to review and vote');
       expect(message.text).toContain(testDaoId);
       
       // Verify database record for deduplication
