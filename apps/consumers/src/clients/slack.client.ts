@@ -28,26 +28,29 @@ export class SlackClient implements SlackClientInterface {
     appToken: string,
     signingSecret: string
   ) {
-    // Initialize session storage
     this.sessionStorage = new InMemorySessionStorage();
+    this.boltApp = this.createBoltApp(appToken, signingSecret);
+  }
 
-    // Initialize Bolt app with Socket Mode
-    // For OAuth multi-workspace support, we use an authorize function
-    // that returns empty credentials since we handle tokens per-message
-    this.boltApp = new App({
+  /**
+   * Create Bolt app with OAuth authorization
+   */
+  private createBoltApp(
+    appToken: string,
+    signingSecret: string
+  ): App {
+    console.log('✅ Slack client: OAuth mode initialized');
+    return new App({
       appToken,
       signingSecret,
       socketMode: true,
       processBeforeResponse: true,
-      authorize: async () => {
-        return {
-          botToken: '', 
-          botId: 'oauth-bot',
-          botUserId: 'oauth-bot-user'
-        };
-      }
+      authorize: async () => ({
+        botToken: '',
+        botId: 'oauth-bot',
+        botUserId: 'oauth-bot-user'
+      })
     });
-    console.log('✅ Slack client initialized with Socket Mode support (OAuth mode)');
   }
 
   async sendMessage(
@@ -216,17 +219,32 @@ export class SlackClient implements SlackClientInterface {
   }
 
   /**
-   * Setup handlers for Slack commands and interactions
+   * Register event handler (e.g., app_home_opened)
+   */
+  private registerEvent(
+    eventType: string,
+    handler: (context: any) => Promise<void>
+  ): void {
+    this.boltApp.event(eventType as any, async (args) => {
+      try {
+        await handler(args);
+      } catch (error) {
+        console.error(`Error handling event ${eventType}:`, error);
+      }
+    });
+  }
+
+  /**
+   * Setup all handlers via registration function
    */
   setupHandlers(registration: (handlers: SlackHandlerRegistration) => void): void {
-    const handlers: SlackHandlerRegistration = {
+    registration({
       command: this.registerCommand.bind(this),
       action: this.registerAction.bind(this),
       view: this.registerView.bind(this),
-      message: this.registerMessage.bind(this)
-    };
-
-    registration(handlers);
+      message: this.registerMessage.bind(this),
+      event: this.registerEvent.bind(this)
+    });
   }
 
   /**
