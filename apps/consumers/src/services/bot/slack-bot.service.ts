@@ -38,10 +38,7 @@ export class SlackBotService implements BotServiceInterface {
     this.daoService = daoService;
     this.walletService = walletService;
 
-    // Initialize command registry
     this.commandHandlers = this.createCommandRegistry();
-
-    // Setup command handlers
     this.setupCommands();
   }
 
@@ -50,12 +47,22 @@ export class SlackBotService implements BotServiceInterface {
    */
   private setupCommands(): void {
     this.slackClient.setupHandlers!((handlers) => {
-      // Main slash command: /dao-notify
-      handlers.command('/dao-notify', async (ctx) => {
-        await this.handleMainCommand(ctx);
+      // App Home
+      handlers.event('app_home_opened', async (ctx) => {
+        try {
+          await ctx.client.views.publish({
+            user_id: ctx.event.user,
+            view: { type: 'home', blocks: slackMessages.homePage.blocks }
+          });
+        } catch (error) {
+          console.error('Error publishing App Home:', error);
+        }
       });
 
-      // DAO action handlers
+      // Main command
+      handlers.command('/anticapture', (ctx) => this.handleMainCommand(ctx));
+
+      // DAO actions
       handlers.action(/^dao_toggle_(subscribe|unsubscribe)_(.+)$/, async (ctx) => {
         const match = (ctx.body as any).actions[0].action_id.match(/^dao_toggle_(subscribe|unsubscribe)_(.+)$/);
         if (match && this.daoService) {
@@ -70,11 +77,10 @@ export class SlackBotService implements BotServiceInterface {
         }
       });
 
-      // Wallet action handlers
+      // Wallet actions
       handlers.action(/^wallet_toggle_(.+)$/, async (ctx) => {
-        const match = (ctx.body as any).actions[0].value;
-        if (match && this.walletService) {
-          await this.walletService.toggleWalletForRemoval(ctx, match);
+        if (this.walletService) {
+          await this.walletService.toggleWalletForRemoval(ctx, (ctx.body as any).actions[0].value);
         }
       });
 
@@ -101,7 +107,7 @@ export class SlackBotService implements BotServiceInterface {
   }
 
   /**
-   * Handle the main /dao-notify command and route to subcommands
+   * Handle the main /anticapture command and route to subcommands
    */
   private async handleMainCommand(context: SlackCommandContext): Promise<void> {
     const text = context.body.text?.trim().toLowerCase();
@@ -177,13 +183,13 @@ export class SlackBotService implements BotServiceInterface {
           text: {
             type: 'mrkdwn',
             text: '*Available Commands:*\n' +
-              '• `/dao-notify subscribe` - Subscribe to DAOs\n' +
-              '• `/dao-notify unsubscribe` - Unsubscribe from DAOs\n' +
-              '• `/dao-notify list` - List your subscriptions\n' +
-              '• `/dao-notify wallet add [address]` - Add a wallet address\n' +
-              '• `/dao-notify wallet remove` - Remove wallet addresses\n' +
-              '• `/dao-notify wallet list` - List your wallets\n' +
-              '• `/dao-notify help` - Show this help message'
+              '• `/anticapture subscribe` - Subscribe to DAOs\n' +
+              '• `/anticapture unsubscribe` - Unsubscribe from DAOs\n' +
+              '• `/anticapture list` - List your subscriptions\n' +
+              '• `/anticapture wallet add [address]` - Add a wallet address\n' +
+              '• `/anticapture wallet remove` - Remove wallet addresses\n' +
+              '• `/anticapture wallet list` - List your wallets\n' +
+              '• `/anticapture help` - Show this help message'
           }
         },
         {
