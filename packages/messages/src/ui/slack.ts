@@ -9,18 +9,6 @@ export const slackMessages = {
     subtitle: '_Spotting the "oh no" before it hits your treasury_'
   },
 
-  // Available commands help text
-  commands: {
-    header: '*Available Commands:*',
-    list: [
-      '• `/dao-notify subscribe` - Subscribe to DAOs',
-      '• `/dao-notify unsubscribe` - Unsubscribe from DAOs',
-      '• `/dao-notify list` - List subscribed DAOs',
-      '• `/dao-notify wallet` - Manage your wallets',
-      '• `/dao-notify help` - Show this help message'
-    ].join('\n')
-  },
-
   // Learn more link
   learnMore: 'Learn more at <https://anticapture.ai|anticapture.com>',
 
@@ -30,50 +18,11 @@ export const slackMessages = {
   // Generic responses
   genericError: 'Sorry, there was an error. Please try again later.',
 
-  // Modal titles
-  modals: {
-    addWallet: 'Add Wallet',
-    selectDaos: 'Select DAOs'
-  },
-
   // Wallet management messages
   wallet: {
     listHeader: '*Your Wallet Addresses:*',
-    emptyList: "You haven't added any wallets yet. Use '/dao-notify wallet add' to get started!",
-    instructions: "Use '/dao-notify wallet add' or '/dao-notify wallet remove' to manage your wallets",
-    addModal: {
-      title: 'Add Wallet',
-      submit: 'Add',
-      cancel: 'Cancel',
-      label: 'Wallet Address or ENS',
-      placeholder: '0x... or name.eth',
-      hint: 'Enter your wallet address or ENS name to receive custom notifications.',
-      validationError: 'Please enter a wallet address or ENS name'
-    },
-    removeHeader: '*Select wallets to remove:*',
-    removeInstructions: 'Select the wallets you want to remove:',
-    noWalletsToRemove: "You don't have any wallets to remove.",
-    confirmRemoval: '🗑️ Confirm Removal',
-    addedSuccess: '✅ *Wallet added successfully!*\n{{displayName}}',
-    removedSuccess: '✅ *Success!* {{message}}',
-    addError: 'An error occurred. Please try again.',
-    // Help messages
-    help: {
-      title: '*Add a Wallet Address*',
-      instructions: 'To add a wallet, use the command with your address or ENS name:',
-      examples: '```/dao-notify wallet add 0x1234...abcd```\nor\n```/dao-notify wallet add vitalik.eth```',
-      privacy: '💡 Your wallet address will be kept private'
-    },
-    // Inline addition messages
-    inline: {
-      maxAddressesError: '❌ Maximum 10 addresses per command',
-      addedSuccess: '✅ {{count}} wallet(s) added successfully\n',
-      duplicatesWarning: '⚠️ {{count}} already exist\n',
-      invalidError: '❌ {{count}} invalid: {{list}}',
-      andMore: ' and {{count}} more',
-      done: '✅ Done',
-      addError: '❌ An error occurred while adding the wallet(s). Please try again.'
-    }
+    emptyList: "You haven't added any wallets yet. Use '/anticapture wallet add' to get started!",
+    instructions: "Use '/anticapture wallet add' or '/anticapture wallet remove' to manage your wallets"
   },
 
   // DAO management messages
@@ -82,10 +31,10 @@ export const slackMessages = {
     unsubscribeHeader: '*Select the DAOs you want to unsubscribe from:*',
     subscribeInstructions: 'Select the DAOs you want to track:',
     unsubscribeInstructions: 'Select the DAOs you want to unsubscribe from:',
-    emptyList: "You're not subscribed to any DAOs yet. Use '/dao-notify subscribe' to get started!",
+    emptyList: "You're not subscribed to any DAOs yet. Use '/anticapture subscribe' to get started!",
     listHeader: '*Your DAO Subscriptions:*',
-    instructions: "Use '/dao-notify subscribe' to add more or '/dao-notify unsubscribe' to remove",
-    updateInstructions: "You can update your subscriptions anytime with '/dao-notify'",
+    instructions: "Use '/anticapture subscribe' to add more or '/anticapture unsubscribe' to remove",
+    updateInstructions: "You can update your subscriptions anytime with '/anticapture'",
     confirmButton: '✅ Confirm Selection',
     subscribeSuccess: '✅ *Success!* You\'re now tracking: {{daoList}}',
     unsubscribeSuccess: '✅ *Success!* You\'ve unsubscribed from: {{daoList}}',
@@ -103,5 +52,67 @@ export const slackMessages = {
   serviceErrors: {
     daoUnavailable: 'DAO management is not available',
     walletUnavailable: 'Wallet management is not available'
+  },
+
+  // Home Page blocks (used by App Home tab)
+  homePage: {
+    blocks: [
+      {
+        type: 'section',
+        text: {
+          type: 'mrkdwn',
+          text: '✨ *[Mission Initiated: Navigating the Governance Space]*\n\n' +
+            'Set up your dashboard to stay on course with proposal signals from the DAOs you participate in.\n\n' +
+            '---\n\n' +
+            '*💎 Mission Features:*\n' +
+            '• Receive real-time alerts for new proposals\n' +
+            '• Be reminded when a voting window is open — don\'t miss your chance to engage\n' +
+            '• Get mission reports with proposal outcomes\n' +
+            '• Lock in the DAOs you want to monitor directly\n' +
+            '• Connect your wallet and sync your DAOs of interest\n' +
+            '• Track if your addresses are actively voting\n\n' +
+            '---\n\n' +
+            '*⚠️ Mission Status Update:*\n' +
+            '• Currently, notifications are transmitted only to your control panel\n' +
+            '• Soon, you\'ll be able to deploy the bot into your Slack channel so your entire crew can stay governance-ready\n\n' +
+            '---\n\n' +
+            '*Another links that might be useful*'
+        }
+      },
+      {
+        type: 'image',
+        image_url: 'https://i.imgur.com/EHA4pdf.png',
+        alt_text: 'Get notified of new proposals, vote reminders, and wallet activity'
+      },
+      {
+        type: 'actions',
+        elements: [
+          {
+            type: 'button',
+            text: { type: 'plain_text', text: '💚 Telegram Bot', emoji: true },
+            url: 'https://t.me/Anticapturebot',
+            action_id: 'mission_telegram'
+          },
+          {
+            type: 'button',
+            text: { type: 'plain_text', text: '🔗 Website', emoji: true },
+            url: 'https://anticapture.com',
+            action_id: 'mission_website'
+          },
+          {
+            type: 'button',
+            text: { type: 'plain_text', text: '📖 Help', emoji: true },
+            url: 'https://anticapture.com/faq',
+            action_id: 'mission_help'
+          },
+          {
+            type: 'button',
+            text: { type: 'plain_text', text: '💬 Contact us', emoji: true },
+            url: 'https://tally.so/r/nrvGbv',
+            action_id: 'mission_contact'
+          }
+        ]
+      }
+    ]
   }
 };
