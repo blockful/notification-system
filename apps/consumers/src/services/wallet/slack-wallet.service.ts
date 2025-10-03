@@ -12,6 +12,11 @@ import {
   SlackActionContext,
   SlackViewContext
 } from '../../interfaces/slack-context.interface';
+import {
+  walletEmptyState,
+  successMessage,
+  errorMessage
+} from '../../utils/slack-blocks-templates';
 
 export class SlackWalletService extends BaseWalletService {
 
@@ -66,13 +71,11 @@ export class SlackWalletService extends BaseWalletService {
     try {
       const wallets = await this.getUserWalletsWithDisplayNames(fullUserId, 'slack');
 
-      if (wallets.length === 0) {
-        if (context.respond) {
-          await context.respond({
-            text: "You haven't added any wallets yet. Use `/dao-notify wallet add` to get started!",
-            response_type: 'ephemeral'
-          });
-        }
+      if (wallets.length === 0 && context.respond) {
+        await context.respond({
+          blocks: walletEmptyState(),
+          response_type: 'ephemeral'
+        });
         return;
       }
 
@@ -104,7 +107,7 @@ export class SlackWalletService extends BaseWalletService {
               elements: [
                 {
                   type: 'mrkdwn',
-                  text: 'Use `/dao-notify wallet add` or `/dao-notify wallet remove` to manage your wallets'
+                  text: 'Use `/anticapture wallet add` or `/anticapture wallet remove` to manage your wallets'
                 }
               ]
             }
@@ -141,7 +144,7 @@ export class SlackWalletService extends BaseWalletService {
             type: 'section',
             text: {
               type: 'mrkdwn',
-              text: '```/dao-notify wallet add 0x1234...abcd```\nor\n```/dao-notify wallet add vitalik.eth```'
+              text: '```/anticapture wallet add 0x1234...abcd```\nor\n```/anticapture wallet add vitalik.eth```'
             }
           },
           {
@@ -171,13 +174,11 @@ export class SlackWalletService extends BaseWalletService {
       // Use base service for validation and addition
       const result = await this.addUserWallet(fullUserId, walletAddress, 'slack');
 
-      if (!result.success) {
-        if (context.respond) {
-          await context.respond({
-            text: `❌ ${result.message}`,
-            response_type: 'ephemeral'
-          });
-        }
+      if (!result.success && context.respond) {
+        await context.respond({
+          blocks: errorMessage(result.message),
+          response_type: 'ephemeral'
+        });
         return;
       }
 
@@ -186,15 +187,7 @@ export class SlackWalletService extends BaseWalletService {
 
       if (context.respond) {
         await context.respond({
-          blocks: [
-            {
-              type: 'section',
-              text: {
-                type: 'mrkdwn',
-                text: `✅ *Wallet added successfully!*\n${displayName}`
-              }
-            }
-          ],
+          blocks: successMessage(`Wallet added successfully!\n${displayName}`),
           response_type: 'ephemeral'
         });
       }
