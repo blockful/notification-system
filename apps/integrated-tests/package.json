@@ -11,6 +11,7 @@
     "@notification-system/anticapture-client": "workspace:*",
     "@notification-system/consumer": "workspace:*",
     "@notification-system/dispatcher": "workspace:*",
+    "@notification-system/messages": "workspace:*",
     "@notification-system/logic-system": "workspace:*",
     "@notification-system/rabbitmq-client": "workspace:*",
     "@notification-system/subscription-server": "workspace:*",

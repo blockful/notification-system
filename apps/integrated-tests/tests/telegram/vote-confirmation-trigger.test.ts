@@ -1,4 +1,4 @@
-import { describe, test, expect, beforeEach, jest, beforeAll, afterEach } from '@jest/globals';
+import { describe, test, expect, beforeEach, jest, beforeAll } from '@jest/globals';
 import { db, TestApps } from '../../src/setup';
 import { HttpClientMockSetup, GraphQLMockSetup } from '../../src/mocks';
 import { UserFactory, VoteFactory } from '../../src/fixtures';
@@ -18,7 +18,7 @@ describe('Vote Confirmation Trigger - Integration Test', () => {
     dbHelper = new DatabaseTestHelper(db);
   });
 
-  afterEach(async () => {
+  beforeEach(async () => {
     await TestCleanup.cleanupBetweenTests();
   });
 

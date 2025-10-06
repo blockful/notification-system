@@ -1,4 +1,4 @@
-import { describe, test, expect, beforeAll, afterEach } from '@jest/globals';
+import { describe, test, expect, beforeAll, beforeEach } from '@jest/globals';
 import { db, TestApps } from '../../src/setup';
 import { HttpClientMockSetup, GraphQLMockSetup } from '../../src/mocks';
 import { UserFactory, VotingPowerFactory } from '../../src/fixtures';
@@ -18,7 +18,7 @@ describe('Delegation Change Notifications - Integration Test', () => {
     dbHelper = new DatabaseTestHelper(db);
   });
 
-  afterEach(async () => {
+  beforeEach(async () => {
     await TestCleanup.cleanupBetweenTests();
   });
 

@@ -3,7 +3,7 @@
  * Tests the complete flow from Logic System trigger to Dispatcher handler
  */
 
-import { describe, test, expect, beforeEach, beforeAll, afterEach } from '@jest/globals';
+import { describe, test, expect, beforeEach, beforeAll } from '@jest/globals';
 import { db, TestApps } from '../../src/setup';
 import { HttpClientMockSetup, GraphQLMockSetup } from '../../src/mocks';
 import { UserFactory, ProposalFactory } from '../../src/fixtures';
@@ -49,10 +49,6 @@ describe('Voting Reminder Integration Tests', () => {
     httpMockSetup = TestCleanup.getGlobalHttpMockSetup();
     telegramHelper = new TelegramTestHelper(global.mockTelegramSendMessage);
     dbHelper = new DatabaseTestHelper(db);
-  });
-
-  afterEach(async () => {
-    await TestCleanup.cleanupBetweenTests();
   });
 
   beforeEach(async () => {
