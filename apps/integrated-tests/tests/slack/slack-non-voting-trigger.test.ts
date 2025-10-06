@@ -23,8 +23,8 @@ describe('Slack Non-Voting Trigger - Integration Test', () => {
   // Test addresses
   const ADDRESS_ACTIVE = '0x1234567890123456789012345678901234567890';
   const ADDRESS_PARTIAL = '0xabcdef1234567890123456789012345678901234';
-  const ADDRESS_INACTIVE = '0x9876543210987654321098765432109876543210';
-  const ADDRESS_ZERO_VOTES = '0x1111111111111111111111111111111111111111';
+  const ADDRESS_INACTIVE = '0xb8c2C29ee19D8307cb7255e1Cd9CbDE883A267d5'.toLowerCase(); // nick.eth
+  const ADDRESS_ZERO_VOTES = '0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045'.toLowerCase(); // vitalik.eth
 
   // Helper function for creating Slack users with followed addresses
   const createSlackUserWithFollowedAddresses = async (
@@ -138,10 +138,10 @@ Consider reaching out to encourage participation!`;
     // Setup mocks
     GraphQLMockSetup.setupMock(httpMockSetup.getMockClient(), proposals, [], {}, votes);
 
-    // Wait for notification - should only be for ADDRESS_INACTIVE
+    // Wait for notification - should only be for ADDRESS_INACTIVE (nick.eth)
     const message = await slackHelper.waitForMessage(
       msg => msg.text.includes('Non-Voting Alert') &&
-             msg.text.includes(ADDRESS_INACTIVE.slice(0, 6)) &&
+             msg.text.includes('nick.eth') &&
              msg.channel === SLACK_CHANNEL_ID,
       {
         timeout: timeouts.notification.delivery,
@@ -153,6 +153,7 @@ Consider reaching out to encourage participation!`;
 
     expect(message.channel).toBe(SLACK_CHANNEL_ID);
     expect(message.text).toContain('hasn\'t voted in the last 3 proposals');
+    expect(message.text).toContain('nick.eth');
     expect(message.text).not.toContain(ADDRESS_ACTIVE.slice(0, 6));
     expect(message.text).not.toContain(ADDRESS_PARTIAL.slice(0, 6));
 
@@ -229,9 +230,9 @@ Consider reaching out to encourage participation!`;
     expect(channels).toContain(SLACK_CHANNEL_ID);
     expect(channels).toContain(SLACK_CHANNEL_2);
 
-    // Verify content
+    // Verify content - should show nick.eth
     messages.forEach(message => {
-      expect(message.text).toContain(ADDRESS_INACTIVE.slice(0, 6));
+      expect(message.text).toContain('nick.eth');
       expect(message.text).toContain('hasn\'t voted in the last 3 proposals');
     });
   });
@@ -263,14 +264,14 @@ Consider reaching out to encourage participation!`;
     // Setup mocks
     GraphQLMockSetup.setupMock(httpMockSetup.getMockClient(), proposals, [], {}, votes);
 
-    // Should only get notification for ADDRESS_ZERO_VOTES
+    // Should only get notification for ADDRESS_ZERO_VOTES (vitalik.eth)
     const message = await slackHelper.waitForMessage(
       msg => msg.text.includes('Non-Voting Alert') &&
              msg.channel === SLACK_CHANNEL_ID,
       { timeout: timeouts.notification.delivery }
     );
 
-    expect(message.text).toContain(ADDRESS_ZERO_VOTES.slice(0, 6));
+    expect(message.text).toContain('vitalik.eth');
     expect(message.text).not.toContain(ADDRESS_ACTIVE.slice(0, 6));
     expect(message.text).not.toContain(ADDRESS_PARTIAL.slice(0, 6));
   });
@@ -350,10 +351,10 @@ Consider reaching out to encourage participation!`;
     const dao2Message = messages.find(m => m.channel === SLACK_CHANNEL_2);
 
     expect(dao1Message?.text).toContain('DAO UNI');
-    expect(dao1Message?.text).toContain(ADDRESS_INACTIVE.slice(0, 6));
+    expect(dao1Message?.text).toContain('nick.eth');
 
     expect(dao2Message?.text).toContain('DAO ENS');
-    expect(dao2Message?.text).toContain(ADDRESS_ZERO_VOTES.slice(0, 6));
+    expect(dao2Message?.text).toContain('vitalik.eth');
   });
 
   test('Duplicate prevention - same address in multiple events', async () => {
@@ -497,16 +498,16 @@ Consider reaching out to encourage participation!`;
       { timeout: timeouts.notification.delivery }
     );
 
-    // Verify Slack message
+    // Verify Slack message - should show nick.eth
     expect(slackMessage.channel).toBe(SLACK_CHANNEL_ID);
-    expect(slackMessage.text).toContain(ADDRESS_INACTIVE.slice(0, 6));
+    expect(slackMessage.text).toContain('nick.eth');
     expect(slackMessage.text).toContain('hasn\'t voted in the last 3 proposals');
 
-    // Verify Telegram also received (checking mock calls)
+    // Verify Telegram also received (checking mock calls) - should show nick.eth
     const telegramCalls = global.mockTelegramSendMessage.mock.calls;
     const telegramMessage = telegramCalls.find(([chatId, text]) =>
       text.includes('Non-Voting Alert') &&
-      text.includes(ADDRESS_INACTIVE.slice(0, 6)) &&
+      text.includes('nick.eth') &&
       chatId.toString() === testConstants.profiles.p1.chatId
     );
     expect(telegramMessage).toBeDefined();

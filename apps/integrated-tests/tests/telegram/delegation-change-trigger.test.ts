@@ -76,7 +76,10 @@ describe('Delegation Change Notifications - Integration Test', () => {
     expect(delegatorMessage.text).not.toContain('{{txLink}}');
     expect(delegatorMessage.text).not.toContain('{{delegatorAccount}}');
     expect(delegatorMessage.text).not.toContain('{{delegate}}');
-    
+
+    expect(delegatorMessage.text).toContain(delegatorAddress);
+    expect(delegatorMessage.text).toContain(delegateAddress);
+
     // Verify message has substantial content
     expect(delegatorMessage.text.length).toBeGreaterThan(50);
   });
@@ -143,6 +146,8 @@ describe('Delegation Change Notifications - Integration Test', () => {
     expect(selfDelegationMessage.text).toContain('to themselves');
     expect(selfDelegationMessage.text).toContain('Total voting power is now');
     expect(selfDelegationMessage.chatId).toBe(testConstants.profiles.p1.chatId);
+
+    expect(selfDelegationMessage.text).toContain(userAddress);
   });
 
   test('should send undelegation confirmation notification', async () => {
@@ -192,5 +197,8 @@ describe('Delegation Change Notifications - Integration Test', () => {
     expect(delegatorMessage.text).toContain('↩️ Undelegation confirmed');
     expect(delegatorMessage.text).toContain('removed');
     expect(delegatorMessage.chatId).toBe(testConstants.profiles.p1.chatId);
+
+    expect(delegatorMessage.text).toContain(delegatorAddress);
+    expect(delegatorMessage.text).toContain(delegateAddress);
   });
 });

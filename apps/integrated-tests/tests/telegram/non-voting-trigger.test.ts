@@ -14,8 +14,8 @@ describe('Non-Voting Trigger - Integration Test', () => {
   // Test addresses
   const ADDRESS_ACTIVE = '0x1234567890123456789012345678901234567890';
   const ADDRESS_PARTIAL = '0xabcdef1234567890123456789012345678901234';
-  const ADDRESS_INACTIVE = '0x9876543210987654321098765432109876543210';
-  const ADDRESS_ZERO_VOTES = '0x1111111111111111111111111111111111111111';
+  const ADDRESS_INACTIVE = '0xb8c2C29ee19D8307cb7255e1Cd9CbDE883A267d5'.toLowerCase(); // nick.eth
+  const ADDRESS_ZERO_VOTES = '0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045'.toLowerCase(); // vitalik.eth
 
   // Helper to create finished proposals (similar to proposal-finished test)
   const createFinishedProposals = (daoId: string, count: number) => {
@@ -93,15 +93,16 @@ Consider reaching out to encourage participation!`;
     // Setup mocks
     GraphQLMockSetup.setupMock(httpMockSetup.getMockClient(), proposals, [], {}, votes);
 
-    // Wait for notification - should only be for ADDRESS_INACTIVE
+    // Wait for notification - should only be for ADDRESS_INACTIVE (nick.eth)
     const message = await telegramHelper.waitForMessage(
-      msg => msg.text.includes('Non-Voting Alert') && 
-             msg.text.includes(ADDRESS_INACTIVE.slice(0, 6)),
+      msg => msg.text.includes('Non-Voting Alert') &&
+             msg.text.includes('nick.eth'),
       { timeout: timeouts.notification.delivery }
     );
 
     expect(message.chatId).toBe(testConstants.profiles.p1.chatId);
     expect(message.text).toContain('hasn\'t voted in the last 3 proposals');
+    expect(message.text).toContain('nick.eth');
     expect(message.text).not.toContain(ADDRESS_ACTIVE.slice(0, 6));
     expect(message.text).not.toContain(ADDRESS_PARTIAL.slice(0, 6));
   });
@@ -174,9 +175,9 @@ Consider reaching out to encourage participation!`;
     expect(chatIds).toContain(testConstants.profiles.p3.chatId);
     expect(chatIds).toContain(testConstants.profiles.p4.chatId);
     
-    // Verify content
+    // Verify content - should show nick.eth
     messages.forEach(message => {
-      expect(message.text).toContain(ADDRESS_INACTIVE.slice(0, 6));
+      expect(message.text).toContain('nick.eth');
       expect(message.text).toContain('hasn\'t voted in the last 3 proposals');
     });
   });
@@ -209,13 +210,13 @@ Consider reaching out to encourage participation!`;
     // Setup mocks
     GraphQLMockSetup.setupMock(httpMockSetup.getMockClient(), proposals, [], {}, votes);
 
-    // Should only get notification for ADDRESS_ZERO_VOTES
+    // Should only get notification for ADDRESS_ZERO_VOTES (vitalik.eth)
     const message = await telegramHelper.waitForMessage(
       msg => msg.text.includes('Non-Voting Alert'),
       { timeout: timeouts.notification.delivery }
     );
 
-    expect(message.text).toContain(ADDRESS_ZERO_VOTES.slice(0, 6));
+    expect(message.text).toContain('vitalik.eth');
     expect(message.text).not.toContain(ADDRESS_ACTIVE.slice(0, 6));
     expect(message.text).not.toContain(ADDRESS_PARTIAL.slice(0, 6));
   });
@@ -293,10 +294,10 @@ Consider reaching out to encourage participation!`;
     const dao2Message = messages.find(m => m.chatId === testConstants.profiles.p9.chatId);
 
     expect(dao1Message?.text).toContain('DAO UNI');
-    expect(dao1Message?.text).toContain(ADDRESS_INACTIVE.slice(0, 6));
-    
+    expect(dao1Message?.text).toContain('nick.eth');
+
     expect(dao2Message?.text).toContain('DAO ENS');
-    expect(dao2Message?.text).toContain(ADDRESS_ZERO_VOTES.slice(0, 6));
+    expect(dao2Message?.text).toContain('vitalik.eth');
   });
 
   test('Duplicate prevention - same address in multiple events', async () => {
