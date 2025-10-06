@@ -14,20 +14,20 @@ export class WorkspaceFactory {
     // Use real credentials if SEND_REAL_SLACK is enabled
     const isRealMode = env.SEND_REAL_SLACK === 'true';
 
-    const finalWorkspaceId = this.getWorkspaceId();
-    const finalBotToken = isRealMode ? env.SLACK_BOT_TOKEN! : 'xoxb-test-workspace-token';
+    const workspaceId = this.getWorkspaceId();
+    const BotToken = isRealMode ? env.SLACK_BOT_TOKEN! : 'xoxb-test-workspace-token';
 
     // Check if workspace already exists
     const existing = await db('channel_workspaces')
-      .where({ workspace_id: finalWorkspaceId })
+      .where({ workspace_id: workspaceId })
       .first();
 
     if (!existing) {
       // Encrypt the token to match production behavior
-      const tokenToStore = this.encryptToken(finalBotToken);
+      const tokenToStore = this.encryptToken(BotToken);
 
       const workspaceData = {
-        workspace_id: finalWorkspaceId,
+        workspace_id: workspaceId,
         workspace_name: isRealMode ? 'Real Test Workspace' : 'Test Workspace',
         channel: 'slack',
         bot_token: tokenToStore,
