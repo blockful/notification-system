@@ -29,7 +29,7 @@ describe('Vote Confirmation Trigger - Integration Test', () => {
     
     // Create user with subscription to DAO
     const pastTimestamp = new Date(Date.now() - timeouts.wait.long).toISOString();
-    
+
     const { user: userWithSub } = await UserFactory.createUserWithFullSetup(
       testUser.chatId,
       'vote-user-for',
@@ -37,13 +37,13 @@ describe('Vote Confirmation Trigger - Integration Test', () => {
       true,
       pastTimestamp
     );
-    
+
     // Create address mapping
     await UserFactory.createUserAddress(userWithSub.id, voterAddress, pastTimestamp);
-    
+
     // Create vote event with timestamp in the future to ensure processing
     const eventTimestamp = (Math.floor(Date.now() / 1000) + 10).toString();
-    
+
     const voteEvents = [
       {
         daoId: testDaoId,
@@ -56,7 +56,7 @@ describe('Vote Confirmation Trigger - Integration Test', () => {
         reason: 'Great proposal!'
       }
     ];
-    
+
     // Setup GraphQL mock
     GraphQLMockSetup.setupMock(
       httpMockSetup.getMockClient(),
@@ -65,7 +65,7 @@ describe('Vote Confirmation Trigger - Integration Test', () => {
       { [testDaoId]: 1 }, // Map daoId to chainId
       voteEvents // Add votes to mock
     );
-    
+
     // Wait for notification
     const message = await telegramHelper.waitForMessage(
       msg => msg.text.includes('just voted on'),
