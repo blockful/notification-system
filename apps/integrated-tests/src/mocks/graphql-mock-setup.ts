@@ -6,17 +6,6 @@ import { ProcessedVotingPowerHistory } from '@notification-system/anticapture-cl
  * @dev Provides methods to mock different GraphQL endpoints with test data
  */
 export class GraphQLMockSetup {
-  /**
-   * @notice Normalizes address for case-insensitive comparison
-   * @dev Used for filtering only - simulates API's internal case-insensitive matching
-   * The real API is case-sensitive storage but does case-insensitive lookups
-   */
-  private static normalizeForComparison(address: string): string {
-    if (!address) {
-      return address;
-    }
-    return address.toLowerCase();
-  }
 
   /**
    * @notice Transforms ProcessedVotingPowerHistory to raw GraphQL format
@@ -118,7 +107,7 @@ export class GraphQLMockSetup {
         if (voterAccountIdIn) {
           filtered = filtered.filter((v: any) =>
             voterAccountIdIn.some((addr: string) =>
-              this.normalizeForComparison(v.voterAccountId) === this.normalizeForComparison(addr)
+            v.voterAccountId.toLowerCase() === addr.toLowerCase()
             )
           );
         }
