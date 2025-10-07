@@ -1,7 +1,7 @@
 import { describe, test, expect, beforeEach, jest, beforeAll } from '@jest/globals';
 import { db, TestApps } from '../../src/setup';
 import { HttpClientMockSetup, GraphQLMockSetup } from '../../src/mocks';
-import { UserFactory, VoteFactory } from '../../src/fixtures';
+import { UserFactory } from '../../src/fixtures';
 import { TelegramTestHelper, DatabaseTestHelper, TestCleanup } from '../../src/helpers';
 import { testConstants, timeouts } from '../../src/config';
 
@@ -24,9 +24,9 @@ describe('Address Normalization - Integration Test', () => {
 
   test('should normalize checksum addresses from API client to lowercase', async () => {
     const testDaoId = testConstants.daoIds.voteTest || 'test-dao-vote';
-    const testUser = testConstants.profiles.p10;  // lowercase - DB e validações
-    const voterAddress = testUser.address;  // '0xadd_p1' - usado no DB
-    const voterAddressChecksum = testConstants.profiles.p10_checksum.address;  // '0xAdd_P1' - SÓ pro mock
+    const testUser = testConstants.profiles.p10;
+    const voterAddress = testUser.address;
+    const voterAddressChecksum = testConstants.profiles.p10_checksum.address;
 
     // Create user with subscription to DAO
     const pastTimestamp = new Date(Date.now() - timeouts.wait.long).toISOString();
@@ -39,7 +39,7 @@ describe('Address Normalization - Integration Test', () => {
       pastTimestamp
     );
 
-    // Create address mapping with LOWERCASE (o que sistema usa)
+    // Create address mapping with LOWERCASE 
     await UserFactory.createUserAddress(userWithSub.id, voterAddress, pastTimestamp);
 
     // Create vote event with timestamp in the future to ensure processing
@@ -50,7 +50,7 @@ describe('Address Normalization - Integration Test', () => {
         daoId: testDaoId,
         txHash: '0xabcdef1234567890abcdef1234567890abcdef1234567890abcdef1234567890',
         proposalId: 'prop-checksum-test',
-        voterAccountId: voterAddressChecksum,  // ← CHECKSUM aqui! Testa normalização
+        voterAccountId: voterAddressChecksum,
         support: '1', // FOR
         votingPower: '1000000000000000000000', // 1000 tokens
         timestamp: eventTimestamp,
@@ -79,6 +79,6 @@ describe('Address Normalization - Integration Test', () => {
     expect(message.text).toMatch(/voted FOR|just voted on/i);
     expect(message.text).toContain('[Transaction details](https://etherscan.io/tx/');
     expect(message.text).not.toContain('{{txLink}}');
-    expect(message.chatId).toBe(testUser.chatId);  // ← Valida com p1 (lowercase)
+    expect(message.chatId).toBe(testUser.chatId);
   });
 });
