@@ -1,5 +1,6 @@
 import { ProposalData } from '../fixtures';
 import { ProcessedVotingPowerHistory } from '@notification-system/anticapture-client';
+import { getAddress, isAddressEqual } from 'viem';
 
 /**
  * @notice Setup class for GraphQL API mocking in integration tests
@@ -107,7 +108,7 @@ export class GraphQLMockSetup {
         if (voterAccountIdIn) {
           filtered = filtered.filter((v: any) =>
             voterAccountIdIn.some((addr: string) =>
-            v.voterAccountId.toLowerCase() === addr.toLowerCase()
+              isAddressEqual(getAddress(v.voterAccountId), getAddress(addr))
             )
           );
         }
