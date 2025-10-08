@@ -7,7 +7,7 @@ export const daoEmojis = new Map<string, string>([
   ['UNI', '🦄'],     // Uniswap
   ['ENS', '🌐'],     // ENS
   ['OP', '🔴'],      // Optimism
-  ['GTC', '🪖'],     // Gitcoin
+  ['GIT', '🪖'],     // Gitcoin
   ['NOUNS', '🕶️'],   // Nouns
   ['OBOL', '♾️'],    // Obol
   ['LIDO', '💧'],    // Lido
