@@ -34,13 +34,18 @@ export class KnexUserRepository implements IUserRepository {
 
   /**
    * Creates a new user in the database
+   * Uses INSERT ... ON CONFLICT ... MERGE to handle race conditions gracefully
    * @param data - The user data to insert
    */
   async create(data: Omit<User, 'id'>): Promise<User> {
+    const userId = uuidv4();
+    const userData = { id: userId, ...data, created_at: new Date().toISOString() };
     const [user] = await this.knex<User>('users')
-      .insert({ id: uuidv4(), ...data, created_at: new Date().toISOString() })
+      .insert(userData)
+      .onConflict(['channel', 'channel_user_id'])
+      .merge()
       .returning('*');
-    
+
     return user;
   }
 
