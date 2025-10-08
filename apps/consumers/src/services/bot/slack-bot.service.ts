@@ -50,17 +50,67 @@ export class SlackBotService implements BotServiceInterface {
       // App Home
       handlers.event('app_home_opened', async (ctx) => {
         try {
-          await ctx.client.views.publish({
-            user_id: ctx.event.user,
-            view: { type: 'home', blocks: slackMessages.homePage.blocks }
-          });
+          const event = ctx.event as any;
+
+          // If user opened the Home tab, publish the home page
+          if (event.tab === 'home') {
+            await ctx.client.views.publish({
+              user_id: event.user,
+              view: { type: 'home', blocks: slackMessages.homePage.blocks }
+            });
+          }
+
+          // If user opened the Messages tab, send welcome message only if chat is empty
+          if (event.tab === 'messages') {
+            // Check if there are any messages in the conversation
+            const history = await ctx.client.conversations.history({
+              channel: event.channel,
+              limit: 1
+            });
+
+            // Only send welcome message if there are no messages yet
+            if (!history.messages || history.messages.length === 0) {
+              await ctx.client.chat.postMessage({
+                channel: event.user,
+                blocks: slackMessages.welcomeMessage.blocks,
+                text: 'Welcome to DAO Notification Bot!' // Fallback text
+              });
+            }
+          }
         } catch (error) {
-          console.error('Error publishing App Home:', error);
+          console.error('Error handling app_home_opened:', error);
+        }
+      });
+
+      // Message handler for conversational flows (e.g., wallet input)
+      handlers.message('', async (ctx) => {
+        const message = ctx.body as any;
+
+        // Check if waiting for wallet input
+        if (ctx.session?.awaitingInput?.type === 'wallet' &&
+            ctx.session?.awaitingInput?.action === 'add') {
+          if (message.text && !message.bot_id && this.walletService) {
+            await this.walletService.processWalletInput(ctx, message.text);
+            return;
+          }
         }
       });
 
       // Main command
       handlers.command('/anticapture', (ctx) => this.handleMainCommand(ctx));
+
+      // Welcome message actions
+      handlers.action('welcome_select_daos', async (ctx) => {
+        if (this.daoService) {
+          await this.daoService.initialize(ctx, 'subscribe');
+        }
+      });
+
+      handlers.action('welcome_setup_wallets', async (ctx) => {
+        if (this.walletService) {
+          await this.walletService.initialize(ctx, 'list', '');
+        }
+      });
 
       // DAO actions
       handlers.action(/^dao_toggle_(subscribe|unsubscribe)_(.+)$/, async (ctx) => {
@@ -87,6 +137,18 @@ export class SlackBotService implements BotServiceInterface {
       handlers.action('wallet_confirm_remove', async (ctx) => {
         if (this.walletService) {
           await this.walletService.confirmRemoval(ctx);
+        }
+      });
+
+      handlers.action('wallet_add', async (ctx) => {
+        if (this.walletService) {
+          await this.walletService.startAddWallet(ctx);
+        }
+      });
+
+      handlers.action('wallet_remove', async (ctx) => {
+        if (this.walletService) {
+          await this.walletService.startRemoveWallet(ctx);
         }
       });
     });
@@ -202,7 +264,7 @@ export class SlackBotService implements BotServiceInterface {
           ]
         }
       ],
-      response_type: 'ephemeral'
+      response_type: 'in_channel'
       });
     }
   }
@@ -215,7 +277,7 @@ export class SlackBotService implements BotServiceInterface {
     if (context.respond) {
       await context.respond({
         text: replacePlaceholders(slackMessages.error, { message }),
-        response_type: 'ephemeral'
+        response_type: 'in_channel'
       });
     }
   }
