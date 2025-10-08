@@ -89,8 +89,7 @@ export class KnexUserRepository implements IUserRepository {
         'channel_workspaces.bot_token as encrypted_token'
       )
       .leftJoin('channel_workspaces', function() {
-        this.on(knex.raw("INSTR(users.channel_user_id, ':') > 0"))
-          .andOn(knex.raw("SUBSTR(users.channel_user_id, 1, INSTR(users.channel_user_id, ':') - 1) = channel_workspaces.workspace_id"))
+        this.on(knex.raw("users.channel_user_id LIKE channel_workspaces.workspace_id || ':%'"))
           .andOn('channel_workspaces.is_active', '=', knex.raw('true'));
       })
       .whereIn('users.id', ids);
