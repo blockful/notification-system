@@ -36,7 +36,7 @@ export class SlackDAOService extends BaseDAOService {
       if (daos.length === 0 && context.respond) {
         await context.respond({
           text: slackMessages.dao.noDaosAvailable,
-          response_type: 'ephemeral'
+          response_type: 'in_channel'
         });
         return;
       }
@@ -58,14 +58,14 @@ export class SlackDAOService extends BaseDAOService {
       );
 
       if (context.respond) {
-        await context.respond({ blocks, response_type: 'ephemeral' });
+        await context.respond({ blocks, response_type: 'in_channel' });
       }
     } catch (error) {
       console.error('Error loading DAOs:', error);
       if (context.respond) {
         await context.respond({
           blocks: errorMessage(slackMessages.dao.loadError),
-          response_type: 'ephemeral'
+          response_type: 'in_channel'
         });
       }
     }
@@ -88,7 +88,7 @@ export class SlackDAOService extends BaseDAOService {
         if (context.respond) {
           await context.respond({
             text: slackMessages.dao.emptyList,
-            response_type: 'ephemeral'
+            response_type: 'in_channel'
           });
         }
         return;
@@ -116,7 +116,7 @@ export class SlackDAOService extends BaseDAOService {
               ]
             }
           ],
-          response_type: 'ephemeral'
+          response_type: 'in_channel'
         });
       }
     } catch (error) {
@@ -124,7 +124,7 @@ export class SlackDAOService extends BaseDAOService {
       if (context.respond) {
         await context.respond({
           text: slackMessages.dao.listError,
-          response_type: 'ephemeral'
+          response_type: 'in_channel'
         });
       }
     }
@@ -164,7 +164,8 @@ export class SlackDAOService extends BaseDAOService {
       if (context.respond) {
         await context.respond({
           replace_original: true,
-          blocks
+          blocks,
+          response_type: 'in_channel'
         });
       }
     } catch (error) {
@@ -192,14 +193,20 @@ export class SlackDAOService extends BaseDAOService {
             text: action === 'subscribe'
               ? slackMessages.dao.subscribeWarning
               : slackMessages.dao.unsubscribeWarning,
-            response_type: 'ephemeral'
+            response_type: 'in_channel'
           });
         }
         return;
       }
 
       // Apply the subscription action to selected DAOs
-      await this.applySubscriptionAction(fullUserId, selectedDAOs, action);
+      if (action === 'subscribe') {
+        // For subscribe, sync to the complete desired state (handles both adds and removes)
+        await this.syncSubscriptionsToState(fullUserId, selectedDAOs);
+      } else {
+        // For unsubscribe, just remove the selected DAOs
+        await this.applySubscriptionAction(fullUserId, selectedDAOs, 'unsubscribe');
+      }
 
       // Show confirmation message
       const daoList = this.formatDAOList(selectedDAOs);
@@ -209,7 +216,7 @@ export class SlackDAOService extends BaseDAOService {
 
       if (context.respond) {
         await context.respond({
-          replace_original: true,
+          replace_original: false,
           blocks: [
             {
               type: 'section',
@@ -227,7 +234,8 @@ export class SlackDAOService extends BaseDAOService {
                 }
               ]
             }
-          ]
+          ],
+          response_type: 'in_channel'
         });
       }
 
@@ -238,9 +246,9 @@ export class SlackDAOService extends BaseDAOService {
       console.error('Error updating subscriptions:', error);
       if (context.respond) {
         await context.respond({
-          replace_original: true,
+          replace_original: false,
           text: slackMessages.dao.updateError,
-          response_type: 'ephemeral'
+          response_type: 'in_channel'
         });
       }
     }
