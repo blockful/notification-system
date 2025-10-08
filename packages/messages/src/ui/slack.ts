@@ -80,7 +80,7 @@ export const slackMessages = {
           type: 'mrkdwn',
           text: '✨ *[Mission Initiated: Navigating the Governance Space]*\n\n' +
             'Set up your dashboard to stay on course with proposal signals from the DAOs you participate in.\n\n' +
-            '---\n\n' +
+            '\n\n' +
             '*💎 Mission Features:*\n' +
             '• Receive real-time alerts for new proposals\n' +
             '• Be reminded when a voting window is open — don\'t miss your chance to engage\n' +
@@ -88,11 +88,11 @@ export const slackMessages = {
             '• Lock in the DAOs you want to monitor directly\n' +
             '• Connect your wallet and sync your DAOs of interest\n' +
             '• Track if your addresses are actively voting\n\n' +
-            '---\n\n' +
+            '\n\n' +
             '*⚠️ Mission Status Update:*\n' +
             '• Currently, notifications are transmitted only to your control panel\n' +
             '• Soon, you\'ll be able to deploy the bot into your Slack channel so your entire crew can stay governance-ready\n\n' +
-            '---\n\n' +
+            '\n\n' +
             '*Another links that might be useful*'
         }
       },
