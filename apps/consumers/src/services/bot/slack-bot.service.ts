@@ -108,7 +108,20 @@ export class SlackBotService implements BotServiceInterface {
 
       handlers.action('welcome_setup_wallets', async (ctx) => {
         if (this.walletService) {
-          await this.walletService.initialize(ctx, 'list', '');
+          await this.walletService.initialize(ctx);
+        }
+      });
+
+      // DAO list actions
+      handlers.action('dao_subscribe', async (ctx) => {
+        if (this.daoService) {
+          await this.daoService.initialize(ctx, 'subscribe');
+        }
+      });
+
+      handlers.action('dao_edit_subscriptions', async (ctx) => {
+        if (this.daoService) {
+          await this.daoService.initialize(ctx, 'subscribe');
         }
       });
 
@@ -159,12 +172,10 @@ export class SlackBotService implements BotServiceInterface {
    */
   private createCommandRegistry(): Map<string, CommandHandler> {
     const registry = new Map<string, CommandHandler>();
-    registry.set('subscribe', async (ctx, args) => this.handleDaoCommand(ctx, 'subscribe'));
-    registry.set('unsubscribe', async (ctx, args) => this.handleDaoCommand(ctx, 'unsubscribe'));
-    registry.set('list', async (ctx, args) => this.handleDaoList(ctx));
-    registry.set('wallet', async (ctx, args) => this.handleWalletCommand(ctx, args));
+    registry.set('daos', async (ctx, args) => this.handleDaoList(ctx));
+    registry.set('wallet', async (ctx, args) => this.handleWalletCommand(ctx));
     registry.set('help', async (ctx, args) => this.showHelp(ctx));
-    
+
     return registry;
   }
 
@@ -180,17 +191,6 @@ export class SlackBotService implements BotServiceInterface {
   }
 
   /**
-   * Handle DAO subscribe/unsubscribe commands
-   */
-  private async handleDaoCommand(context: SlackCommandContext, action: 'subscribe' | 'unsubscribe'): Promise<void> {
-    if (!this.daoService) {
-      await this.respondWithError(context, 'DAO management is not available');
-      return;
-    }
-    await this.daoService.initialize(context, action);
-  }
-
-  /**
    * Handle DAO list command
    */
   private async handleDaoList(context: SlackCommandContext): Promise<void> {
@@ -202,24 +202,15 @@ export class SlackBotService implements BotServiceInterface {
   }
 
   /**
-   * Handle wallet commands with subcommands
+   * Handle wallet command - always shows list with add/remove buttons
    */
-  private async handleWalletCommand(context: SlackCommandContext, args: string[]): Promise<void> {
+  private async handleWalletCommand(context: SlackCommandContext): Promise<void> {
     if (!this.walletService) {
       await this.respondWithError(context, 'Wallet management is not available');
       return;
     }
 
-    const subcommand = args[0] || 'list';
-    const validSubcommands: Record<string, 'add' | 'remove' | 'list'> = {
-      'add': 'add',
-      'remove': 'remove',
-      'list': 'list'
-    };
-
-    const action = validSubcommands[subcommand] || 'list';
-    const walletAddress = args.slice(1).join(' ').trim();
-    await this.walletService.initialize(context, action, walletAddress);
+    await this.walletService.initialize(context);
   }
 
   /**
@@ -245,12 +236,8 @@ export class SlackBotService implements BotServiceInterface {
           text: {
             type: 'mrkdwn',
             text: '*Available Commands:*\n' +
-              '• `/anticapture subscribe` - Subscribe to DAOs\n' +
-              '• `/anticapture unsubscribe` - Unsubscribe from DAOs\n' +
-              '• `/anticapture list` - List your subscriptions\n' +
-              '• `/anticapture wallet add [address]` - Add a wallet address\n' +
-              '• `/anticapture wallet remove` - Remove wallet addresses\n' +
-              '• `/anticapture wallet list` - List your wallets\n' +
+              '• `/anticapture wallet` - Manage your wallet addresses\n' +
+              '• `/anticapture daos` - Manage your DAO subscriptions\n' +
               '• `/anticapture help` - Show this help message'
           }
         },
