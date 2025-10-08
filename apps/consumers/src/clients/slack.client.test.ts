@@ -11,6 +11,12 @@ import { App } from '@slack/bolt';
 jest.mock('@slack/web-api');
 jest.mock('@slack/bolt');
 
+// Test configuration constants
+const TEST_APP_TOKEN = 'xapp-test-app-token';
+const TEST_SIGNING_SECRET = 'test-signing-secret';
+const TEST_SUBSCRIPTION_SERVER_URL = 'http://test-subscription-server';
+const TEST_ENCRYPTION_KEY = '0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef';
+
 describe('SlackClient', () => {
   let slackClient: SlackClient;
   let mockWebClient: jest.Mocked<WebClient>;
@@ -20,12 +26,22 @@ describe('SlackClient', () => {
     mockWebClient = new WebClient() as jest.Mocked<WebClient>;
     (WebClient as unknown as jest.Mock).mockImplementation(() => mockWebClient);
 
-    slackClient = new SlackClient('test-app-token', 'test-signing-secret');
+    slackClient = new SlackClient(
+      TEST_APP_TOKEN,
+      TEST_SIGNING_SECRET,
+      TEST_SUBSCRIPTION_SERVER_URL,
+      TEST_ENCRYPTION_KEY
+    );
   });
 
   describe('constructor', () => {
     it('should create client with valid token', () => {
-      expect(new SlackClient('valid-app-token', 'valid-signing-secret')).toBeInstanceOf(SlackClient);
+      expect(new SlackClient(
+        TEST_APP_TOKEN,
+        TEST_SIGNING_SECRET,
+        TEST_SUBSCRIPTION_SERVER_URL,
+        TEST_ENCRYPTION_KEY
+      )).toBeInstanceOf(SlackClient);
     });
   });
 
@@ -156,20 +172,35 @@ describe('SlackClient', () => {
     });
 
     it('should always initialize with Socket Mode', () => {
-      const client = new SlackClient('xapp-token', 'signing-secret');
+      const client = new SlackClient(
+        TEST_APP_TOKEN,
+        TEST_SIGNING_SECRET,
+        TEST_SUBSCRIPTION_SERVER_URL,
+        TEST_ENCRYPTION_KEY
+      );
 
       expect(App).toHaveBeenCalledWith({
-        appToken: 'xapp-token',
-        signingSecret: 'signing-secret',
+        appToken: TEST_APP_TOKEN,
+        signingSecret: TEST_SIGNING_SECRET,
         socketMode: true,
         processBeforeResponse: true,
+        installationStore: expect.objectContaining({
+          storeInstallation: expect.any(Function),
+          fetchInstallation: expect.any(Function),
+          deleteInstallation: expect.any(Function)
+        }),
         authorize: expect.any(Function)
       });
     });
 
 
     it('should setup command handlers', () => {
-      const client = new SlackClient('xapp-token', 'signing-secret');
+      const client = new SlackClient(
+        TEST_APP_TOKEN,
+        TEST_SIGNING_SECRET,
+        TEST_SUBSCRIPTION_SERVER_URL,
+        TEST_ENCRYPTION_KEY
+      );
 
       client.setupHandlers?.((handlers) => {
         handlers.command('/test', async (ctx) => {
@@ -181,7 +212,12 @@ describe('SlackClient', () => {
     });
 
     it('should setup action handlers', () => {
-      const client = new SlackClient('xapp-token', 'signing-secret');
+      const client = new SlackClient(
+        TEST_APP_TOKEN,
+        TEST_SIGNING_SECRET,
+        TEST_SUBSCRIPTION_SERVER_URL,
+        TEST_ENCRYPTION_KEY
+      );
 
       client.setupHandlers?.((handlers) => {
         handlers.action('button_click', async (ctx) => {
@@ -193,7 +229,12 @@ describe('SlackClient', () => {
     });
 
     it('should launch the Bolt app', async () => {
-      const client = new SlackClient('xapp-token', 'signing-secret');
+      const client = new SlackClient(
+        TEST_APP_TOKEN,
+        TEST_SIGNING_SECRET,
+        TEST_SUBSCRIPTION_SERVER_URL,
+        TEST_ENCRYPTION_KEY
+      );
 
       await client.launch?.();
 
@@ -201,7 +242,12 @@ describe('SlackClient', () => {
     });
 
     it('should stop the Bolt app', () => {
-      const client = new SlackClient('xapp-token', 'signing-secret');
+      const client = new SlackClient(
+        TEST_APP_TOKEN,
+        TEST_SIGNING_SECRET,
+        TEST_SUBSCRIPTION_SERVER_URL,
+        TEST_ENCRYPTION_KEY
+      );
 
       client.stop?.('SIGTERM');
 
