@@ -26,7 +26,7 @@ export class SlackDAOService extends BaseDAOService {
   /**
    * Initialize DAO selection interface
    */
-  async initialize(context: SlackCommandContext, action: 'subscribe' | 'unsubscribe' = 'subscribe'): Promise<void> {
+  async initialize(context: SlackCommandContext): Promise<void> {
     const channelId = context.body.channel_id;
     const workspaceId = context.body.team_id;
     const fullUserId = `${workspaceId}:${channelId}`;
@@ -45,18 +45,17 @@ export class SlackDAOService extends BaseDAOService {
 
       // Get user's current subscriptions and initialize session
       const userPreferences = await this.getUserSubscriptions(fullUserId);
-      const currentSelections = action === 'subscribe' ? new Set(userPreferences) : new Set<string>();
+      const currentSelections = new Set(userPreferences);
 
       if (!context.session) context.session = {};
-      context.session.daoAction = action;
       context.session.daoSelections = currentSelections;
 
       const blocks = daoSelectionList(
         daos,
         currentSelections,
-        `dao_toggle_${action}`,
-        `dao_confirm_${action}`,
-        action === 'subscribe' ? slackMessages.dao.subscribeInstructions : slackMessages.dao.unsubscribeInstructions
+        'dao_toggle_subscribe',
+        'dao_confirm_subscribe',
+        slackMessages.dao.subscribeInstructions
       );
 
       if (context.respond) {
@@ -134,16 +133,13 @@ export class SlackDAOService extends BaseDAOService {
         context.session.daoSelections.add(normalizedDaoName);
       }
 
-      const action = context.session.daoAction ||
-        (context.body.actions[0].action_id?.includes('unsubscribe') ? 'unsubscribe' : 'subscribe');
-
       const daos = await this.fetchAvailableDAOs();
       const blocks = daoSelectionList(
         daos,
         context.session.daoSelections || new Set(),
-        `dao_toggle_${action}`,
-        `dao_confirm_${action}`,
-        action === 'subscribe' ? slackMessages.dao.subscribeHeader : slackMessages.dao.unsubscribeHeader
+        'dao_toggle_subscribe',
+        'dao_confirm_subscribe',
+        slackMessages.dao.subscribeHeader
       );
 
       if (context.respond) {
@@ -161,7 +157,7 @@ export class SlackDAOService extends BaseDAOService {
   /**
    * Confirm DAO selection changes
    */
-  async confirm(context: SlackActionContext, action: 'subscribe' | 'unsubscribe'): Promise<void> {
+  async confirm(context: SlackActionContext): Promise<void> {
     const channelId = context.body.channel?.id;
     const workspaceId = context.body.team?.id || context.body.user?.team_id;
     const fullUserId = `${workspaceId}:${channelId}`;
@@ -171,26 +167,16 @@ export class SlackDAOService extends BaseDAOService {
 
       const selectedDAOs = context.session.daoSelections || new Set<string>();
 
-      // Apply the subscription action to selected DAOs
-      if (action === 'subscribe') {
-        // For subscribe, sync to the complete desired state (handles both adds and removes)
-        await this.syncSubscriptionsToState(fullUserId, selectedDAOs);
-      } else {
-        // For unsubscribe, just remove the selected DAOs
-        await this.applySubscriptionAction(fullUserId, selectedDAOs, 'unsubscribe');
-      }
+      // Sync to the complete desired state (handles both adds and removes)
+      await this.syncSubscriptionsToState(fullUserId, selectedDAOs);
 
       // Show confirmation message
       let successMessage: string;
       if (selectedDAOs.size === 0) {
-        successMessage = action === 'subscribe'
-          ? '✅ *Success!* You\'ve unsubscribed from all DAOs.'
-          : '✅ *Success!* No changes were made.';
+        successMessage = slackMessages.dao.unsubscribeAllSuccess;
       } else {
         const daoList = this.formatDAOList(selectedDAOs);
-        successMessage = action === 'subscribe'
-          ? replacePlaceholders(slackMessages.dao.subscribeSuccess, { daoList })
-          : replacePlaceholders(slackMessages.dao.unsubscribeSuccess, { daoList });
+        successMessage = replacePlaceholders(slackMessages.dao.subscribeSuccess, { daoList });
       }
 
       if (context.respond) {
@@ -220,7 +206,6 @@ export class SlackDAOService extends BaseDAOService {
 
       // Clear session
       context.session.daoSelections = new Set<string>();
-      context.session.daoAction = undefined;
     } catch (error) {
       console.error('Error updating subscriptions:', error);
       if (context.respond) {

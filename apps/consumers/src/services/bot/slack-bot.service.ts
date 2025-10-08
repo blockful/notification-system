@@ -70,7 +70,7 @@ export class SlackBotService implements BotServiceInterface {
       // Welcome message actions
       handlers.action('welcome_select_daos', async (ctx) => {
         if (this.daoService) {
-          await this.daoService.initialize(ctx, 'subscribe');
+          await this.daoService.initialize(ctx);
         }
       });
 
@@ -83,28 +83,27 @@ export class SlackBotService implements BotServiceInterface {
       // DAO list actions
       handlers.action('dao_subscribe', async (ctx) => {
         if (this.daoService) {
-          await this.daoService.initialize(ctx, 'subscribe');
+          await this.daoService.initialize(ctx);
         }
       });
 
       handlers.action('dao_edit_subscriptions', async (ctx) => {
         if (this.daoService) {
-          await this.daoService.initialize(ctx, 'subscribe');
+          await this.daoService.initialize(ctx);
         }
       });
 
       // DAO actions
-      handlers.action(/^dao_toggle_(subscribe|unsubscribe)_(.+)$/, async (ctx) => {
-        const match = (ctx.body as any).actions[0].action_id.match(/^dao_toggle_(subscribe|unsubscribe)_(.+)$/);
+      handlers.action(/^dao_toggle_subscribe_(.+)$/, async (ctx) => {
+        const match = (ctx.body as any).actions[0].action_id.match(/^dao_toggle_subscribe_(.+)$/);
         if (match && this.daoService) {
-          await this.daoService.toggle(ctx, match[2]);
+          await this.daoService.toggle(ctx, match[1]);
         }
       });
 
-      handlers.action(/^dao_confirm_(subscribe|unsubscribe)$/, async (ctx) => {
-        const match = (ctx.body as any).actions[0].action_id.match(/^dao_confirm_(subscribe|unsubscribe)$/);
-        if (match && this.daoService) {
-          await this.daoService.confirm(ctx, match[1] as 'subscribe' | 'unsubscribe');
+      handlers.action('dao_confirm_subscribe', async (ctx) => {
+        if (this.daoService) {
+          await this.daoService.confirm(ctx);
         }
       });
 
