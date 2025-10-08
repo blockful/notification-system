@@ -34,7 +34,6 @@ export class KnexUserRepository implements IUserRepository {
 
   /**
    * Creates a new user in the database
-   * Uses INSERT ... ON CONFLICT ... MERGE to handle race conditions gracefully
    * @param data - The user data to insert
    */
   async create(data: Omit<User, 'id'>): Promise<User> {
