@@ -94,3 +94,24 @@ export const walletEmptyState = (): Block[] => [
     button(slackMessages.wallet.buttonRemove, 'wallet_remove', { style: 'danger' })
   )
 ];
+
+/**
+ * DAO empty state
+ */
+export const daoEmptyState = (): Block[] => [
+  section(slackMessages.dao.emptyList),
+  actions(
+    button(slackMessages.dao.buttonSubscribe, 'dao_subscribe', { style: 'primary' })
+  )
+];
+
+/**
+ * DAO list with edit button
+ */
+export const daoListWithEdit = (daoList: string): Block[] => [
+  section(slackMessages.dao.listHeader + '\n' + daoList),
+  { type: 'divider' },
+  actions(
+    button(slackMessages.dao.buttonEdit, 'dao_edit_subscriptions', { style: 'primary' })
+  )
+];

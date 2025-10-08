@@ -21,7 +21,7 @@ export const slackMessages = {
   // Wallet management messages
   wallet: {
     listHeader: '*Your Wallet Addresses:*',
-    emptyList: "You haven't added any wallets yet. Use '/anticapture wallet add' to get started!",
+    emptyList: "You can add wallets and receive custom notifications related to them and the DAOs you follow!",
     instructions: "Use '/anticapture wallet add' or '/anticapture wallet remove' to manage your wallets",
     buttonAdd: 'Add Wallet',
     buttonRemove: 'Remove Wallet',
@@ -48,9 +48,11 @@ export const slackMessages = {
     unsubscribeHeader: '*Select the DAOs you want to unsubscribe from:*',
     subscribeInstructions: 'Select the DAOs you want to track:',
     unsubscribeInstructions: 'Select the DAOs you want to unsubscribe from:',
-    emptyList: "You're not subscribed to any DAOs yet. Use '/anticapture subscribe' to get started!",
+    emptyList: "You can select DAOs to receive customized notifications for each one.",
     listHeader: '*Your DAO Subscriptions:*',
     instructions: "Use '/anticapture subscribe' to add more or '/anticapture unsubscribe' to remove",
+    buttonSubscribe: '🗳️ Subscribe to DAOs',
+    buttonEdit: '✏️ Edit DAO subscriptions',
     updateInstructions: "You can update your subscriptions anytime with '/anticapture'",
     confirmButton: '✅ Confirm Selection',
     subscribeSuccess: '✅ *Success!* You\'re now tracking: {{daoList}}',
