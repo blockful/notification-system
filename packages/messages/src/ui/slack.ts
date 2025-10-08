@@ -89,10 +89,6 @@ export const slackMessages = {
             '• Connect your wallet and sync your DAOs of interest\n' +
             '• Track if your addresses are actively voting\n\n' +
             '\n\n' +
-            '*⚠️ Mission Status Update:*\n' +
-            '• Currently, notifications are transmitted only to your control panel\n' +
-            '• Soon, you\'ll be able to deploy the bot into your Slack channel so your entire crew can stay governance-ready\n\n' +
-            '\n\n' +
             '*Another links that might be useful*'
         }
       },
