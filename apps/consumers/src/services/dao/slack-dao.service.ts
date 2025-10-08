@@ -9,7 +9,9 @@ import { SlackCommandContext, SlackActionContext } from '../../interfaces/slack-
 import { slackMessages, replacePlaceholders } from '@notification-system/messages';
 import {
   daoSelectionList,
-  errorMessage
+  errorMessage,
+  daoEmptyState,
+  daoListWithEdit
 } from '../../utils/slack-blocks-templates';
 
 export class SlackDAOService extends BaseDAOService {
@@ -72,7 +74,7 @@ export class SlackDAOService extends BaseDAOService {
   }
 
   /**
-   * List user's current DAO subscriptions
+   * List user's current DAO subscriptions with edit button
    */
   async listSubscriptions(context: SlackCommandContext): Promise<void> {
     const channelId = context.body.channel_id;
@@ -87,7 +89,7 @@ export class SlackDAOService extends BaseDAOService {
       if (userPreferences.length === 0) {
         if (context.respond) {
           await context.respond({
-            text: slackMessages.dao.emptyList,
+            blocks: daoEmptyState(),
             response_type: 'in_channel'
           });
         }
@@ -98,24 +100,7 @@ export class SlackDAOService extends BaseDAOService {
 
       if (context.respond) {
         await context.respond({
-          blocks: [
-            {
-              type: 'section',
-              text: {
-                type: 'mrkdwn',
-                text: slackMessages.dao.listHeader + '\n' + daoList
-              }
-            },
-            {
-              type: 'context',
-              elements: [
-                {
-                  type: 'mrkdwn',
-                  text: slackMessages.dao.instructions
-                }
-              ]
-            }
-          ],
+          blocks: daoListWithEdit(daoList),
           response_type: 'in_channel'
         });
       }
@@ -184,20 +169,7 @@ export class SlackDAOService extends BaseDAOService {
     try {
       await context.ack();
 
-      const selectedDAOs = context.session.daoSelections;
-
-      if (!selectedDAOs || selectedDAOs.size === 0) {
-        if (context.respond) {
-          await context.respond({
-            replace_original: true,
-            text: action === 'subscribe'
-              ? slackMessages.dao.subscribeWarning
-              : slackMessages.dao.unsubscribeWarning,
-            response_type: 'in_channel'
-          });
-        }
-        return;
-      }
+      const selectedDAOs = context.session.daoSelections || new Set<string>();
 
       // Apply the subscription action to selected DAOs
       if (action === 'subscribe') {
@@ -209,10 +181,17 @@ export class SlackDAOService extends BaseDAOService {
       }
 
       // Show confirmation message
-      const daoList = this.formatDAOList(selectedDAOs);
-      const successMessage = action === 'subscribe'
-        ? replacePlaceholders(slackMessages.dao.subscribeSuccess, { daoList })
-        : replacePlaceholders(slackMessages.dao.unsubscribeSuccess, { daoList });
+      let successMessage: string;
+      if (selectedDAOs.size === 0) {
+        successMessage = action === 'subscribe'
+          ? '✅ *Success!* You\'ve unsubscribed from all DAOs.'
+          : '✅ *Success!* No changes were made.';
+      } else {
+        const daoList = this.formatDAOList(selectedDAOs);
+        successMessage = action === 'subscribe'
+          ? replacePlaceholders(slackMessages.dao.subscribeSuccess, { daoList })
+          : replacePlaceholders(slackMessages.dao.unsubscribeSuccess, { daoList });
+      }
 
       if (context.respond) {
         await context.respond({
