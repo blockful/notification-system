@@ -24,10 +24,12 @@ const ensResolver = new EnsResolverService();
 // Create Telegram client for production
 const telegramClient = new TelegramClient(config.telegramBotToken);
 
-// Create Slack client 
+// Create Slack client
 const slackClient = new SlackClient(
   config.slackAppToken,
-  config.slackSigningSecret
+  config.slackSigningSecret,
+  config.subscriptionServerUrl,
+  config.tokenEncryptionKey
 );
 
 // Create and start the application

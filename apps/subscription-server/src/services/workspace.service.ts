@@ -56,11 +56,11 @@ export class WorkspaceService {
   }
 
   /**
-   * Get workspace token by workspace ID
+   * Get encrypted workspace token by workspace ID
    * @param workspaceId Workspace/team ID
-   * @returns Decrypted bot token or null if not found/inactive
+   * @returns Encrypted bot token or null if not found/inactive
    */
-  async getWorkspaceToken(workspaceId: string): Promise<string | null> {
+  async getEncryptedWorkspaceToken(workspaceId: string): Promise<string | null> {
     const workspace = await this.db<ChannelWorkspace>('channel_workspaces')
       .where({ workspace_id: workspaceId, is_active: true })
       .first();
@@ -69,12 +69,7 @@ export class WorkspaceService {
       return null;
     }
 
-    try {
-      return CryptoUtil.decrypt(workspace.bot_token, this.tokenEncryptionKey);
-    } catch (error) {
-      console.error(`Failed to decrypt token for workspace ${workspaceId}:`, error);
-      return null;
-    }
+    return workspace.bot_token;
   }
 
   /**

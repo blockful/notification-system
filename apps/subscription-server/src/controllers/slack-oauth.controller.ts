@@ -33,6 +33,9 @@ export class SlackOAuthController {
       // Status endpoint to check if workspace is installed
       instance.get('/slack/status/:workspaceId', this.handleStatus.bind(this));
 
+      // Token endpoint to fetch workspace token
+      instance.get('/slack/workspace/:workspaceId/token', this.handleGetToken.bind(this));
+
       done();
     });
 
@@ -142,6 +145,56 @@ export class SlackOAuthController {
       workspace_name: workspace?.workspace_name || null,
       is_active: workspace?.is_active || null,
     });
+  }
+
+  /**
+   * Get workspace installation data
+   * Returns installation object compatible with Slack Bolt's installationStore
+   */
+  private async handleGetToken(
+    request: FastifyRequest,
+    reply: FastifyReply
+  ): Promise<void> {
+    const { workspaceId } = request.params as { workspaceId: string };
+
+    try {
+      const token = await this.workspaceService.getEncryptedWorkspaceToken(workspaceId);
+
+      if (!token) {
+        return reply.code(404).send({
+          error: 'Workspace not found or not installed'
+        });
+      }
+
+      const workspace = await this.workspaceService.getWorkspace(workspaceId);
+
+      // Return Bolt-compatible installation object
+      return reply.send({
+        team: {
+          id: workspaceId,
+          name: workspace?.workspace_name || 'Unknown'
+        },
+        bot: {
+          token: token,
+          userId: workspace?.bot_user_id || '',
+          scopes: [
+            'chat:write',
+            'chat:write.public',
+            'commands',
+            'app_mentions:read',
+            'im:read',
+            'im:write',
+            'im:history'
+          ],
+          id: workspace?.bot_user_id || ''
+        }
+      });
+    } catch (error) {
+      console.error(`Error fetching installation for workspace ${workspaceId}:`, error);
+      return reply.code(500).send({
+        error: 'Failed to fetch workspace installation'
+      });
+    }
   }
 
   /**

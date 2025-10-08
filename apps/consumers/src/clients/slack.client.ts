@@ -5,7 +5,7 @@
  */
 
 import { WebClient } from '@slack/web-api';
-import { App } from '@slack/bolt';
+import { App, Installation } from '@slack/bolt';
 import {
   SlackClientInterface,
   SlackSendMessageOptions,
@@ -19,37 +19,82 @@ import {
   SlackSessionStorage,
   SlackSession
 } from '../interfaces/slack-context.interface';
+import { CryptoUtil } from '../utils/crypto';
 
 export class SlackClient implements SlackClientInterface {
   private boltApp: App;
   private sessionStorage: SlackSessionStorage;
+  private subscriptionServerUrl: string;
+  private tokenEncryptionKey: string;
 
   constructor(
     appToken: string,
-    signingSecret: string
+    signingSecret: string,
+    subscriptionServerUrl: string,
+    tokenEncryptionKey: string
   ) {
     this.sessionStorage = new InMemorySessionStorage();
+    this.subscriptionServerUrl = subscriptionServerUrl;
+    this.tokenEncryptionKey = tokenEncryptionKey;
     this.boltApp = this.createBoltApp(appToken, signingSecret);
   }
 
   /**
-   * Create Bolt app with OAuth authorization
+   * Create Bolt app with installationStore and authorize callback
    */
   private createBoltApp(
     appToken: string,
     signingSecret: string
   ): App {
+    const installationStore = {
+      storeInstallation: async () => {},
+      fetchInstallation: async (installQuery) => {
+          // Fetch installation from subscription server
+          const response = await fetch(
+            `${this.subscriptionServerUrl}/slack/workspace/${installQuery.teamId}/token`
+          );
+
+          if (!response.ok) {
+            throw new Error(`Installation not found for workspace ${installQuery.teamId}`);
+          }
+          const installation = await response.json() as Installation;
+
+          // Decrypt the token before returning
+          installation.bot!.token = CryptoUtil.decrypt(installation.bot!.token, this.tokenEncryptionKey);
+
+          return installation;
+        },
+      deleteInstallation: async () => {}
+    };
+
     console.log('✅ Slack client: OAuth mode initialized');
     return new App({
       appToken,
       signingSecret,
       socketMode: true,
       processBeforeResponse: true,
-      authorize: async () => ({
-        botToken: '',
-        botId: 'oauth-bot',
-        botUserId: 'oauth-bot-user'
-      })
+      installationStore,
+      authorize: async (source) => {
+        // Fetch installation using the installationStore
+        const installation = await installationStore.fetchInstallation({
+          teamId: source.teamId,
+          enterpriseId: source.enterpriseId,
+          isEnterpriseInstall: source.isEnterpriseInstall,
+        });
+
+        if (!installation) {
+          throw new Error(`No installation found for team ${source.teamId}`);
+        }
+
+        // Return authorization result
+        return {
+          botToken: installation.bot?.token,
+          botId: installation.bot?.id,
+          botUserId: installation.bot?.userId,
+          teamId: installation.team?.id,
+          enterpriseId: installation.enterprise?.id,
+        };
+      }
     });
   }
 
