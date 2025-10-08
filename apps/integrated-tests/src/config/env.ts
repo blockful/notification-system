@@ -15,10 +15,10 @@ const envSchema = z.object({
 
   // Telegram configuration
   TELEGRAM_BOT_TOKEN: z.string().optional(),
-  SEND_REAL_TELEGRAM: z.string().optional(),
+  SEND_REAL_TELEGRAM: z.coerce.boolean().default(false),
 
   // Slack configuration
-  SEND_REAL_SLACK: z.string().optional(),
+  SEND_REAL_SLACK: z.coerce.boolean().default(false),
   SLACK_TEST_CHANNEL_ID: z.string().optional(), 
   SLACK_WORKSPACE_ID: z.string().optional(),
   SLACK_BOT_TOKEN: z.string().optional(),
@@ -35,13 +35,13 @@ if (_env.success === false) {
 }
 
 // Validate required credentials when real mode is enabled
-if (_env.data.SEND_REAL_TELEGRAM === 'true' && !_env.data.TELEGRAM_BOT_TOKEN) {
+if (_env.data.SEND_REAL_TELEGRAM && !_env.data.TELEGRAM_BOT_TOKEN) {
   throw new Error(
     'SEND_REAL_TELEGRAM is enabled but missing TELEGRAM_BOT_TOKEN'
   );
 }
 
-if (_env.data.SEND_REAL_SLACK === 'true') {
+if (_env.data.SEND_REAL_SLACK) {
   if (!_env.data.SLACK_WORKSPACE_ID || !_env.data.SLACK_BOT_TOKEN || !_env.data.SLACK_TEST_CHANNEL_ID) {
     throw new Error(
       'SEND_REAL_SLACK is enabled but missing required Slack credentials. ' +

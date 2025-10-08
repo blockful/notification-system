@@ -89,7 +89,7 @@ describe('Slack Delegation Change Notifications - Integration Test', () => {
       {
         timeout: timeouts.notification.delivery,
         errorMessage: 'Slack delegation confirmation not received',
-        useHistory: env.SEND_REAL_SLACK === 'true',
+        useHistory: env.SEND_REAL_SLACK,
         channel: channelId
       }
     );

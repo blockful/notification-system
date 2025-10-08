@@ -92,7 +92,7 @@ describe('Slack Proposal Finished Trigger - Integration Test', () => {
       {
         timeout: timeouts.notification.delivery,
         errorMessage: 'Slack proposal finished notification not received',
-        useHistory: env.SEND_REAL_SLACK === 'true',
+        useHistory: env.SEND_REAL_SLACK,
         channel: channelId
       }
     );

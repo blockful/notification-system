@@ -12,7 +12,7 @@ export class WorkspaceFactory {
    */
   static async createDefaultSlackWorkspace(): Promise<void> {
     // Use real credentials if SEND_REAL_SLACK is enabled
-    const isRealMode = env.SEND_REAL_SLACK === 'true';
+    const isRealMode = env.SEND_REAL_SLACK;
 
     const workspaceId = this.getWorkspaceId();
     const BotToken = isRealMode ? env.SLACK_BOT_TOKEN! : 'xoxb-test-workspace-token';
@@ -61,7 +61,7 @@ export class WorkspaceFactory {
    * @returns Workspace ID for use in channel_user_id format (T_DEFAULT for mock, real ID for real mode)
    */
   static getWorkspaceId(): string {
-    const isRealMode = env.SEND_REAL_SLACK === 'true';
+    const isRealMode = env.SEND_REAL_SLACK;
     return isRealMode ? env.SLACK_WORKSPACE_ID! : 'T_DEFAULT';
   }
 }

@@ -96,7 +96,7 @@ describe('Slack Vote Confirmation Trigger - Integration Test', () => {
       {
         timeout: timeouts.notification.delivery,
         errorMessage: 'Slack vote FOR confirmation not received',
-        useHistory: env.SEND_REAL_SLACK === 'true',
+        useHistory: env.SEND_REAL_SLACK,
         channel: channelId
       }
     );
@@ -156,7 +156,7 @@ describe('Slack Vote Confirmation Trigger - Integration Test', () => {
       {
         timeout: timeouts.notification.delivery,
         errorMessage: 'Slack vote AGAINST confirmation not received',
-        useHistory: env.SEND_REAL_SLACK === 'true',
+        useHistory: env.SEND_REAL_SLACK,
         channel: channelId
       }
     );
@@ -210,7 +210,7 @@ describe('Slack Vote Confirmation Trigger - Integration Test', () => {
       {
         timeout: timeouts.notification.delivery,
         errorMessage: 'Slack vote ABSTAIN confirmation not received',
-        useHistory: env.SEND_REAL_SLACK === 'true',
+        useHistory: env.SEND_REAL_SLACK,
         channel: channelId
       }
     );
@@ -265,7 +265,7 @@ describe('Slack Vote Confirmation Trigger - Integration Test', () => {
              msg.channel === channelId,
       {
         timeout: timeouts.notification.delivery,
-        useHistory: env.SEND_REAL_SLACK === 'true',
+        useHistory: env.SEND_REAL_SLACK,
         channel: channelId
       }
     );

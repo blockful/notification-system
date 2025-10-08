@@ -35,7 +35,7 @@ describe('Slack Non-Voting Trigger - Integration Test', () => {
     isActive?: boolean,
     timestamp?: string
   ) => {
-    const workspaceId = env.SEND_REAL_SLACK === 'true' ? env.SLACK_WORKSPACE_ID! : WorkspaceFactory.getWorkspaceId();
+    const workspaceId = env.SEND_REAL_SLACK ? env.SLACK_WORKSPACE_ID! : WorkspaceFactory.getWorkspaceId();
     const slackUserId = `${workspaceId}:${channelId}`;
     const result = await UserFactory.createUserWithFollowedAddresses(
       slackUserId,
@@ -146,7 +146,7 @@ Consider reaching out to encourage participation!`;
       {
         timeout: timeouts.notification.delivery,
         errorMessage: 'Slack non-voting notification not received',
-        useHistory: env.SEND_REAL_SLACK === 'true',
+        useHistory: env.SEND_REAL_SLACK,
         channel: SLACK_CHANNEL_ID
       }
     );

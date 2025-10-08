@@ -106,7 +106,7 @@ describe('Slack Voting Reminder Trigger - Integration Test', () => {
         {
           timeout: timeouts.notification.delivery,
           errorMessage: 'Slack 30% voting reminder not received',
-          useHistory: env.SEND_REAL_SLACK === 'true',
+          useHistory: env.SEND_REAL_SLACK,
           channel: channelId
         }
       );
@@ -254,7 +254,7 @@ describe('Slack Voting Reminder Trigger - Integration Test', () => {
         {
           timeout: timeouts.notification.delivery,
           errorMessage: 'Slack 60% voting reminder not received',
-          useHistory: env.SEND_REAL_SLACK === 'true',
+          useHistory: env.SEND_REAL_SLACK,
           channel: channelId
         }
       );
@@ -306,7 +306,7 @@ describe('Slack Voting Reminder Trigger - Integration Test', () => {
         {
           timeout: timeouts.notification.delivery,
           errorMessage: 'Slack 90% urgent voting reminder not received',
-          useHistory: env.SEND_REAL_SLACK === 'true',
+          useHistory: env.SEND_REAL_SLACK,
           channel: channelId
         }
       );
@@ -366,7 +366,7 @@ describe('Slack Voting Reminder Trigger - Integration Test', () => {
         {
           timeout: timeouts.notification.delivery,
           errorMessage: 'Slack time calculation reminder not received',
-          useHistory: env.SEND_REAL_SLACK === 'true',
+          useHistory: env.SEND_REAL_SLACK,
           channel: channelId
         }
       );
@@ -401,7 +401,7 @@ describe('Slack Voting Reminder Trigger - Integration Test', () => {
                msg.channel === channelId,
         {
           timeout: timeouts.notification.delivery,
-          useHistory: env.SEND_REAL_SLACK === 'true',
+          useHistory: env.SEND_REAL_SLACK,
           channel: channelId
         }
       );
@@ -422,7 +422,7 @@ describe('Slack Voting Reminder Trigger - Integration Test', () => {
                msg.channel === channelId,
         {
           timeout: timeouts.notification.delivery,
-          useHistory: env.SEND_REAL_SLACK === 'true',
+          useHistory: env.SEND_REAL_SLACK,
           channel: channelId
         }
       );
@@ -471,7 +471,7 @@ describe('Slack Voting Reminder Trigger - Integration Test', () => {
                msg.channel === channelId,
         {
           timeout: timeouts.notification.delivery,
-          useHistory: env.SEND_REAL_SLACK === 'true',
+          useHistory: env.SEND_REAL_SLACK,
           channel: channelId
         }
       );
@@ -547,7 +547,7 @@ describe('Slack Voting Reminder Trigger - Integration Test', () => {
                msg.channel === subscribedChannelId,
         {
           timeout: timeouts.notification.delivery,
-          useHistory: env.SEND_REAL_SLACK === 'true',
+          useHistory: env.SEND_REAL_SLACK,
           channel: subscribedChannelId
         }
       );

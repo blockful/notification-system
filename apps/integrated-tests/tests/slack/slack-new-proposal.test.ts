@@ -45,7 +45,7 @@ describe('Slack New Proposal - Integration Test', () => {
 
   test('New proposal notification delivered to Slack', async () => {
     // Create a Slack user subscribed to the test DAO first
-    const slackUserId = env.SEND_REAL_SLACK === 'true'
+    const slackUserId = env.SEND_REAL_SLACK
       ? `${env.SLACK_WORKSPACE_ID}:${SLACK_CHANNEL_ID}`
       : `T_DEFAULT:${SLACK_CHANNEL_ID}`;
 
