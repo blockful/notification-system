@@ -31,26 +31,12 @@ export class SlackWalletService extends BaseWalletService {
 
   /**
    * Display the wallet management interface
+   * Always shows list with add/remove buttons
    */
-  async initialize(context: SlackCommandContext, action: 'add' | 'remove' | 'list', walletAddress?: string): Promise<void> {
+  async initialize(context: SlackCommandContext): Promise<void> {
     try {
       await context.ack();
-
-      if (action === 'list') {
-        await this.listWallets(context);
-        return;
-      }
-
-      if (action === 'add') {
-        // If wallet address provided, add directly
-        if (walletAddress) {
-          await this.processInlineWalletAdd(context, walletAddress);
-        } else {
-          await this.showAddWalletHelp(context);
-        }
-      } else {
-        await this.startRemoveWallet(context);
-      }
+      await this.listWallets(context);
     } catch (error) {
       console.error('Error in wallet initialization:', error);
       if (context.respond) {
@@ -148,42 +134,6 @@ export class SlackWalletService extends BaseWalletService {
   }
 
   /**
-   * Show help message for adding wallet
-   */
-  async showAddWalletHelp(context: SlackCommandContext): Promise<void> {
-    if (context.respond) {
-      await context.respond({
-        blocks: [
-          {
-            type: 'section',
-            text: {
-              type: 'mrkdwn',
-              text: slackMessages.wallet.addInstructions
-            }
-          },
-          {
-            type: 'section',
-            text: {
-              type: 'mrkdwn',
-              text: slackMessages.wallet.addExamples
-            }
-          },
-          {
-            type: 'context',
-            elements: [
-              {
-                type: 'mrkdwn',
-                text: slackMessages.wallet.privacyNote
-              }
-            ]
-          }
-        ],
-        response_type: 'in_channel'
-      });
-    }
-  }
-
-  /**
    * Start the add wallet flow (conversational)
    */
   async startAddWallet(context: SlackActionContext): Promise<void> {
@@ -215,46 +165,6 @@ export class SlackWalletService extends BaseWalletService {
       if (context.respond) {
         await context.respond({
           text: slackMessages.genericError,
-          response_type: 'in_channel'
-        });
-      }
-    }
-  }
-
-  /**
-   * Process wallet addition from inline command
-   */
-  async processInlineWalletAdd(context: SlackCommandContext, walletAddress: string): Promise<void> {
-    const channelId = context.body.channel_id;
-    const workspaceId = context.body.team_id;
-    const fullUserId = `${workspaceId}:${channelId}`;
-
-    try {
-      // Use base service for validation and addition
-      const result = await this.addUserWallet(fullUserId, walletAddress, 'slack');
-
-      if (!result.success && context.respond) {
-        await context.respond({
-          blocks: errorMessage(result.message),
-          response_type: 'in_channel'
-        });
-        return;
-      }
-
-      // Get display name for the added address
-      const displayName = await this.ensResolver.resolveDisplayName(result.address!);
-
-      if (context.respond) {
-        await context.respond({
-          blocks: successMessage(replacePlaceholders(slackMessages.wallet.addSuccess, { displayName })),
-          response_type: 'in_channel'
-        });
-      }
-    } catch (error) {
-      console.error('Error adding wallet:', error);
-      if (context.respond) {
-        await context.respond({
-          text: slackMessages.wallet.addError,
           response_type: 'in_channel'
         });
       }
