@@ -24,7 +24,7 @@ const userAddressRepository = new KnexUserAddressRepository(db);
 
 // Service instances
 const workspaceService = new WorkspaceService(db, config.tokenEncryptionKey);
-const subscriptionService = new SubscriptionService(userRepository, preferenceRepository, userAddressRepository, workspaceService);
+const subscriptionService = new SubscriptionService(userRepository, preferenceRepository, userAddressRepository);
 const notificationService = new NotificationService(notificationRepository);
 
 // Handler instances

@@ -144,7 +144,8 @@ export class UserAddressController {
             id: z.string(),
             channel: z.string(),
             channel_user_id: z.string(),
-            created_at: z.string()
+            created_at: z.string(),
+            token: z.string().optional()
           }))
         }
       }
@@ -153,13 +154,7 @@ export class UserAddressController {
       
       try {
         const users = await this.subscriptionService.getUsersByWalletAddress(address);
-        const formattedUsers = users.map(user => ({
-          id: user.id,
-          channel: user.channel,
-          channel_user_id: user.channel_user_id,
-          created_at: user.created_at
-        }));
-        return reply.send(formattedUsers);
+        return reply.send(users);
       } catch (error: any) {
         return reply.status(500).send({ error: error.message });
       }
@@ -177,7 +172,8 @@ export class UserAddressController {
             id: z.string(),
             channel: z.string(),
             channel_user_id: z.string(),
-            created_at: z.string()
+            created_at: z.string(),
+            token: z.string().optional()
           })))
         }
       }

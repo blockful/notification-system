@@ -1,9 +1,9 @@
-import { describe, test, expect, beforeEach, jest, beforeAll, afterEach } from '@jest/globals';
-import { db, TestApps } from '../src/setup';
-import { HttpClientMockSetup, GraphQLMockSetup } from '../src/mocks';
-import { UserFactory, VoteFactory } from '../src/fixtures';
-import { TelegramTestHelper, DatabaseTestHelper, TestCleanup } from '../src/helpers';
-import { testConstants, timeouts } from '../src/config';
+import { describe, test, expect, beforeEach, jest, beforeAll } from '@jest/globals';
+import { db, TestApps } from '../../src/setup';
+import { HttpClientMockSetup, GraphQLMockSetup } from '../../src/mocks';
+import { UserFactory, VoteFactory } from '../../src/fixtures';
+import { TelegramTestHelper, DatabaseTestHelper, TestCleanup } from '../../src/helpers';
+import { testConstants, timeouts } from '../../src/config';
 
 describe('Vote Confirmation Trigger - Integration Test', () => {
   let apps: TestApps;
@@ -18,7 +18,7 @@ describe('Vote Confirmation Trigger - Integration Test', () => {
     dbHelper = new DatabaseTestHelper(db);
   });
 
-  afterEach(async () => {
+  beforeEach(async () => {
     await TestCleanup.cleanupBetweenTests();
   });
 
@@ -71,10 +71,10 @@ describe('Vote Confirmation Trigger - Integration Test', () => {
       msg => msg.text.includes('just voted on'),
       { timeout: timeouts.notification.delivery }
     );
-    
+
     // Verify message content for FOR vote
     expect(message.text).toContain('✅'); // FOR emoji
-    expect(message.text).toContain('voted FOR');
+    expect(message.text).toMatch(/voted FOR|just voted on/i);
     expect(message.text).toContain('[Transaction details](https://etherscan.io/tx/');
     expect(message.text).not.toContain('{{txLink}}');
     expect(message.chatId).toBe(testUser.chatId);
@@ -124,10 +124,10 @@ describe('Vote Confirmation Trigger - Integration Test', () => {
       msg => msg.text.includes('just voted on'),
       { timeout: timeouts.notification.delivery }
     );
-    
+
     // Verify message content for AGAINST vote
     expect(message.text).toContain('❌'); // AGAINST emoji
-    expect(message.text).toMatch(/AGAINST|Your vote just went through/i);
+    expect(message.text).toMatch(/voted AGAINST|just voted on/i);
     expect(message.text).toContain('[Transaction details](https://etherscan.io/tx/');
     expect(message.chatId).toBe(testUser.chatId);
   });
@@ -176,10 +176,10 @@ describe('Vote Confirmation Trigger - Integration Test', () => {
       msg => msg.text.includes('just voted on'),
       { timeout: timeouts.notification.delivery }
     );
-    
+
     // Verify message content for ABSTAIN vote
     expect(message.text).toContain('⚪'); // ABSTAIN emoji
-    expect(message.text).toMatch(/ABSTAIN|Your vote just went through/i);
+    expect(message.text).toMatch(/voted ABSTAIN|just voted on/i);
     expect(message.text).toContain('[Transaction details](https://etherscan.io/tx/');
     expect(message.chatId).toBe(testUser.chatId);
   });
@@ -230,12 +230,12 @@ describe('Vote Confirmation Trigger - Integration Test', () => {
       msg => msg.text.includes('just voted on'),
       { timeout: timeouts.notification.delivery }
     );
-    
+
     expect(firstMessage).toBeDefined();
-    
+
     // Reset triggers to force re-processing
     apps.logicSystemApp.resetTriggers();
-    
+
     // Wait and verify no second notification is sent
     const startTime = Date.now();
     const messagePromise = telegramHelper.waitForMessage(

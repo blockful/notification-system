@@ -1,6 +1,7 @@
 import { describe, test, expect, jest, beforeEach } from '@jest/globals';
 import { SubscriptionService } from './subscription.service';
 import { User, UserPreference, IUserRepository, IPreferenceRepository } from '../interfaces';
+import { IUserAddressRepository } from '../interfaces/user-address.interface';
 
 // ---- MOCKS ----
 const mockUser: User = {
@@ -57,17 +58,30 @@ const createMockPrefRepo = (): jest.Mocked<IPreferenceRepository> => ({
   findByDao: jest.fn()
 });
 
+const createMockUserAddressRepo = (): jest.Mocked<IUserAddressRepository> => ({
+  findByUser: jest.fn(),
+  findByAddress: jest.fn(),
+  findByAddresses: jest.fn(),
+  findByUserAndAddress: jest.fn(),
+  create: jest.fn(),
+  deactivate: jest.fn(),
+  reactivate: jest.fn(),
+  getFollowedAddressByDao: jest.fn()
+});
+
 // ---- TESTS ----
 describe('Subscription Service', () => {
   let userRepo: jest.Mocked<IUserRepository>;
   let prefRepo: jest.Mocked<IPreferenceRepository>;
+  let userAddressRepo: jest.Mocked<IUserAddressRepository>;
   let subscriptionService: SubscriptionService;
 
   beforeEach(() => {
     jest.clearAllMocks();
     userRepo = createMockUserRepo();
     prefRepo = createMockPrefRepo();
-    subscriptionService = new SubscriptionService(userRepo, prefRepo);
+    userAddressRepo = createMockUserAddressRepo();
+    subscriptionService = new SubscriptionService(userRepo, prefRepo, userAddressRepo);
   });
 
   describe('handleSubscription', () => {
@@ -204,8 +218,8 @@ describe('Subscription Service', () => {
         { user_id: '456', is_active: true }
       ] as UserPreference[];
 
-      // Mock findByIds to return users
-      userRepo.findByIds.mockResolvedValueOnce(mockSubscribers);
+      // Mock findByIdsWithWorkspaceTokens to return users
+      userRepo.findByIdsWithWorkspaceTokens.mockResolvedValueOnce(mockSubscribers);
 
       prefRepo.findByDao.mockResolvedValueOnce(mockPreferences);
 
@@ -219,17 +233,17 @@ describe('Subscription Service', () => {
       expect(result.subscribers[0]).toHaveProperty('is_active');
 
       expect(prefRepo.findByDao).toHaveBeenCalledWith('dao123', undefined);
-      expect(userRepo.findByIds).toHaveBeenCalledWith(['123', '456']);
+      expect(userRepo.findByIdsWithWorkspaceTokens).toHaveBeenCalledWith(['123', '456']);
     });
 
     test('should return empty array when no subscribers exist', async () => {
       prefRepo.findByDao.mockResolvedValueOnce([]);
-      userRepo.findByIds.mockResolvedValueOnce([]);
+      userRepo.findByIdsWithWorkspaceTokens.mockResolvedValueOnce([]);
 
       const result = await subscriptionService.getDaoSubscribers('unknown-dao');
 
       expect(result.subscribers).toEqual([]);
-      expect(userRepo.findByIds).toHaveBeenCalledWith([]);
+      expect(userRepo.findByIdsWithWorkspaceTokens).toHaveBeenCalledWith([]);
     });
     
     test('should handle errors properly', async () => {

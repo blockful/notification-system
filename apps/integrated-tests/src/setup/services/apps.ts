@@ -104,8 +104,8 @@ const createTelegramClient = () => {
  */
 const createSlackClient = () => {
   const mockSendMessage = mockSlackSendMessage;
-  const isRealMode = env.SEND_REAL_SLACK === 'true';
-  const slackClient = new SlackTestClient(mockSendMessage, isRealMode);
+  const botToken = env.SLACK_BOT_TOKEN;
+  const slackClient = new SlackTestClient(mockSendMessage, botToken);
 
   return { slackClient, mockSlackSendMessage: mockSendMessage };
 };
@@ -125,7 +125,7 @@ const startSubscriptionServer = async (db: Knex): Promise<SubscriptionServerApp>
 
   // Service instances
   const workspaceService = new WorkspaceService(db, serviceConfig.oauth.tokenEncryptionKey);
-  const subscriptionService = new SubscriptionService(userRepository, preferenceRepository, userAddressRepository, workspaceService);
+  const subscriptionService = new SubscriptionService(userRepository, preferenceRepository, userAddressRepository);
   const notificationService = new NotificationService(notificationRepository);
 
   // Handler instances

@@ -1,9 +1,9 @@
-import { describe, test, expect, beforeEach, jest } from '@jest/globals';
-import { db, TestApps } from '../src/setup';
-import { HttpClientMockSetup, GraphQLMockSetup } from '../src/mocks';
-import { UserFactory, VotingPowerFactory } from '../src/fixtures';
-import { TelegramTestHelper, DatabaseTestHelper, TestCleanup } from '../src/helpers';
-import { testConstants, timeouts } from '../src/config';
+import { describe, test, expect, beforeEach, beforeAll, jest } from '@jest/globals';
+import { db, TestApps } from '../../src/setup';
+import { HttpClientMockSetup, GraphQLMockSetup } from '../../src/mocks';
+import { UserFactory, VotingPowerFactory } from '../../src/fixtures';
+import { TelegramTestHelper, DatabaseTestHelper, TestCleanup } from '../../src/helpers';
+import { testConstants, timeouts } from '../../src/config';
 
 describe('Voting Power Trigger - Integration Test', () => {
   let apps: TestApps;
@@ -18,7 +18,7 @@ describe('Voting Power Trigger - Integration Test', () => {
     dbHelper = new DatabaseTestHelper(db);
   });
 
-  afterEach(async () => {
+  beforeEach(async () => {
     await TestCleanup.cleanupBetweenTests();
   });
 
@@ -77,7 +77,7 @@ describe('Voting Power Trigger - Integration Test', () => {
     // Verify the message contains the expected content
     expect(message.text).toContain('voting power');
     expect(message.text).toContain(testDaoId);
-
+    
     // Verify that the placeholder was replaced with the actual link
     expect(message.text).not.toContain('{{txLink}}');
     

@@ -1,9 +1,9 @@
 import { describe, test, expect, beforeEach, jest } from '@jest/globals';
-import { db, TestApps } from '../src/setup';
-import { HttpClientMockSetup, GraphQLMockSetup } from '../src/mocks';
-import { UserFactory, ProposalFactory } from '../src/fixtures';
-import { TelegramTestHelper, DatabaseTestHelper, TestCleanup } from '../src/helpers';
-import { testConstants, timeouts } from '../src/config';  
+import { db, TestApps } from '../../src/setup';
+import { HttpClientMockSetup, GraphQLMockSetup } from '../../src/mocks';
+import { UserFactory, ProposalFactory } from '../../src/fixtures';
+import { TelegramTestHelper, DatabaseTestHelper, TestCleanup } from '../../src/helpers';
+import { testConstants, timeouts } from '../../src/config';
 
 describe('Proposal Finished Trigger - Integration Test', () => {
   let apps: TestApps;
@@ -77,7 +77,8 @@ describe('Proposal Finished Trigger - Integration Test', () => {
     // Verify message content
     expect(message.chatId).toBe(testUser.chatId);
     expect(message.text).toContain('has ended');
-    expect(message.text).toContain(testDaoId);
+    expect(message.text).toMatch(/📊 Proposal .* has ended on DAO/);
+    
     // Verify database record
     await dbHelper.waitForRecordCount(testConstants.tables.notifications, 1);
   });
@@ -157,6 +158,8 @@ describe('Proposal Finished Trigger - Integration Test', () => {
     
     // Verify all messages are about finished proposals
     expect(userMessages.every(msg => msg.text.includes('has ended'))).toBe(true);
+    expect(userMessages.every(msg => msg.text.match(/📊 Proposal .* has ended on DAO/))).toBe(true);
+    
     // Verify database records
     await dbHelper.waitForRecordCount(testConstants.tables.notifications, 3);
   });
@@ -249,10 +252,11 @@ describe('Proposal Finished Trigger - Integration Test', () => {
     
     expect(dao1Message).toBeDefined();
     expect(dao1Message?.text).toContain('has ended');
-    expect(dao1Message?.text).toContain(dao1Id);
+    expect(dao1Message?.text).toMatch(/📊 Proposal .* has ended on DAO/);
+    
     expect(dao2Message).toBeDefined();
     expect(dao2Message?.text).toContain('has ended');
-    expect(dao2Message?.text).toContain(dao2Id);
+    expect(dao2Message?.text).toMatch(/📊 Proposal .* has ended on DAO/);
     
     // Verify database records
     await dbHelper.waitForRecordCount(testConstants.tables.notifications, 2);

@@ -1,9 +1,9 @@
 import { describe, test, expect, beforeAll, beforeEach, jest } from '@jest/globals';
-import { db, TestApps } from '../src/setup';
-import { HttpClientMockSetup, GraphQLMockSetup } from '../src/mocks';
-import { UserFactory, ProposalFactory } from '../src/fixtures';
-import { TelegramTestHelper, DatabaseTestHelper, TestCleanup } from '../src/helpers';
-import { testConstants, timeouts } from '../src/config';
+import { db, TestApps } from '../../src/setup';
+import { HttpClientMockSetup, GraphQLMockSetup } from '../../src/mocks';
+import { UserFactory, ProposalFactory } from '../../src/fixtures';
+import { TelegramTestHelper, DatabaseTestHelper, TestCleanup } from '../../src/helpers';
+import { testConstants, timeouts } from '../../src/config';
 
 describe('Duplicate Prevention - Integration Test', () => {
   let apps: TestApps;

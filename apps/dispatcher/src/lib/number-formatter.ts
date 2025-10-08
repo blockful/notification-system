@@ -17,7 +17,7 @@ export function formatTokenAmount(amount: string | number, decimals: number = 18
   if (actualAmount === 0) return '0';
   
   // Handle very small amounts (less than 0.1)
-  if (actualAmount < 0.1) return '<0.1';
+  if (actualAmount < 0.1) return '< 0.1';
   
   // For amounts less than 1000, show with 1 decimal place
   if (actualAmount < 1000) {

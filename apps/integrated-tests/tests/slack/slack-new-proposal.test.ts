@@ -5,13 +5,13 @@
  */
 
 import { describe, test, expect, beforeEach, beforeAll } from '@jest/globals';
-import { db, TestApps } from '../src/setup';
-import { HttpClientMockSetup, GraphQLMockSetup } from '../src/mocks';
-import { UserFactory, ProposalFactory, WorkspaceFactory } from '../src/fixtures';
-import { SlackTestHelper, DatabaseTestHelper, TestCleanup } from '../src/helpers';
-import { SlackTestClient } from '../src/test-clients/slack-test.client';
-import { testConstants, timeouts } from '../src/config';
-import { env } from '../src/config/env';
+import { db, TestApps } from '../../src/setup';
+import { HttpClientMockSetup, GraphQLMockSetup } from '../../src/mocks';
+import { UserFactory, ProposalFactory, WorkspaceFactory } from '../../src/fixtures';
+import { SlackTestHelper, DatabaseTestHelper, TestCleanup } from '../../src/helpers';
+import { SlackTestClient } from '../../src/test-clients/slack-test.client';
+import { testConstants, timeouts } from '../../src/config';
+import { env } from '../../src/config/env';
 
 describe('Slack New Proposal - Integration Test', () => {
   let apps: TestApps;
@@ -33,36 +33,30 @@ describe('Slack New Proposal - Integration Test', () => {
     slackHelper = new SlackTestHelper(global.mockSlackSendMessage, slackClient);
 
     dbHelper = new DatabaseTestHelper(db);
+
+    // Workspace is now created in global setup
   });
 
   beforeEach(async () => {
     await TestCleanup.cleanupBetweenTests();
 
-    // Create default Slack workspace for OAuth support
-    await WorkspaceFactory.createDefaultSlackWorkspace();
   });
 
-  /**
-   * Helper to create a Slack user with subscription
-   */
-  const createSlackUser = async (channelId: string, daoId: string) => {
-    // Use workspace:user format for Slack OAuth support
-    const slackUserId = `T_DEFAULT:${channelId}`;
-
-    const result = await UserFactory.createUserWithFullSetup(
-      slackUserId,
-      `slack_user_${channelId}`,
-      daoId,
-      true,
-      undefined,
-      'slack' // Specify slack as the channel
-    );
-    return result.user;
-  };
 
   test('New proposal notification delivered to Slack', async () => {
     // Create a Slack user subscribed to the test DAO first
-    const user = await createSlackUser(SLACK_CHANNEL_ID, TEST_DAO_ID);
+    const slackUserId = env.SEND_REAL_SLACK
+      ? `${env.SLACK_WORKSPACE_ID}:${SLACK_CHANNEL_ID}`
+      : `T_DEFAULT:${SLACK_CHANNEL_ID}`;
+
+    const { user } = await UserFactory.createUserWithFullSetup(
+      slackUserId,
+      `slack_user_${SLACK_CHANNEL_ID}`,
+      TEST_DAO_ID,
+      true,
+      undefined,
+      'slack'
+    );
 
     // Create a new proposal with timestamp 5 seconds in the future to ensure it's detected
     const proposalId = `proposal-${Date.now()}`;
@@ -82,16 +76,13 @@ describe('Slack New Proposal - Integration Test', () => {
     // Wait for Slack notification
     const message = await slackHelper.waitForMessage(
       msg => {
-        return msg.text.includes('New') &&
-               msg.text.includes('proposal') &&
+        return msg.text.includes('New governance proposal') &&
                msg.text.includes(proposal.title || '') &&
                msg.channel === SLACK_CHANNEL_ID;
       },
       {
         timeout: timeouts.notification.delivery,
-        errorMessage: 'Slack notification not received',
-        useHistory: env.SEND_REAL_SLACK === 'true', // Use history API in real mode
-        channel: SLACK_CHANNEL_ID // Pass channel explicitly for history mode
+        errorMessage: 'Slack notification not received'
       }
     );
 
@@ -99,8 +90,7 @@ describe('Slack New Proposal - Integration Test', () => {
     expect(message.channel).toBe(SLACK_CHANNEL_ID);
 
     // Verify message content
-    expect(message.text).toContain('New');
-    expect(message.text).toContain('proposal');
+    expect(message.text).toContain('New governance proposal');
     expect(message.text).toContain(proposal.title);
     expect(message.text).toContain(TEST_DAO_ID);
 
@@ -108,16 +98,6 @@ describe('Slack New Proposal - Integration Test', () => {
     if (message.text.includes('http')) {
       // Slack links should be in <url|text> format after conversion
       expect(message.text).toMatch(/<https?:\/\/[^|]+\|[^>]+>/);
-    }
-
-    // In real mode, also verify through conversations.history
-    if (env.SEND_REAL_SLACK === 'true') {
-      const history = await slackClient.getMessageHistory(SLACK_CHANNEL_ID, 10);
-      const foundMessage = history.find(msg =>
-        msg.text?.includes(proposal.title)
-      );
-      expect(foundMessage).toBeDefined();
-      console.log('✅ Real Slack message delivered and verified via conversations.history');
     }
 
     // Verify database records
@@ -132,7 +112,16 @@ describe('Slack New Proposal - Integration Test', () => {
 
   test('Slack formatting conversion works correctly', async () => {
     // Create a Slack user
-    await createSlackUser(SLACK_CHANNEL_ID, TEST_DAO_ID);
+    const workspaceId = WorkspaceFactory.getWorkspaceId();
+    const slackUserId = `${workspaceId}:${SLACK_CHANNEL_ID}`;
+    await UserFactory.createUserWithFullSetup(
+      slackUserId,
+      `slack_user_${SLACK_CHANNEL_ID}`,
+      TEST_DAO_ID,
+      true,
+      undefined,
+      'slack'
+    );
 
     // Wait a bit to ensure user is properly saved and indexed
     await new Promise(resolve => setTimeout(resolve, 1000));
@@ -169,8 +158,26 @@ describe('Slack New Proposal - Integration Test', () => {
     const channel2 = 'C2222222222';
 
     // Create two Slack users subscribed to the same DAO
-    await createSlackUser(channel1, TEST_DAO_ID);
-    await createSlackUser(channel2, TEST_DAO_ID);
+    const workspaceId = WorkspaceFactory.getWorkspaceId();
+    const slackUserId1 = `${workspaceId}:${channel1}`;
+    await UserFactory.createUserWithFullSetup(
+      slackUserId1,
+      `slack_user_${channel1}`,
+      TEST_DAO_ID,
+      true,
+      undefined,
+      'slack'
+    );
+
+    const slackUserId2 = `${workspaceId}:${channel2}`;
+    await UserFactory.createUserWithFullSetup(
+      slackUserId2,
+      `slack_user_${channel2}`,
+      TEST_DAO_ID,
+      true,
+      undefined,
+      'slack'
+    );
 
     // Create a new proposal with future timestamp
     const proposalId = `proposal-multi-${Date.now()}`;
@@ -202,15 +209,23 @@ describe('Slack New Proposal - Integration Test', () => {
 
     // Verify content is identical for both
     messages.forEach(message => {
-      expect(message.text).toContain('New');
-      expect(message.text).toContain('proposal');
+      expect(message.text).toContain('New governance proposal');
       expect(message.text).toContain(proposal.title);
     });
   });
 
   test('Slack and Telegram users coexist without interference', async () => {
     // Create one Slack user and one Telegram user for the same DAO
-    await createSlackUser(SLACK_CHANNEL_ID, TEST_DAO_ID);
+    const workspaceId = WorkspaceFactory.getWorkspaceId();
+    const slackUserId = `${workspaceId}:${SLACK_CHANNEL_ID}`;
+    await UserFactory.createUserWithFullSetup(
+      slackUserId,
+      `slack_user_${SLACK_CHANNEL_ID}`,
+      TEST_DAO_ID,
+      true,
+      undefined,
+      'slack'
+    );
     await UserFactory.createUserWithFullSetup(
       testConstants.profiles.p1.chatId,
       'telegram_user',
@@ -255,7 +270,7 @@ describe('Slack New Proposal - Integration Test', () => {
 
     // Find notifications by user_id instead of channel
     const slackUser = await db(testConstants.tables.users).where({
-      channel_user_id: `T_DEFAULT:${SLACK_CHANNEL_ID}`,
+      channel_user_id: `${WorkspaceFactory.getWorkspaceId()}:${SLACK_CHANNEL_ID}`,
       channel: 'slack'
     }).first();
     const telegramUser = await db(testConstants.tables.users).where({

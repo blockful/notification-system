@@ -1,10 +1,9 @@
 import { describe, test, expect, beforeEach, beforeAll } from '@jest/globals';
-import { db, TestApps } from '../src/setup';
-import { HttpClientMockSetup, GraphQLMockSetup } from '../src/mocks';
-import { UserFactory, ProposalFactory, VoteFactory, VoteData } from '../src/fixtures';
-import { TelegramTestHelper, DatabaseTestHelper, TestCleanup } from '../src/helpers';
-import { testConstants, timeouts } from '../src/config';
-import { nonVotingMessages, replacePlaceholders } from '@notification-system/messages';
+import { db, TestApps } from '../../src/setup';
+import { HttpClientMockSetup, GraphQLMockSetup } from '../../src/mocks';
+import { UserFactory, ProposalFactory, VoteFactory, VoteData } from '../../src/fixtures';
+import { TelegramTestHelper, DatabaseTestHelper, TestCleanup } from '../../src/helpers';
+import { testConstants, timeouts } from '../../src/config';
 
 describe('Non-Voting Trigger - Integration Test', () => {
   let apps: TestApps;
@@ -16,7 +15,7 @@ describe('Non-Voting Trigger - Integration Test', () => {
   const ADDRESS_ACTIVE = '0x1234567890123456789012345678901234567890';
   const ADDRESS_PARTIAL = '0xabcdef1234567890123456789012345678901234';
   const ADDRESS_INACTIVE = '0xb8c2C29ee19D8307cb7255e1Cd9CbDE883A267d5'.toLowerCase(); // nick.eth
-  const ADDRESS_ZERO_VOTES = '0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045'; // vitalik.eth
+  const ADDRESS_ZERO_VOTES = '0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045'.toLowerCase(); // vitalik.eth
 
   // Helper to create finished proposals (similar to proposal-finished test)
   const createFinishedProposals = (daoId: string, count: number) => {
@@ -42,6 +41,23 @@ describe('Non-Voting Trigger - Integration Test', () => {
     });
   };
 
+  // Helper to format expected non-voting message
+  const formatNonVotingMessage = (address: string, daoId: string, proposals: any[]) => {
+    const shortAddress = `${address.slice(0, 6)}...${address.slice(-4)}`;
+    const proposalList = proposals
+      .slice(0, 3)
+      .map(p => `• ${p.title}`)
+      .join('\n');
+    
+    return `⚠️ Non-Voting Alert for DAO ${daoId.toUpperCase()}
+
+The address ${shortAddress} that you follow hasn't voted in the last 3 proposals:
+
+${proposalList}
+
+Consider reaching out to encourage participation!`;
+  };
+
   beforeAll(async () => {
     apps = TestCleanup.getGlobalApps();
     httpMockSetup = TestCleanup.getGlobalHttpMockSetup();
@@ -56,33 +72,14 @@ describe('Non-Voting Trigger - Integration Test', () => {
   test('Basic non-voting scenario - only completely inactive address gets notification', async () => {
     const testDaoId = testConstants.daoIds.temporalTest1;
     
-    // Create a user who owns the ADDRESS_INACTIVE wallet
-    const { user: inactiveUser } = await UserFactory.createUserWithFullSetup(
+    // Create user following 3 addresses
+    await UserFactory.createUserWithFollowedAddresses(
       testConstants.profiles.p1.chatId,
-      'inactive_user',
+      'test_user',
       testDaoId,
+      [ADDRESS_ACTIVE, ADDRESS_PARTIAL, ADDRESS_INACTIVE],
       true
     );
-    
-    // Associate ADDRESS_INACTIVE with this user
-    await UserFactory.createUserAddress(inactiveUser.id, ADDRESS_INACTIVE);
-    
-    // Create other users for ADDRESS_ACTIVE and ADDRESS_PARTIAL (but we don't care about them)
-    const { user: activeUser } = await UserFactory.createUserWithFullSetup(
-      '999991',
-      'active_user',
-      testDaoId,
-      true
-    );
-    await UserFactory.createUserAddress(activeUser.id, ADDRESS_ACTIVE);
-    
-    const { user: partialUser } = await UserFactory.createUserWithFullSetup(
-      '999992',
-      'partial_user',
-      testDaoId,
-      true  
-    );
-    await UserFactory.createUserAddress(partialUser.id, ADDRESS_PARTIAL);
 
     // Create 3 finished proposals
     const proposals = createFinishedProposals(testDaoId, 3);
@@ -98,15 +95,16 @@ describe('Non-Voting Trigger - Integration Test', () => {
 
     // Wait for notification - should only be for ADDRESS_INACTIVE (nick.eth)
     const message = await telegramHelper.waitForMessage(
-      msg => msg.text.includes('Non-Voting Alert') && 
+      msg => msg.text.includes('Non-Voting Alert') &&
              msg.text.includes('nick.eth'),
       { timeout: timeouts.notification.delivery }
     );
 
     expect(message.chatId).toBe(testConstants.profiles.p1.chatId);
-    expect(message.text).toContain(nonVotingMessages.alert.substring(0, 23));
-    expect(message.text).not.toContain(ADDRESS_ACTIVE);
-    expect(message.text).not.toContain(ADDRESS_PARTIAL);
+    expect(message.text).toContain('hasn\'t voted in the last 3 proposals');
+    expect(message.text).toContain('nick.eth');
+    expect(message.text).not.toContain(ADDRESS_ACTIVE.slice(0, 6));
+    expect(message.text).not.toContain(ADDRESS_PARTIAL.slice(0, 6));
   });
 
   test('Edge case - less than 3 proposals, no notifications', async () => {
@@ -180,7 +178,7 @@ describe('Non-Voting Trigger - Integration Test', () => {
     // Verify content - should show nick.eth
     messages.forEach(message => {
       expect(message.text).toContain('nick.eth');
-      expect(message.text).toContain(nonVotingMessages.alert.substring(0, 23));
+      expect(message.text).toContain('hasn\'t voted in the last 3 proposals');
     });
   });
 
@@ -219,8 +217,8 @@ describe('Non-Voting Trigger - Integration Test', () => {
     );
 
     expect(message.text).toContain('vitalik.eth');
-    expect(message.text).not.toContain(ADDRESS_ACTIVE);
-    expect(message.text).not.toContain(ADDRESS_PARTIAL);
+    expect(message.text).not.toContain(ADDRESS_ACTIVE.slice(0, 6));
+    expect(message.text).not.toContain(ADDRESS_PARTIAL.slice(0, 6));
   });
 
   test('No followed addresses - no processing', async () => {
@@ -297,7 +295,7 @@ describe('Non-Voting Trigger - Integration Test', () => {
 
     expect(dao1Message?.text).toContain('DAO UNI');
     expect(dao1Message?.text).toContain('nick.eth');
-    
+
     expect(dao2Message?.text).toContain('DAO ENS');
     expect(dao2Message?.text).toContain('vitalik.eth');
   });
@@ -350,8 +348,8 @@ describe('Non-Voting Trigger - Integration Test', () => {
     
     // Verify event IDs contain the address and are unique
     const eventIds = nonVotingNotifications.map(n => n.event_id);
-    expect(eventIds[0]).toContain(ADDRESS_INACTIVE.toLowerCase());
-    expect(eventIds[1]).toContain(ADDRESS_INACTIVE.toLowerCase());
+    expect(eventIds[0]).toContain(ADDRESS_INACTIVE);
+    expect(eventIds[1]).toContain(ADDRESS_INACTIVE);
     expect(eventIds[0]).toContain('non-voting');
     expect(eventIds[1]).toContain('non-voting');
     

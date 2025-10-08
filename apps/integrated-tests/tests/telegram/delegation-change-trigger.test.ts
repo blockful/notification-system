@@ -1,10 +1,9 @@
-import { describe, test, expect, beforeAll, afterEach } from '@jest/globals';
-import { db, TestApps } from '../src/setup';
-import { HttpClientMockSetup, GraphQLMockSetup } from '../src/mocks';
-import { UserFactory, VotingPowerFactory } from '../src/fixtures';
-import { TelegramTestHelper, DatabaseTestHelper, TestCleanup } from '../src/helpers';
-import { testConstants, timeouts } from '../src/config';
-import { delegationChangeMessages } from '@notification-system/messages';
+import { describe, test, expect, beforeAll, beforeEach } from '@jest/globals';
+import { db, TestApps } from '../../src/setup';
+import { HttpClientMockSetup, GraphQLMockSetup } from '../../src/mocks';
+import { UserFactory, VotingPowerFactory } from '../../src/fixtures';
+import { TelegramTestHelper, DatabaseTestHelper, TestCleanup } from '../../src/helpers';
+import { testConstants, timeouts } from '../../src/config';
 
 describe('Delegation Change Notifications - Integration Test', () => {
   let apps: TestApps;
@@ -19,7 +18,7 @@ describe('Delegation Change Notifications - Integration Test', () => {
     dbHelper = new DatabaseTestHelper(db);
   });
 
-  afterEach(async () => {
+  beforeEach(async () => {
     await TestCleanup.cleanupBetweenTests();
   });
 
@@ -68,16 +67,19 @@ describe('Delegation Change Notifications - Integration Test', () => {
     );
 
     // Verify delegator confirmation notification
-    expect(delegatorMessage.chatId).toBe(testConstants.profiles.p1.chatId);
-    expect(delegatorMessage.text).toContain(delegationChangeMessages.confirmed.substring(0, 23));
+    expect(delegatorMessage.text).toContain('✅ Delegation confirmed');
     expect(delegatorMessage.text).toContain(testDaoId);
     expect(delegatorMessage.text).toContain('delegated');
+    expect(delegatorMessage.chatId).toBe(testConstants.profiles.p1.chatId);
     
     // Verify transaction link and placeholders are replaced
     expect(delegatorMessage.text).not.toContain('{{txLink}}');
     expect(delegatorMessage.text).not.toContain('{{delegatorAccount}}');
     expect(delegatorMessage.text).not.toContain('{{delegate}}');
-    
+
+    expect(delegatorMessage.text).toContain(delegatorAddress);
+    expect(delegatorMessage.text).toContain(delegateAddress);
+
     // Verify message has substantial content
     expect(delegatorMessage.text.length).toBeGreaterThan(50);
   });
@@ -139,10 +141,13 @@ describe('Delegation Change Notifications - Integration Test', () => {
     console.log('Self-delegation message received:', selfDelegationMessage.text);
 
     // Verify self-delegation message content
-    expect(selfDelegationMessage.chatId).toBe(testConstants.profiles.p1.chatId);
-    expect(selfDelegationMessage.text).toContain(delegationChangeMessages.selfDelegation.substring(0, 29));
+    expect(selfDelegationMessage.text).toContain('🔄 Self-delegation confirmed');
+    expect(selfDelegationMessage.text).toContain('delegated');
     expect(selfDelegationMessage.text).toContain('to themselves');
     expect(selfDelegationMessage.text).toContain('Total voting power is now');
+    expect(selfDelegationMessage.chatId).toBe(testConstants.profiles.p1.chatId);
+
+    expect(selfDelegationMessage.text).toContain(userAddress);
   });
 
   test('should send undelegation confirmation notification', async () => {
@@ -189,8 +194,11 @@ describe('Delegation Change Notifications - Integration Test', () => {
     );
 
     // Verify undelegation confirmation notification
-    expect(delegatorMessage.chatId).toBe(testConstants.profiles.p1.chatId);
-    expect(delegatorMessage.text).toContain(delegationChangeMessages.undelegation.substring(0, 25));
+    expect(delegatorMessage.text).toContain('↩️ Undelegation confirmed');
     expect(delegatorMessage.text).toContain('removed');
+    expect(delegatorMessage.chatId).toBe(testConstants.profiles.p1.chatId);
+
+    expect(delegatorMessage.text).toContain(delegatorAddress);
+    expect(delegatorMessage.text).toContain(delegateAddress);
   });
 });
