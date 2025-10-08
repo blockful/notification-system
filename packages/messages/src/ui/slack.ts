@@ -22,7 +22,24 @@ export const slackMessages = {
   wallet: {
     listHeader: '*Your Wallet Addresses:*',
     emptyList: "You haven't added any wallets yet. Use '/anticapture wallet add' to get started!",
-    instructions: "Use '/anticapture wallet add' or '/anticapture wallet remove' to manage your wallets"
+    instructions: "Use '/anticapture wallet add' or '/anticapture wallet remove' to manage your wallets",
+    buttonAdd: 'Add Wallet',
+    buttonRemove: 'Remove Wallet',
+    buttonSelected: 'Selected',
+    buttonSelect: 'Select',
+    loadError: 'Sorry, there was an error loading your wallets. Please try again later.',
+    addInstructions: '*Add a Wallet Address*\n\nTo add a wallet, use the command with your address or ENS name:',
+    addExamples: '```/anticapture wallet add 0x1234...abcd```\nor\n```/anticapture wallet add vitalik.eth```',
+    privacyNote: '💡 Your wallet address will be kept private',
+    inputPrompt: '👛 *Please enter your address or ENS name:*',
+    addSuccess: '✅ Wallet added successfully!\n{{displayName}}',
+    addError: '❌ An error occurred while adding the wallet. Please try again.',
+    noWalletsToRemove: "You don't have any wallets to remove.",
+    removeInstructions: '*Select wallets to remove:*',
+    removeWarning: '⚠️ Please select at least one wallet to remove.',
+    removeSuccess: '✅ *Success!* {{message}}',
+    removeError: '❌ Sorry, there was an error removing your wallets. Please try again later.',
+    confirmRemoval: '🗑️ Confirm Removal'
   },
 
   // DAO management messages
@@ -110,6 +127,51 @@ export const slackMessages = {
             text: { type: 'plain_text', text: '💬 Contact us', emoji: true },
             url: 'https://tally.so/r/nrvGbv',
             action_id: 'mission_contact'
+          }
+        ]
+      }
+    ]
+  },
+
+  // Welcome message (sent when user first opens DM with bot)
+  welcomeMessage: {
+    blocks: [
+      {
+        type: 'section',
+        text: {
+          type: 'mrkdwn',
+          text: '🚨 *Welcome to the Anticapture notification system!*\n\n' +
+            'Spot the "oh no" before it reaches your treasury.\n\n' +
+            '*To get started:*\n' +
+            '• Choose the DAOs you want to track.\n' +
+            '• Connect your wallets to receive related alerts.'
+        }
+      },
+      {
+        type: 'image',
+        image_url: 'https://i.imgur.com/EHA4pdf.png',
+        alt_text: 'New governance proposal in the selected DAO'
+      },
+      {
+        type: 'section',
+        text: {
+          type: 'mrkdwn',
+          text: '*Select DAOs or set up your wallets below to begin.*'
+        }
+      },
+      {
+        type: 'actions',
+        elements: [
+          {
+            type: 'button',
+            text: { type: 'plain_text', text: '🗳️ Select DAOs', emoji: true },
+            action_id: 'welcome_select_daos',
+            style: 'primary'
+          },
+          {
+            type: 'button',
+            text: { type: 'plain_text', text: '👛 Set up Wallets', emoji: true },
+            action_id: 'welcome_setup_wallets'
           }
         ]
       }

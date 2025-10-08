@@ -48,7 +48,7 @@ export const errorMessage = (text: string): Block[] => [
 ];
 
 /**
- * DAO selection list with checkboxes
+ * DAO selection list with horizontal grid buttons
  */
 export const daoSelectionList = (
   daos: Array<{ id: string; name?: string }>,
@@ -56,29 +56,33 @@ export const daoSelectionList = (
   actionPrefix: string,
   confirmActionId: string,
   headerText: string
-): Block[] => [
-  section(headerText),
-  ...daos.map(dao => {
+): Block[] => {
+  // Create buttons for each DAO
+  const daoButtons = daos.map(dao => {
     const daoId = dao.id.toUpperCase();
     const isSelected = selectedIds.has(daoId);
     const emoji = daoEmojis.get(daoId) || defaultDaoEmoji;
 
-    return {
-      type: 'section',
-      text: {
-        type: 'mrkdwn',
-        text: `${isSelected ? '☑️' : '☐'} *${emoji} ${daoId}*`
-      },
-      accessory: button(
-        isSelected ? slackMessages.dao.buttonSelected : slackMessages.dao.buttonSelect,
-        `${actionPrefix}_${daoId}`,
-        { style: isSelected ? 'primary' : undefined, value: daoId }
-      )
-    };
-  }),
-  { type: 'divider' },
-  actions(button(slackMessages.dao.confirmButton, confirmActionId, { style: 'primary' }))
-];
+    return button(
+      `${emoji} ${daoId}`,
+      `${actionPrefix}_${daoId}`,
+      { style: isSelected ? 'primary' : undefined, value: daoId }
+    );
+  });
+
+  // Slack allows max 5 elements per actions block, so chunk into groups
+  const buttonRows: Block[] = [];
+  for (let i = 0; i < daoButtons.length; i += 5) {
+    buttonRows.push(actions(...daoButtons.slice(i, i + 5)));
+  }
+
+  return [
+    section(headerText),
+    ...buttonRows,
+    { type: 'divider' },
+    actions(button(slackMessages.dao.confirmButton, confirmActionId, { style: 'primary' }))
+  ];
+};
 
 /**
  * Wallet empty state
@@ -86,7 +90,7 @@ export const daoSelectionList = (
 export const walletEmptyState = (): Block[] => [
   section(slackMessages.wallet.emptyList),
   actions(
-    button('Add Wallet', 'wallet_add', { style: 'primary' }),
-    button('Remove Wallet', 'wallet_remove', { style: 'danger' })
+    button(slackMessages.wallet.buttonAdd, 'wallet_add', { style: 'primary' }),
+    button(slackMessages.wallet.buttonRemove, 'wallet_remove', { style: 'danger' })
   )
 ];
