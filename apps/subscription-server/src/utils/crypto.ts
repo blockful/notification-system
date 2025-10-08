@@ -81,12 +81,4 @@ export class CryptoUtil {
 
     return decrypted;
   }
-
-  /**
-   * Generate a new encryption key for initial setup
-   * This should be run once and the result saved to environment variables
-   */
-  static generateKey(): string {
-    return crypto.randomBytes(this.keyLength).toString('hex');
-  }
 }
