@@ -28,28 +28,6 @@ export class CryptoUtil {
   }
 
   /**
-   * Encrypt a string value
-   * @param text Plain text to encrypt
-   * @param encryptionKey Encryption key as hex string
-   * @returns Encrypted text with IV prepended (format: iv:encryptedData)
-   */
-  static encrypt(text: string, encryptionKey: string): string {
-    if (!text) {
-      throw new Error('Cannot encrypt empty text');
-    }
-
-    const key = this.getKey(encryptionKey);
-    const iv = crypto.randomBytes(this.ivLength);
-
-    const cipher = crypto.createCipheriv(this.algorithm, key, iv);
-    let encrypted = cipher.update(text, 'utf8', 'hex');
-    encrypted += cipher.final('hex');
-
-    // Return IV and encrypted data together
-    return `${iv.toString('hex')}:${encrypted}`;
-  }
-
-  /**
    * Decrypt a string value
    * @param encryptedText Encrypted text with IV (format: iv:encryptedData)
    * @param encryptionKey Encryption key as hex string
@@ -80,13 +58,5 @@ export class CryptoUtil {
     decrypted += decipher.final('utf8');
 
     return decrypted;
-  }
-
-  /**
-   * Generate a new encryption key for initial setup
-   * This should be run once and the result saved to environment variables
-   */
-  static generateKey(): string {
-    return crypto.randomBytes(this.keyLength).toString('hex');
   }
 }
