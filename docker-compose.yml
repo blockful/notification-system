@@ -7,8 +7,15 @@ services:
       POSTGRES_DB: postgres
     ports:
       - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
     networks:
       - notification-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
 
   # RabbitMQ Message Broker
   rabbitmq:
@@ -48,7 +55,8 @@ services:
       - notification-network
     restart: unless-stopped
     depends_on:
-      - subscription-db
+      subscription-db:
+        condition: service_healthy
 
   # Consumers (Telegram Bot + Slack Bot + RabbitMQ Consumer)
   consumers:
@@ -59,12 +67,12 @@ services:
     environment:
       TELEGRAM_BOT_TOKEN: ${TELEGRAM_BOT_TOKEN}
       ANTICAPTURE_GRAPHQL_ENDPOINT: ${ANTICAPTURE_GRAPHQL_ENDPOINT}
-      SLACK_BOT_TOKEN: ${SLACK_BOT_TOKEN}
       SLACK_APP_TOKEN: ${SLACK_APP_TOKEN}
       SLACK_SIGNING_SECRET: ${SLACK_SIGNING_SECRET}
       SLACK_CHANNEL_ID: ${SLACK_CHANNEL_ID:-}
       SUBSCRIPTION_SERVER_URL: http://subscription-server:3003
       RABBITMQ_URL: amqp://admin:admin@rabbitmq:5672
+      TOKEN_ENCRYPTION_KEY: ${TOKEN_ENCRYPTION_KEY}
     depends_on:
       subscription-server:
         condition: service_started
@@ -128,3 +136,7 @@ services:
 networks:
   notification-network:
     driver: bridge
+
+volumes:
+  postgres_data:
+    driver: local

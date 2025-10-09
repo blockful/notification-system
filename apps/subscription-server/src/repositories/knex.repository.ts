@@ -37,10 +37,14 @@ export class KnexUserRepository implements IUserRepository {
    * @param data - The user data to insert
    */
   async create(data: Omit<User, 'id'>): Promise<User> {
+    const userId = uuidv4();
+    const userData = { id: userId, ...data, created_at: new Date().toISOString() };
     const [user] = await this.knex<User>('users')
-      .insert({ id: uuidv4(), ...data, created_at: new Date().toISOString() })
+      .insert(userData)
+      .onConflict(['channel', 'channel_user_id'])
+      .merge()
       .returning('*');
-    
+
     return user;
   }
 
@@ -84,8 +88,7 @@ export class KnexUserRepository implements IUserRepository {
         'channel_workspaces.bot_token as encrypted_token'
       )
       .leftJoin('channel_workspaces', function() {
-        this.on(knex.raw("INSTR(users.channel_user_id, ':') > 0"))
-          .andOn(knex.raw("SUBSTR(users.channel_user_id, 1, INSTR(users.channel_user_id, ':') - 1) = channel_workspaces.workspace_id"))
+        this.on(knex.raw("users.channel_user_id LIKE channel_workspaces.workspace_id || ':%'"))
           .andOn('channel_workspaces.is_active', '=', knex.raw('true'));
       })
       .whereIn('users.id', ids);

@@ -38,10 +38,7 @@ export class SlackBotService implements BotServiceInterface {
     this.daoService = daoService;
     this.walletService = walletService;
 
-    // Initialize command registry
     this.commandHandlers = this.createCommandRegistry();
-
-    // Setup command handlers
     this.setupCommands();
   }
 
@@ -50,37 +47,88 @@ export class SlackBotService implements BotServiceInterface {
    */
   private setupCommands(): void {
     this.slackClient.setupHandlers!((handlers) => {
-      // Main slash command: /dao-notify
-      handlers.command('/dao-notify', async (ctx) => {
-        await this.handleMainCommand(ctx);
-      });
+      // App Home
+      handlers.event('app_home_opened', (ctx) => this.handleAppHomeOpened(ctx));
 
-      // DAO action handlers
-      handlers.action(/^dao_toggle_(subscribe|unsubscribe)_(.+)$/, async (ctx) => {
-        const match = (ctx.body as any).actions[0].action_id.match(/^dao_toggle_(subscribe|unsubscribe)_(.+)$/);
-        if (match && this.daoService) {
-          await this.daoService.toggle(ctx, match[2]);
+      // Message handler for conversational flows (e.g., wallet input)
+      handlers.message('', async (ctx) => {
+        const message = ctx.body as any;
+
+        // Check if waiting for wallet input
+        if (ctx.session?.awaitingInput?.type === 'wallet' &&
+            ctx.session?.awaitingInput?.action === 'add') {
+          if (message.text && !message.bot_id && this.walletService) {
+            await this.walletService.processWalletInput(ctx, message.text);
+            return;
+          }
         }
       });
 
-      handlers.action(/^dao_confirm_(subscribe|unsubscribe)$/, async (ctx) => {
-        const match = (ctx.body as any).actions[0].action_id.match(/^dao_confirm_(subscribe|unsubscribe)$/);
-        if (match && this.daoService) {
-          await this.daoService.confirm(ctx, match[1] as 'subscribe' | 'unsubscribe');
+      // Main command
+      handlers.command('/anticapture', (ctx) => this.handleMainCommand(ctx));
+
+      // Welcome message actions
+      handlers.action('welcome_select_daos', async (ctx) => {
+        if (this.daoService) {
+          await this.daoService.initialize(ctx);
         }
       });
 
-      // Wallet action handlers
+      handlers.action('welcome_setup_wallets', async (ctx) => {
+        if (this.walletService) {
+          await this.walletService.initialize(ctx);
+        }
+      });
+
+      // DAO list actions
+      handlers.action('dao_subscribe', async (ctx) => {
+        if (this.daoService) {
+          await this.daoService.initialize(ctx);
+        }
+      });
+
+      handlers.action('dao_edit_subscriptions', async (ctx) => {
+        if (this.daoService) {
+          await this.daoService.initialize(ctx);
+        }
+      });
+
+      // DAO actions
+      handlers.action(/^dao_toggle_subscribe_(.+)$/, async (ctx) => {
+        const match = (ctx.body as any).actions[0].action_id.match(/^dao_toggle_subscribe_(.+)$/);
+        if (match && this.daoService) {
+          await this.daoService.toggle(ctx, match[1]);
+        }
+      });
+
+      handlers.action('dao_confirm_subscribe', async (ctx) => {
+        if (this.daoService) {
+          await this.daoService.confirm(ctx);
+        }
+      });
+
+      // Wallet actions
       handlers.action(/^wallet_toggle_(.+)$/, async (ctx) => {
-        const match = (ctx.body as any).actions[0].value;
-        if (match && this.walletService) {
-          await this.walletService.toggleWalletForRemoval(ctx, match);
+        if (this.walletService) {
+          await this.walletService.toggleWalletForRemoval(ctx, (ctx.body as any).actions[0].value);
         }
       });
 
       handlers.action('wallet_confirm_remove', async (ctx) => {
         if (this.walletService) {
           await this.walletService.confirmRemoval(ctx);
+        }
+      });
+
+      handlers.action('wallet_add', async (ctx) => {
+        if (this.walletService) {
+          await this.walletService.startAddWallet(ctx);
+        }
+      });
+
+      handlers.action('wallet_remove', async (ctx) => {
+        if (this.walletService) {
+          await this.walletService.startRemoveWallet(ctx);
         }
       });
     });
@@ -91,17 +139,15 @@ export class SlackBotService implements BotServiceInterface {
    */
   private createCommandRegistry(): Map<string, CommandHandler> {
     const registry = new Map<string, CommandHandler>();
-    registry.set('subscribe', async (ctx, args) => this.handleDaoCommand(ctx, 'subscribe'));
-    registry.set('unsubscribe', async (ctx, args) => this.handleDaoCommand(ctx, 'unsubscribe'));
-    registry.set('list', async (ctx, args) => this.handleDaoList(ctx));
-    registry.set('wallet', async (ctx, args) => this.handleWalletCommand(ctx, args));
+    registry.set('daos', async (ctx, args) => this.handleDaoList(ctx));
+    registry.set('wallet', async (ctx, args) => this.handleWalletCommand(ctx));
     registry.set('help', async (ctx, args) => this.showHelp(ctx));
-    
+
     return registry;
   }
 
   /**
-   * Handle the main /dao-notify command and route to subcommands
+   * Handle the main /anticapture command and route to subcommands
    */
   private async handleMainCommand(context: SlackCommandContext): Promise<void> {
     const text = context.body.text?.trim().toLowerCase();
@@ -109,17 +155,6 @@ export class SlackBotService implements BotServiceInterface {
     const command = args[0] || 'help';
     const handler = this.commandHandlers.get(command) || this.commandHandlers.get('help')!;
     await handler(context, args.slice(1));
-  }
-
-  /**
-   * Handle DAO subscribe/unsubscribe commands
-   */
-  private async handleDaoCommand(context: SlackCommandContext, action: 'subscribe' | 'unsubscribe'): Promise<void> {
-    if (!this.daoService) {
-      await this.respondWithError(context, 'DAO management is not available');
-      return;
-    }
-    await this.daoService.initialize(context, action);
   }
 
   /**
@@ -134,24 +169,15 @@ export class SlackBotService implements BotServiceInterface {
   }
 
   /**
-   * Handle wallet commands with subcommands
+   * Handle wallet command - always shows list with add/remove buttons
    */
-  private async handleWalletCommand(context: SlackCommandContext, args: string[]): Promise<void> {
+  private async handleWalletCommand(context: SlackCommandContext): Promise<void> {
     if (!this.walletService) {
       await this.respondWithError(context, 'Wallet management is not available');
       return;
     }
 
-    const subcommand = args[0] || 'list';
-    const validSubcommands: Record<string, 'add' | 'remove' | 'list'> = {
-      'add': 'add',
-      'remove': 'remove',
-      'list': 'list'
-    };
-
-    const action = validSubcommands[subcommand] || 'list';
-    const walletAddress = args.slice(1).join(' ').trim();
-    await this.walletService.initialize(context, action, walletAddress);
+    await this.walletService.initialize(context);
   }
 
   /**
@@ -177,13 +203,9 @@ export class SlackBotService implements BotServiceInterface {
           text: {
             type: 'mrkdwn',
             text: '*Available Commands:*\n' +
-              '• `/dao-notify subscribe` - Subscribe to DAOs\n' +
-              '• `/dao-notify unsubscribe` - Unsubscribe from DAOs\n' +
-              '• `/dao-notify list` - List your subscriptions\n' +
-              '• `/dao-notify wallet add [address]` - Add a wallet address\n' +
-              '• `/dao-notify wallet remove` - Remove wallet addresses\n' +
-              '• `/dao-notify wallet list` - List your wallets\n' +
-              '• `/dao-notify help` - Show this help message'
+              '• `/anticapture wallet` - Manage your wallet addresses\n' +
+              '• `/anticapture daos` - Manage your DAO subscriptions\n' +
+              '• `/anticapture help` - Show this help message'
           }
         },
         {
@@ -196,7 +218,7 @@ export class SlackBotService implements BotServiceInterface {
           ]
         }
       ],
-      response_type: 'ephemeral'
+      response_type: 'in_channel'
       });
     }
   }
@@ -209,8 +231,45 @@ export class SlackBotService implements BotServiceInterface {
     if (context.respond) {
       await context.respond({
         text: replacePlaceholders(slackMessages.error, { message }),
-        response_type: 'ephemeral'
+        response_type: 'in_channel'
       });
+    }
+  }
+
+  /**
+   * Handle App Home opened event
+   */
+  private async handleAppHomeOpened(ctx: any): Promise<void> {
+    try {
+      const event = ctx.event as any;
+
+      // If user opened the Home tab, publish the home page
+      if (event.tab === 'home') {
+        await ctx.client.views.publish({
+          user_id: event.user,
+          view: { type: 'home', blocks: slackMessages.homePage.blocks }
+        });
+      }
+
+      // If user opened the Messages tab, send welcome message only if chat is empty
+      if (event.tab === 'messages') {
+        // Check if there are any messages in the conversation
+        const history = await ctx.client.conversations.history({
+          channel: event.channel,
+          limit: 1
+        });
+
+        // Only send welcome message if there are no messages yet
+        if (!history.messages || history.messages.length === 0) {
+          await ctx.client.chat.postMessage({
+            channel: event.user,
+            blocks: slackMessages.welcomeMessage.blocks,
+            text: 'Welcome to DAO Notification Bot!' // Fallback text
+          });
+        }
+      }
+    } catch (error) {
+      console.error('Error handling app_home_opened:', error);
     }
   }
 

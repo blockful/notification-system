@@ -15,7 +15,7 @@ import type {
  * Maintains state across multiple interactions
  */
 export interface SlackSession {
-  daoSelections: Set<string>;
+  daoSelections?: Set<string>;
   daoAction?: 'subscribe' | 'unsubscribe';
   walletAction?: 'add' | 'remove';
   walletsToRemove?: Set<string>;
@@ -96,6 +96,7 @@ export interface SlackHandlerRegistration {
   action(actionId: string | RegExp, handler: (context: SlackActionContext) => Promise<void>): void;
   view(callbackId: string | RegExp, handler: (context: SlackViewContext) => Promise<void>): void;
   message(pattern: string | RegExp, handler: (context: SlackCommandContext) => Promise<void>): void;
+  event(eventType: string, handler: (context: any) => Promise<void>): void;
 }
 
 /**

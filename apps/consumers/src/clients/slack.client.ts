@@ -5,7 +5,7 @@
  */
 
 import { WebClient } from '@slack/web-api';
-import { App } from '@slack/bolt';
+import { App, Installation } from '@slack/bolt';
 import {
   SlackClientInterface,
   SlackSendMessageOptions,
@@ -19,35 +19,83 @@ import {
   SlackSessionStorage,
   SlackSession
 } from '../interfaces/slack-context.interface';
+import { CryptoUtil } from '../utils/crypto';
 
 export class SlackClient implements SlackClientInterface {
   private boltApp: App;
   private sessionStorage: SlackSessionStorage;
+  private subscriptionServerUrl: string;
+  private tokenEncryptionKey: string;
 
   constructor(
     appToken: string,
-    signingSecret: string
+    signingSecret: string,
+    subscriptionServerUrl: string,
+    tokenEncryptionKey: string
   ) {
-    // Initialize session storage
     this.sessionStorage = new InMemorySessionStorage();
+    this.subscriptionServerUrl = subscriptionServerUrl;
+    this.tokenEncryptionKey = tokenEncryptionKey;
+    this.boltApp = this.createBoltApp(appToken, signingSecret);
+  }
 
-    // Initialize Bolt app with Socket Mode
-    // For OAuth multi-workspace support, we use an authorize function
-    // that returns empty credentials since we handle tokens per-message
-    this.boltApp = new App({
+  /**
+   * Create Bolt app with installationStore and authorize callback
+   */
+  private createBoltApp(
+    appToken: string,
+    signingSecret: string
+  ): App {
+    const installationStore = {
+      storeInstallation: async () => {},
+      fetchInstallation: async (installQuery) => {
+          // Fetch installation from subscription server
+          const response = await fetch(
+            `${this.subscriptionServerUrl}/slack/workspace/${installQuery.teamId}/token`
+          );
+
+          if (!response.ok) {
+            throw new Error(`Installation not found for workspace ${installQuery.teamId}`);
+          }
+          const installation = await response.json() as Installation;
+
+          // Decrypt the token before returning
+          installation.bot!.token = CryptoUtil.decrypt(installation.bot!.token, this.tokenEncryptionKey);
+
+          return installation;
+        },
+      deleteInstallation: async () => {}
+    };
+
+    console.log('✅ Slack client: OAuth mode initialized');
+    return new App({
       appToken,
       signingSecret,
       socketMode: true,
       processBeforeResponse: true,
-      authorize: async () => {
+      installationStore,
+      authorize: async (source) => {
+        // Fetch installation using the installationStore
+        const installation = await installationStore.fetchInstallation({
+          teamId: source.teamId,
+          enterpriseId: source.enterpriseId,
+          isEnterpriseInstall: source.isEnterpriseInstall,
+        });
+
+        if (!installation) {
+          throw new Error(`No installation found for team ${source.teamId}`);
+        }
+
+        // Return authorization result
         return {
-          botToken: '', 
-          botId: 'oauth-bot',
-          botUserId: 'oauth-bot-user'
+          botToken: installation.bot?.token,
+          botId: installation.bot?.id,
+          botUserId: installation.bot?.userId,
+          teamId: installation.team?.id,
+          enterpriseId: installation.enterprise?.id,
         };
       }
     });
-    console.log('✅ Slack client initialized with Socket Mode support (OAuth mode)');
   }
 
   async sendMessage(
@@ -216,17 +264,32 @@ export class SlackClient implements SlackClientInterface {
   }
 
   /**
-   * Setup handlers for Slack commands and interactions
+   * Register event handler (e.g., app_home_opened)
+   */
+  private registerEvent(
+    eventType: string,
+    handler: (context: any) => Promise<void>
+  ): void {
+    this.boltApp.event(eventType as any, async (args) => {
+      try {
+        await handler(args);
+      } catch (error) {
+        console.error(`Error handling event ${eventType}:`, error);
+      }
+    });
+  }
+
+  /**
+   * Setup all handlers via registration function
    */
   setupHandlers(registration: (handlers: SlackHandlerRegistration) => void): void {
-    const handlers: SlackHandlerRegistration = {
+    registration({
       command: this.registerCommand.bind(this),
       action: this.registerAction.bind(this),
       view: this.registerView.bind(this),
-      message: this.registerMessage.bind(this)
-    };
-
-    registration(handlers);
+      message: this.registerMessage.bind(this),
+      event: this.registerEvent.bind(this)
+    });
   }
 
   /**
