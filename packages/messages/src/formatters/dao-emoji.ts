@@ -1,0 +1,27 @@
+/**
+ * DAO emoji mappings for consistent representation across all services
+ */
+
+// Map of DAO identifiers to their emoji representations
+export const daoEmojis = new Map<string, string>([
+  ['UNI', '🦄'],     // Uniswap
+  ['ENS', '🌐'],     // ENS
+  ['OP', '🔴'],      // Optimism
+  ['GTC', '🪖'],     // Gitcoin
+  ['NOUNS', '🕶️'],   // Nouns
+  ['OBOL', '♾️'],    // Obol
+  ['LDO', '💧'],     // Lido
+  ['VIRTUAL', '🤖'], // Virtual
+  ['SCR', '📜']      // Scroll
+]);
+
+export const defaultDaoEmoji = '🏛️';
+
+/**
+ * Get DAO display name with emoji
+ */
+export function getDaoWithEmoji(dao: string): string {
+  const normalizedDao = dao.toUpperCase();
+  const emoji = daoEmojis.get(normalizedDao) || defaultDaoEmoji;
+  return `${emoji} ${dao}`;
+}

@@ -33,5 +33,6 @@ query ListProposals($skip: NonNegativeInt, $limit: PositiveInt, $orderDirection:
       againstVotes
       abstainVotes
     }
+    totalCount
   }
 }

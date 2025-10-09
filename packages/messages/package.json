@@ -1,0 +1,17 @@
+{
+  "name": "@notification-system/messages",
+  "version": "1.0.0",
+  "description": "Shared message templates and UI text for the notification system",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "build": "tsc",
+    "clean": "rm -rf dist",
+    "dev": "tsc --watch"
+  },
+  "devDependencies": {
+    "@types/node": "^20.0.0",
+    "typescript": "^5.0.0"
+  },
+  "dependencies": {}
+}

@@ -4,6 +4,8 @@ import { NotificationClientFactory } from '../notification/notification-factory.
 import { ISubscriptionClient } from '../../interfaces/subscription-client.interface';
 import { AnticaptureClient } from '@notification-system/anticapture-client';
 import { FormattingService } from '../formatting.service';
+import { votingReminderMessages, replacePlaceholders } from '@notification-system/messages';
+import { BatchNotificationService } from '../batch-notification.service';
 
 /**
  * Event data received from logic system for voting reminders
@@ -33,6 +35,7 @@ interface ProcessingResult {
  * Processes proposals and sends reminders to subscribed users who haven't voted yet.
  */
 export class VotingReminderTriggerHandler extends BaseTriggerHandler<VotingReminderEvent> {
+  private readonly batchNotificationService: BatchNotificationService;
 
   constructor(
     protected readonly subscriptionClient: ISubscriptionClient,
@@ -40,6 +43,7 @@ export class VotingReminderTriggerHandler extends BaseTriggerHandler<VotingRemin
     private readonly anticaptureClient: AnticaptureClient
   ) {
     super(subscriptionClient, notificationFactory);
+    this.batchNotificationService = new BatchNotificationService(subscriptionClient, notificationFactory);
   }
 
   async handleMessage(message: DispatcherMessage<VotingReminderEvent>): Promise<MessageProcessingResult> {
@@ -95,45 +99,24 @@ export class VotingReminderTriggerHandler extends BaseTriggerHandler<VotingRemin
       return { sent: 0, skipped: 1, failed: 0 };
     }
 
-    // Get user information for non-voting addresses
-    const nonVotingUsers = await this.subscriptionClient.getWalletOwnersBatch(nonVotingAddresses);
-    const allUsers = Object.values(nonVotingUsers).flat();
-
-    if (allUsers.length === 0) {
-      return { sent: 0, skipped: 1, failed: 0 };
-    }
-
-    // Filter users who should receive notifications (deduplication check)
-    const eventId = `${event.id}-${event.thresholdPercentage}-reminder`;
-    const filteredNotifications = await this.subscriptionClient.shouldSend(allUsers, eventId, event.daoId);
-    
-    const usersToNotify = allUsers.filter(user => 
-      filteredNotifications.some(notification => notification.user_id === user.id)
-    );
-
-    if (usersToNotify.length === 0) {
-      return { sent: 0, skipped: 1, failed: 0 };
-    }
-
-    // Send reminders to users
-    const message = this.createReminderMessage(event);
-    await this.sendNotificationsToSubscribers(
-      usersToNotify,
-      message,
-      eventId,
+    // Send reminders using batch notification service
+    await this.batchNotificationService.sendBatchNotifications(
+      nonVotingAddresses,
       event.daoId,
-      {
+      () => `${event.id}-${event.thresholdPercentage}-reminder`,
+      (address) => this.createReminderMessage(event, address),
+      (address) => ({
         proposalId: event.id,
         thresholdPercentage: event.thresholdPercentage,
         timeElapsedPercentage: event.timeElapsedPercentage,
-        timeRemaining: FormattingService.calculateTimeRemaining(event.endTimestamp)
-      }
+        timeRemaining: FormattingService.calculateTimeRemaining(event.endTimestamp),
+        addresses: { voterAddress: address }
+      })
     );
-    
-    return { 
-      sent: usersToNotify.length, 
-      skipped: allUsers.length - usersToNotify.length, 
-      failed: 0 
+    return {
+      sent: 1,
+      skipped: 0,
+      failed: 0
     };
   }
 
@@ -161,41 +144,23 @@ export class VotingReminderTriggerHandler extends BaseTriggerHandler<VotingRemin
   /**
    * Creates the reminder message based on proposal data and urgency level
    */
-  private createReminderMessage(event: VotingReminderEvent): string {
+  private createReminderMessage(event: VotingReminderEvent, address?: string): string {
     const timeRemaining = FormattingService.calculateTimeRemaining(event.endTimestamp);
-    
-    // Determine urgency level and emoji directly based on threshold
-    const urgencyLevel = event.thresholdPercentage >= 80 ? 'URGENT' :
-                        event.thresholdPercentage >= 50 ? 'Mid-Period' :
-                        event.thresholdPercentage >= 30 ? 'Early' : 'Voting';
-    
-    const emoji = event.thresholdPercentage >= 80 ? '🚨' :
-                  event.thresholdPercentage >= 50 ? '⏰' :
-                  event.thresholdPercentage >= 30 ? '🔔' : '🗳️';
-    
-    // Extract title from description if not available
     const title = event.title || FormattingService.extractTitle(event.description);
-    
-    let message = `${emoji} ${urgencyLevel} Voting Reminder - ${event.daoId}\n\n`;
-    
-    if (title) {
-      message += `Proposal: "${title}"\n\n`;
-    }
-    
-    message += `⏱️ Time remaining: ${timeRemaining}\n`;
-    message += `📊 ${event.thresholdPercentage}% of voting period has passed\n`;
-    message += `🗳️ Your vote hasn't been recorded yet\n\n`;
-    
-    if (event.thresholdPercentage >= 80) {
-      message += `⚠️ This proposal is closing soon! Don't miss your chance to participate in governance.\n\n`;
-    } else if (event.thresholdPercentage >= 50) {
-      message += `⏰ More than half of the voting period has passed. Consider casting your vote soon.\n\n`;
-    } else {
-      message += `🔔 The voting period is underway. Take your time to review and vote.\n\n`;
-    }
-    
-    message += `Participate in governance and make your voice heard!`;
-    
-    return message;
+
+    // Get the message key based on threshold
+    const messageKey = votingReminderMessages.getMessageKey(event.thresholdPercentage);
+
+    // Get the complete message template
+    const messageTemplate = votingReminderMessages[messageKey];
+
+    // Replace all placeholders
+    return replacePlaceholders(messageTemplate, {
+      daoId: event.daoId,
+      title,
+      timeRemaining,
+      thresholdPercentage: event.thresholdPercentage.toString(),
+      address: address || 'Your wallet'
+    });
   }
 }

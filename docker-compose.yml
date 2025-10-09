@@ -7,8 +7,15 @@ services:
       POSTGRES_DB: postgres
     ports:
       - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
     networks:
       - notification-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
 
   # RabbitMQ Message Broker
   rabbitmq:
@@ -39,13 +46,19 @@ services:
     environment:
       DATABASE_URL: postgresql://postgres:postgres@subscription-db:5432/postgres
       PORT: 3003
+      # OAuth configuration for Slack
+      SLACK_CLIENT_ID: ${SLACK_CLIENT_ID:-}
+      SLACK_CLIENT_SECRET: ${SLACK_CLIENT_SECRET:-}
+      SLACK_REDIRECT_URI: ${SLACK_REDIRECT_URI:-}
+      TOKEN_ENCRYPTION_KEY: ${TOKEN_ENCRYPTION_KEY:-}
     networks:
       - notification-network
     restart: unless-stopped
     depends_on:
-      - subscription-db
+      subscription-db:
+        condition: service_healthy
 
-  # Consumers (Telegram Bot + RabbitMQ Consumer)
+  # Consumers (Telegram Bot + Slack Bot + RabbitMQ Consumer)
   consumers:
     build:
       context: .
@@ -54,8 +67,12 @@ services:
     environment:
       TELEGRAM_BOT_TOKEN: ${TELEGRAM_BOT_TOKEN}
       ANTICAPTURE_GRAPHQL_ENDPOINT: ${ANTICAPTURE_GRAPHQL_ENDPOINT}
+      SLACK_APP_TOKEN: ${SLACK_APP_TOKEN}
+      SLACK_SIGNING_SECRET: ${SLACK_SIGNING_SECRET}
+      SLACK_CHANNEL_ID: ${SLACK_CHANNEL_ID:-}
       SUBSCRIPTION_SERVER_URL: http://subscription-server:3003
       RABBITMQ_URL: amqp://admin:admin@rabbitmq:5672
+      TOKEN_ENCRYPTION_KEY: ${TOKEN_ENCRYPTION_KEY}
     depends_on:
       subscription-server:
         condition: service_started
@@ -72,6 +89,7 @@ services:
       dockerfile: apps/dispatcher/Dockerfile
     container_name: dispatcher
     environment:
+      ANTICAPTURE_GRAPHQL_ENDPOINT: ${ANTICAPTURE_GRAPHQL_ENDPOINT}
       RABBITMQ_URL: amqp://admin:admin@rabbitmq:5672
       SUBSCRIPTION_SERVER_URL: http://subscription-server:3003
     depends_on:
@@ -101,6 +119,24 @@ services:
       - notification-network
     restart: unless-stopped
 
+  # Caddy reverse proxy for HTTPS (local development only)
+  caddy:
+    image: caddy:alpine
+    container_name: caddy-https
+    ports:
+      - "443:443"  # HTTPS
+      - "80:80"    # HTTP (optional, redirects to HTTPS)
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile
+    networks:
+      - notification-network
+    depends_on:
+      - subscription-server
+
 networks:
   notification-network:
     driver: bridge
+
+volumes:
+  postgres_data:
+    driver: local

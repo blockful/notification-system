@@ -8,12 +8,20 @@ export declare class AnticaptureClient {
     private readonly httpClient;
     constructor(httpClient: AxiosInstance);
     /**
-     * Recursively normalizes Ethereum addresses to EIP-55 checksum format
-     * Detects addresses by their format using viem's isAddress validation
-     * @param obj - Any value to normalize (primitives, objects, arrays, nested structures)
-     * @returns The normalized value with checksummed addresses
+     * Recursively normalizes Ethereum addresses in an object/array structure
+     * @param obj - Any value to process
+     * @param transformer - Function to transform each detected address
+     * @returns The processed value with transformed addresses
      */
-    private normalizeAddresses;
+    private normalizeAddressesInObject;
+    /**
+     * Converts addresses to EIP-55 checksum format (for API input - case-sensitive API)
+     */
+    private toChecksum;
+    /**
+     * Converts addresses to lowercase (for our system - case-insensitive DB)
+     */
+    private toLowercase;
     private query;
     private buildHeaders;
     /**

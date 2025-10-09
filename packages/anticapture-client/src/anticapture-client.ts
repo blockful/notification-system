@@ -27,33 +27,47 @@ export class AnticaptureClient {
   }
 
   /**
-   * Recursively normalizes Ethereum addresses to EIP-55 checksum format
-   * Detects addresses by their format using viem's isAddress validation
-   * @param obj - Any value to normalize (primitives, objects, arrays, nested structures)
-   * @returns The normalized value with checksummed addresses
+   * Recursively normalizes Ethereum addresses in an object/array structure
+   * @param obj - Any value to process
+   * @param transformer - Function to transform each detected address
+   * @returns The processed value with transformed addresses
    */
-  private normalizeAddresses(obj: any): any {
+  private normalizeAddressesInObject(obj: any, transformer: (address: string) => string): any {
     if (obj == null) return obj;
 
     if (typeof obj === 'string') {
       try {
-        return isAddress(obj) ? getAddress(obj) : obj;
+        return isAddress(obj) ? transformer(obj) : obj;
       } catch {
         return obj;
       }
     }
 
     if (Array.isArray(obj)) {
-      return obj.map(item => this.normalizeAddresses(item));
+      return obj.map(item => this.normalizeAddressesInObject(item, transformer));
     }
 
     if (typeof obj === 'object') {
       return Object.fromEntries(
-        Object.entries(obj).map(([k, v]) => [k, this.normalizeAddresses(v)])
+        Object.entries(obj).map(([k, v]) => [k, this.normalizeAddressesInObject(v, transformer)])
       );
     }
 
     return obj;
+  }
+
+  /**
+   * Converts addresses to EIP-55 checksum format (for API input - case-sensitive API)
+   */
+  private toChecksum(obj: any): any {
+    return this.normalizeAddressesInObject(obj, (address) => getAddress(address));
+  }
+
+  /**
+   * Converts addresses to lowercase (for our system - case-insensitive DB)
+   */
+  private toLowercase(obj: any): any {
+    return this.normalizeAddressesInObject(obj, (address) => address.toLowerCase());
   }
 
   private async query<TResult, TVariables, TSchema extends z.ZodSchema<any>>(
@@ -64,19 +78,19 @@ export class AnticaptureClient {
   ): Promise<z.infer<TSchema>> {
     const headers = this.buildHeaders(daoId);
 
-    // Normalize addresses in variables to EIP-55 checksum format
-    const normalizedVariables = variables ? this.normalizeAddresses(variables) : variables;
+    // INPUT: Convert addresses to checksum format for case-sensitive API
+    const checksummedVariables = variables ? this.toChecksum(variables) : variables;
 
     const response = await this.httpClient.post('', {
       query: print(document),
-      variables: normalizedVariables,
+      variables: checksummedVariables,
     }, { headers });
 
     if (response.data.errors) {
       throw new Error(JSON.stringify(response.data.errors));
     }
 
-    return schema.parse(response.data.data);
+    return schema.parse(this.toLowercase(response.data.data));
   }
 
   private buildHeaders(daoId?: string): Record<string, string> {
@@ -140,7 +154,7 @@ export class AnticaptureClient {
       for (const dao of allDAOs) {
         try {
           const validated = await this.query(ListProposalsDocument, SafeProposalsResponseSchema, variables, dao.id);
-          const processed = processProposals(validated.proposals.items, dao.id);
+          const processed = processProposals(validated, dao.id);
           if (processed && processed.length > 0) {
             allProposals.push(...processed);
           }
@@ -154,7 +168,7 @@ export class AnticaptureClient {
 
     try {
       const validated = await this.query(ListProposalsDocument, SafeProposalsResponseSchema, variables, daoId);
-      return processProposals(validated.proposals.items, daoId!) || [];
+      return processProposals(validated, daoId!) || [];
     } catch (error) {
       console.warn(`Error querying proposals for DAO ${daoId}: ${error instanceof Error ? error.message : error}`);
       return [];

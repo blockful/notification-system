@@ -6,11 +6,11 @@ import { testConstants } from '../config';
  * @dev Provides consistent mocking behavior for Telegram API calls
  * This is now only used as a fallback when TestTelegramClient is not available
  */
-export const mockSendMessage = createMockFunction();
+export const mockTelegramSendMessage = createMockFunction();
 
 // Initialize mock implementation when Jest is available
 if (typeof jest !== 'undefined') {
-  mockSendMessage.mockImplementation(() =>
+  mockTelegramSendMessage.mockImplementation(() =>
     Promise.resolve({
       message_id: Math.floor(Math.random() * 1_000_000),
       chat: { id: parseInt(testConstants.defaults.channelUserId) },

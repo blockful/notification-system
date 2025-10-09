@@ -11,6 +11,7 @@ export interface User {
   channel: string;
   channel_user_id: string;
   created_at?: string;
+  token?: string;  // Optional token for workspace authentication
 }
 
 /**
@@ -41,6 +42,7 @@ export interface IUserRepository {
   findByChannelAndId(channel: string, channelUserId: string): Promise<User | undefined>;
   findById(id: string): Promise<User | undefined>;
   findByIds(ids: string[]): Promise<User[]>;
+  findByIdsWithWorkspaceTokens(ids: string[]): Promise<User[]>;
   create(data: Omit<User, 'id'>): Promise<User>;
 }
 
@@ -83,4 +85,5 @@ export interface UserResponse {
   channel: string;
   channel_user_id: string;
   created_at?: string;
+  token?: string;  // Optional token for workspace authentication
 } 

@@ -10,42 +10,54 @@ class AnticaptureClient {
         this.httpClient = httpClient;
     }
     /**
-     * Recursively normalizes Ethereum addresses to EIP-55 checksum format
-     * Detects addresses by their format using viem's isAddress validation
-     * @param obj - Any value to normalize (primitives, objects, arrays, nested structures)
-     * @returns The normalized value with checksummed addresses
+     * Recursively normalizes Ethereum addresses in an object/array structure
+     * @param obj - Any value to process
+     * @param transformer - Function to transform each detected address
+     * @returns The processed value with transformed addresses
      */
-    normalizeAddresses(obj) {
+    normalizeAddressesInObject(obj, transformer) {
         if (obj == null)
             return obj;
         if (typeof obj === 'string') {
             try {
-                return (0, viem_1.isAddress)(obj) ? (0, viem_1.getAddress)(obj) : obj;
+                return (0, viem_1.isAddress)(obj) ? transformer(obj) : obj;
             }
             catch {
                 return obj;
             }
         }
         if (Array.isArray(obj)) {
-            return obj.map(item => this.normalizeAddresses(item));
+            return obj.map(item => this.normalizeAddressesInObject(item, transformer));
         }
         if (typeof obj === 'object') {
-            return Object.fromEntries(Object.entries(obj).map(([k, v]) => [k, this.normalizeAddresses(v)]));
+            return Object.fromEntries(Object.entries(obj).map(([k, v]) => [k, this.normalizeAddressesInObject(v, transformer)]));
         }
         return obj;
     }
+    /**
+     * Converts addresses to EIP-55 checksum format (for API input - case-sensitive API)
+     */
+    toChecksum(obj) {
+        return this.normalizeAddressesInObject(obj, (address) => (0, viem_1.getAddress)(address));
+    }
+    /**
+     * Converts addresses to lowercase (for our system - case-insensitive DB)
+     */
+    toLowercase(obj) {
+        return this.normalizeAddressesInObject(obj, (address) => address.toLowerCase());
+    }
     async query(document, schema, variables, daoId) {
         const headers = this.buildHeaders(daoId);
-        // Normalize addresses in variables to EIP-55 checksum format
-        const normalizedVariables = variables ? this.normalizeAddresses(variables) : variables;
+        // INPUT: Convert addresses to checksum format for case-sensitive API
+        const checksummedVariables = variables ? this.toChecksum(variables) : variables;
         const response = await this.httpClient.post('', {
             query: (0, graphql_1.print)(document),
-            variables: normalizedVariables,
+            variables: checksummedVariables,
         }, { headers });
         if (response.data.errors) {
             throw new Error(JSON.stringify(response.data.errors));
         }
-        return schema.parse(response.data.data);
+        return schema.parse(this.toLowercase(response.data.data));
     }
     buildHeaders(daoId) {
         const headers = {
@@ -100,7 +112,7 @@ class AnticaptureClient {
             for (const dao of allDAOs) {
                 try {
                     const validated = await this.query(graphql_2.ListProposalsDocument, schemas_1.SafeProposalsResponseSchema, variables, dao.id);
-                    const processed = (0, schemas_1.processProposals)(validated.proposals.items, dao.id);
+                    const processed = (0, schemas_1.processProposals)(validated, dao.id);
                     if (processed && processed.length > 0) {
                         allProposals.push(...processed);
                     }
@@ -113,7 +125,7 @@ class AnticaptureClient {
         }
         try {
             const validated = await this.query(graphql_2.ListProposalsDocument, schemas_1.SafeProposalsResponseSchema, variables, daoId);
-            return (0, schemas_1.processProposals)(validated.proposals.items, daoId) || [];
+            return (0, schemas_1.processProposals)(validated, daoId) || [];
         }
         catch (error) {
             console.warn(`Error querying proposals for DAO ${daoId}: ${error instanceof Error ? error.message : error}`);

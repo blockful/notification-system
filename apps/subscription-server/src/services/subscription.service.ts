@@ -83,26 +83,17 @@ export class SubscriptionService {
 
   /**
    * Gets all subscribers for a specific DAO
-   * 
+   *
    * @param {string} dao - The DAO identifier
    * @param {string} eventTimestamp - Optional timestamp to filter subscribers by subscription date
    * @returns {Promise<{subscribers: Array<User>}>} The list of subscribers
    */
   async getDaoSubscribers(dao: string, eventTimestamp?: string) {
     const preferences = await this.preferenceRepository.findByDao(dao, eventTimestamp);
-    const subscribers: User[] = [];
-    
-    // Fetch user details for each preference
-    for (const pref of preferences) {
-      const user = await this.userRepository.findById(pref.user_id);
-      if (user) {
-        subscribers.push(user);
-      }
-    }
-    
-    return {
-      subscribers
-    };
+    const userIds = preferences.map(p => p.user_id);
+    const subscribers = await this.userRepository.findByIdsWithWorkspaceTokens(userIds);
+
+    return { subscribers };
   }
 
   /**
@@ -257,18 +248,18 @@ export class SubscriptionService {
     // Get unique user IDs
     const userIds = [...new Set(userAddresses.map(ua => ua.user_id))];
     if (userIds.length === 0) return result;
-    
-    // Fetch all users in one batch
-    const users = await this.userRepository.findByIds(userIds);
+
+    // Fetch all users in one batch with workspace tokens
+    const users = await this.userRepository.findByIdsWithWorkspaceTokens(userIds);
     const userMap = new Map(users.map(user => [user.id, user]));
-    
+
     // Build result mapping addresses to users
     Object.entries(addressGroups).forEach(([address, userIdList]) => {
       result[address] = userIdList
         .map(userId => userMap.get(userId))
         .filter((user): user is User => user !== undefined);
     });
-    
+
     return result;
   }
 

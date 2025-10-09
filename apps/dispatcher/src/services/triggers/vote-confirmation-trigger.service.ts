@@ -4,6 +4,7 @@ import { NotificationClientFactory } from '../notification/notification-factory.
 import { ISubscriptionClient } from '../../interfaces/subscription-client.interface';
 import { AnticaptureClient } from '@notification-system/anticapture-client';
 import { formatTokenAmount } from '../../lib/number-formatter';
+import { voteConfirmationMessages, replacePlaceholders } from '@notification-system/messages';
 
 interface VoteEvent {
   daoId: string;
@@ -155,45 +156,21 @@ export class VoteConfirmationTriggerHandler extends BaseTriggerHandler<VoteEvent
   }
 
   private formatVoteMessage(vote: VoteEvent): string {
-    const position = this.getSupportText(vote.support);
-    const emoji = this.getSupportEmoji(vote.support);
+    const supportKey = voteConfirmationMessages.getSupportKey(vote.support);
     const votingPower = formatTokenAmount(vote.votingPower, 18);
-    
-    let message = `${emoji} Your vote just went through on ${vote.daoId}!\n\nYou voted ${position} on proposal #${vote.proposalId.slice(0, 8)}... with ${votingPower} voting power.`;
-    
-    if (vote.reason && vote.reason.trim()) {
-      message += `\n\nYour reason: "${vote.reason}"`;
-    }
-    
-    message += `\n\n{{txLink}}`;
-    
-    return message;
-  }
+    const hasReason = vote.reason && vote.reason.trim();
 
-  private getSupportText(support: string): string {
-    switch (support) {
-      case '0':
-        return 'AGAINST';
-      case '1':
-        return 'FOR';
-      case '2':
-        return 'ABSTAIN';
-      default:
-        return 'UNKNOWN';
-    }
-  }
+    const messageTemplate = hasReason
+      ? voteConfirmationMessages.withReason[supportKey]
+      : voteConfirmationMessages.withoutReason[supportKey];
 
-  private getSupportEmoji(support: string): string {
-    switch (support) {
-      case '0':
-        return '❌';
-      case '1':
-        return '✅';
-      case '2':
-        return '⚪';
-      default:
-        return '🗳️';
-    }
+    return replacePlaceholders(messageTemplate, {
+      daoId: vote.daoId,
+      proposalIdShort: vote.proposalId.slice(0, 8) + '...',
+      votingPower,
+      address: vote.voterAccountId,
+      ...(hasReason && { reason: vote.reason! })
+    });
   }
 
   private async getChainIdForDao(daoId: string): Promise<number> {

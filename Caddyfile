@@ -1,0 +1,12 @@
+# Caddy configuration for local HTTPS development
+# Automatically generates self-signed certificates for localhost
+
+localhost {
+    # Reverse proxy all requests to subscription-server
+    reverse_proxy subscription-server:3003
+    
+    # Caddy automatically handles:
+    # - Self-signed certificate generation
+    # - HTTPS setup
+    # - HTTP/2 support
+}

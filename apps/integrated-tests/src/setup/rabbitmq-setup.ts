@@ -3,6 +3,7 @@ import { RabbitMQConnection } from '@notification-system/rabbitmq-client';
 import { Consumer } from 'rabbitmq-client';
 import { EventCollector } from '../helpers/messaging/event-collector';
 import { timeouts } from '../config';
+import { env } from '../config/env';
 
 const STANDARD_QUEUES = [
   'logic-system-queue',
@@ -66,7 +67,7 @@ export class RabbitMQTestSetup {
     console.log('RabbitMQ ready');
     
     // Setup spy consumer if not using real Telegram
-    if (!process.env.SEND_REAL_TELEGRAM) {
+    if (!env.SEND_REAL_TELEGRAM) {
       await this.setupSpyConsumer('dispatcher-queue');
     }
     

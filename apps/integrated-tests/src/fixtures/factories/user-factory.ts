@@ -54,12 +54,13 @@ export class UserFactory {
    * @notice Creates a new user record in the database
    * @param channelUserId The user's ID in the messaging channel
    * @param name Display name for the user (used for identification)
+   * @param channel Optional channel type (defaults to telegram)
    * @return Promise resolving to the created user data
    */
-  static async createUser(channelUserId: string, name: string): Promise<UserData> {
+  static async createUser(channelUserId: string, name: string, channel: string = testConstants.defaults.channel): Promise<UserData> {
     const user = {
       id: uuidv4(),
-      channel: testConstants.defaults.channel,
+      channel,
       channel_user_id: channelUserId,
       created_at: new Date().toISOString()
     };
@@ -100,18 +101,20 @@ export class UserFactory {
    * @param daoId The DAO to create preference for
    * @param preferenceActive Whether the preference should be active
    * @param timestamp Optional custom timestamp for creation
+   * @param channel Optional channel type (defaults to telegram)
    * @return Promise resolving to both user and preference data
    */
   static async createUserWithFullSetup(
-    channelUserId: string, 
-    name: string, 
+    channelUserId: string,
+    name: string,
     daoId: string,
     preferenceActive: boolean = true,
-    timestamp?: string
+    timestamp?: string,
+    channel: string = testConstants.defaults.channel
   ): Promise<{ user: UserData; preference: UserPreferenceData }> {
-    const user = await this.createUser(channelUserId, name);
+    const user = await this.createUser(channelUserId, name, channel);
     const preference = await this.createUserPreference(user.id, daoId, preferenceActive, timestamp);
-    
+
     return { user, preference };
   }
 
@@ -152,7 +155,7 @@ export class UserFactory {
     const userAddress = {
       id: uuidv4(),
       user_id: userId,
-      address: address.toLowerCase(),
+      address: address,
       is_active: true,
       created_at: timestamp || new Date().toISOString(),
       updated_at: timestamp || new Date().toISOString()
@@ -169,6 +172,7 @@ export class UserFactory {
    * @param followedAddresses Array of addresses this user follows
    * @param preferenceActive Whether preferences are active
    * @param timestamp Optional custom timestamp
+   * @param channel Optional channel type (defaults to telegram)
    * @return Promise resolving to user, preference, and address data
    */
   static async createUserWithFollowedAddresses(
@@ -177,9 +181,10 @@ export class UserFactory {
     daoId: string,
     followedAddresses: string[],
     preferenceActive: boolean = true,
-    timestamp?: string
-  ): Promise<{ 
-    user: UserData; 
+    timestamp?: string,
+    channel: string = testConstants.defaults.channel
+  ): Promise<{
+    user: UserData;
     preference: UserPreferenceData;
     addresses: UserAddressData[];
   }> {
@@ -188,7 +193,8 @@ export class UserFactory {
       name,
       daoId,
       preferenceActive,
-      timestamp
+      timestamp,
+      channel
     );
 
     const addresses = await Promise.all(

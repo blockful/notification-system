@@ -59,7 +59,9 @@ describe('NonVotingHandler', () => {
   it('should identify and notify about non-voting addresses', async () => {
     // Setup test data using factories
     const message = createDispatcherMessage([
-      createProposalNotification()
+      createProposalNotification({ id: 'proposal-3' }),
+      createProposalNotification({ id: 'proposal-2' }),
+      createProposalNotification({ id: 'proposal-1' })
     ]);
 
     const followedAddresses = [TestAddresses.ADDRESS_1, TestAddresses.ADDRESS_2, TestAddresses.ADDRESS_3];
@@ -259,7 +261,7 @@ describe('NonVotingHandler', () => {
       userId: 'user-1',
       channel: 'telegram',
       channelUserId: '12345',
-      message: ExpectedMessages.createNonVotingAlert(TestAddresses.ADDRESS_LONG, '0x1234...7890', 'ENS'),
+      message: ExpectedMessages.createNonVotingAlert('ENS'),
       metadata: {
         addresses: {
           'nonVoterAddress': TestAddresses.ADDRESS_LONG

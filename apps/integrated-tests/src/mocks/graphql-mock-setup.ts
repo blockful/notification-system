@@ -1,45 +1,33 @@
 import { ProposalData } from '../fixtures';
 import { ProcessedVotingPowerHistory } from '@notification-system/anticapture-client';
-import { getAddress, isAddress } from 'viem';
+import { getAddress, isAddressEqual } from 'viem';
 
 /**
  * @notice Setup class for GraphQL API mocking in integration tests
  * @dev Provides methods to mock different GraphQL endpoints with test data
  */
 export class GraphQLMockSetup {
-  /**
-   * @notice Converts an address to checksummed format if valid
-   * @dev Simulates API behavior of returning checksummed addresses
-   */
-  private static toChecksum(address: string): string {
-    if (!address || !isAddress(address)) {
-      return address;
-    }
-    try {
-      return getAddress(address);
-    } catch {
-      return address;
-    }
-  }
+
   /**
    * @notice Transforms ProcessedVotingPowerHistory to raw GraphQL format
+   * @dev Returns addresses in original format (checksum) like real API
    */
   private static transformToRawGraphQLFormat(votingPowerData: ProcessedVotingPowerHistory[]): any[] {
     return votingPowerData.map(vp => ({
-      accountId: this.toChecksum(vp.accountId),
+      accountId: vp.accountId,
       timestamp: vp.timestamp,
       votingPower: vp.votingPower,
       delta: vp.delta || null,
       daoId: vp.daoId,
       transactionHash: vp.transactionHash,
       delegation: vp.delegation ? {
-        delegatorAccountId: this.toChecksum(vp.delegation.delegatorAccountId),
+        delegatorAccountId: vp.delegation.delegatorAccountId,
         delegatedValue: vp.delegation.delegatedValue
       } : null,
       transfer: vp.transfer ? {
         amount: vp.transfer.amount,
-        fromAccountId: this.toChecksum(vp.transfer.fromAccountId),
-        toAccountId: this.toChecksum(vp.transfer.toAccountId)
+        fromAccountId: vp.transfer.fromAccountId,
+        toAccountId: vp.transfer.toAccountId
       } : null
     }));
   }
@@ -52,8 +40,7 @@ export class GraphQLMockSetup {
     return (url: string, data: any, config: any) => {
       // Handle proposals
       if (data.query?.includes('ListProposals')) {
-        console.log('[Mock] ListProposals called with variables:', JSON.stringify(data.variables));
-        console.log('[Mock] Headers:', JSON.stringify(config?.headers));
+
         let filtered = proposals;
         if (data.variables?.status) {
           // Status can be string or array (JSON type in GraphQL)
@@ -63,18 +50,15 @@ export class GraphQLMockSetup {
           filtered = filtered.filter(p => statusFilter.includes(p.status));
         }
         if (data.variables?.fromDate) {
-          filtered = filtered.filter(p => parseInt(p.endTimestamp) >= data.variables.fromDate);
+          // Filter by creation timestamp, not end timestamp
+          const beforeCount = filtered.length;
+          filtered = filtered.filter(p => parseInt(p.timestamp) >= data.variables.fromDate);
         }
         if (config?.headers?.['anticapture-dao-id']) {
           filtered = filtered.filter(p => p.daoId === config.headers['anticapture-dao-id']);
         }
-        // Convert proposer addresses to checksum format
-        const checksummedProposals = filtered.map(p => ({
-          ...p,
-          proposerAccountId: this.toChecksum(p.proposerAccountId)
-        }));
         return Promise.resolve({
-          data: { data: { proposals: { items: checksummedProposals } } }
+          data: { data: { proposals: { items: filtered, totalCount: filtered.length } } }
         });
       }
 
@@ -82,13 +66,8 @@ export class GraphQLMockSetup {
       if (data.query?.includes('GetProposalById')) {
         const proposalId = data.variables?.id;
         const proposal = proposals.find(p => p.id === proposalId);
-        // Convert proposer address to checksum if proposal exists
-        const checksummedProposal = proposal ? {
-          ...proposal,
-          proposerAccountId: this.toChecksum(proposal.proposerAccountId)
-        } : null;
         return Promise.resolve({
-          data: { data: { proposal: checksummedProposal } }
+          data: { data: { proposal: proposal || null } }
         });
       }
 
@@ -106,30 +85,30 @@ export class GraphQLMockSetup {
       // Handle votes
       if (data.query?.includes('ListVotesOnchains')) {
         let filtered = votesData;
-
+        
         const daoId = data.variables?.daoId;
         const proposalIdIn = data.variables?.proposalId_in;
         const voterAccountIdIn = data.variables?.voterAccountId_in;
         const timestampGt = data.variables?.timestamp_gt;
-
+        
         // Filter by daoId if provided
         if (daoId) {
           filtered = filtered.filter((v: any) => v.daoId === daoId);
         }
-
+        
         // Filter by proposalId_in if provided
         if (proposalIdIn) {
-          filtered = filtered.filter((v: any) =>
+          filtered = filtered.filter((v: any) => 
             proposalIdIn.includes(v.proposalId)
           );
         }
-
+        
         // Filter by voterAccountId_in if provided
-        // Now using exact comparison since AnticaptureClient normalizes addresses
+        // Using case-insensitive comparison (simulates API's internal normalization)
         if (voterAccountIdIn) {
           filtered = filtered.filter((v: any) =>
             voterAccountIdIn.some((addr: string) =>
-              this.toChecksum(v.voterAccountId) === addr
+              isAddressEqual(getAddress(v.voterAccountId), getAddress(addr))
             )
           );
         }
@@ -141,14 +120,9 @@ export class GraphQLMockSetup {
           );
         }
 
-        // Convert voter addresses to checksum format (simulating real API behavior)
-        const checksummedVotes = filtered.map((v: any) => ({
-          ...v,
-          voterAccountId: this.toChecksum(v.voterAccountId)
-        }));
-
+        // Return votes in original format (checksum) - AnticaptureClient will normalize to lowercase
         return Promise.resolve({
-          data: { data: { votesOnchains: { items: checksummedVotes, totalCount: checksummedVotes.length } } }
+          data: { data: { votesOnchains: { items: filtered, totalCount: filtered.length } } }
         });
       }
 
@@ -160,17 +134,11 @@ export class GraphQLMockSetup {
           ...votesData.map((v: any) => v.daoId).filter(Boolean)
         ])];
         return Promise.resolve({
-          data: {
-            data: {
-              daos: {
-                items: uniqueDaoIds.map(id => ({
-                  id,
-                  votingDelay: '0',
-                  chainId: (id && daoChainMapping[id]) || 1 // Default to Ethereum mainnet
-                }))
-              }
-            }
-          }
+          data: { data: { daos: { items: uniqueDaoIds.map(id => ({ 
+            id,
+            votingDelay: '0',
+            chainId: (id && daoChainMapping[id]) || 1 // Default to Ethereum mainnet
+          })) } } }
         });
       }
 
@@ -178,7 +146,7 @@ export class GraphQLMockSetup {
         data: {
           data: {
             votingPowerHistorys: { items: [] },
-            proposals: [],
+            proposals: { items: [], totalCount: 0 },
             proposal: null,
             daos: { items: [] },
             votesOnchains: { items: [] }
@@ -196,8 +164,8 @@ export class GraphQLMockSetup {
    * @param votesData Array of vote data
    */
   static setupMock(
-    mockHttpClient: any,
-    proposals: ProposalData[] = [],
+    mockHttpClient: any, 
+    proposals: ProposalData[] = [], 
     votingPowerData: ProcessedVotingPowerHistory[] = [],
     daoChainMapping: Record<string, number> = {},
     votesData: any[] = []

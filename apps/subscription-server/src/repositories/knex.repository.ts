@@ -7,13 +7,17 @@ import { Knex } from 'knex';
 import { v4 as uuidv4 } from 'uuid';
 import { IUserRepository, IPreferenceRepository, INotificationRepository, User, UserPreference, Notification } from '../interfaces';
 import { IUserAddressRepository, UserAddress } from '../interfaces/user-address.interface';
+import { CryptoUtil } from '../utils/crypto';
 
 /**
  * User repository implementation using Knex
  * Handles all user-related database operations
  */
 export class KnexUserRepository implements IUserRepository {
-  constructor(private readonly knex: Knex) {}
+  constructor(
+    private readonly knex: Knex,
+    private readonly tokenEncryptionKey?: string
+  ) {}
 
   /**
    * Finds a user by their channel and channel-specific user ID
@@ -33,10 +37,14 @@ export class KnexUserRepository implements IUserRepository {
    * @param data - The user data to insert
    */
   async create(data: Omit<User, 'id'>): Promise<User> {
+    const userId = uuidv4();
+    const userData = { id: userId, ...data, created_at: new Date().toISOString() };
     const [user] = await this.knex<User>('users')
-      .insert({ id: uuidv4(), ...data, created_at: new Date().toISOString() })
+      .insert(userData)
+      .onConflict(['channel', 'channel_user_id'])
+      .merge()
       .returning('*');
-    
+
     return user;
   }
 
@@ -63,6 +71,42 @@ export class KnexUserRepository implements IUserRepository {
       .whereIn('id', ids);
     
     return users;
+  }
+
+  /**
+   * Gets multiple users by their IDs with workspace tokens attached
+   * Uses LEFT JOIN to fetch tokens in a single query instead of N+1 queries
+   * @param ids - Array of user IDs
+   */
+  async findByIdsWithWorkspaceTokens(ids: string[]): Promise<User[]> {
+    if (ids.length === 0) return [];
+
+    const knex = this.knex;
+    const rows = await knex('users')
+      .select(
+        'users.*',
+        'channel_workspaces.bot_token as encrypted_token'
+      )
+      .leftJoin('channel_workspaces', function() {
+        this.on(knex.raw("users.channel_user_id LIKE channel_workspaces.workspace_id || ':%'"))
+          .andOn('channel_workspaces.is_active', '=', knex.raw('true'));
+      })
+      .whereIn('users.id', ids);
+
+    if (!this.tokenEncryptionKey) {
+      return rows.map(({ encrypted_token, ...user }) => user);
+    }
+
+    return rows.map(({ encrypted_token, ...user }) => {
+      if (encrypted_token) {
+        try {
+          user.token = CryptoUtil.decrypt(encrypted_token, this.tokenEncryptionKey!);
+        } catch (error) {
+          console.error(`Failed to decrypt token for user ${user.id}:`, error);
+        }
+      }
+      return user;
+    });
   }
 }
 

@@ -14,7 +14,7 @@ import path from 'path';
 export const db = knex({
   client: 'sqlite3',
   connection: {
-    filename: '/tmp/test_integration.db'
+    filename: './test_integration.db'
   },
   useNullAsDefault: true,
   migrations: {

@@ -7,9 +7,9 @@ describe('formatTokenAmount', () => {
       expect(formatTokenAmount(0)).toBe('0');
     });
 
-    it('should format very small amounts as <0.1', () => {
-      expect(formatTokenAmount('1')).toBe('<0.1'); // 1 wei
-      expect(formatTokenAmount('50000000000000000')).toBe('<0.1'); // 0.05 token
+    it('should format very small amounts as < 0.1', () => {
+      expect(formatTokenAmount('1')).toBe('< 0.1'); // 1 wei
+      expect(formatTokenAmount('50000000000000000')).toBe('< 0.1'); // 0.05 token
       expect(formatTokenAmount('99999999999999999')).toBe('0.1'); // 0.099... token (rounds to 0.1)
     });
 

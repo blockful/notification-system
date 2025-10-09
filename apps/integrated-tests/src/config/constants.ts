@@ -28,11 +28,15 @@ export const testConstants = {
     p7: { chatId: '888888888', address: '0xadd_p7' },
     p8: { chatId: '999999999', address: '0xadd_p8' },
     p9: { chatId: 'user-with-subscription.eth', address: 'user-with-subscription.eth' },
+    p10: { chatId: '101010101', address: '0x1e0E09b49eDB3bfA2E82ed4ab7F1260b9F49d067'.toLowerCase() }, 
+    p10_checksum: { chatId: '101010101', address: '0x1e0E09b49eDB3bfA2E82ed4ab7F1260b9F49d067' }, 
   },
 
   // External addresses for events (actors not necessarily using the bot)
   eventActors: {
     delegator1: 'delegator1.eth',
+    delegator2: 'delegator2.eth',
+    delegator3: 'delegator3.eth',
     delegator: 'delegator.eth',
     recipient: 'recipient.eth',
     sender: 'sender.eth',
@@ -58,10 +62,11 @@ export const testConstants = {
     voteTest: 'test-dao-vote',
   },
   
-  // Voting power test values 
+  // Voting power test values
   votingPower: {
     default: '1000',
     small: '100',
+    medium: '500',
   },
   
   // Proposal timing constants

@@ -21,19 +21,17 @@ export class MockEnsResolverService {
 
   /**
    * Mock implementation of address to display name resolution
-   * Returns ENS names for known addresses or shortened format for others
+   * Returns ENS names for known addresses or full address for others
    * @param address The Ethereum address
-   * @returns ENS name if known, otherwise shortened address format (0x1234...5678)
+   * @returns ENS name if known, otherwise the full Ethereum address
    */
   async resolveDisplayName(address: string): Promise<string> {
-    // Map of known ENS names for testing
+    // Map of known ENS names for testing (keys must be lowercase)
     const ensNames: Record<string, string> = {
       '0xb8c2c29ee19d8307cb7255e1cd9cbde883a267d5': 'nick.eth',
       '0xd8da6bf26964af9d7eed9e03e53415d37aa96045': 'vitalik.eth',
-      // Add more ENS mappings as needed for testing
     };
-    
-    // Check if this address has a known ENS name
+
     const lowerAddress = address.toLowerCase();
     if (ensNames[lowerAddress]) {
       return Promise.resolve(ensNames[lowerAddress]);

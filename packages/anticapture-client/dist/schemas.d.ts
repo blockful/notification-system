@@ -62,27 +62,34 @@ export declare const SafeDaosResponseSchema: z.ZodEffects<z.ZodObject<{
 }>;
 export declare const SafeProposalsResponseSchema: z.ZodEffects<z.ZodObject<{
     proposals: z.ZodNullable<z.ZodObject<{
-        items: z.ZodNullable<z.ZodArray<z.ZodAny, "many">>;
+        items: z.ZodArray<z.ZodAny, "many">;
+        totalCount: z.ZodNumber;
     }, "strip", z.ZodTypeAny, {
-        items: any[] | null;
+        items: any[];
+        totalCount: number;
     }, {
-        items: any[] | null;
+        items: any[];
+        totalCount: number;
     }>>;
 }, "strip", z.ZodTypeAny, {
     proposals: {
-        items: any[] | null;
+        items: any[];
+        totalCount: number;
     } | null;
 }, {
     proposals: {
-        items: any[] | null;
+        items: any[];
+        totalCount: number;
     } | null;
 }>, {
     proposals: {
-        items: any[] | null;
+        items: any[];
+        totalCount: number;
     };
 }, {
     proposals: {
-        items: any[] | null;
+        items: any[];
+        totalCount: number;
     } | null;
 }>;
 export declare const SafeProposalByIdResponseSchema: z.ZodObject<{
@@ -431,6 +438,6 @@ export type ProcessedVotingPowerHistory = z.infer<typeof VotingPowerHistoryItemS
     targetAccountId: string;
     chainId?: number;
 };
-export declare function processProposals(validated: SafeProposalsResponse['proposals']['items'], daoId: string): any;
+export declare function processProposals(validated: SafeProposalsResponse, daoId: string): any;
 export declare function processVotingPowerHistory(validated: SafeVotingPowerHistoryResponse, daoId: string, chainId?: number): ProcessedVotingPowerHistory[];
 export {};

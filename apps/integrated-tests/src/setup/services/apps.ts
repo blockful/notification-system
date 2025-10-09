@@ -2,6 +2,13 @@ import { App as ConsumerApp } from '@notification-system/consumer';
 import { App as LogicSystemApp } from '@notification-system/logic-system';
 import { App as DispatcherApp } from '@notification-system/dispatcher';
 import { App as SubscriptionServerApp } from '@notification-system/subscription-server';
+import { DaoController, NotificationController } from '@notification-system/subscription-server/dist/controllers';
+import { UserAddressController } from '@notification-system/subscription-server/dist/controllers/user-address.controller';
+import { SlackOAuthController } from '@notification-system/subscription-server/dist/controllers/slack-oauth.controller';
+import { KnexUserRepository, KnexPreferenceRepository, KnexNotificationRepository, KnexUserAddressRepository } from '@notification-system/subscription-server/dist/repositories/knex.repository';
+import { SubscriptionService, NotificationService } from '@notification-system/subscription-server/dist/services';
+import { DaoHandler } from '@notification-system/subscription-server/dist/handlers/dao.handlers';
+import { WorkspaceService } from '@notification-system/subscription-server/dist/services/workspace.service';
 import { Knex } from 'knex';
 import { RabbitMQTestSetup } from '../rabbitmq-setup';
 import { serviceConfig, timeouts } from '../../config';
@@ -9,7 +16,10 @@ import { env } from '../../config/env';
 import { waitFor } from '../../helpers/utilities/wait-for';
 import { MockEnsResolverService } from '../../mocks/ens-resolver-mock';
 import { TelegramTestClient } from '../../test-clients/telegram-test.client';
+import { SlackTestClient } from '../../test-clients/slack-test.client';
 import { jest } from '@jest/globals';
+import { mockTelegramSendMessage } from '../../mocks/telegram-mock-setup';
+import { mockSlackSendMessage } from '../../mocks/slack-mock-setup';
 
 /**
  * @notice Type definition for test applications container
@@ -26,8 +36,10 @@ export type TestApps = {
   subscriptionServerApp: SubscriptionServerApp;
   /** RabbitMQ test setup instance */
   rabbitmqSetup: RabbitMQTestSetup;
-  /** Mock sendMessage function for testing */
-  mockSendMessage?: jest.Mock;
+  /** Mock sendMessage function for Telegram testing */
+  mockTelegramSendMessage?: jest.Mock;
+  /** Mock sendMessage function for Slack testing */
+  mockSlackSendMessage?: jest.Mock;
 };
 
 /**
@@ -71,15 +83,7 @@ const setupRabbitMQ = async (): Promise<{ rabbitmqSetup: RabbitMQTestSetup; rabb
  * @return Object containing telegram client and mock send message function
  */
 const createTelegramClient = () => {
-  // Always create a mock function for test assertions
-  const mockSendMessage = jest.fn<any>().mockResolvedValue({
-    message_id: 123,
-    date: Date.now(),
-    chat: { id: 1, type: 'private' },
-    text: 'test',
-    from: { id: 123456789, is_bot: true, first_name: 'TestBot' }
-  });
-  
+  const mockSendMessage = mockTelegramSendMessage;
   let telegramClient;
   
   if (env.SEND_REAL_TELEGRAM) {
@@ -90,8 +94,20 @@ const createTelegramClient = () => {
     // Use TelegramTestClient in mock-only mode
     telegramClient = new TelegramTestClient(mockSendMessage);
   }
-  
-  return { telegramClient, mockSendMessage };
+  return { telegramClient, mockTelegramSendMessage: mockSendMessage };
+};
+
+/**
+ * @notice Creates and configures Slack client for testing
+ * @dev Returns SlackTestClient configured for either real or mock mode
+ * @return Object containing slack client and mock send message function
+ */
+const createSlackClient = () => {
+  const mockSendMessage = mockSlackSendMessage;
+  const botToken = env.SLACK_BOT_TOKEN;
+  const slackClient = new SlackTestClient(mockSendMessage, botToken);
+
+  return { slackClient, mockSlackSendMessage: mockSendMessage };
 };
 
 /**
@@ -101,7 +117,39 @@ const createTelegramClient = () => {
  * @return Started subscription server application instance
  */
 const startSubscriptionServer = async (db: Knex): Promise<SubscriptionServerApp> => {
-  const subscriptionServerApp = new SubscriptionServerApp(db, TEST_CONFIG.ports.subscriptionServer);
+  // Repository instances
+  const userRepository = new KnexUserRepository(db, serviceConfig.oauth.tokenEncryptionKey);
+  const preferenceRepository = new KnexPreferenceRepository(db);
+  const notificationRepository = new KnexNotificationRepository(db);
+  const userAddressRepository = new KnexUserAddressRepository(db);
+
+  // Service instances
+  const workspaceService = new WorkspaceService(db, serviceConfig.oauth.tokenEncryptionKey);
+  const subscriptionService = new SubscriptionService(userRepository, preferenceRepository, userAddressRepository);
+  const notificationService = new NotificationService(notificationRepository);
+
+  // Handler instances
+  const daoHandler = new DaoHandler(subscriptionService);
+
+  // Controller instances
+  const daoController = new DaoController(daoHandler);
+  const notificationController = new NotificationController(notificationService);
+  const userAddressController = new UserAddressController(subscriptionService);
+  const slackOAuthController = new SlackOAuthController(
+    workspaceService,
+    serviceConfig.oauth.slackClientId,
+    serviceConfig.oauth.slackClientSecret,
+    serviceConfig.oauth.slackRedirectUri
+  );
+
+  const subscriptionServerApp = new SubscriptionServerApp(
+    db,
+    TEST_CONFIG.ports.subscriptionServer,
+    daoController,
+    notificationController,
+    userAddressController,
+    slackOAuthController
+  );
   await subscriptionServerApp.start();
   return subscriptionServerApp;
 };
@@ -112,12 +160,14 @@ const startSubscriptionServer = async (db: Knex): Promise<SubscriptionServerApp>
  * @param mockHttpClient Mocked HTTP client
  * @param rabbitmqUrl RabbitMQ connection URL
  * @param telegramClient Telegram client instance
+ * @param slackClient Slack client instance
  * @return Started consumer application instance
  */
 const startConsumer = async (
   mockHttpClient: any,
   rabbitmqUrl: string,
-  telegramClient: any
+  telegramClient: any,
+  slackClient: any
 ): Promise<ConsumerApp> => {
   const mockEnsResolver = new MockEnsResolverService() as any;
   const consumerApp = new ConsumerApp(
@@ -125,7 +175,8 @@ const startConsumer = async (
     mockHttpClient,
     rabbitmqUrl,
     mockEnsResolver,
-    telegramClient
+    telegramClient,
+    slackClient
   );
   await consumerApp.start();
   return consumerApp;
@@ -203,14 +254,13 @@ const waitForAppsReady = async (apps: Omit<TestApps, 'rabbitmqSetup' | 'mockSend
 export const startTestApps = async (db: Knex, mockHttpClient: any): Promise<TestApps> => {
   // Setup infrastructure
   const { rabbitmqSetup, rabbitmqUrl } = await setupRabbitMQ();
-  const { telegramClient, mockSendMessage } = createTelegramClient();
-  
+  const { telegramClient, mockTelegramSendMessage } = createTelegramClient();
+  const { slackClient, mockSlackSendMessage } = createSlackClient();
   // Start all services
   const subscriptionServerApp = await startSubscriptionServer(db);
-  const consumerApp = await startConsumer(mockHttpClient, rabbitmqUrl, telegramClient);
+  const consumerApp = await startConsumer(mockHttpClient, rabbitmqUrl, telegramClient, slackClient);
   const dispatcherApp = await startDispatcher(rabbitmqUrl, mockHttpClient);
   const logicSystemApp = await startLogicSystem(mockHttpClient, rabbitmqUrl);
-  
   // Wait for all apps to be ready
   await waitForAppsReady({
     consumerApp,
@@ -218,14 +268,14 @@ export const startTestApps = async (db: Knex, mockHttpClient: any): Promise<Test
     dispatcherApp,
     subscriptionServerApp
   });
-  
   return {
     consumerApp,
     logicSystemApp,
     dispatcherApp,
     subscriptionServerApp,
     rabbitmqSetup,
-    mockSendMessage
+    mockTelegramSendMessage,
+    mockSlackSendMessage
   };
 };
 
