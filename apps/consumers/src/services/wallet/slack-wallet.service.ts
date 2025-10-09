@@ -62,7 +62,8 @@ export class SlackWalletService extends BaseWalletService {
       if (wallets.length === 0 && context.respond) {
         await context.respond({
           blocks: walletEmptyState(),
-          response_type: 'in_channel'
+          response_type: 'in_channel',
+          replace_original: false
         });
         return;
       }
@@ -119,7 +120,8 @@ export class SlackWalletService extends BaseWalletService {
               ]
             }
           ],
-          response_type: 'in_channel'
+          response_type: 'in_channel',
+          replace_original: false
         });
       }
     } catch (error) {
@@ -250,7 +252,8 @@ export class SlackWalletService extends BaseWalletService {
         await context.respond({
           text: slackMessages.wallet.removeInstructions,
           blocks,
-          response_type: 'in_channel'
+          response_type: 'in_channel',
+          replace_original: false
         });
       }
     } catch (error) {

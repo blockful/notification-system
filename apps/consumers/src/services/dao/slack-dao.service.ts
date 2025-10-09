@@ -59,7 +59,11 @@ export class SlackDAOService extends BaseDAOService {
       );
 
       if (context.respond) {
-        await context.respond({ blocks, response_type: 'in_channel' });
+        await context.respond({
+          blocks,
+          response_type: 'in_channel',
+          replace_original: false
+        });
       }
     } catch (error) {
       console.error('Error loading DAOs:', error);
@@ -89,7 +93,8 @@ export class SlackDAOService extends BaseDAOService {
         if (context.respond) {
           await context.respond({
             blocks: daoEmptyState(),
-            response_type: 'in_channel'
+            response_type: 'in_channel',
+            replace_original: false
           });
         }
         return;
@@ -100,7 +105,8 @@ export class SlackDAOService extends BaseDAOService {
       if (context.respond) {
         await context.respond({
           blocks: daoListWithEdit(daoList),
-          response_type: 'in_channel'
+          response_type: 'in_channel',
+          replace_original: false
         });
       }
     } catch (error) {
