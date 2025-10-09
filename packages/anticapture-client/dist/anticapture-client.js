@@ -57,9 +57,7 @@ class AnticaptureClient {
         if (response.data.errors) {
             throw new Error(JSON.stringify(response.data.errors));
         }
-        // OUTPUT: Convert addresses to lowercase for our case-insensitive system
-        const lowercasedData = this.toLowercase(response.data.data);
-        return schema.parse(lowercasedData);
+        return schema.parse(this.toLowercase(response.data.data));
     }
     buildHeaders(daoId) {
         const headers = {
