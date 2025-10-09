@@ -145,6 +145,9 @@ importers:
       '@notification-system/logic-system':
         specifier: workspace:*
         version: link:../logic-system
+      '@notification-system/messages':
+        specifier: workspace:*
+        version: link:../../packages/messages
       '@notification-system/rabbitmq-client':
         specifier: workspace:*
         version: link:../../packages/rabbitmq-client
