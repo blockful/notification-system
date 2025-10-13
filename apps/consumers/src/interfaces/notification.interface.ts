@@ -15,6 +15,10 @@ export interface NotificationPayload {
       hash: string;
       chainId: number;
     };
+    buttons?: Array<{
+      text: string;
+      url: string;
+    }>;
     [key: string]: any;
   };
 }

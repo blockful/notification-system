@@ -8,12 +8,11 @@
 import { SlackClientInterface } from '../../interfaces/slack-client.interface';
 import { NotificationPayload } from '../../interfaces/notification.interface';
 import { BotServiceInterface } from '../../interfaces/bot-service.interface';
-import { ExplorerService } from '../explorer.service';
+import { ExplorerService, slackMessages, replacePlaceholders, convertMarkdownToSlack } from '@notification-system/messages';
 import { EnsResolverService } from '../ens-resolver.service';
 import { SlackDAOService } from '../dao/slack-dao.service';
 import { SlackWalletService } from '../wallet/slack-wallet.service';
 import { SlackCommandContext } from '../../interfaces/slack-context.interface';
-import { slackMessages, replacePlaceholders } from '@notification-system/messages';
 
 type CommandHandler = (context: SlackCommandContext, args: string[]) => Promise<void>;
 
@@ -300,16 +299,8 @@ export class SlackBotService implements BotServiceInterface {
   public async sendNotification(payload: NotificationPayload): Promise<string> {
     let processedMessage = payload.message;
 
-    // Process transaction link placeholder
-    if (processedMessage.includes('{{txLink}}')) {
-      const txUrl = payload.metadata?.transaction
-        ? this.explorerService.getTransactionLink(payload.metadata.transaction.chainId, payload.metadata.transaction.hash)
-        : null;
-
-      processedMessage = txUrl
-        ? processedMessage.replace('{{txLink}}', `<${txUrl}|Transaction details>`)
-        : processedMessage.replace('\n\n{{txLink}}', '');
-    }
+    // Convert Telegram markdown to Slack mrkdwn
+    processedMessage = convertMarkdownToSlack(processedMessage);
 
     // Process ENS names if addresses are provided in metadata
     if (payload.metadata?.addresses) {
@@ -328,14 +319,36 @@ export class SlackBotService implements BotServiceInterface {
       throw new Error('Slack notification requires workspace OAuth token. No bot_token provided in notification payload.');
     }
 
+    // Build message options with buttons if provided
+    const messageOptions = payload.metadata?.buttons ? {
+      blocks: [
+        {
+          type: 'section',
+          text: { type: 'mrkdwn', text: processedMessage }
+        },
+        {
+          type: 'actions',
+          elements: payload.metadata.buttons.map(btn => ({
+            type: 'button',
+            text: { type: 'plain_text', text: btn.text },
+            url: btn.url
+          }))
+        }
+      ],
+      text: processedMessage, // Fallback text
+      mrkdwn: true,
+      unfurl_links: false,
+      token: payload.bot_token
+    } : {
+      mrkdwn: true,
+      unfurl_links: false,
+      token: payload.bot_token
+    };
+
     const sentMessage = await this.slackClient.sendMessage(
       userId,
       processedMessage,
-      {
-        mrkdwn: true,
-        unfurl_links: false,
-        token: payload.bot_token // Pass the workspace-specific token
-      }
+      messageOptions
     );
 
     return sentMessage.ts;

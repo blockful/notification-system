@@ -1,8 +1,8 @@
 import { DispatcherMessage, MessageProcessingResult } from "../../interfaces/dispatcher-message.interface";
 import { TriggerHandler } from "../../interfaces/base-trigger.interface";
-import { ISubscriptionClient, User, Notification } from "../../interfaces/subscription-client.interface";
+import { ISubscriptionClient, User } from "../../interfaces/subscription-client.interface";
 import { NotificationClientFactory } from "../notification/notification-factory.service";
-import { INotificationClient } from "../../interfaces/notification-client.interface";
+import { AnticaptureClient } from '@notification-system/anticapture-client';
 
 /**
  * Base class for trigger handlers
@@ -10,14 +10,18 @@ import { INotificationClient } from "../../interfaces/notification-client.interf
  * @template T - Type of event data being processed
  */
 export abstract class BaseTriggerHandler<T = any> implements TriggerHandler<T> {
+  private daoChainCache: Map<string, number> = new Map();
+
   /**
    * Creates a new instance of the BaseTriggerHandler
    * @param subscriptionClient Client for subscription server API
    * @param notificationFactory Factory for creating notification clients
+   * @param anticaptureClient Optional client for AntiCapture API (required for getChainIdForDao)
    */
   constructor(
     protected readonly subscriptionClient: ISubscriptionClient,
-    protected readonly notificationFactory: NotificationClientFactory
+    protected readonly notificationFactory: NotificationClientFactory,
+    protected readonly anticaptureClient?: AnticaptureClient
   ) {}
 
   /**
@@ -48,13 +52,15 @@ export abstract class BaseTriggerHandler<T = any> implements TriggerHandler<T> {
    * @param eventId Event identifier
    * @param daoId DAO identifier
    * @param metadata Optional metadata including transaction info
+   * @param buttons Optional buttons to include in the notification
    */
   protected async sendNotificationsToSubscribers(
     subscribers: User[],
     message: string,
     eventId: string,
     daoId: string,
-    metadata?: { transaction?: { hash: string; chainId: number }; [key: string]: any, addresses?: Record<string, string> }
+    metadata?: { transaction?: { hash: string; chainId: number }; [key: string]: any, addresses?: Record<string, string> },
+    buttons?: Array<{ text: string; url: string }>
   ): Promise<void> {
     const supportedSubscribers = subscribers.filter(subscriber =>
       this.notificationFactory.supportsChannel(subscriber.channel)
@@ -70,12 +76,12 @@ export abstract class BaseTriggerHandler<T = any> implements TriggerHandler<T> {
           channelUserId: subscriber.channel_user_id,
           message,
           bot_token: subscriber.token,
-          metadata
+          metadata: buttons ? { ...metadata, buttons } : metadata
         });
       })
     );
 
-    const successfulSubscribers = supportedSubscribers.filter((_, index) => 
+    const successfulSubscribers = supportedSubscribers.filter((_, index) =>
       results[index].status === 'fulfilled'
     );
 
@@ -88,5 +94,34 @@ export abstract class BaseTriggerHandler<T = any> implements TriggerHandler<T> {
     if (notifications.length > 0) {
       await this.subscriptionClient.markAsSent(notifications);
     }
+  }
+
+  /**
+   * Gets the chain ID for a specific DAO, with caching
+   * @param daoId DAO identifier
+   * @returns Chain ID for the DAO, or 1 (Ethereum mainnet) as default
+   * @throws Error if anticaptureClient is not provided
+   */
+  protected async getChainIdForDao(daoId: string): Promise<number> {
+    if (!this.anticaptureClient) {
+      throw new Error('AnticaptureClient is required for getChainIdForDao');
+    }
+
+    // Check cache first
+    if (this.daoChainCache.has(daoId)) {
+      return this.daoChainCache.get(daoId)!;
+    }
+
+    // Fetch DAOs and cache chain IDs
+    const daos = await this.anticaptureClient.getDAOs();
+    const daoMap = new Map(daos.map(dao => [dao.id, dao.chainId]));
+
+    // Cache all DAOs
+    daoMap.forEach((chainId, id) => {
+      this.daoChainCache.set(id, chainId);
+    });
+
+    // Return chain ID for requested DAO or default to Ethereum mainnet
+    return daoMap.get(daoId) || 1;
   }
 } 

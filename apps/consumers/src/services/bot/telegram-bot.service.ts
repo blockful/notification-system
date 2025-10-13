@@ -5,10 +5,9 @@
  */
 
 import { Markup } from 'telegraf';
-import { telegramMessages, uiMessages } from '@notification-system/messages';
+import { telegramMessages, uiMessages, ExplorerService } from '@notification-system/messages';
 import { TelegramDAOService } from '../dao/telegram-dao.service';
 import { TelegramWalletService } from '../wallet/telegram-wallet.service';
-import { ExplorerService } from '../explorer.service';
 import { EnsResolverService } from '../ens-resolver.service';
 import { MatchedContext } from '../../interfaces/bot.interface';
 import { NotificationPayload } from '../../interfaces/notification.interface';
@@ -151,18 +150,7 @@ export class TelegramBotService implements BotServiceInterface {
    */
   public async sendNotification(payload: NotificationPayload): Promise<string> {
     let processedMessage = payload.message;
-    
-    // Process transaction link placeholder
-    if (processedMessage.includes('{{txLink}}')) {
-      const txUrl = payload.metadata?.transaction 
-        ? this.explorerService.getTransactionLink(payload.metadata.transaction.chainId, payload.metadata.transaction.hash)
-        : null;
-      
-      processedMessage = txUrl 
-        ? processedMessage.replace('{{txLink}}', `[Transaction details](${txUrl})`)
-        : processedMessage.replace('\n\n{{txLink}}', '');
-    }
-    
+
     // Process ENS names if addresses are provided in metadata
     if (payload.metadata?.addresses) {
       for (const [placeholder, address] of Object.entries(payload.metadata.addresses)) {
@@ -170,13 +158,21 @@ export class TelegramBotService implements BotServiceInterface {
         processedMessage = processedMessage.replace(`{{${placeholder}}}`, displayName);
       }
     }
-    
+
+    // Build inline keyboard if buttons are provided
+    const replyMarkup = payload.metadata?.buttons ? {
+      inline_keyboard: [[
+        ...payload.metadata.buttons.map(btn => ({ text: btn.text, url: btn.url }))
+      ]]
+    } : undefined;
+
     const sentMessage = await this.telegramClient.sendMessage(
-      payload.channelUserId, 
+      payload.channelUserId,
       processedMessage,
-      { 
+      {
         parse_mode: 'Markdown',
-        disable_web_page_preview: true
+        disable_web_page_preview: true,
+        reply_markup: replyMarkup
       }
     );
     return `${sentMessage.message_id}`;
