@@ -39,6 +39,8 @@ export interface ProposalData {
   againstVotes: string;
   /** Number of abstain votes (as string for big number support) */
   abstainVotes: string;
+  /** Transaction hash of the proposal creation transaction */
+  txHash?: string;
 }
 
 /**
@@ -73,6 +75,7 @@ export class ProposalFactory {
       forVotes: '1000000000000000000',
       againstVotes: '500000000000000000',
       abstainVotes: '200000000000000000',
+      txHash: '0x1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef',
       ...overrides
     };
 
