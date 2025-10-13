@@ -5,7 +5,7 @@ import { SlackDAOService } from './services/dao/slack-dao.service';
 import { SlackWalletService } from './services/wallet/slack-wallet.service';
 import { TelegramDAOService } from './services/dao/telegram-dao.service';
 import { TelegramWalletService } from './services/wallet/telegram-wallet.service';
-import { ExplorerService } from './services/explorer.service';
+import { ExplorerService } from '@notification-system/messages';
 import { EnsResolverService } from './services/ens-resolver.service';
 import { AnticaptureClient } from '@notification-system/anticapture-client';
 import { SubscriptionAPIService } from './services/subscription-api.service';
