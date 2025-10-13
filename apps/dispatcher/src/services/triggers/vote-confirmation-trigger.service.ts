@@ -4,7 +4,7 @@ import { NotificationClientFactory } from '../notification/notification-factory.
 import { ISubscriptionClient } from '../../interfaces/subscription-client.interface';
 import { AnticaptureClient } from '@notification-system/anticapture-client';
 import { formatTokenAmount } from '../../lib/number-formatter';
-import { voteConfirmationMessages, replacePlaceholders } from '@notification-system/messages';
+import { voteConfirmationMessages, replacePlaceholders, buildButtons } from '@notification-system/messages';
 
 interface VoteEvent {
   daoId: string;
@@ -32,14 +32,12 @@ type ProcessingStatus = 'sent' | 'skipped';
 
 
 export class VoteConfirmationTriggerHandler extends BaseTriggerHandler<VoteEvent> {
-  private daoChainCache: Map<string, number> = new Map();
-
   constructor(
     protected readonly subscriptionClient: ISubscriptionClient,
     protected readonly notificationFactory: NotificationClientFactory,
-    private readonly anticaptureClient: AnticaptureClient
+    anticaptureClient: AnticaptureClient
   ) {
-    super(subscriptionClient, notificationFactory);
+    super(subscriptionClient, notificationFactory, anticaptureClient);
   }
 
   async handleMessage(message: DispatcherMessage<VoteEvent>): Promise<MessageProcessingResult> {
@@ -133,7 +131,14 @@ export class VoteConfirmationTriggerHandler extends BaseTriggerHandler<VoteEvent
   private async sendVoteNotification(user: any, vote: VoteEvent): Promise<void> {
     const message = this.formatVoteMessage(vote);
     const chainId = await this.getChainIdForDao(vote.daoId);
-    
+
+    // Build buttons
+    const buttons = buildButtons({
+      triggerType: 'voteConfirmation',
+      txHash: vote.txHash,
+      chainId
+    });
+
     await this.sendNotificationsToSubscribers(
       [user],
       message,
@@ -151,7 +156,8 @@ export class VoteConfirmationTriggerHandler extends BaseTriggerHandler<VoteEvent
         support: vote.support,
         votingPower: vote.votingPower,
         reason: vote.reason
-      }
+      },
+      buttons
     );
   }
 
@@ -171,25 +177,5 @@ export class VoteConfirmationTriggerHandler extends BaseTriggerHandler<VoteEvent
       address: vote.voterAccountId,
       ...(hasReason && { reason: vote.reason! })
     });
-  }
-
-  private async getChainIdForDao(daoId: string): Promise<number> {
-    // Check cache first
-    if (this.daoChainCache.has(daoId)) {
-      return this.daoChainCache.get(daoId)!;
-    }
-
-    // Fetch DAOs and cache chain IDs
-    const daos = await this.anticaptureClient.getDAOs();
-    const daoMap = new Map(daos.map(dao => [dao.id, dao.chainId]));
-    
-    // Cache all DAOs
-    daoMap.forEach((chainId, id) => {
-      this.daoChainCache.set(id, chainId);
-    });
-
-    // Return chain ID for requested DAO or default to Ethereum mainnet
-    return daoMap.get(daoId) || 1;
-    
   }
 }

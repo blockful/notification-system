@@ -3,7 +3,7 @@ import { ISubscriptionClient, User } from "../../interfaces/subscription-client.
 import { NotificationClientFactory } from "../notification/notification-factory.service";
 import { BaseTriggerHandler } from "./base-trigger.service";
 import { formatTokenAmount } from "../../lib/number-formatter";
-import { votingPowerMessages, replacePlaceholders } from '@notification-system/messages';
+import { votingPowerMessages, replacePlaceholders, buildButtons } from '@notification-system/messages';
 import crypto from 'crypto';
 
 /**
@@ -126,8 +126,15 @@ export class VotingPowerTriggerHandler extends BaseTriggerHandler {
     const metadata = this.buildNotificationMetadata(chainId, transactionHash, {
       delegator: sourceAccountId
     });
-    
-    await this.sendNotificationsToSubscribers(subscribers, notificationMessage, transactionHash, daoId, metadata);
+
+    // Build buttons for delegation change
+    const buttons = buildButtons({
+      triggerType: 'delegationChange',
+      txHash: transactionHash,
+      chainId
+    });
+
+    await this.sendNotificationsToSubscribers(subscribers, notificationMessage, transactionHash, daoId, metadata, buttons);
   }
 
   /**
@@ -195,8 +202,15 @@ export class VotingPowerTriggerHandler extends BaseTriggerHandler {
       delegatorAccount: sourceAccountId,
       delegate: targetAccountId || accountId
     });
-    
-    await this.sendNotificationsToSubscribers(subscribers, notificationMessage, transactionHash, daoId, metadata);
+
+    // Build buttons for delegation change
+    const buttons = buildButtons({
+      triggerType: 'delegationChange',
+      txHash: transactionHash,
+      chainId
+    });
+
+    await this.sendNotificationsToSubscribers(subscribers, notificationMessage, transactionHash, daoId, metadata, buttons);
   }
 
   /**
@@ -247,8 +261,15 @@ export class VotingPowerTriggerHandler extends BaseTriggerHandler {
     }
 
     const metadata = this.buildNotificationMetadata(chainId, transactionHash);
-    
-    await this.sendNotificationsToSubscribers(subscribers, notificationMessage, transactionHash, daoId, metadata);
+
+    // Build buttons for voting power change
+    const buttons = buildButtons({
+      triggerType: 'votingPowerChange',
+      txHash: transactionHash,
+      chainId
+    });
+
+    await this.sendNotificationsToSubscribers(subscribers, notificationMessage, transactionHash, daoId, metadata, buttons);
   }
 
   /**
