@@ -48,7 +48,7 @@ export const errorMessage = (text: string): Block[] => [
 ];
 
 /**
- * DAO selection list with horizontal grid buttons
+ * DAO selection list with checkboxes
  */
 export const daoSelectionList = (
   daos: Array<{ id: string; name?: string }>,
@@ -57,28 +57,47 @@ export const daoSelectionList = (
   confirmActionId: string,
   headerText: string
 ): Block[] => {
-  // Create buttons for each DAO
-  const daoButtons = daos.map(dao => {
+  // Create checkbox options for each DAO
+  const checkboxOptions = daos.map(dao => {
     const daoId = dao.id.toUpperCase();
-    const isSelected = selectedIds.has(daoId);
     const emoji = daoEmojis.get(daoId) || defaultDaoEmoji;
 
-    return button(
-      `${emoji} ${daoId}`,
-      `${actionPrefix}_${daoId}`,
-      { style: isSelected ? 'primary' : undefined, value: daoId }
-    );
+    return {
+      text: {
+        type: 'mrkdwn' as const,
+        text: `${emoji} *${daoId}*`
+      },
+      value: daoId
+    };
   });
 
-  // Slack allows max 5 elements per actions block, so chunk into groups
-  const buttonRows: Block[] = [];
-  for (let i = 0; i < daoButtons.length; i += 5) {
-    buttonRows.push(actions(...daoButtons.slice(i, i + 5)));
-  }
+  // Convert selected IDs set to array of initially selected options
+  const initialOptions = Array.from(selectedIds).map(daoId => {
+    const emoji = daoEmojis.get(daoId) || defaultDaoEmoji;
+    return {
+      text: {
+        type: 'mrkdwn' as const,
+        text: `${emoji} *${daoId}*`
+      },
+      value: daoId
+    };
+  });
 
   return [
     section(headerText),
-    ...buttonRows,
+    { type: 'divider' },
+    {
+      type: 'actions',
+      block_id: 'dao_checkboxes_block',
+      elements: [
+        {
+          type: 'checkboxes',
+          action_id: actionPrefix,
+          options: checkboxOptions,
+          initial_options: initialOptions.length > 0 ? initialOptions : undefined
+        }
+      ]
+    },
     { type: 'divider' },
     actions(button(slackMessages.dao.confirmButton, confirmActionId, { style: 'primary' }))
   ];
