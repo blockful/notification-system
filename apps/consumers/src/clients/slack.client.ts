@@ -5,7 +5,7 @@
  */
 
 import { WebClient } from '@slack/web-api';
-import { App, Installation } from '@slack/bolt';
+import { AckFn, App, Installation, ViewResponseAction } from '@slack/bolt';
 import {
   SlackClientInterface,
   SlackSendMessageOptions,
@@ -210,7 +210,7 @@ export class SlackClient implements SlackClientInterface {
         body: args.body,
         view: args.view,
         session,
-        ack: args.ack,
+        ack: args.ack as AckFn<void | ViewResponseAction>,
         client: args.client
       };
 
