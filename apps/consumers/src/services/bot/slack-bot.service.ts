@@ -78,12 +78,6 @@ export class SlackBotService implements BotServiceInterface {
       });
 
       // Wallet actions
-      handlers.action(/^wallet_toggle_(.+)$/, async (ctx) => {
-        if (this.walletService) {
-          await this.walletService.toggleWalletForRemoval(ctx, (ctx.body as any).actions[0].value);
-        }
-      });
-
       handlers.action('wallet_confirm_remove', async (ctx) => {
         if (this.walletService) {
           await this.walletService.confirmRemoval(ctx);

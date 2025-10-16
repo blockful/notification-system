@@ -16,7 +16,7 @@ import {
 import {
   walletEmptyState,
   successMessage,
-  errorMessage
+  walletSelectionList
 } from '../../utils/slack-blocks-templates';
 import { slackMessages, replacePlaceholders } from '@notification-system/messages';
 
@@ -293,15 +293,17 @@ export class SlackWalletService extends BaseWalletService {
         return;
       }
 
-      // Clear previous selections
-      context.session.walletsToRemove = new Set<string>();
-
-      // Build blocks with checkboxes for each wallet
-      const blocks = await this.buildWalletRemovalBlocks(wallets, context.session.walletsToRemove);
+      // Build blocks with native checkboxes
+      const blocks = walletSelectionList(
+        wallets,
+        new Set<string>(), // No initial selections
+        'wallet_checkboxes',
+        'wallet_confirm_remove',
+        slackMessages.wallet.removeInstructions
+      );
 
       if (context.respond) {
         await context.respond({
-          text: slackMessages.wallet.removeInstructions,
           blocks,
           response_type: 'in_channel',
           replace_original: false
@@ -319,44 +321,6 @@ export class SlackWalletService extends BaseWalletService {
   }
 
 
-  /**
-   * Toggle wallet selection for removal
-   */
-  async toggleWalletForRemoval(context: SlackActionContext, address: string): Promise<void> {
-    const channelId = context.body.channel?.id;
-    const workspaceId = context.body.team?.id || context.body.user?.team_id;
-    const fullUserId = `${workspaceId}:${channelId}`;
-
-    try {
-      await context.ack();
-
-      if (!context.session.walletsToRemove) {
-        context.session.walletsToRemove = new Set<string>();
-      }
-
-      // Toggle selection
-      if (context.session.walletsToRemove.has(address)) {
-        context.session.walletsToRemove.delete(address);
-      } else {
-        context.session.walletsToRemove.add(address);
-      }
-
-      // Get current wallets to rebuild blocks
-      const wallets = await this.getUserWalletsWithDisplayNames(fullUserId, 'slack');
-      const blocks = await this.buildWalletRemovalBlocks(wallets, context.session.walletsToRemove);
-
-      if (context.respond) {
-        await context.respond({
-          replace_original: true,
-          text: slackMessages.wallet.removeInstructions,
-          blocks,
-          response_type: 'in_channel'
-        });
-      }
-    } catch (error) {
-      console.error('Error toggling wallet selection:', error);
-    }
-  }
 
   /**
    * Confirm wallet removal
@@ -369,12 +333,20 @@ export class SlackWalletService extends BaseWalletService {
     try {
       await context.ack();
 
-      const walletsToRemove = context.session.walletsToRemove;
+      // Extract selected wallets from checkbox state
+      const state = context.body.state;
+      if (typeof state === 'string') {
+        throw new Error('Unexpected DialogAction state format');
+      }
 
-      if (!walletsToRemove || walletsToRemove.size === 0) {
+      const selectedOptions: any[] =
+        state?.values?.wallet_checkboxes_block?.wallet_checkboxes?.selected_options || [];
+      const walletsToRemove = selectedOptions.map(opt => opt.value);
+
+      if (walletsToRemove.length === 0) {
         if (context.respond) {
           await context.respond({
-            replace_original: true,
+            replace_original: false,
             text: slackMessages.wallet.removeWarning,
             response_type: 'in_channel'
           });
@@ -385,7 +357,7 @@ export class SlackWalletService extends BaseWalletService {
       // Use base service for removal
       const result = await this.removeUserWallets(
         fullUserId,
-        Array.from(walletsToRemove),
+        walletsToRemove,
         'slack'
       );
 
@@ -406,9 +378,6 @@ export class SlackWalletService extends BaseWalletService {
           response_type: 'in_channel'
         });
       }
-
-      // Clear session
-      context.session.walletsToRemove = new Set<string>();
     } catch (error) {
       console.error('Error removing wallets:', error);
       if (context.respond) {
@@ -421,73 +390,4 @@ export class SlackWalletService extends BaseWalletService {
     }
   }
 
-  /**
-   * Build Block Kit blocks for wallet removal
-   */
-  private async buildWalletRemovalBlocks(
-    wallets: { address: string; displayName?: string }[],
-    selections: Set<string>
-  ): Promise<any[]> {
-    const blocks: any[] = [
-      {
-        type: 'section',
-        text: {
-          type: 'mrkdwn',
-          text: slackMessages.wallet.removeInstructions
-        }
-      },
-      {
-        type: 'divider'
-      }
-    ];
-
-    // Add wallet checkboxes
-    for (const wallet of wallets) {
-      const isSelected = selections.has(wallet.address);
-      const displayName = wallet.displayName || wallet.address;
-
-      blocks.push({
-        type: 'section',
-        text: {
-          type: 'mrkdwn',
-          text: `${isSelected ? '☑️' : '☐'} ${displayName}`
-        },
-        accessory: {
-          type: 'button',
-          text: {
-            type: 'plain_text',
-            text: isSelected ? slackMessages.wallet.buttonSelected : slackMessages.wallet.buttonSelect,
-            emoji: true
-          },
-          style: isSelected ? 'danger' : undefined,
-          action_id: `wallet_toggle_${wallet.address}`,
-          value: wallet.address
-        }
-      });
-    }
-
-    // Add confirm button
-    blocks.push(
-      {
-        type: 'divider'
-      },
-      {
-        type: 'actions',
-        elements: [
-          {
-            type: 'button',
-            text: {
-              type: 'plain_text',
-              text: slackMessages.wallet.confirmRemoval,
-              emoji: true
-            },
-            style: 'danger',
-            action_id: 'wallet_confirm_remove'
-          }
-        ]
-      }
-    );
-
-    return blocks;
-  }
 }

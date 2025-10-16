@@ -9,10 +9,8 @@ import {
   defaultDaoEmoji
 } from '@notification-system/messages';
 
-type Block = any;
-
 // Simple builders - single responsibility
-export const section = (text: string): Block => ({
+export const section = (text: string): any => ({
   type: 'section',
   text: { type: 'mrkdwn', text }
 });
@@ -28,7 +26,7 @@ export const button = (
   ...options
 });
 
-export const actions = (...buttons: any[]): Block => ({
+export const actions = (...buttons: any[]): any => ({
   type: 'actions',
   elements: buttons
 });
@@ -36,19 +34,77 @@ export const actions = (...buttons: any[]): Block => ({
 /**
  * Success message
  */
-export const successMessage = (text: string): Block[] => [
-  section(`✅ *Success!*\n${text}`)
+export const successMessage = (text: string): any[] => [
+  section(`${text}`)
 ];
 
 /**
  * Error message
  */
-export const errorMessage = (text: string): Block[] => [
+export const errorMessage = (text: string): any[] => [
   section(`❌ *Error*\n${text}`)
 ];
 
 /**
+ * Generic checkbox selection list
+ * Can be used for any item selection (DAOs, wallets, etc.)
+ */
+export const checkboxSelectionList = (
+  items: Array<{ value: string; displayText: string }>,
+  selectedValues: Set<string>,
+  actionId: string,
+  blockId: string,
+  confirmActionId: string,
+  headerText: string,
+  confirmButtonStyle: 'primary' | 'danger' = 'primary'
+): any[] => {
+  // Create checkbox options for each item
+  const checkboxOptions = items.map(item => ({
+    text: {
+      type: 'mrkdwn' as const,
+      text: item.displayText
+    },
+    value: item.value
+  }));
+
+  // Convert selected values set to array of initially selected options
+  const initialOptions = Array.from(selectedValues)
+    .map(value => {
+      const item = items.find(i => i.value === value);
+      if (!item) return null;
+      return {
+        text: {
+          type: 'mrkdwn' as const,
+          text: item.displayText
+        },
+        value: item.value
+      };
+    })
+    .filter((opt): opt is NonNullable<typeof opt> => opt !== null);
+
+  return [
+    section(headerText),
+    { type: 'divider' },
+    {
+      type: 'actions',
+      block_id: blockId,
+      elements: [
+        {
+          type: 'checkboxes',
+          action_id: actionId,
+          options: checkboxOptions,
+          initial_options: initialOptions.length > 0 ? initialOptions : undefined
+        }
+      ]
+    },
+    { type: 'divider' },
+    actions(button(slackMessages.dao.confirmButton, confirmActionId, { style: confirmButtonStyle }))
+  ];
+};
+
+/**
  * DAO selection list with checkboxes
+ * Wrapper around checkboxSelectionList with DAO-specific formatting
  */
 export const daoSelectionList = (
   daos: Array<{ id: string; name?: string }>,
@@ -56,57 +112,59 @@ export const daoSelectionList = (
   actionPrefix: string,
   confirmActionId: string,
   headerText: string
-): Block[] => {
-  // Create checkbox options for each DAO
-  const checkboxOptions = daos.map(dao => {
+): any[] => {
+  // Format DAOs with emojis
+  const items = daos.map(dao => {
     const daoId = dao.id.toUpperCase();
     const emoji = daoEmojis.get(daoId) || defaultDaoEmoji;
-
     return {
-      text: {
-        type: 'mrkdwn' as const,
-        text: `${emoji} *${daoId}*`
-      },
-      value: daoId
+      value: daoId,
+      displayText: `${emoji} *${daoId}*`
     };
   });
 
-  // Convert selected IDs set to array of initially selected options
-  const initialOptions = Array.from(selectedIds).map(daoId => {
-    const emoji = daoEmojis.get(daoId) || defaultDaoEmoji;
-    return {
-      text: {
-        type: 'mrkdwn' as const,
-        text: `${emoji} *${daoId}*`
-      },
-      value: daoId
-    };
-  });
+  return checkboxSelectionList(
+    items,
+    selectedIds,
+    actionPrefix,
+    'dao_checkboxes_block',
+    confirmActionId,
+    headerText,
+    'primary'
+  );
+};
 
-  return [
-    section(headerText),
-    { type: 'divider' },
-    {
-      type: 'actions',
-      block_id: 'dao_checkboxes_block',
-      elements: [
-        {
-          type: 'checkboxes',
-          action_id: actionPrefix,
-          options: checkboxOptions,
-          initial_options: initialOptions.length > 0 ? initialOptions : undefined
-        }
-      ]
-    },
-    { type: 'divider' },
-    actions(button(slackMessages.dao.confirmButton, confirmActionId, { style: 'primary' }))
-  ];
+/**
+ * Wallet selection list with checkboxes (for removal)
+ */
+export const walletSelectionList = (
+  wallets: Array<{ address: string; displayName?: string }>,
+  selectedAddresses: Set<string>,
+  actionId: string,
+  confirmActionId: string,
+  headerText: string
+): any[] => {
+  // Format wallets with display names
+  const items = wallets.map(wallet => ({
+    value: wallet.address,
+    displayText: wallet.displayName || wallet.address
+  }));
+
+  return checkboxSelectionList(
+    items,
+    selectedAddresses,
+    actionId,
+    'wallet_checkboxes_block',
+    confirmActionId,
+    headerText,
+    'danger'
+  );
 };
 
 /**
  * Wallet empty state
  */
-export const walletEmptyState = (): Block[] => [
+export const walletEmptyState = (): any[] => [
   section(slackMessages.wallet.emptyList),
   actions(
     button(slackMessages.wallet.buttonAdd, 'wallet_add', { style: 'primary' }),
@@ -117,7 +175,7 @@ export const walletEmptyState = (): Block[] => [
 /**
  * DAO empty state
  */
-export const daoEmptyState = (): Block[] => [
+export const daoEmptyState = (): any[] => [
   section(slackMessages.dao.emptyList),
   actions(
     button(slackMessages.dao.buttonSubscribe, 'dao_subscribe', { style: 'primary' })
@@ -127,7 +185,7 @@ export const daoEmptyState = (): Block[] => [
 /**
  * DAO list with edit button
  */
-export const daoListWithEdit = (daoList: string): Block[] => [
+export const daoListWithEdit = (daoList: string): any[] => [
   section(slackMessages.dao.listHeader + '\n' + daoList),
   { type: 'divider' },
   actions(
