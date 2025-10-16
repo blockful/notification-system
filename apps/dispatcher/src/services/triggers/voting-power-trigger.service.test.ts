@@ -450,12 +450,41 @@ describe('VotingPowerTriggerHandler', () => {
         triggerId: 'voting-power-changed',
         events: [transferEvent]
       };
-      
+
       await handler.handleMessage(mockMessage);
-      
+
       expect(mockNotificationClient.sendNotification).toHaveBeenCalledWith(
         expect.objectContaining({
           message: expect.stringContaining('📉 Voting power decreased in test-dao!')
+        })
+      );
+    });
+
+    it('should include address in metadata for ENS resolution', async () => {
+      const transferEvent = {
+        accountId: '0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045',
+        daoId: 'test-dao',
+        transactionHash: 'tx123',
+        changeType: 'transfer',
+        delta: '1000',
+        chainId: 1,
+        timestamp: '2023-01-01T00:00:00Z'
+      };
+
+      const mockMessage: DispatcherMessage = {
+        triggerId: 'voting-power-changed',
+        events: [transferEvent]
+      };
+
+      await handler.handleMessage(mockMessage);
+
+      expect(mockNotificationClient.sendNotification).toHaveBeenCalledWith(
+        expect.objectContaining({
+          metadata: expect.objectContaining({
+            addresses: expect.objectContaining({
+              address: '0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045'
+            })
+          })
         })
       );
     });
@@ -477,12 +506,12 @@ describe('VotingPowerTriggerHandler', () => {
         triggerId: 'voting-power-changed',
         events: [otherEvent]
       };
-      
+
       await handler.handleMessage(mockMessage);
-      
+
       expect(mockNotificationClient.sendNotification).toHaveBeenCalledWith(
         expect.objectContaining({
-          message: expect.stringContaining('⚡ Voting power changed for 0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045 in test-dao!')
+          message: expect.stringContaining('⚡ Voting power increased for 0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045 in test-dao!')
         })
       );
     });
@@ -502,18 +531,66 @@ describe('VotingPowerTriggerHandler', () => {
         triggerId: 'voting-power-changed',
         events: [otherEvent]
       };
-      
+
       await handler.handleMessage(mockMessage);
-      
+
       expect(mockNotificationClient.sendNotification).toHaveBeenCalledWith(
         expect.objectContaining({
-          message: expect.stringContaining('⚡ Voting power changed for 0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045 in test-dao!')
+          message: expect.stringContaining('⚡ Voting power increased for 0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045 in test-dao!')
         })
       );
-      
+    });
+
+    it('should send generic voting power decreased notification', async () => {
+      const otherEvent = {
+        accountId: '0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045',
+        daoId: 'test-dao',
+        transactionHash: 'tx123',
+        changeType: 'other',
+        delta: '-1000',
+        chainId: 1,
+        timestamp: '2023-01-01T00:00:00Z'
+      };
+
+      const mockMessage: DispatcherMessage = {
+        triggerId: 'voting-power-changed',
+        events: [otherEvent]
+      };
+
+      await handler.handleMessage(mockMessage);
+
       expect(mockNotificationClient.sendNotification).toHaveBeenCalledWith(
         expect.objectContaining({
-          message: expect.stringContaining('Voting power activity detected.')
+          message: expect.stringContaining('⚡ Voting power decreased for 0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045 in test-dao!')
+        })
+      );
+    });
+
+    it('should include address in metadata for ENS resolution', async () => {
+      const otherEvent = {
+        accountId: '0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045',
+        daoId: 'test-dao',
+        transactionHash: 'tx123',
+        changeType: 'other',
+        delta: '1000',
+        chainId: 1,
+        timestamp: '2023-01-01T00:00:00Z'
+      };
+
+      const mockMessage: DispatcherMessage = {
+        triggerId: 'voting-power-changed',
+        events: [otherEvent]
+      };
+
+      await handler.handleMessage(mockMessage);
+
+      expect(mockNotificationClient.sendNotification).toHaveBeenCalledWith(
+        expect.objectContaining({
+          metadata: expect.objectContaining({
+            addresses: expect.objectContaining({
+              address: '0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045'
+            })
+          })
         })
       );
     });
