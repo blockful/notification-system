@@ -249,9 +249,9 @@ export class VotingPowerTriggerHandler extends BaseTriggerHandler {
       });
     } else {
       // Generic voting power change
-      const messageTemplate = deltaValue !== 0
-        ? votingPowerMessages.generic.changed
-        : votingPowerMessages.generic.activity;
+      const messageTemplate = deltaValue >= 0
+        ? votingPowerMessages.generic.increased
+        : votingPowerMessages.generic.decreased;
 
       notificationMessage = replacePlaceholders(messageTemplate, {
         daoId,
@@ -260,7 +260,9 @@ export class VotingPowerTriggerHandler extends BaseTriggerHandler {
       });
     }
 
-    const metadata = this.buildNotificationMetadata(chainId, transactionHash);
+    const metadata = this.buildNotificationMetadata(chainId, transactionHash, {
+      address: accountId
+    });
 
     // Build buttons for voting power change
     const buttons = buildButtons({
