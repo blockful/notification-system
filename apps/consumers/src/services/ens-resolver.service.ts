@@ -3,7 +3,7 @@
  * Handles ENS name resolution and reverse lookups using Viem.
  */
 
-import { createPublicClient, http } from 'viem';
+import { createPublicClient, http, getAddress } from 'viem';
 import { mainnet } from 'viem/chains';
 import { normalize } from 'viem/ens';
 
@@ -45,8 +45,9 @@ export class EnsResolverService {
    */
   async resolveDisplayName(address: string): Promise<string> {
     try {
+      const checksumAddress = getAddress(address);
       const ensName = await this.client.getEnsName({
-        address: address as `0x${string}`
+        address: checksumAddress
       });
       if (ensName) return ensName;
     } catch (error) {
