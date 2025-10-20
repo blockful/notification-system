@@ -155,7 +155,8 @@ export class TelegramBotService implements BotServiceInterface {
     if (payload.metadata?.addresses) {
       for (const [placeholder, address] of Object.entries(payload.metadata.addresses)) {
         const displayName = await this.ensResolver.resolveDisplayName(address);
-        processedMessage = processedMessage.replace(`{{${placeholder}}}`, displayName);
+        const regex = new RegExp(`\\{\\{${placeholder}\\}\\}`, 'g');
+        processedMessage = processedMessage.replace(regex, displayName);
       }
     }
 

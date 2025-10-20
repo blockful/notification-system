@@ -128,6 +128,5 @@ export abstract class BaseDAOService {
   // Abstract methods that must be implemented by platform-specific services
   abstract initialize(context: any, action?: 'subscribe' | 'unsubscribe'): Promise<void>;
   abstract listSubscriptions(context: any): Promise<void>;
-  abstract toggle(context: any, daoName: string): Promise<void>;
   abstract confirm(context: any, action: 'subscribe' | 'unsubscribe'): Promise<void>;
 }

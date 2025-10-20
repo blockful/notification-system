@@ -7,6 +7,7 @@
 import { BaseDAOService } from './base-dao.service';
 import { SlackCommandContext, SlackActionContext } from '../../interfaces/slack-context.interface';
 import { slackMessages, replacePlaceholders } from '@notification-system/messages';
+import type { ViewStateSelectedOption } from '@slack/bolt';
 import {
   daoSelectionList,
   errorMessage,
@@ -26,9 +27,9 @@ export class SlackDAOService extends BaseDAOService {
   /**
    * Initialize DAO selection interface
    */
-  async initialize(context: SlackCommandContext): Promise<void> {
-    const channelId = context.body.channel_id;
-    const workspaceId = context.body.team_id;
+  async initialize(context: SlackCommandContext | SlackActionContext): Promise<void> {
+    const channelId = context.body.channel?.id || context.body.channel_id;
+    const workspaceId = context.body.team?.id || context.body.team_id || context.body.user?.team_id;
     const fullUserId = `${workspaceId}:${channelId}`;
 
     try {
@@ -43,17 +44,14 @@ export class SlackDAOService extends BaseDAOService {
         return;
       }
 
-      // Get user's current subscriptions and initialize session
+      // Get user's current subscriptions for initial checkbox state
       const userPreferences = await this.getUserSubscriptions(fullUserId);
       const currentSelections = new Set(userPreferences);
-
-      if (!context.session) context.session = {};
-      context.session.daoSelections = currentSelections;
 
       const blocks = daoSelectionList(
         daos,
         currentSelections,
-        'dao_toggle_subscribe',
+        'dao_checkboxes',
         'dao_confirm_subscribe',
         slackMessages.dao.subscribeInstructions
       );
@@ -121,47 +119,7 @@ export class SlackDAOService extends BaseDAOService {
   }
 
   /**
-   * Toggle DAO selection when user clicks a button
-   */
-  async toggle(context: SlackActionContext, daoName: string): Promise<void> {
-    try {
-      await context.ack();
-
-      const normalizedDaoName = daoName.toUpperCase();
-
-      // Toggle DAO in session
-      if (!context.session) context.session = {};
-      if (!context.session.daoSelections) context.session.daoSelections = new Set();
-
-      if (context.session.daoSelections.has(normalizedDaoName)) {
-        context.session.daoSelections.delete(normalizedDaoName);
-      } else {
-        context.session.daoSelections.add(normalizedDaoName);
-      }
-
-      const daos = await this.fetchAvailableDAOs();
-      const blocks = daoSelectionList(
-        daos,
-        context.session.daoSelections || new Set(),
-        'dao_toggle_subscribe',
-        'dao_confirm_subscribe',
-        slackMessages.dao.subscribeHeader
-      );
-
-      if (context.respond) {
-        await context.respond({
-          replace_original: true,
-          blocks,
-          response_type: 'in_channel'
-        });
-      }
-    } catch (error) {
-      console.error('Error updating selection:', error);
-    }
-  }
-
-  /**
-   * Confirm DAO selection changes
+   * Confirm DAO selection changes from checkboxes
    */
   async confirm(context: SlackActionContext): Promise<void> {
     const channelId = context.body.channel?.id;
@@ -171,7 +129,15 @@ export class SlackDAOService extends BaseDAOService {
     try {
       await context.ack();
 
-      const selectedDAOs = context.session.daoSelections || new Set<string>();
+      // Extract selected DAOs from checkbox state
+      const state = context.body.state;
+      if (typeof state === 'string') {
+        throw new Error('Unexpected DialogAction state format');
+      }
+
+      const selectedOptions: ViewStateSelectedOption[] =
+        state?.values?.dao_checkboxes_block?.dao_checkboxes?.selected_options || [];
+      const selectedDAOs = new Set<string>(selectedOptions.map(opt => opt.value));
 
       // Sync to the complete desired state (handles both adds and removes)
       await this.syncSubscriptionsToState(fullUserId, selectedDAOs);
@@ -209,9 +175,6 @@ export class SlackDAOService extends BaseDAOService {
           response_type: 'in_channel'
         });
       }
-
-      // Clear session
-      context.session.daoSelections = new Set<string>();
     } catch (error) {
       console.error('Error updating subscriptions:', error);
       if (context.respond) {

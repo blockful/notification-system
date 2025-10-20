@@ -150,7 +150,7 @@ export class VoteConfirmationTriggerHandler extends BaseTriggerHandler<VoteEvent
           chainId
         },
         addresses: {
-          voterAccountId: vote.voterAccountId
+          address: vote.voterAccountId
         },
         proposalId: vote.proposalId,
         support: vote.support,
@@ -174,7 +174,6 @@ export class VoteConfirmationTriggerHandler extends BaseTriggerHandler<VoteEvent
       daoId: vote.daoId,
       proposalIdShort: vote.proposalId.slice(0, 8) + '...',
       votingPower,
-      address: vote.voterAccountId,
       ...(hasReason && { reason: vote.reason! })
     });
   }

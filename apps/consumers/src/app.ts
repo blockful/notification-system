@@ -49,7 +49,6 @@ export class App {
 
     this.slackBotService = new SlackBotService(
       slackClient,
-      explorerService,
       ensResolver,
       slackDaoService,
       slackWalletService

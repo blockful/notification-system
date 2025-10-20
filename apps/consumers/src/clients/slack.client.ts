@@ -5,7 +5,7 @@
  */
 
 import { WebClient } from '@slack/web-api';
-import { App, Installation } from '@slack/bolt';
+import { App, Installation, ViewSubmitAction } from '@slack/bolt';
 import {
   SlackClientInterface,
   SlackSendMessageOptions,
@@ -203,7 +203,7 @@ export class SlackClient implements SlackClientInterface {
     callbackId: string | RegExp,
     handler: (context: SlackViewContext) => Promise<void>
   ): void {
-    this.boltApp.view(callbackId, async (args) => {
+    this.boltApp.view<ViewSubmitAction>(callbackId, async (args) => {
       const userId = args.body.user.id;
       const session = this.sessionStorage.get(userId);
       const context: SlackViewContext = {

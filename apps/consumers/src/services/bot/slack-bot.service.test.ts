@@ -5,14 +5,12 @@
 import { describe, it, expect, jest, beforeEach } from '@jest/globals';
 import { SlackBotService } from './slack-bot.service';
 import { SlackClientInterface } from '../../interfaces/slack-client.interface';
-import { ExplorerService } from '@notification-system/messages';
 import { EnsResolverService } from '../ens-resolver.service';
 import { NotificationPayload } from '../../interfaces/notification.interface';
 
 describe('SlackBotService', () => {
   let slackBotService: SlackBotService;
   let mockSlackClient: jest.Mocked<SlackClientInterface>;
-  let mockExplorerService: jest.Mocked<ExplorerService>;
   let mockEnsResolver: jest.Mocked<EnsResolverService>;
 
   beforeEach(() => {
@@ -21,17 +19,12 @@ describe('SlackBotService', () => {
       setupHandlers: jest.fn()
     };
 
-    mockExplorerService = {
-      getTransactionLink: jest.fn()
-    } as any;
-
     mockEnsResolver = {
       resolveDisplayName: jest.fn()
     } as any;
 
     slackBotService = new SlackBotService(
       mockSlackClient,
-      mockExplorerService,
       mockEnsResolver
     );
   });
