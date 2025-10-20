@@ -4,14 +4,14 @@
  * business logic to BaseWalletService.
  */
 
+import type { Option } from '@slack/web-api';
 import { BaseWalletService } from './base-wallet.service';
 import { SubscriptionAPIService } from '../subscription-api.service';
 import { EnsResolverService } from '../ens-resolver.service';
 import {
   SlackCommandContext,
   SlackActionContext,
-  SlackViewContext,
-  SlackMessageableContext
+  SlackViewContext
 } from '../../interfaces/slack-context.interface';
 import {
   walletEmptyState,
@@ -148,7 +148,7 @@ export class SlackWalletService extends BaseWalletService {
       }
 
       // Open modal with wallet input
-      await (context as any).client.views.open({
+      await context.client.views.open({
         trigger_id: triggerId,
         view: {
           type: 'modal',
@@ -253,8 +253,8 @@ export class SlackWalletService extends BaseWalletService {
       const displayName = await this.ensResolver.resolveDisplayName(result.address!);
 
       // Send success message to channel
-      if ((context as any).client) {
-        await (context as any).client.chat.postMessage({
+      if (context.client && channelId) {
+        await context.client.chat.postMessage({
           channel: channelId,
           blocks: successMessage(replacePlaceholders(slackMessages.wallet.addSuccess, { displayName }))
         });
@@ -339,9 +339,9 @@ export class SlackWalletService extends BaseWalletService {
         throw new Error('Unexpected DialogAction state format');
       }
 
-      const selectedOptions: any[] =
+      const selectedOptions: Option[] =
         state?.values?.wallet_checkboxes_block?.wallet_checkboxes?.selected_options || [];
-      const walletsToRemove = selectedOptions.map(opt => opt.value);
+      const walletsToRemove = selectedOptions.map(opt => opt.value as string);
 
       if (walletsToRemove.length === 0) {
         if (context.respond) {

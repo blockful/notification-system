@@ -207,14 +207,14 @@ export class SlackBotService implements BotServiceInterface {
     const messageOptions = payload.metadata?.buttons ? {
       blocks: [
         {
-          type: 'section',
-          text: { type: 'mrkdwn', text: processedMessage }
+          type: 'section' as const,
+          text: { type: 'mrkdwn' as const, text: processedMessage }
         },
         {
-          type: 'actions',
+          type: 'actions' as const,
           elements: payload.metadata.buttons.map(btn => ({
-            type: 'button',
-            text: { type: 'plain_text', text: btn.text },
+            type: 'button' as const,
+            text: { type: 'plain_text' as const, text: btn.text },
             url: btn.url
           }))
         }

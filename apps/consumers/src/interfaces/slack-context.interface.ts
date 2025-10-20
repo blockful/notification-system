@@ -12,7 +12,7 @@ import type {
   ViewStateValue,
   ViewResponseAction
 } from '@slack/bolt';
-import type { WebClient } from '@slack/web-api';
+import type { WebClient, KnownBlock, MessageAttachment } from '@slack/web-api';
 
 /**
  * Type helper for Slack action/command bodies with channel and team IDs
@@ -138,8 +138,8 @@ export interface SlackHandlerRegistration {
  */
 export interface SlackMessageOptions {
   text: string;
-  blocks?: any[];
-  attachments?: any[];
+  blocks?: KnownBlock[];
+  attachments?: MessageAttachment[];
   thread_ts?: string;
   mrkdwn?: boolean;
   unfurl_links?: boolean;

@@ -3,6 +3,7 @@
  * Defines the contract for Slack bot operations similar to TelegramClientInterface
  */
 
+import type { KnownBlock, MessageAttachment } from '@slack/web-api';
 import { SlackHandlerRegistration } from './slack-context.interface';
 
 export interface SlackSendMessageOptions {
@@ -11,8 +12,8 @@ export interface SlackSendMessageOptions {
   unfurl_links?: boolean;
   unfurl_media?: boolean;
   mrkdwn?: boolean;
-  blocks?: any[];
-  attachments?: any[];
+  blocks?: KnownBlock[];
+  attachments?: MessageAttachment[];
   token?: string; // Optional token for multi-workspace support
 }
 

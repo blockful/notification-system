@@ -3,6 +3,7 @@
  * Simple builders for reusable UI components
  */
 
+import type { KnownBlock, SectionBlock, ActionsBlock, Button } from '@slack/web-api';
 import {
   slackMessages,
   daoEmojis,
@@ -10,7 +11,7 @@ import {
 } from '@notification-system/messages';
 
 // Simple builders - single responsibility
-export const section = (text: string): any => ({
+export const section = (text: string): SectionBlock => ({
   type: 'section',
   text: { type: 'mrkdwn', text }
 });
@@ -19,14 +20,14 @@ export const button = (
   text: string,
   actionId: string,
   options: { style?: 'primary' | 'danger'; url?: string; value?: string } = {}
-): any => ({
+): Button => ({
   type: 'button',
   text: { type: 'plain_text', text, emoji: true },
   action_id: actionId,
   ...options
 });
 
-export const actions = (...buttons: any[]): any => ({
+export const actions = (...buttons: Button[]): ActionsBlock => ({
   type: 'actions',
   elements: buttons
 });
@@ -34,14 +35,14 @@ export const actions = (...buttons: any[]): any => ({
 /**
  * Success message
  */
-export const successMessage = (text: string): any[] => [
+export const successMessage = (text: string): KnownBlock[] => [
   section(`${text}`)
 ];
 
 /**
  * Error message
  */
-export const errorMessage = (text: string): any[] => [
+export const errorMessage = (text: string): KnownBlock[] => [
   section(`❌ *Error*\n${text}`)
 ];
 
@@ -57,7 +58,7 @@ export const checkboxSelectionList = (
   confirmActionId: string,
   headerText: string,
   confirmButtonStyle: 'primary' | 'danger' = 'primary'
-): any[] => {
+): KnownBlock[] => {
   // Create checkbox options for each item
   const checkboxOptions = items.map(item => ({
     text: {
@@ -112,7 +113,7 @@ export const daoSelectionList = (
   actionPrefix: string,
   confirmActionId: string,
   headerText: string
-): any[] => {
+): KnownBlock[] => {
   // Format DAOs with emojis
   const items = daos.map(dao => {
     const daoId = dao.id.toUpperCase();
@@ -143,7 +144,7 @@ export const walletSelectionList = (
   actionId: string,
   confirmActionId: string,
   headerText: string
-): any[] => {
+): KnownBlock[] => {
   // Format wallets with display names
   const items = wallets.map(wallet => ({
     value: wallet.address,
@@ -164,7 +165,7 @@ export const walletSelectionList = (
 /**
  * Wallet empty state
  */
-export const walletEmptyState = (): any[] => [
+export const walletEmptyState = (): KnownBlock[] => [
   section(slackMessages.wallet.emptyList),
   actions(
     button(slackMessages.wallet.buttonAdd, 'wallet_add', { style: 'primary' }),
@@ -175,7 +176,7 @@ export const walletEmptyState = (): any[] => [
 /**
  * DAO empty state
  */
-export const daoEmptyState = (): any[] => [
+export const daoEmptyState = (): KnownBlock[] => [
   section(slackMessages.dao.emptyList),
   actions(
     button(slackMessages.dao.buttonSubscribe, 'dao_subscribe', { style: 'primary' })
@@ -185,7 +186,7 @@ export const daoEmptyState = (): any[] => [
 /**
  * DAO list with edit button
  */
-export const daoListWithEdit = (daoList: string): any[] => [
+export const daoListWithEdit = (daoList: string): KnownBlock[] => [
   section(slackMessages.dao.listHeader + '\n' + daoList),
   { type: 'divider' },
   actions(
