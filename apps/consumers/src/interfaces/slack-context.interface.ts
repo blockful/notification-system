@@ -94,7 +94,7 @@ export interface SlackActionContext extends SlackMessageableContext<SlackBodyWit
  * Slack view submission context for modal interactions
  * Provides essential properties from Slack's view args with session management
  */
-export interface SlackViewContext extends SlackBaseContext<SlackViewBodyWithMetadata, void | ViewResponseAction> {
+export interface SlackViewContext extends SlackBaseContext<SlackViewBodyWithMetadata, ViewResponseAction> {
   view: ViewOutput;
 }
 
