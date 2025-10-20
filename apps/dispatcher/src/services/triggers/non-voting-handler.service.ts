@@ -7,7 +7,7 @@ import { AnticaptureClient, QueryInput_Proposals_OrderDirection } from '@notific
 import { BatchNotificationService } from '../batch-notification.service';
 import { FormattingService } from '../formatting.service';
 import { ValidationService } from '../validation.service';
-import { nonVotingMessages, replacePlaceholders } from '@notification-system/messages';
+import { nonVotingMessages, replacePlaceholders, buildButtons } from '@notification-system/messages';
 
 /**
  * Handler for detecting non-voting addresses on proposal finished events
@@ -22,9 +22,9 @@ export class NonVotingHandler extends BaseTriggerHandler<ProposalFinishedNotific
   constructor(
     subscriptionClient: ISubscriptionClient,
     notificationFactory: NotificationClientFactory,
-    private anticaptureClient: AnticaptureClient
+    anticaptureClient: AnticaptureClient
   ) {
-    super(subscriptionClient, notificationFactory);
+    super(subscriptionClient, notificationFactory, anticaptureClient);
     this.batchNotificationService = new BatchNotificationService(subscriptionClient, notificationFactory);
   }
 
@@ -115,12 +115,12 @@ export class NonVotingHandler extends BaseTriggerHandler<ProposalFinishedNotific
    * @returns Array of vote records
    */
   private async getVotingData(
-    daoId: string, 
-    lastProposals: any[], 
+    daoId: string,
+    lastProposals: any[],
     followedAddresses: string[]
   ): Promise<any[]> {
     const proposalIds = lastProposals.map(p => p.id);
-    return await this.anticaptureClient.listVotesOnchains({
+    return await this.anticaptureClient!.listVotesOnchains({
       daoId,
       proposalId_in: proposalIds,
       voterAccountId_in: followedAddresses
@@ -134,12 +134,17 @@ export class NonVotingHandler extends BaseTriggerHandler<ProposalFinishedNotific
    * @param lastProposals - Recent proposals for context
    */
   private async sendNonVoterNotifications(
-    nonVoters: string[], 
-    daoId: string, 
+    nonVoters: string[],
+    daoId: string,
     lastProposals: any[]
   ): Promise<void> {
     const proposalTitles = FormattingService.formatProposalList(lastProposals);
-    
+
+    // Build buttons for non-voting (no tx hash)
+    const buttons = buildButtons({
+      triggerType: 'nonVoting'
+    });
+
     await this.batchNotificationService.sendBatchNotifications(
       nonVoters,
       daoId,
@@ -155,7 +160,8 @@ export class NonVotingHandler extends BaseTriggerHandler<ProposalFinishedNotific
         addresses: {
           'nonVoterAddress': address
         }
-      })
+      }),
+      () => buttons
     );
   }
 
@@ -167,10 +173,10 @@ export class NonVotingHandler extends BaseTriggerHandler<ProposalFinishedNotific
    * @returns Array of finished proposals
    */
   private async getLastFinishedProposals(
-    daoId: string, 
+    daoId: string,
     currentEndTimestamp: number
   ): Promise<any[]> {
-    const proposals = await this.anticaptureClient.listProposals({
+    const proposals = await this.anticaptureClient!.listProposals({
       status: ['EXECUTED', 'SUCCEEDED', 'DEFEATED', 'EXPIRED', 'CANCELED'],
       limit: NonVotingHandler.PROPOSALS_TO_CHECK * NonVotingHandler.FETCH_MARGIN_MULTIPLIER,
       orderDirection: QueryInput_Proposals_OrderDirection.Desc

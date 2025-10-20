@@ -75,7 +75,6 @@ describe('Vote Confirmation Trigger - Integration Test', () => {
     // Verify message content for FOR vote
     expect(message.text).toContain('✅'); // FOR emoji
     expect(message.text).toMatch(/voted FOR|just voted on/i);
-    expect(message.text).toContain('[Transaction details](https://etherscan.io/tx/');
     expect(message.text).not.toContain('{{txLink}}');
     expect(message.chatId).toBe(testUser.chatId);
   });
@@ -128,7 +127,6 @@ describe('Vote Confirmation Trigger - Integration Test', () => {
     // Verify message content for AGAINST vote
     expect(message.text).toContain('❌'); // AGAINST emoji
     expect(message.text).toMatch(/voted AGAINST|just voted on/i);
-    expect(message.text).toContain('[Transaction details](https://etherscan.io/tx/');
     expect(message.chatId).toBe(testUser.chatId);
   });
 
@@ -180,7 +178,6 @@ describe('Vote Confirmation Trigger - Integration Test', () => {
     // Verify message content for ABSTAIN vote
     expect(message.text).toContain('⚪'); // ABSTAIN emoji
     expect(message.text).toMatch(/voted ABSTAIN|just voted on/i);
-    expect(message.text).toContain('[Transaction details](https://etherscan.io/tx/');
     expect(message.chatId).toBe(testUser.chatId);
   });
 

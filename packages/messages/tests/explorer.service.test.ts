@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach } from '@jest/globals';
-import { ExplorerService } from './explorer.service';
+import { ExplorerService } from '../src/formatters/explorer.service';
 
 describe('ExplorerService', () => {
   let explorerService: ExplorerService;
@@ -33,7 +33,7 @@ describe('ExplorerService', () => {
       expect(result).toBe('');
     });
 
-    it('should return empty string for invalid hash format', () => {
+    it('should return invalid hash format', () => {
       const hash = 'invalid-hash';
       const result = explorerService.getTransactionLink(1, hash);
       expect(result).toBe('');
@@ -43,7 +43,7 @@ describe('ExplorerService', () => {
       const result = explorerService.getTransactionLink(1, '');
       expect(result).toBe('');
     });
-    
+
     it('should return empty string for 0x-only hash', () => {
       const result = explorerService.getTransactionLink(1, '0x');
       expect(result).toBe('');

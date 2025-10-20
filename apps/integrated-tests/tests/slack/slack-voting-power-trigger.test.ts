@@ -58,7 +58,7 @@ describe('Slack Voting Power Trigger - Integration Test', () => {
 
 
   test('Basic voting power change notification delivered to Slack', async () => {
-    const userWalletAddress = testConstants.profiles.p1.address;
+    const userWalletAddress = testConstants.profiles.p2.address;
 
     // Create Slack user with wallet address
     const user = await createSlackUserWithWallet(
@@ -72,8 +72,8 @@ describe('Slack Voting Power Trigger - Integration Test', () => {
 
     const votingPowerEvents = [
       VotingPowerFactory.createDelegationEvent(
-        testConstants.eventActors.delegator1,
-        userWalletAddress,
+        testConstants.eventActors.delegator1, // vitalik.eth
+        userWalletAddress, // nick.eth 
         testConstants.votingPower.default,
         TEST_DAO_ID,
         {
@@ -179,7 +179,7 @@ describe('Slack Voting Power Trigger - Integration Test', () => {
     expect(message.text).toContain('received a new delegation');
 
     // Should mention the delegator (either as ENS name or address)
-    const hasDelegatorMention = message.text.includes('delegator1.eth') ||
+    const hasDelegatorMention = message.text.includes('vitalik.eth') ||
                                 message.text.toLowerCase().includes(delegatorAddress.toLowerCase().slice(0, 8));
     expect(hasDelegatorMention).toBe(true);
   });
@@ -237,7 +237,7 @@ describe('Slack Voting Power Trigger - Integration Test', () => {
   });
 
   test('Multiple voting power events processed correctly', async () => {
-    const userAddress = testConstants.profiles.p1.address;
+    const userAddress = testConstants.profiles.p4.address;
 
     // Create Slack user
     const user = await createSlackUserWithWallet(
@@ -250,8 +250,8 @@ describe('Slack Voting Power Trigger - Integration Test', () => {
     const baseTimestamp = Math.floor(Date.now() / 1000) + 10;
     const events = [
       VotingPowerFactory.createDelegationEvent(
-        testConstants.eventActors.delegator1,
-        userAddress,
+        testConstants.eventActors.delegator1, // vitalik.eth
+        userAddress, // nick.eth
         testConstants.votingPower.small,
         TEST_DAO_ID,
         {
@@ -387,7 +387,7 @@ describe('Slack Voting Power Trigger - Integration Test', () => {
   });
 
   test('Slack markdown formatting for voting power messages', async () => {
-    const userAddress = testConstants.profiles.p1.address;
+    const userAddress = testConstants.profiles.p2.address;
 
     // Create Slack user
     const user = await createSlackUserWithWallet(
@@ -401,8 +401,8 @@ describe('Slack Voting Power Trigger - Integration Test', () => {
     const txHash = '0x1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef';
 
     const event = VotingPowerFactory.createDelegationEvent(
-      testConstants.eventActors.delegator1,
-      userAddress,
+      testConstants.eventActors.delegator1, // vitalik.eth
+      userAddress, // nick.eth 
       '1000000000000000000000', // Large number to test formatting
       TEST_DAO_ID,
       {

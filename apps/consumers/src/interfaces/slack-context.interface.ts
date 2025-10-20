@@ -7,8 +7,41 @@ import type {
   SlashCommand,
   RespondFn,
   AckFn,
-  SayFn
+  SayFn,
+  ViewOutput,
+  ViewStateValue,
+  ViewResponseAction
 } from '@slack/bolt';
+import type { WebClient, KnownBlock, MessageAttachment } from '@slack/web-api';
+
+/**
+ * Type helper for Slack action/command bodies with channel and team IDs
+ * Includes state property for interactive elements
+ */
+export interface SlackBodyWithIds {
+  channel?: { id?: string } | null;
+  channel_id?: string;
+  team?: { id?: string } | null;
+  team_id?: string;
+  user?: { id?: string; team_id?: string } | null;
+  user_id?: string;
+  trigger_id?: string;
+  state?: {
+    values?: {
+      [blockId: string]: {
+        [actionId: string]: ViewStateValue;
+      };
+    };
+  } | string; // Can be string for DialogSubmitAction or object for BlockAction
+}
+
+/**
+ * Type helper for Slack view submission bodies
+ * Extends SlackBodyWithIds with view-specific fields
+ */
+export interface SlackViewBodyWithMetadata extends SlackBodyWithIds {
+  view?: ViewOutput;
+}
 
 /**
  * Session data structure for Slack users
@@ -33,7 +66,7 @@ export interface SlackBaseContext<TBody = any, TAck = void> {
   body: TBody;
   session: SlackSession;
   ack: AckFn<TAck>;
-  client: any; // Slack WebClient
+  client: WebClient;
 }
 
 /**
@@ -55,14 +88,14 @@ export interface SlackCommandContext extends SlackMessageableContext<SlashComman
  * Slack action context for button/select interactions
  * Provides essential properties from Slack's action args with session management
  */
-export interface SlackActionContext extends SlackMessageableContext<any> {}
+export interface SlackActionContext extends SlackMessageableContext<SlackBodyWithIds> {}
 
 /**
  * Slack view submission context for modal interactions
  * Provides essential properties from Slack's view args with session management
  */
-export interface SlackViewContext extends SlackBaseContext<any, void | any> {
-  view: any; // View submission data
+export interface SlackViewContext extends SlackBaseContext<SlackViewBodyWithMetadata, ViewResponseAction> {
+  view: ViewOutput;
 }
 
 /**
@@ -105,8 +138,8 @@ export interface SlackHandlerRegistration {
  */
 export interface SlackMessageOptions {
   text: string;
-  blocks?: any[];
-  attachments?: any[];
+  blocks?: KnownBlock[];
+  attachments?: MessageAttachment[];
   thread_ts?: string;
   mrkdwn?: boolean;
   unfurl_links?: boolean;

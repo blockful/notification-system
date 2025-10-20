@@ -4,11 +4,13 @@ import { ISubscriptionClient, User, Notification } from '../../interfaces/subscr
 import { NotificationClientFactory } from '../notification/notification-factory.service';
 import { INotificationClient } from '../../interfaces/notification-client.interface';
 import { DispatcherMessage } from '../../interfaces/dispatcher-message.interface';
+import { AnticaptureClient } from '@notification-system/anticapture-client';
 
 describe('NewProposalTriggerHandler', () => {
   let mockSubscriptionClient: jest.Mocked<ISubscriptionClient>;
   let mockNotificationFactory: jest.Mocked<NotificationClientFactory>;
   let mockNotificationClient: jest.Mocked<INotificationClient>;
+  let mockAnticaptureClient: jest.Mocked<AnticaptureClient>;
   let handler: NewProposalTriggerHandler;
   let mockUsers: User[];
   let mockNotifications: Notification[];
@@ -69,8 +71,20 @@ describe('NewProposalTriggerHandler', () => {
     mockSubscriptionClient.shouldSend.mockResolvedValue(mockNotifications);
     mockSubscriptionClient.markAsSent.mockResolvedValue();
     mockNotificationClient.sendNotification.mockResolvedValue();
-    
-    handler = new NewProposalTriggerHandler(mockSubscriptionClient, mockNotificationFactory);
+
+    mockAnticaptureClient = {
+      getDAOs: jest.fn(async () => [
+        { id: 'dao123', chainId: 1 },
+        { id: 'dao456', chainId: 10 }
+      ]),
+      getProposalById: jest.fn(),
+      listProposals: jest.fn(),
+      listVotingPowerHistory: jest.fn(),
+      listVotesOnchains: jest.fn(),
+      listRecentVotesFromAllDaos: jest.fn()
+    } as unknown as jest.Mocked<AnticaptureClient>;
+
+    handler = new NewProposalTriggerHandler(mockSubscriptionClient, mockNotificationFactory, mockAnticaptureClient);
   });
   
   afterEach(() => {

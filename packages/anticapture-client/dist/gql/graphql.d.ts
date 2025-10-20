@@ -274,6 +274,9 @@ export type QueryHistoricalBalancesArgs = {
     addresses: Scalars['JSON']['input'];
     days?: InputMaybe<QueryInput_HistoricalBalances_Days>;
 };
+export type QueryHistoricalTokenDataArgs = {
+    days?: InputMaybe<QueryInput_HistoricalTokenData_Days>;
+};
 export type QueryHistoricalVotingPowerArgs = {
     addresses: Scalars['JSON']['input'];
     days?: InputMaybe<QueryInput_HistoricalVotingPower_Days>;
@@ -379,6 +382,8 @@ export type QueryVotingPowerHistorysArgs = {
 export type QueryVotingPowersArgs = {
     account: Scalars['String']['input'];
     limit?: InputMaybe<Scalars['PositiveInt']['input']>;
+    maxDelta?: InputMaybe<Scalars['String']['input']>;
+    minDelta?: InputMaybe<Scalars['String']['input']>;
     orderBy?: InputMaybe<QueryInput_VotingPowers_OrderBy>;
     orderDirection?: InputMaybe<QueryInput_VotingPowers_OrderDirection>;
     skip?: InputMaybe<Scalars['NonNegativeInt']['input']>;
@@ -1316,6 +1321,13 @@ export declare enum QueryInput_HistoricalBalances_Days {
     '180d' = "_180d",
     '365d' = "_365d"
 }
+export declare enum QueryInput_HistoricalTokenData_Days {
+    '7d' = "_7d",
+    '30d' = "_30d",
+    '90d' = "_90d",
+    '180d' = "_180d",
+    '365d' = "_365d"
+}
 export declare enum QueryInput_HistoricalVotingPower_Days {
     '7d' = "_7d",
     '30d' = "_30d",
@@ -1936,6 +1948,7 @@ export type VotingPowerHistory = {
     daoId: Scalars['String']['output'];
     delegation?: Maybe<Delegation>;
     delta: Scalars['BigInt']['output'];
+    deltaMod: Scalars['BigInt']['output'];
     logIndex: Scalars['Int']['output'];
     timestamp: Scalars['BigInt']['output'];
     transactionHash: Scalars['String']['output'];
@@ -1966,6 +1979,14 @@ export type VotingPowerHistoryFilter = {
     daoId_not_starts_with?: InputMaybe<Scalars['String']['input']>;
     daoId_starts_with?: InputMaybe<Scalars['String']['input']>;
     delta?: InputMaybe<Scalars['BigInt']['input']>;
+    deltaMod?: InputMaybe<Scalars['BigInt']['input']>;
+    deltaMod_gt?: InputMaybe<Scalars['BigInt']['input']>;
+    deltaMod_gte?: InputMaybe<Scalars['BigInt']['input']>;
+    deltaMod_in?: InputMaybe<Array<InputMaybe<Scalars['BigInt']['input']>>>;
+    deltaMod_lt?: InputMaybe<Scalars['BigInt']['input']>;
+    deltaMod_lte?: InputMaybe<Scalars['BigInt']['input']>;
+    deltaMod_not?: InputMaybe<Scalars['BigInt']['input']>;
+    deltaMod_not_in?: InputMaybe<Array<InputMaybe<Scalars['BigInt']['input']>>>;
     delta_gt?: InputMaybe<Scalars['BigInt']['input']>;
     delta_gte?: InputMaybe<Scalars['BigInt']['input']>;
     delta_in?: InputMaybe<Array<InputMaybe<Scalars['BigInt']['input']>>>;
@@ -2054,6 +2075,7 @@ export type GetProposalByIdQuery = {
         forVotes: string;
         againstVotes: string;
         abstainVotes: string;
+        txHash: string;
     } | null;
 };
 export type ListProposalsQueryVariables = Exact<{
@@ -2083,6 +2105,7 @@ export type ListProposalsQuery = {
             forVotes: string;
             againstVotes: string;
             abstainVotes: string;
+            txHash: string;
         } | null>;
     } | null;
 };

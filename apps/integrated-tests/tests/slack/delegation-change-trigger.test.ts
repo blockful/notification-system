@@ -105,8 +105,9 @@ describe('Slack Delegation Change Notifications - Integration Test', () => {
       expect(delegatorMessage.text).toMatch(/<https?:\/\/[^|]+\|[^>]+>/);
     }
 
-    expect(delegatorMessage.text).toContain(delegatorAddress);
-    expect(delegatorMessage.text).toContain(delegateAddress);
+    // Verify ENS names are resolved (not raw addresses)
+    expect(delegatorMessage.text).toContain('vitalik.eth');
+    expect(delegatorMessage.text).toContain('nick.eth');
 
     // Verify message has substantial content
     expect(delegatorMessage.text.length).toBeGreaterThan(50);
@@ -178,7 +179,8 @@ describe('Slack Delegation Change Notifications - Integration Test', () => {
     expect(selfDelegationMessage.text).toContain('to themselves');
     expect(selfDelegationMessage.text).toContain('Total voting power is now');
 
-    expect(selfDelegationMessage.text).toContain(userAddress);
+    // Verify ENS name is resolved (not raw address)
+    expect(selfDelegationMessage.text).toContain('vitalik.eth');
   });
 
   test('should send undelegation confirmation notification via Slack', async () => {
@@ -238,8 +240,9 @@ describe('Slack Delegation Change Notifications - Integration Test', () => {
     expect(delegatorMessage.text).toContain('↩️ Undelegation confirmed');
     expect(delegatorMessage.text).toContain('removed');
 
-    expect(delegatorMessage.text).toContain(delegatorAddress);
-    expect(delegatorMessage.text).toContain(delegateAddress);
+    // Verify ENS names are resolved (not raw addresses)
+    expect(delegatorMessage.text).toContain('vitalik.eth');
+    expect(delegatorMessage.text).toContain('nick.eth');
 
     // Verify database record
     const notifications = await dbHelper.getNotifications();

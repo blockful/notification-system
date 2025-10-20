@@ -77,7 +77,6 @@ describe('Address Normalization - Integration Test', () => {
     // Verify message content for FOR vote
     expect(message.text).toContain('✅'); // FOR emoji
     expect(message.text).toMatch(/voted FOR|just voted on/i);
-    expect(message.text).toContain('[Transaction details](https://etherscan.io/tx/');
     expect(message.text).not.toContain('{{txLink}}');
     expect(message.chatId).toBe(testUser.chatId);
   });

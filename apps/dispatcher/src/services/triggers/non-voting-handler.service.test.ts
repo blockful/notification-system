@@ -262,10 +262,17 @@ describe('NonVotingHandler', () => {
       channel: 'telegram',
       channelUserId: '12345',
       message: ExpectedMessages.createNonVotingAlert('ENS'),
+      bot_token: undefined,
       metadata: {
         addresses: {
           'nonVoterAddress': TestAddresses.ADDRESS_LONG
-        }
+        },
+        buttons: [
+          {
+            text: 'Check delegates and proposals',
+            url: 'https://anticapture.com/'
+          }
+        ]
       }
     });
   });

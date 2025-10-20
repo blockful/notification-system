@@ -59,6 +59,7 @@ export class SlackTestClient implements SlackClientInterface {
       const result = await realClient.chat.postMessage({
         channel: realChannel,
         text: slackText,
+        blocks: options?.blocks,
         parse: options?.parse || 'none',
         link_names: options?.link_names ?? true,
         unfurl_links: options?.unfurl_links ?? false,

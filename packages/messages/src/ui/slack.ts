@@ -126,18 +126,16 @@ export const slackMessages = {
     ]
   },
 
-  // Welcome message (sent when user first opens DM with bot)
+  // Main command message (shown via /anticapture)
   welcomeMessage: {
     blocks: [
       {
         type: 'section',
         text: {
           type: 'mrkdwn',
-          text: '🚨 *Welcome to the Anticapture notification system!*\n\n' +
+          text: '🚨 *Anticapture Notification System*\n\n' +
             'Spot the "oh no" before it reaches your treasury.\n\n' +
-            '*To get started:*\n' +
-            '• Choose the DAOs you want to track.\n' +
-            '• Connect your wallets to receive related alerts.'
+            '*Manage your notification preferences:*'
         }
       },
       {
@@ -146,27 +144,33 @@ export const slackMessages = {
         alt_text: 'New governance proposal in the selected DAO'
       },
       {
+        type: 'divider'
+      },
+      {
         type: 'section',
         text: {
           type: 'mrkdwn',
-          text: '*Select DAOs or set up your wallets below to begin.*'
+          text: '*Track DAOs*\nManage which DAOs you want to monitor for proposals and votes.'
+        },
+        accessory: {
+          type: 'button',
+          text: { type: 'plain_text', text: '🗳️ Manage DAOs', emoji: true },
+          action_id: 'welcome_select_daos',
+          style: 'primary'
         }
       },
       {
-        type: 'actions',
-        elements: [
-          {
-            type: 'button',
-            text: { type: 'plain_text', text: '🗳️ Select DAOs', emoji: true },
-            action_id: 'welcome_select_daos',
-            style: 'primary'
-          },
-          {
-            type: 'button',
-            text: { type: 'plain_text', text: '👛 Set up Wallets', emoji: true },
-            action_id: 'welcome_setup_wallets'
-          }
-        ]
+        type: 'section',
+        text: {
+          type: 'mrkdwn',
+          text: '*Wallet Addresses*\nManage your wallet addresses to receive personalized alerts.'
+        },
+        accessory: {
+          type: 'button',
+          text: { type: 'plain_text', text: '👛 Manage Wallets', emoji: true },
+          action_id: 'welcome_setup_wallets',
+          style: 'primary'
+        }
       }
     ]
   }
