@@ -19,27 +19,27 @@ export const testConstants = {
   
   // Test user profiles, combining chatId and a primary address
   profiles: {
-    p1: { chatId: '6717185777', address: '0xadd_p1' },
-    p2: { chatId: '222222222', address: '0xadd_p2' },
-    p3: { chatId: '333333333', address: '0xadd_p3' },
-    p4: { chatId: '555555555', address: '0xadd_p4' },
-    p5: { chatId: '666666666', address: '0xadd_p5' },
-    p6: { chatId: '777777777', address: '0xadd_p6' },
-    p7: { chatId: '888888888', address: '0xadd_p7' },
-    p8: { chatId: '999999999', address: '0xadd_p8' },
+    p1: { chatId: '6717185777', address: '0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045'.toLowerCase() }, // vitalik.eth
+    p2: { chatId: '222222222', address: '0x225f137127d9067788314bc7fcc1f36746a3c3B5'.toLowerCase() }, // nick.eth
+    p3: { chatId: '333333333', address: '0x983110309620d911731ac0932219af06091b6744'.toLowerCase() }, // brantly.eth
+    p4: { chatId: '555555555', address: '0xb8c2C29ee19D8307cb7255e1Cd9CbDE883A267d5'.toLowerCase() },
+    p5: { chatId: '666666666', address: '0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045'.toLowerCase() },
+    p6: { chatId: '777777777', address: '0x225f137127d9067788314bc7fcc1f36746a3c3B5'.toLowerCase() },
+    p7: { chatId: '888888888', address: '0x983110309620d911731ac0932219af06091b6744'.toLowerCase() },
+    p8: { chatId: '999999999', address: '0xb8c2C29ee19D8307cb7255e1Cd9CbDE883A267d5'.toLowerCase() },
     p9: { chatId: 'user-with-subscription.eth', address: 'user-with-subscription.eth' },
-    p10: { chatId: '101010101', address: '0x1e0E09b49eDB3bfA2E82ed4ab7F1260b9F49d067'.toLowerCase() }, 
-    p10_checksum: { chatId: '101010101', address: '0x1e0E09b49eDB3bfA2E82ed4ab7F1260b9F49d067' }, 
+    p10: { chatId: '101010101', address: '0x1e0E09b49eDB3bfA2E82ed4ab7F1260b9F49d067'.toLowerCase() },
+    p10_checksum: { chatId: '101010101', address: '0x1e0E09b49eDB3bfA2E82ed4ab7F1260b9F49d067' },
   },
 
   // External addresses for events (actors not necessarily using the bot)
   eventActors: {
-    delegator1: 'delegator1.eth',
-    delegator2: 'delegator2.eth',
-    delegator3: 'delegator3.eth',
-    delegator: 'delegator.eth',
-    recipient: 'recipient.eth',
-    sender: 'sender.eth',
+    delegator1: '0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045', // vitalik.eth
+    delegator2: '0x225f137127d9067788314bc7fcc1f36746a3c3B5', // nick.eth
+    delegator3: '0x983110309620d911731ac0932219af06091b6744', // brantly.eth
+    delegator: '0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045', // vitalik.eth
+    recipient: '0x225f137127d9067788314bc7fcc1f36746a3c3B5', // nick.eth
+    sender: '0x983110309620d911731ac0932219af06091b6744', // brantly.eth
     userPrefix: 'user',
   },
   

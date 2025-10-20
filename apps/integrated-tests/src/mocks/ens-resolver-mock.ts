@@ -26,10 +26,12 @@ export class MockEnsResolverService {
    * @returns ENS name if known, otherwise the full Ethereum address
    */
   async resolveDisplayName(address: string): Promise<string> {
-    // Map of known ENS names for testing (keys must be lowercase)
     const ensNames: Record<string, string> = {
-      '0xb8c2c29ee19d8307cb7255e1cd9cbde883a267d5': 'nick.eth',
       '0xd8da6bf26964af9d7eed9e03e53415d37aa96045': 'vitalik.eth',
+      '0x225f137127d9067788314bc7fcc1f36746a3c3b5': 'nick.eth',
+      '0x983110309620d911731ac0932219af06091b6744': 'brantly.eth',
+      '0xb8c2c29ee19d8307cb7255e1cd9cbde883a267d5': 'firefish.eth',
+      '0x59a7abcf26ae2990ecbca902a2ea43536a4f56d9': 'theblackbelt.eth',
     };
 
     const lowerAddress = address.toLowerCase();

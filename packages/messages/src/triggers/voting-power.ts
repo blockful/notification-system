@@ -41,10 +41,10 @@ Account {{delegatorAccount}} removed {{delta}} voting power from {{delegate}}.`
 
   // Generic voting power change - complete
   generic: {
-    changed: `⚡ Voting power changed for {{address}} in {{daoId}}!
-Voting power updated by {{delta}}.`,
+    increased: `⚡ Voting power increased for {{address}} in {{daoId}}!
+Voting power increased by {{delta}}.`,
 
-    activity: `⚡ Voting power changed for {{address}} in {{daoId}}!
-Voting power activity detected.`
+    decreased: `⚡ Voting power decreased for {{address}} in {{daoId}}!
+Voting power decreased by {{delta}}.`
   }
 };
