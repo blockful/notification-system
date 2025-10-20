@@ -115,7 +115,7 @@ export class VotingReminderTriggerHandler extends BaseTriggerHandler<VotingRemin
         thresholdPercentage: event.thresholdPercentage,
         timeElapsedPercentage: event.timeElapsedPercentage,
         timeRemaining: FormattingService.calculateTimeRemaining(event.endTimestamp),
-        addresses: { voterAddress: address }
+        addresses: { address: address }
       }),
       () => buttons
     );
@@ -165,8 +165,7 @@ export class VotingReminderTriggerHandler extends BaseTriggerHandler<VotingRemin
       daoId: event.daoId,
       title,
       timeRemaining,
-      thresholdPercentage: event.thresholdPercentage.toString(),
-      address: address || 'Your wallet'
+      thresholdPercentage: event.thresholdPercentage.toString()
     });
   }
 }

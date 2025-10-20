@@ -152,16 +152,22 @@ describe('VotingPowerTriggerHandler', () => {
       };
       
       await handler.handleMessage(mockMessage);
-      
+
       expect(mockNotificationClient.sendNotification).toHaveBeenCalledWith(
         expect.objectContaining({
-          message: expect.stringContaining('🥳 0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045 received a new delegation in test-dao!')
+          message: expect.stringContaining('🥳 {{address}} received a new delegation in test-dao!'),
+          metadata: expect.objectContaining({
+            addresses: expect.objectContaining({
+              address: '0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045',
+              delegator: '0xEF8305E140ac520225DAf050e2f71d5fBcC543e7'
+            })
+          })
         })
       );
-      
+
       expect(mockNotificationClient.sendNotification).toHaveBeenCalledWith(
         expect.objectContaining({
-          message: expect.stringContaining('delegated to 0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045')
+          message: expect.stringContaining('{{delegator}} delegated to {{address}}')
         })
       );
     });
@@ -185,16 +191,22 @@ describe('VotingPowerTriggerHandler', () => {
       };
       
       await handler.handleMessage(mockMessage);
-      
+
       expect(mockNotificationClient.sendNotification).toHaveBeenCalledWith(
         expect.objectContaining({
-          message: expect.stringContaining('✅ Delegation confirmed in test-dao!')
+          message: expect.stringContaining('✅ Delegation confirmed in test-dao!'),
+          metadata: expect.objectContaining({
+            addresses: expect.objectContaining({
+              delegatorAccount: '0xEF8305E140ac520225DAf050e2f71d5fBcC543e7',
+              delegate: '0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045'
+            })
+          })
         })
       );
-      
+
       expect(mockNotificationClient.sendNotification).toHaveBeenCalledWith(
         expect.objectContaining({
-          message: expect.stringContaining('Account 0xEF8305E140ac520225DAf050e2f71d5fBcC543e7 delegated')
+          message: expect.stringContaining('Account {{delegatorAccount}} delegated')
         })
       );
     });
@@ -218,16 +230,22 @@ describe('VotingPowerTriggerHandler', () => {
       };
       
       await handler.handleMessage(mockMessage);
-      
+
       expect(mockNotificationClient.sendNotification).toHaveBeenCalledWith(
         expect.objectContaining({
-          message: expect.stringContaining('🥺 A delegator just undelegated in test-dao!')
+          message: expect.stringContaining('🥺 A delegator just undelegated in test-dao!'),
+          metadata: expect.objectContaining({
+            addresses: expect.objectContaining({
+              address: '0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045',
+              delegator: '0xEF8305E140ac520225DAf050e2f71d5fBcC543e7'
+            })
+          })
         })
       );
-      
+
       expect(mockNotificationClient.sendNotification).toHaveBeenCalledWith(
         expect.objectContaining({
-          message: expect.stringContaining('removed their delegation from 0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045')
+          message: expect.stringContaining('removed their delegation from {{address}}')
         })
       );
     });
@@ -251,16 +269,22 @@ describe('VotingPowerTriggerHandler', () => {
       };
       
       await handler.handleMessage(mockMessage);
-      
+
       expect(mockNotificationClient.sendNotification).toHaveBeenCalledWith(
         expect.objectContaining({
-          message: expect.stringContaining('↩️ Undelegation confirmed in test-dao!')
+          message: expect.stringContaining('↩️ Undelegation confirmed in test-dao!'),
+          metadata: expect.objectContaining({
+            addresses: expect.objectContaining({
+              delegatorAccount: '0xEF8305E140ac520225DAf050e2f71d5fBcC543e7',
+              delegate: '0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045'
+            })
+          })
         })
       );
-      
+
       expect(mockNotificationClient.sendNotification).toHaveBeenCalledWith(
         expect.objectContaining({
-          message: expect.stringContaining('Account 0xEF8305E140ac520225DAf050e2f71d5fBcC543e7 removed')
+          message: expect.stringContaining('Account {{delegatorAccount}} removed')
         })
       );
     });
@@ -359,7 +383,7 @@ describe('VotingPowerTriggerHandler', () => {
       expect(mockNotificationClient.sendNotification).toHaveBeenCalledTimes(1);
       expect(mockNotificationClient.sendNotification).toHaveBeenCalledWith(
         expect.objectContaining({
-          message: expect.stringContaining('🥳 0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045 received a new delegation')
+          message: expect.stringContaining('🥳 {{address}} received a new delegation')
         })
       );
     });
@@ -511,7 +535,12 @@ describe('VotingPowerTriggerHandler', () => {
 
       expect(mockNotificationClient.sendNotification).toHaveBeenCalledWith(
         expect.objectContaining({
-          message: expect.stringContaining('⚡ Voting power increased for 0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045 in test-dao!')
+          message: expect.stringContaining('⚡ Voting power increased for {{address}} in test-dao!'),
+          metadata: expect.objectContaining({
+            addresses: expect.objectContaining({
+              address: '0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045'
+            })
+          })
         })
       );
     });
@@ -536,7 +565,12 @@ describe('VotingPowerTriggerHandler', () => {
 
       expect(mockNotificationClient.sendNotification).toHaveBeenCalledWith(
         expect.objectContaining({
-          message: expect.stringContaining('⚡ Voting power increased for 0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045 in test-dao!')
+          message: expect.stringContaining('⚡ Voting power increased for {{address}} in test-dao!'),
+          metadata: expect.objectContaining({
+            addresses: expect.objectContaining({
+              address: '0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045'
+            })
+          })
         })
       );
     });
@@ -561,7 +595,12 @@ describe('VotingPowerTriggerHandler', () => {
 
       expect(mockNotificationClient.sendNotification).toHaveBeenCalledWith(
         expect.objectContaining({
-          message: expect.stringContaining('⚡ Voting power decreased for 0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045 in test-dao!')
+          message: expect.stringContaining('⚡ Voting power decreased for {{address}} in test-dao!'),
+          metadata: expect.objectContaining({
+            addresses: expect.objectContaining({
+              address: '0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045'
+            })
+          })
         })
       );
     });

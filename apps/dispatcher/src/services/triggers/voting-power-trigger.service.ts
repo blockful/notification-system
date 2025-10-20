@@ -118,12 +118,11 @@ export class VotingPowerTriggerHandler extends BaseTriggerHandler {
 
     const notificationMessage = replacePlaceholders(messageTemplate, {
       daoId,
-      delta: formattedDelta,
-      address: accountId,
-      delegator: sourceAccountId
+      delta: formattedDelta
     });
-    
+
     const metadata = this.buildNotificationMetadata(chainId, transactionHash, {
+      address: accountId,
       delegator: sourceAccountId
     });
 
@@ -181,8 +180,7 @@ export class VotingPowerTriggerHandler extends BaseTriggerHandler {
       notificationMessage = replacePlaceholders(messageTemplate, {
         daoId,
         delta: formattedDelta,
-        votingPower: formattedVotingPower,
-        address: sourceAccountId
+        votingPower: formattedVotingPower
       });
     } else {
       const messageTemplate = deltaValue > 0
@@ -191,17 +189,20 @@ export class VotingPowerTriggerHandler extends BaseTriggerHandler {
 
       notificationMessage = replacePlaceholders(messageTemplate, {
         daoId,
-        delta: formattedDelta,
-        address: sourceAccountId,
-        delegate: targetAccountId || accountId,
-        delegatorAccount: sourceAccountId
+        delta: formattedDelta
       });
     }
 
-    const metadata = this.buildNotificationMetadata(chainId, transactionHash, {
-      delegatorAccount: sourceAccountId,
-      delegate: targetAccountId || accountId
-    });
+    // Build metadata conditionally based on self-delegation
+    const isSelfDelegation = sourceAccountId === accountId;
+    const metadata = this.buildNotificationMetadata(chainId, transactionHash,
+      isSelfDelegation ? {
+        address: sourceAccountId
+      } : {
+        delegatorAccount: sourceAccountId,
+        delegate: targetAccountId || accountId
+      }
+    );
 
     // Build buttons for delegation change
     const buttons = buildButtons({
@@ -244,8 +245,7 @@ export class VotingPowerTriggerHandler extends BaseTriggerHandler {
 
       notificationMessage = replacePlaceholders(messageTemplate, {
         daoId,
-        delta: formattedDelta,
-        address: accountId
+        delta: formattedDelta
       });
     } else {
       // Generic voting power change
@@ -255,8 +255,7 @@ export class VotingPowerTriggerHandler extends BaseTriggerHandler {
 
       notificationMessage = replacePlaceholders(messageTemplate, {
         daoId,
-        delta: formattedDelta,
-        address: accountId
+        delta: formattedDelta
       });
     }
 
