@@ -138,10 +138,10 @@ Consider reaching out to encourage participation!`;
     // Setup mocks
     GraphQLMockSetup.setupMock(httpMockSetup.getMockClient(), proposals, [], {}, votes);
 
-    // Wait for notification - should only be for ADDRESS_INACTIVE (nick.eth)
+    // Wait for notification - should only be for ADDRESS_INACTIVE (firefish.eth)
     const message = await slackHelper.waitForMessage(
       msg => msg.text.includes('Non-Voting Alert') &&
-             msg.text.includes('nick.eth') &&
+             msg.text.includes('firefish.eth') &&
              msg.channel === SLACK_CHANNEL_ID,
       {
         timeout: timeouts.notification.delivery,
@@ -153,7 +153,7 @@ Consider reaching out to encourage participation!`;
 
     expect(message.channel).toBe(SLACK_CHANNEL_ID);
     expect(message.text).toContain('hasn\'t voted in the last 3 proposals');
-    expect(message.text).toContain('nick.eth');
+    expect(message.text).toContain('firefish.eth');
     expect(message.text).not.toContain(ADDRESS_ACTIVE.slice(0, 6));
     expect(message.text).not.toContain(ADDRESS_PARTIAL.slice(0, 6));
 
@@ -230,9 +230,9 @@ Consider reaching out to encourage participation!`;
     expect(channels).toContain(SLACK_CHANNEL_ID);
     expect(channels).toContain(SLACK_CHANNEL_2);
 
-    // Verify content - should show nick.eth
+    // Verify content - should show firefish.eth
     messages.forEach(message => {
-      expect(message.text).toContain('nick.eth');
+      expect(message.text).toContain('firefish.eth');
       expect(message.text).toContain('hasn\'t voted in the last 3 proposals');
     });
   });
@@ -351,7 +351,7 @@ Consider reaching out to encourage participation!`;
     const dao2Message = messages.find(m => m.channel === SLACK_CHANNEL_2);
 
     expect(dao1Message?.text).toContain('DAO UNI');
-    expect(dao1Message?.text).toContain('nick.eth');
+    expect(dao1Message?.text).toContain('firefish.eth');
 
     expect(dao2Message?.text).toContain('DAO ENS');
     expect(dao2Message?.text).toContain('vitalik.eth');
@@ -498,16 +498,16 @@ Consider reaching out to encourage participation!`;
       { timeout: timeouts.notification.delivery }
     );
 
-    // Verify Slack message - should show nick.eth
+    // Verify Slack message - should show firefish.eth
     expect(slackMessage.channel).toBe(SLACK_CHANNEL_ID);
-    expect(slackMessage.text).toContain('nick.eth');
+    expect(slackMessage.text).toContain('firefish.eth');
     expect(slackMessage.text).toContain('hasn\'t voted in the last 3 proposals');
 
-    // Verify Telegram also received (checking mock calls) - should show nick.eth
+    // Verify Telegram also received (checking mock calls) - should show firefish.eth
     const telegramCalls = global.mockTelegramSendMessage.mock.calls;
     const telegramMessage = telegramCalls.find(([chatId, text]) =>
       text.includes('Non-Voting Alert') &&
-      text.includes('nick.eth') &&
+      text.includes('firefish.eth') &&
       chatId.toString() === testConstants.profiles.p1.chatId
     );
     expect(telegramMessage).toBeDefined();

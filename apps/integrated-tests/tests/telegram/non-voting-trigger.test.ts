@@ -93,16 +93,16 @@ Consider reaching out to encourage participation!`;
     // Setup mocks
     GraphQLMockSetup.setupMock(httpMockSetup.getMockClient(), proposals, [], {}, votes);
 
-    // Wait for notification - should only be for ADDRESS_INACTIVE (nick.eth)
+    // Wait for notification - should only be for ADDRESS_INACTIVE (firefish.eth)
     const message = await telegramHelper.waitForMessage(
       msg => msg.text.includes('Non-Voting Alert') &&
-             msg.text.includes('nick.eth'),
+             msg.text.includes('firefish.eth'),
       { timeout: timeouts.notification.delivery }
     );
 
     expect(message.chatId).toBe(testConstants.profiles.p1.chatId);
     expect(message.text).toContain('hasn\'t voted in the last 3 proposals');
-    expect(message.text).toContain('nick.eth');
+    expect(message.text).toContain('firefish.eth');
     expect(message.text).not.toContain(ADDRESS_ACTIVE.slice(0, 6));
     expect(message.text).not.toContain(ADDRESS_PARTIAL.slice(0, 6));
   });
@@ -175,9 +175,9 @@ Consider reaching out to encourage participation!`;
     expect(chatIds).toContain(testConstants.profiles.p3.chatId);
     expect(chatIds).toContain(testConstants.profiles.p4.chatId);
     
-    // Verify content - should show nick.eth
+    // Verify content - should show firefish.eth
     messages.forEach(message => {
-      expect(message.text).toContain('nick.eth');
+      expect(message.text).toContain('firefish.eth');
       expect(message.text).toContain('hasn\'t voted in the last 3 proposals');
     });
   });
@@ -294,7 +294,7 @@ Consider reaching out to encourage participation!`;
     const dao2Message = messages.find(m => m.chatId === testConstants.profiles.p9.chatId);
 
     expect(dao1Message?.text).toContain('DAO UNI');
-    expect(dao1Message?.text).toContain('nick.eth');
+    expect(dao1Message?.text).toContain('firefish.eth');
 
     expect(dao2Message?.text).toContain('DAO ENS');
     expect(dao2Message?.text).toContain('vitalik.eth');
