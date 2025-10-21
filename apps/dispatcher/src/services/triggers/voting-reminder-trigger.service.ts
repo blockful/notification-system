@@ -4,7 +4,7 @@ import { NotificationClientFactory } from '../notification/notification-factory.
 import { ISubscriptionClient } from '../../interfaces/subscription-client.interface';
 import { AnticaptureClient } from '@notification-system/anticapture-client';
 import { FormattingService } from '../formatting.service';
-import { votingReminderMessages, replacePlaceholders } from '@notification-system/messages';
+import { votingReminderMessages, replacePlaceholders, buildButtons } from '@notification-system/messages';
 import { BatchNotificationService } from '../batch-notification.service';
 
 /**
@@ -40,9 +40,9 @@ export class VotingReminderTriggerHandler extends BaseTriggerHandler<VotingRemin
   constructor(
     protected readonly subscriptionClient: ISubscriptionClient,
     protected readonly notificationFactory: NotificationClientFactory,
-    private readonly anticaptureClient: AnticaptureClient
+    anticaptureClient: AnticaptureClient
   ) {
-    super(subscriptionClient, notificationFactory);
+    super(subscriptionClient, notificationFactory, anticaptureClient);
     this.batchNotificationService = new BatchNotificationService(subscriptionClient, notificationFactory);
   }
 
@@ -99,6 +99,11 @@ export class VotingReminderTriggerHandler extends BaseTriggerHandler<VotingRemin
       return { sent: 0, skipped: 1, failed: 0 };
     }
 
+    // Build buttons for voting reminder (no tx hash)
+    const buttons = buildButtons({
+      triggerType: 'votingReminder'
+    });
+
     // Send reminders using batch notification service
     await this.batchNotificationService.sendBatchNotifications(
       nonVotingAddresses,
@@ -110,8 +115,9 @@ export class VotingReminderTriggerHandler extends BaseTriggerHandler<VotingRemin
         thresholdPercentage: event.thresholdPercentage,
         timeElapsedPercentage: event.timeElapsedPercentage,
         timeRemaining: FormattingService.calculateTimeRemaining(event.endTimestamp),
-        addresses: { voterAddress: address }
-      })
+        addresses: { address: address }
+      }),
+      () => buttons
     );
     return {
       sent: 1,
@@ -124,11 +130,11 @@ export class VotingReminderTriggerHandler extends BaseTriggerHandler<VotingRemin
    * Gets addresses that haven't voted on the specific proposal
    */
   private async getNonVotingAddresses(
-    proposalId: string, 
-    daoId: string, 
+    proposalId: string,
+    daoId: string,
     subscribedAddresses: string[]
   ): Promise<string[]> {
-    const votes = await this.anticaptureClient.listVotesOnchains({
+    const votes = await this.anticaptureClient!.listVotesOnchains({
       daoId,
       proposalId_in: [proposalId],
       voterAccountId_in: subscribedAddresses
@@ -159,8 +165,7 @@ export class VotingReminderTriggerHandler extends BaseTriggerHandler<VotingRemin
       daoId: event.daoId,
       title,
       timeRemaining,
-      thresholdPercentage: event.thresholdPercentage.toString(),
-      address: address || 'Your wallet'
+      thresholdPercentage: event.thresholdPercentage.toString()
     });
   }
 }

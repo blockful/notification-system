@@ -5,7 +5,7 @@
  */
 
 import { WebClient } from '@slack/web-api';
-import { App, Installation } from '@slack/bolt';
+import { App, Installation, ViewSubmitAction } from '@slack/bolt';
 import {
   SlackClientInterface,
   SlackSendMessageOptions,
@@ -20,6 +20,7 @@ import {
   SlackSession
 } from '../interfaces/slack-context.interface';
 import { CryptoUtil } from '../utils/crypto';
+import { convertMarkdownToSlack } from '@notification-system/messages';
 
 export class SlackClient implements SlackClientInterface {
   private boltApp: App;
@@ -108,12 +109,13 @@ export class SlackClient implements SlackClientInterface {
     }
 
     // Convert markdown to Slack mrkdwn format
-    const slackText = this.convertMarkdownToSlackFormat(text);
+    const slackText = convertMarkdownToSlack(text);
     const clientToUse = new WebClient(options.token);
 
     const result = await clientToUse.chat.postMessage({
       channel,
       text: slackText,
+      blocks: options?.blocks,
       parse: options?.parse || 'none',
       link_names: options?.link_names ?? true,
       unfurl_links: options?.unfurl_links ?? false,
@@ -130,19 +132,6 @@ export class SlackClient implements SlackClientInterface {
       channel: result.channel as string,
       text: slackText
     };
-  }
-
-  /**
-   * Convert Telegram markdown to Slack mrkdwn format
-   * @param text Text with Telegram markdown formatting
-   * @returns Text with Slack mrkdwn formatting
-   */
-  private convertMarkdownToSlackFormat(text: string): string {
-    return text
-      // Convert [text](url) links to <url|text> format
-      .replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<$2|$1>')
-      // Convert **bold** to *bold*
-      .replace(/\*\*([^*]+)\*\*/g, '*$1*');
   }
 
   /**
@@ -214,7 +203,7 @@ export class SlackClient implements SlackClientInterface {
     callbackId: string | RegExp,
     handler: (context: SlackViewContext) => Promise<void>
   ): void {
-    this.boltApp.view(callbackId, async (args) => {
+    this.boltApp.view<ViewSubmitAction>(callbackId, async (args) => {
       const userId = args.body.user.id;
       const session = this.sessionStorage.get(userId);
       const context: SlackViewContext = {

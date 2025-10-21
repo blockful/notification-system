@@ -64,11 +64,13 @@ export class BatchNotificationService {
    * @param validNotifications - Notifications ready to be sent
    * @param messageGenerator - Function to generate message for each address
    * @param metadataGenerator - Optional function to generate metadata for each notification
+   * @param buttonsGenerator - Optional function to generate buttons for each notification
    */
   async executeBatchSend(
     validNotifications: BatchNotificationData[],
     messageGenerator: (address: string) => string,
-    metadataGenerator?: (address: string) => Record<string, any>
+    metadataGenerator?: (address: string) => Record<string, any>,
+    buttonsGenerator?: (address: string) => Array<{ text: string; url: string }>
   ): Promise<void> {
     const sendPromises: Promise<void>[] = [];
     const allNotificationsToMark: Notification[] = [];
@@ -77,15 +79,17 @@ export class BatchNotificationService {
       const followerMap = new Map(followers.map((f: User) => [f.id, f]));
       const message = messageGenerator(address);
       const metadata = metadataGenerator ? metadataGenerator(address) : undefined;
-      
+      const buttons = buttonsGenerator ? buttonsGenerator(address) : undefined;
+
       this.queueNotificationSends(
-        notificationsToSend, 
-        followerMap, 
-        message, 
+        notificationsToSend,
+        followerMap,
+        message,
         metadata,
+        buttons,
         sendPromises
       );
-      
+
       allNotificationsToMark.push(...notificationsToSend);
     }
 
@@ -102,6 +106,7 @@ export class BatchNotificationService {
    * @param followerMap - Map of follower IDs to follower data
    * @param message - Formatted notification message
    * @param metadata - Optional metadata for the notification
+   * @param buttons - Optional buttons for the notification
    * @param sendPromises - Array to collect send promises
    */
   private queueNotificationSends(
@@ -109,6 +114,7 @@ export class BatchNotificationService {
     followerMap: Map<string, User>,
     message: string,
     metadata: Record<string, any> | undefined,
+    buttons: Array<{ text: string; url: string }> | undefined,
     sendPromises: Promise<void>[]
   ): void {
     for (const notification of notificationsToSend) {
@@ -124,7 +130,7 @@ export class BatchNotificationService {
             channelUserId: follower.channel_user_id,
             message,
             bot_token: follower.token,
-            metadata
+            metadata: buttons ? { ...metadata, buttons } : metadata
           })
           .catch(error => {
             console.error(`Failed to send notification to user ${follower.id}:`, error);
@@ -141,22 +147,24 @@ export class BatchNotificationService {
    * @param eventIdGenerator - Function to generate unique event IDs
    * @param messageGenerator - Function to generate messages
    * @param metadataGenerator - Optional function to generate metadata
+   * @param buttonsGenerator - Optional function to generate buttons
    */
   async sendBatchNotifications(
     addresses: string[],
     daoId: string,
     eventIdGenerator: (address: string) => string,
     messageGenerator: (address: string) => string,
-    metadataGenerator?: (address: string) => Record<string, any>
+    metadataGenerator?: (address: string) => Record<string, any>,
+    buttonsGenerator?: (address: string) => Array<{ text: string; url: string }>
   ): Promise<void> {
     const batchData = await this.prepareBatchData(addresses, daoId, eventIdGenerator);
     const validNotifications = this.filterValidNotifications(batchData);
-    
+
     if (validNotifications.length === 0) {
       return;
     }
 
-    await this.executeBatchSend(validNotifications, messageGenerator, metadataGenerator);
+    await this.executeBatchSend(validNotifications, messageGenerator, metadataGenerator, buttonsGenerator);
   }
 }
 

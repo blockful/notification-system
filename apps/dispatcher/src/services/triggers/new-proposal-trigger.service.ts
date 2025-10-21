@@ -3,7 +3,8 @@ import { ISubscriptionClient } from "../../interfaces/subscription-client.interf
 import { NotificationClientFactory } from "../notification/notification-factory.service";
 import { BaseTriggerHandler } from "./base-trigger.service";
 import { FormattingService } from "../formatting.service";
-import { newProposalMessages, replacePlaceholders } from '@notification-system/messages';
+import { newProposalMessages, replacePlaceholders, buildButtons } from '@notification-system/messages';
+import { AnticaptureClient } from '@notification-system/anticapture-client';
 import crypto from 'crypto';
 
 /**
@@ -14,12 +15,14 @@ export class NewProposalTriggerHandler extends BaseTriggerHandler {
    * Creates a new instance of the NewProposalTriggerHandler
    * @param subscriptionClient Client for subscription server API
    * @param notificationFactory Factory for creating notification clients
+   * @param anticaptureClient Client for AntiCapture API
    */
   constructor(
     subscriptionClient: ISubscriptionClient,
-    notificationFactory: NotificationClientFactory
+    notificationFactory: NotificationClientFactory,
+    anticaptureClient: AnticaptureClient
   ) {
-    super(subscriptionClient, notificationFactory);
+    super(subscriptionClient, notificationFactory, anticaptureClient);
   }
 
   /**
@@ -28,16 +31,32 @@ export class NewProposalTriggerHandler extends BaseTriggerHandler {
    */
   async handleMessage(message: DispatcherMessage): Promise<MessageProcessingResult> {
     for (const proposal of message.events) {
-      const { daoId, id: proposalId, title, description, timestamp } = proposal;
+      const { daoId, id: proposalId, title, description, timestamp, txHash } = proposal;
       const proposalTitle = title || FormattingService.extractTitle(description, 'Unnamed Proposal');
       const subscribers = await this.getSubscribers(daoId, proposalId, timestamp);
       const notificationMessage = replacePlaceholders(newProposalMessages.notification, {
         daoId,
         title: proposalTitle
       });
-      await this.sendNotificationsToSubscribers(subscribers, notificationMessage, proposalId, daoId);
+
+      // Build buttons with transaction hash
+      const chainId = await this.getChainIdForDao(daoId);
+      const buttons = buildButtons({
+        triggerType: 'newProposal',
+        txHash: txHash,
+        chainId
+      });
+
+      await this.sendNotificationsToSubscribers(
+        subscribers,
+        notificationMessage,
+        proposalId,
+        daoId,
+        undefined,
+        buttons
+      );
     }
-    
+
     return {
       messageId: crypto.randomUUID(),
       timestamp: new Date().toISOString()

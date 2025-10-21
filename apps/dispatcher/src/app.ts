@@ -56,7 +56,7 @@ export class App {
 
     triggerProcessorService.addHandler(
       'new-proposal',
-      new NewProposalTriggerHandler(subscriptionClient, notificationFactory)
+      new NewProposalTriggerHandler(subscriptionClient, notificationFactory, anticaptureClient)
     );
 
     triggerProcessorService.addHandler(

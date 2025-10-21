@@ -13,6 +13,7 @@ query GetProposalById($id: String!) {
     forVotes
     againstVotes
     abstainVotes
+    txHash
   }
 }
 
@@ -32,6 +33,7 @@ query ListProposals($skip: NonNegativeInt, $limit: PositiveInt, $orderDirection:
       forVotes
       againstVotes
       abstainVotes
+      txHash
     }
     totalCount
   }

@@ -8,37 +8,29 @@
 import { SlackClientInterface } from '../../interfaces/slack-client.interface';
 import { NotificationPayload } from '../../interfaces/notification.interface';
 import { BotServiceInterface } from '../../interfaces/bot-service.interface';
-import { ExplorerService } from '../explorer.service';
+import { slackMessages, convertMarkdownToSlack } from '@notification-system/messages';
 import { EnsResolverService } from '../ens-resolver.service';
 import { SlackDAOService } from '../dao/slack-dao.service';
 import { SlackWalletService } from '../wallet/slack-wallet.service';
 import { SlackCommandContext } from '../../interfaces/slack-context.interface';
-import { slackMessages, replacePlaceholders } from '@notification-system/messages';
-
-type CommandHandler = (context: SlackCommandContext, args: string[]) => Promise<void>;
 
 export class SlackBotService implements BotServiceInterface {
   private slackClient: SlackClientInterface;
-  private explorerService: ExplorerService;
   private ensResolver: EnsResolverService;
   private daoService?: SlackDAOService;
   private walletService?: SlackWalletService;
-  private commandHandlers: Map<string, CommandHandler>;
 
   constructor(
     slackClient: SlackClientInterface,
-    explorerService: ExplorerService,
     ensResolver: EnsResolverService,
     daoService?: SlackDAOService,
     walletService?: SlackWalletService
   ) {
     this.slackClient = slackClient;
-    this.explorerService = explorerService;
     this.ensResolver = ensResolver;
     this.daoService = daoService;
     this.walletService = walletService;
 
-    this.commandHandlers = this.createCommandRegistry();
     this.setupCommands();
   }
 
@@ -49,20 +41,6 @@ export class SlackBotService implements BotServiceInterface {
     this.slackClient.setupHandlers!((handlers) => {
       // App Home
       handlers.event('app_home_opened', (ctx) => this.handleAppHomeOpened(ctx));
-
-      // Message handler for conversational flows (e.g., wallet input)
-      handlers.message('', async (ctx) => {
-        const message = ctx.body as any;
-
-        // Check if waiting for wallet input
-        if (ctx.session?.awaitingInput?.type === 'wallet' &&
-            ctx.session?.awaitingInput?.action === 'add') {
-          if (message.text && !message.bot_id && this.walletService) {
-            await this.walletService.processWalletInput(ctx, message.text);
-            return;
-          }
-        }
-      });
 
       // Main command
       handlers.command('/anticapture', (ctx) => this.handleMainCommand(ctx));
@@ -93,14 +71,6 @@ export class SlackBotService implements BotServiceInterface {
         }
       });
 
-      // DAO actions
-      handlers.action(/^dao_toggle_subscribe_(.+)$/, async (ctx) => {
-        const match = (ctx.body as any).actions[0].action_id.match(/^dao_toggle_subscribe_(.+)$/);
-        if (match && this.daoService) {
-          await this.daoService.toggle(ctx, match[1]);
-        }
-      });
-
       handlers.action('dao_confirm_subscribe', async (ctx) => {
         if (this.daoService) {
           await this.daoService.confirm(ctx);
@@ -108,12 +78,6 @@ export class SlackBotService implements BotServiceInterface {
       });
 
       // Wallet actions
-      handlers.action(/^wallet_toggle_(.+)$/, async (ctx) => {
-        if (this.walletService) {
-          await this.walletService.toggleWalletForRemoval(ctx, (ctx.body as any).actions[0].value);
-        }
-      });
-
       handlers.action('wallet_confirm_remove', async (ctx) => {
         if (this.walletService) {
           await this.walletService.confirmRemoval(ctx);
@@ -131,106 +95,25 @@ export class SlackBotService implements BotServiceInterface {
           await this.walletService.startRemoveWallet(ctx);
         }
       });
+
+      // Modal submission handlers
+      handlers.view('wallet_add_modal', async (ctx) => {
+        if (this.walletService) {
+          await this.walletService.processWalletSubmission(ctx);
+        }
+      });
     });
   }
 
   /**
-   * Create the command registry mapping commands to handlers
-   */
-  private createCommandRegistry(): Map<string, CommandHandler> {
-    const registry = new Map<string, CommandHandler>();
-    registry.set('daos', async (ctx, args) => this.handleDaoList(ctx));
-    registry.set('wallet', async (ctx, args) => this.handleWalletCommand(ctx));
-    registry.set('help', async (ctx, args) => this.showHelp(ctx));
-
-    return registry;
-  }
-
-  /**
-   * Handle the main /anticapture command and route to subcommands
+   * Handle the main /anticapture command - shows welcome message
    */
   private async handleMainCommand(context: SlackCommandContext): Promise<void> {
-    const text = context.body.text?.trim().toLowerCase();
-    const args = text ? text.split(/\s+/) : [];
-    const command = args[0] || 'help';
-    const handler = this.commandHandlers.get(command) || this.commandHandlers.get('help')!;
-    await handler(context, args.slice(1));
-  }
-
-  /**
-   * Handle DAO list command
-   */
-  private async handleDaoList(context: SlackCommandContext): Promise<void> {
-    if (!this.daoService) {
-      await this.respondWithError(context, 'DAO management is not available');
-      return;
-    }
-    await this.daoService.listSubscriptions(context);
-  }
-
-  /**
-   * Handle wallet command - always shows list with add/remove buttons
-   */
-  private async handleWalletCommand(context: SlackCommandContext): Promise<void> {
-    if (!this.walletService) {
-      await this.respondWithError(context, 'Wallet management is not available');
-      return;
-    }
-
-    await this.walletService.initialize(context);
-  }
-
-  /**
-   * Show help message
-   */
-  private async showHelp(context: SlackCommandContext): Promise<void> {
     await context.ack();
     if (context.respond) {
       await context.respond({
-      blocks: [
-        {
-          type: 'section',
-          text: {
-            type: 'mrkdwn',
-            text: `${slackMessages.header.title}\n${slackMessages.header.subtitle}`
-          }
-        },
-        {
-          type: 'divider'
-        },
-        {
-          type: 'section',
-          text: {
-            type: 'mrkdwn',
-            text: '*Available Commands:*\n' +
-              '• `/anticapture wallet` - Manage your wallet addresses\n' +
-              '• `/anticapture daos` - Manage your DAO subscriptions\n' +
-              '• `/anticapture help` - Show this help message'
-          }
-        },
-        {
-          type: 'context',
-          elements: [
-            {
-              type: 'mrkdwn',
-              text: slackMessages.learnMore
-            }
-          ]
-        }
-      ],
-      response_type: 'in_channel'
-      });
-    }
-  }
-
-  /**
-   * Respond with an error message
-   */
-  private async respondWithError(context: SlackCommandContext, message: string): Promise<void> {
-    await context.ack();
-    if (context.respond) {
-      await context.respond({
-        text: replacePlaceholders(slackMessages.error, { message }),
+        blocks: slackMessages.welcomeMessage.blocks,
+        text: 'Anticapture Notification System - Manage your notification preferences',
         response_type: 'in_channel'
       });
     }
@@ -264,7 +147,7 @@ export class SlackBotService implements BotServiceInterface {
           await ctx.client.chat.postMessage({
             channel: event.user,
             blocks: slackMessages.welcomeMessage.blocks,
-            text: 'Welcome to DAO Notification Bot!' // Fallback text
+            text: 'Anticapture Notification System - Manage your notification preferences'
           });
         }
       }
@@ -300,22 +183,15 @@ export class SlackBotService implements BotServiceInterface {
   public async sendNotification(payload: NotificationPayload): Promise<string> {
     let processedMessage = payload.message;
 
-    // Process transaction link placeholder
-    if (processedMessage.includes('{{txLink}}')) {
-      const txUrl = payload.metadata?.transaction
-        ? this.explorerService.getTransactionLink(payload.metadata.transaction.chainId, payload.metadata.transaction.hash)
-        : null;
-
-      processedMessage = txUrl
-        ? processedMessage.replace('{{txLink}}', `<${txUrl}|Transaction details>`)
-        : processedMessage.replace('\n\n{{txLink}}', '');
-    }
+    // Convert Telegram markdown to Slack mrkdwn
+    processedMessage = convertMarkdownToSlack(processedMessage);
 
     // Process ENS names if addresses are provided in metadata
     if (payload.metadata?.addresses) {
       for (const [placeholder, address] of Object.entries(payload.metadata.addresses)) {
         const displayName = await this.ensResolver.resolveDisplayName(address);
-        processedMessage = processedMessage.replace(`{{${placeholder}}}`, displayName);
+        const regex = new RegExp(`\\{\\{${placeholder}\\}\\}`, 'g');
+        processedMessage = processedMessage.replace(regex, displayName);
       }
     }
 
@@ -328,14 +204,36 @@ export class SlackBotService implements BotServiceInterface {
       throw new Error('Slack notification requires workspace OAuth token. No bot_token provided in notification payload.');
     }
 
+    // Build message options with buttons if provided
+    const messageOptions = payload.metadata?.buttons ? {
+      blocks: [
+        {
+          type: 'section' as const,
+          text: { type: 'mrkdwn' as const, text: processedMessage }
+        },
+        {
+          type: 'actions' as const,
+          elements: payload.metadata.buttons.map(btn => ({
+            type: 'button' as const,
+            text: { type: 'plain_text' as const, text: btn.text },
+            url: btn.url
+          }))
+        }
+      ],
+      text: processedMessage, // Fallback text
+      mrkdwn: true,
+      unfurl_links: false,
+      token: payload.bot_token
+    } : {
+      mrkdwn: true,
+      unfurl_links: false,
+      token: payload.bot_token
+    };
+
     const sentMessage = await this.slackClient.sendMessage(
       userId,
       processedMessage,
-      {
-        mrkdwn: true,
-        unfurl_links: false,
-        token: payload.bot_token // Pass the workspace-specific token
-      }
+      messageOptions
     );
 
     return sentMessage.ts;
