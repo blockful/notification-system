@@ -54,6 +54,10 @@ export class GraphQLMockSetup {
           const beforeCount = filtered.length;
           filtered = filtered.filter(p => parseInt(p.timestamp) >= data.variables.fromDate);
         }
+        if (data.variables?.fromEndDate) {
+          // Filter by end timestamp
+          filtered = filtered.filter(p => parseInt(p.endTimestamp) >= data.variables.fromEndDate);
+        }
         if (config?.headers?.['anticapture-dao-id']) {
           filtered = filtered.filter(p => p.daoId === config.headers['anticapture-dao-id']);
         }
