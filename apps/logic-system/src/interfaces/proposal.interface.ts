@@ -30,6 +30,8 @@ export interface ListProposalsOptions {
     daoId?: string;
     /** Filter proposals after this date (timestamp in seconds as float) */
     fromDate?: string;
+    /** Filter proposals by end timestamp (timestamp in seconds as float) */
+    fromEndDate?: string;
     /** Order direction - asc or desc */
     orderDirection?: string;
 }

@@ -9,7 +9,7 @@ import { ProposalOnChain, ProposalFinishedNotification } from '../interfaces/pro
  */
 export class ProposalFinishedTrigger extends Trigger<ProposalOnChain, void> {
   private readonly finishedStatuses = ['EXECUTED', 'DEFEATED', 'SUCCEEDED', 'EXPIRED', 'CANCELED'];
-  private lastProcessedEndTimestamp: string;
+  private endTimestampCursor: number;
 
   constructor(
     private readonly proposalRepository: ProposalRepository,
@@ -20,10 +20,9 @@ export class ProposalFinishedTrigger extends Trigger<ProposalOnChain, void> {
     super('proposal-finished', interval);
     // Use provided timestamp or default to 24 hours lookback
     if (initialTimestamp) {
-      this.lastProcessedEndTimestamp = initialTimestamp;
+      this.endTimestampCursor = parseInt(initialTimestamp, 10);
     } else {
-      const twentyFourHoursAgo = Math.floor((Date.now() - 24 * 60 * 60 * 1000) / 1000);
-      this.lastProcessedEndTimestamp = twentyFourHoursAgo.toString();
+      this.endTimestampCursor = Math.floor((Date.now() - 24 * 60 * 60 * 1000) / 1000);
     }
   }
 
@@ -35,18 +34,17 @@ export class ProposalFinishedTrigger extends Trigger<ProposalOnChain, void> {
    */
   public reset(timestamp?: string): void {
     if (timestamp) {
-      this.lastProcessedEndTimestamp = timestamp;
+      this.endTimestampCursor = parseInt(timestamp, 10);
     } else {
-      const twentyFourHoursAgo = Math.floor((Date.now() - 24 * 60 * 60 * 1000) / 1000);
-      this.lastProcessedEndTimestamp = twentyFourHoursAgo.toString();
+      this.endTimestampCursor = Math.floor((Date.now() - 24 * 60 * 60 * 1000) / 1000);
     }
   }
 
   protected async fetchData(): Promise<ProposalOnChain[]> {
     return await this.proposalRepository.listAll({
       status: this.finishedStatuses,  // API accepts array
-      fromDate: this.lastProcessedEndTimestamp,
-      orderDirection: 'desc',  // API orders by timestamp by default
+      fromEndDate: this.endTimestampCursor.toString(),
+      orderDirection: 'desc',  // API orders by endTimestamp when using fromEndDate
       limit: 100
     });
   }
@@ -75,11 +73,11 @@ export class ProposalFinishedTrigger extends Trigger<ProposalOnChain, void> {
     };
     
     await this.rabbitMQDispatcherService.sendMessage(message);
-    
-    // Update timestamp to the most recent proposal's endTimestamp
+
+    // Update timestamp to the most recent proposal's endTimestamp + 1
     // Since we order by endTimestamp desc, the first one has the highest endTimestamp
     if (notifications.length > 0 && notifications[0].endTimestamp > 0) {
-      this.lastProcessedEndTimestamp = notifications[0].endTimestamp.toString();
+      this.endTimestampCursor = notifications[0].endTimestamp + 1;
     }
   }
 }

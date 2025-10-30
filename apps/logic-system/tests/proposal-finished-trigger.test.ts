@@ -33,13 +33,13 @@ describe('ProposalFinishedTrigger', () => {
   describe('Data Fetching', () => {
     it('should fetch proposals with finished statuses and temporal filter', async () => {
       mockProposalRepository.listAll.mockResolvedValue([]);
-      const initialTimestamp = trigger['lastProcessedEndTimestamp'];
+      const initialTimestamp = trigger['endTimestampCursor'];
       
       await (trigger as any).fetchData();
       
       expect(mockProposalRepository.listAll).toHaveBeenCalledWith({
         status: ['EXECUTED', 'DEFEATED', 'SUCCEEDED', 'EXPIRED', 'CANCELED'],
-        fromDate: initialTimestamp,
+        fromEndDate: initialTimestamp.toString(),
         orderDirection: 'desc',
         limit: 100
       });
@@ -69,7 +69,7 @@ describe('ProposalFinishedTrigger', () => {
     });
 
     describe('when proposals exist', () => {
-      it('should send message with correct format and update lastProcessedEndTimestamp', async () => {
+      it('should send message with correct format and update endTimestampCursor', async () => {
         const proposals = [
           createFinishedProposal('EXECUTED', {
             id: 'prop1',
@@ -118,8 +118,8 @@ describe('ProposalFinishedTrigger', () => {
           ]
         });
         
-        // Should update to the first notification's endTimestamp (prop1 is first in array)
-        expect(trigger['lastProcessedEndTimestamp']).toBe('1625097600');
+        // Should update to the first notification's endTimestamp + 1 (prop1 is first in array)
+        expect(trigger['endTimestampCursor']).toBe(1625097601);
       });
 
       it('should handle proposals with missing optional fields', async () => {
@@ -163,6 +163,64 @@ describe('ProposalFinishedTrigger', () => {
               expect.objectContaining({ id: 'prop2' }),
               expect.objectContaining({ id: 'prop3' }),
               expect.objectContaining({ id: 'prop4' })
+            ])
+          })
+        );
+      });
+    });
+
+    describe('Bug Fix: Proposals with Different Creation and End Times', () => {
+      it('should not lose proposals that were created before but finished after endTimestampCursor', async () => {
+        const proposalA = createFinishedProposal('EXECUTED', {
+          id: 'proposal-a',
+          daoId: 'dao1',
+          timestamp: '1000',
+          endTimestamp: '2000'
+        });
+
+        const proposalB = createFinishedProposal('DEFEATED', {
+          id: 'proposal-b',
+          daoId: 'dao1',
+          timestamp: '1100',
+          endTimestamp: '2100'
+        });
+
+        // First execution: process proposal A
+        mockProposalRepository.listAll.mockResolvedValueOnce([proposalA]);
+        await (trigger as any).fetchData();
+        await trigger.process([proposalA]);
+
+        // Verify endTimestampCursor was updated to A's endTimestamp + 1
+        expect(trigger['endTimestampCursor']).toBe(2001);
+
+        // Second execution: should fetch proposals with fromEndDate=2001
+        // Proposal B should be returned because endTimestamp(2100) >= 2001
+        // Proposal A (endTimestamp=2000) will NOT be returned (2000 < 2001)
+        mockProposalRepository.listAll.mockResolvedValueOnce([proposalB]);
+        const secondFetchResult = await (trigger as any).fetchData();
+
+        // Verify the query uses fromEndDate=2001 (A's endTimestamp + 1)
+        // This ensures A is not fetched again, avoiding duplicates
+        expect(mockProposalRepository.listAll).toHaveBeenLastCalledWith({
+          status: ['EXECUTED', 'DEFEATED', 'SUCCEEDED', 'EXPIRED', 'CANCELED'],
+          fromEndDate: '2001',  // A's endTimestamp + 1 converted to string for repository
+          orderDirection: 'desc',
+          limit: 100
+        });
+
+        // Verify proposal B is returned and can be processed
+        expect(secondFetchResult).toEqual([proposalB]);
+
+        // Process B and verify it's notified
+        await trigger.process([proposalB]);
+        expect(mockDispatcherService.sendMessage).toHaveBeenCalledWith(
+          expect.objectContaining({
+            triggerId: 'proposal-finished',
+            events: expect.arrayContaining([
+              expect.objectContaining({
+                id: 'proposal-b',
+                endTimestamp: 2100
+              })
             ])
           })
         );
