@@ -111,7 +111,7 @@ describe('VotingReminderTrigger', () => {
       expect(mockDispatcherService.sendMessage).not.toHaveBeenCalled();
     });
 
-    it('should update lastProcessedTimestamp after processing', async () => {
+    it('should update timestampCursor after processing', async () => {
       const proposalStart = baseTime - 3600;
       const proposalEnd = baseTime + 300; // within 90-95% window
       
@@ -126,10 +126,11 @@ describe('VotingReminderTrigger', () => {
 
       // Process proposal
       await trigger.process([proposal]);
-      
-      // Check that lastProcessedTimestamp was updated to the proposal's timestamp
-      const updatedTimestamp = (trigger as any).lastProcessedTimestamp;
-      expect(updatedTimestamp).toBe(proposalStart.toString());
+
+      // Check that timestampCursor was updated to the proposal's timestamp + 1
+      // +1 to avoid duplicates since API uses >= comparison
+      const updatedTimestamp = (trigger as any).timestampCursor;
+      expect(updatedTimestamp).toBe(proposalStart + 1);
       
       expect(mockDispatcherService.sendMessage).toHaveBeenCalledTimes(1);
     });
@@ -196,7 +197,7 @@ describe('VotingReminderTrigger', () => {
 
       const result = await trigger['fetchData']();
 
-      // Should include fromDate filter with lastProcessedTimestamp
+      // Should include fromDate filter with timestampCursor
       expect(mockProposalRepository.listAll).toHaveBeenCalledWith({
         status: 'ACTIVE',
         fromDate: expect.any(String)
@@ -206,7 +207,7 @@ describe('VotingReminderTrigger', () => {
   });
 
   describe('reset', () => {
-    it('should reset the lastProcessedTimestamp', () => {
+    it('should reset the timestampCursor', () => {
       // Create trigger with initial timestamp
       const initialTimestamp = '1000000';
       const triggerWithTimestamp = new VotingReminderTrigger(
@@ -222,16 +223,16 @@ describe('VotingReminderTrigger', () => {
       triggerWithTimestamp.reset();
       
       // Access private property for testing
-      const resetTimestamp = (triggerWithTimestamp as any).lastProcessedTimestamp;
+      const resetTimestamp = (triggerWithTimestamp as any).timestampCursor;
       const twentyFourHoursAgo = Math.floor((Date.now() - 24 * 60 * 60 * 1000) / 1000);
       
       // Should be around 24 hours ago (within 1 second tolerance)
-      expect(Math.abs(parseInt(resetTimestamp) - twentyFourHoursAgo)).toBeLessThanOrEqual(1);
+      expect(Math.abs(resetTimestamp - twentyFourHoursAgo)).toBeLessThanOrEqual(1);
 
       // Reset with specific timestamp
       triggerWithTimestamp.reset('2000000');
-      const specificTimestamp = (triggerWithTimestamp as any).lastProcessedTimestamp;
-      expect(specificTimestamp).toBe('2000000');
+      const specificTimestamp = (triggerWithTimestamp as any).timestampCursor;
+      expect(specificTimestamp).toBe(2000000);
     });
   });
 

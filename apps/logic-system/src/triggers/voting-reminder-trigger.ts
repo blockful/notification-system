@@ -27,7 +27,7 @@ const TRIGGER_ID_PREFIX = 'voting-reminder';
 const DEFAULT_WINDOW_SIZE = 5; 
 
 export class VotingReminderTrigger extends Trigger<ProposalOnChain> {
-  private lastProcessedTimestamp: string;
+  private timestampCursor: number;
   private thresholdPercentage: number;
   private windowSize: number;
 
@@ -45,10 +45,9 @@ export class VotingReminderTrigger extends Trigger<ProposalOnChain> {
     
     // Initialize timestamp - look back 24 hours by default
     if (initialTimestamp) {
-      this.lastProcessedTimestamp = initialTimestamp;
+      this.timestampCursor = parseInt(initialTimestamp, 10);
     } else {
-      const twentyFourHoursAgo = Math.floor((Date.now() - 24 * 60 * 60 * 1000) / 1000);
-      this.lastProcessedTimestamp = twentyFourHoursAgo.toString();
+      this.timestampCursor = Math.floor((Date.now() - 24 * 60 * 60 * 1000) / 1000);
     }
   }
 
@@ -58,10 +57,9 @@ export class VotingReminderTrigger extends Trigger<ProposalOnChain> {
    */
   public reset(timestamp?: string): void {
     if (timestamp) {
-      this.lastProcessedTimestamp = timestamp;
+      this.timestampCursor = parseInt(timestamp, 10);
     } else {
-      const twentyFourHoursAgo = Math.floor((Date.now() - 24 * 60 * 60 * 1000) / 1000);
-      this.lastProcessedTimestamp = twentyFourHoursAgo.toString();
+      this.timestampCursor = Math.floor((Date.now() - 24 * 60 * 60 * 1000) / 1000);
     }
   }
 
@@ -89,11 +87,11 @@ export class VotingReminderTrigger extends Trigger<ProposalOnChain> {
     };
 
     await this.dispatcherService.sendMessage(message);
-    
-    // Update timestamp to the most recent proposal's timestamp
+
+    // Update timestamp to the most recent proposal's timestamp + 1
     // Since data comes ordered by timestamp desc, the first item has the latest timestamp
     if (proposals[0]?.timestamp) {
-      this.lastProcessedTimestamp = proposals[0].timestamp;
+      this.timestampCursor = parseInt(proposals[0].timestamp, 10) + 1;
     }
 
   }
@@ -183,7 +181,7 @@ export class VotingReminderTrigger extends Trigger<ProposalOnChain> {
   protected async fetchData(): Promise<ProposalOnChain[]> {
     return await this.proposalRepository.listAll({ 
       status: 'ACTIVE',
-      fromDate: this.lastProcessedTimestamp
+      fromDate: this.timestampCursor.toString()
     });
   }
 }

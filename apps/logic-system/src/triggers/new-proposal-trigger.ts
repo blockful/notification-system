@@ -10,7 +10,7 @@ import { DispatcherService, DispatcherMessage } from '../interfaces/dispatcher.i
 const triggerId = 'new-proposal';
 
 export class NewProposalTrigger extends Trigger<ProposalOnChain, ListProposalsOptions> {
-  private lastFetchedTimestamp: string;
+  private timestampCursor: number;
   constructor(
     private readonly dispatcherService: DispatcherService,
     private readonly proposalRepository: ProposalDataSource,
@@ -20,10 +20,9 @@ export class NewProposalTrigger extends Trigger<ProposalOnChain, ListProposalsOp
     super(triggerId, interval);
     // Use provided timestamp or default to 24 hours lookback
     if (initialTimestamp) {
-      this.lastFetchedTimestamp = initialTimestamp;
+      this.timestampCursor = parseInt(initialTimestamp, 10);
     } else {
-      const twentyFourHoursAgo = Math.floor((Date.now() - 24 * 60 * 60 * 1000) / 1000);
-      this.lastFetchedTimestamp = twentyFourHoursAgo.toString();
+      this.timestampCursor = Math.floor((Date.now() - 24 * 60 * 60 * 1000) / 1000);
     }
   }
 
@@ -35,10 +34,9 @@ export class NewProposalTrigger extends Trigger<ProposalOnChain, ListProposalsOp
    */
   public reset(timestamp?: string): void {
     if (timestamp) {
-      this.lastFetchedTimestamp = timestamp;
+      this.timestampCursor = parseInt(timestamp, 10);
     } else {
-      const twentyFourHoursAgo = Math.floor((Date.now() - 24 * 60 * 60 * 1000) / 1000);
-      this.lastFetchedTimestamp = twentyFourHoursAgo.toString();
+      this.timestampCursor = Math.floor((Date.now() - 24 * 60 * 60 * 1000) / 1000);
     }
   }
 
@@ -52,11 +50,11 @@ export class NewProposalTrigger extends Trigger<ProposalOnChain, ListProposalsOp
       events: data
     };   
     await this.dispatcherService.sendMessage(message);
-    
-    // Update timestamp to the most recent proposal's timestamp
+
+    // Update timestamp to the most recent proposal's timestamp + 1
     // Since data comes ordered by timestamp desc, the first item has the latest timestamp
     if (data[0]?.timestamp) {
-      this.lastFetchedTimestamp = data[0].timestamp;
+      this.timestampCursor = parseInt(data[0].timestamp, 10) + 1;
     }
   }
 
@@ -70,7 +68,7 @@ export class NewProposalTrigger extends Trigger<ProposalOnChain, ListProposalsOp
     }
     return await this.proposalRepository.listAll({ 
       status: options.status,
-      fromDate: this.lastFetchedTimestamp 
+      fromDate: this.timestampCursor.toString() 
     });
   }
 } 
