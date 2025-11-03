@@ -9,6 +9,8 @@ export interface VoteData {
   weight: string;
   reason?: string;
   timestamp: string;
+  txHash: string;
+  votingPower: string;
 }
 
 /**
@@ -37,6 +39,8 @@ export class VoteFactory {
       support: '1', // '1' = FOR, '0' = AGAINST, '2' = ABSTAIN (must be string for Zod validation)
       weight: '1000000000000000000', // 1 token in wei
       timestamp: new Date().toISOString(),
+      txHash: `0x${uuidv4().replace(/-/g, '')}${uuidv4().replace(/-/g, '').substring(0, 8)}`, // Generate a fake tx hash
+      votingPower: '1000000000000000000', // 1 token in wei
       ...overrides
     };
   }

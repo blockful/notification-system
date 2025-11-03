@@ -28,8 +28,10 @@ export interface ListProposalsOptions {
     status?: string | string[];
     /** Filter by DAO (passed as header, not query param) */
     daoId?: string;
-    /** Filter proposals after this date (timestamp in seconds as float) */
-    fromDate?: string;
+    /** Filter proposals after this date (timestamp in seconds) */
+    fromDate?: number;
+    /** Filter proposals by end timestamp (timestamp in seconds) */
+    fromEndDate?: number;
     /** Order direction - asc or desc */
     orderDirection?: string;
 }
