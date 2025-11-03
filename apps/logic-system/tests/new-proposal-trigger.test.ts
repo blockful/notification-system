@@ -93,7 +93,7 @@ describe('NewProposalTrigger', () => {
       expect(mockProposalDataSource.listAll).toHaveBeenCalledTimes(1);
       expect(mockProposalDataSource.listAll).toHaveBeenCalledWith({ 
         status: 'ACTIVE',
-        fromDate: initialTimestamp.toString() 
+        fromDate: initialTimestamp 
       });
     });
     
@@ -107,7 +107,7 @@ describe('NewProposalTrigger', () => {
       
       expect(mockProposalDataSource.listAll).toHaveBeenCalledWith({ 
         status: 'ACTIVE',
-        fromDate: initialTimestamp.toString() 
+        fromDate: initialTimestamp 
       });
     });
     
@@ -119,7 +119,7 @@ describe('NewProposalTrigger', () => {
       expect(mockProposalDataSource.listAll).toHaveBeenCalledTimes(1);
       expect(mockProposalDataSource.listAll).toHaveBeenCalledWith({ 
         status: 'ACTIVE',
-        fromDate: initialTimestamp.toString() 
+        fromDate: initialTimestamp 
       });
       
       mockProposalDataSource.listAll.mockClear();

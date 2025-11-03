@@ -47,7 +47,7 @@ export class VotingReminderTrigger extends Trigger<ProposalOnChain> {
     if (initialTimestamp) {
       this.timestampCursor = parseInt(initialTimestamp, 10);
     } else {
-      this.timestampCursor = Math.floor((Date.now() - 24 * 60 * 60 * 1000) / 1000);
+      this.timestampCursor = Math.floor((Date.now() - 24 * 60 * 60 * 1000) / 1000); // 24 hours ago
     }
   }
 
@@ -59,7 +59,7 @@ export class VotingReminderTrigger extends Trigger<ProposalOnChain> {
     if (timestamp) {
       this.timestampCursor = parseInt(timestamp, 10);
     } else {
-      this.timestampCursor = Math.floor((Date.now() - 24 * 60 * 60 * 1000) / 1000);
+      this.timestampCursor = Math.floor((Date.now() - 24 * 60 * 60 * 1000) / 1000); // 24 hours ago
     }
   }
 
@@ -179,9 +179,9 @@ export class VotingReminderTrigger extends Trigger<ProposalOnChain> {
    * Fetches active proposals from the repository
    */
   protected async fetchData(): Promise<ProposalOnChain[]> {
-    return await this.proposalRepository.listAll({ 
+    return await this.proposalRepository.listAll({
       status: 'ACTIVE',
-      fromDate: this.timestampCursor.toString()
+      fromDate: this.timestampCursor
     });
   }
 }

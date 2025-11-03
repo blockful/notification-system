@@ -22,13 +22,11 @@ export class ProposalRepository implements ProposalDataSource {
     
     // Date filtering
     if (options?.fromDate) {
-      // Convert string timestamp to integer
-      variables.fromDate = parseInt(options.fromDate, 10);
+      variables.fromDate = options.fromDate;
     }
 
     if (options?.fromEndDate) {
-      // Convert string timestamp to integer
-      variables.fromEndDate = parseInt(options.fromEndDate, 10);
+      variables.fromEndDate = options.fromEndDate;
     }
 
     // Pagination

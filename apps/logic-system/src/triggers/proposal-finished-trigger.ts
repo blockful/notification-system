@@ -22,7 +22,7 @@ export class ProposalFinishedTrigger extends Trigger<ProposalOnChain, void> {
     if (initialTimestamp) {
       this.endTimestampCursor = parseInt(initialTimestamp, 10);
     } else {
-      this.endTimestampCursor = Math.floor((Date.now() - 24 * 60 * 60 * 1000) / 1000);
+      this.endTimestampCursor = Math.floor((Date.now() - 24 * 60 * 60 * 1000) / 1000); // 24 hours ago
     }
   }
 
@@ -36,14 +36,14 @@ export class ProposalFinishedTrigger extends Trigger<ProposalOnChain, void> {
     if (timestamp) {
       this.endTimestampCursor = parseInt(timestamp, 10);
     } else {
-      this.endTimestampCursor = Math.floor((Date.now() - 24 * 60 * 60 * 1000) / 1000);
+      this.endTimestampCursor = Math.floor((Date.now() - 24 * 60 * 60 * 1000) / 1000); // 24 hours ago
     }
   }
 
   protected async fetchData(): Promise<ProposalOnChain[]> {
     return await this.proposalRepository.listAll({
       status: this.finishedStatuses,  // API accepts array
-      fromEndDate: this.endTimestampCursor.toString(),
+      fromEndDate: this.endTimestampCursor,
       orderDirection: 'desc',  // API orders by endTimestamp when using fromEndDate
       limit: 100
     });

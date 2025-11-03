@@ -200,7 +200,7 @@ describe('VotingReminderTrigger', () => {
       // Should include fromDate filter with timestampCursor
       expect(mockProposalRepository.listAll).toHaveBeenCalledWith({
         status: 'ACTIVE',
-        fromDate: expect.any(String)
+        fromDate: expect.any(Number)
       });
       expect(result).toEqual(proposals);
     });

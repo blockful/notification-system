@@ -22,7 +22,7 @@ export class NewProposalTrigger extends Trigger<ProposalOnChain, ListProposalsOp
     if (initialTimestamp) {
       this.timestampCursor = parseInt(initialTimestamp, 10);
     } else {
-      this.timestampCursor = Math.floor((Date.now() - 24 * 60 * 60 * 1000) / 1000);
+      this.timestampCursor = Math.floor((Date.now() - 24 * 60 * 60 * 1000) / 1000); // 24 hours ago
     }
   }
 
@@ -36,7 +36,7 @@ export class NewProposalTrigger extends Trigger<ProposalOnChain, ListProposalsOp
     if (timestamp) {
       this.timestampCursor = parseInt(timestamp, 10);
     } else {
-      this.timestampCursor = Math.floor((Date.now() - 24 * 60 * 60 * 1000) / 1000);
+      this.timestampCursor = Math.floor((Date.now() - 24 * 60 * 60 * 1000) / 1000); // 24 hours ago
     }
   }
 
@@ -66,9 +66,9 @@ export class NewProposalTrigger extends Trigger<ProposalOnChain, ListProposalsOp
     if (!options?.status) {
       throw new Error('Status is required in filter options');
     }
-    return await this.proposalRepository.listAll({ 
+    return await this.proposalRepository.listAll({
       status: options.status,
-      fromDate: this.timestampCursor.toString() 
+      fromDate: this.timestampCursor
     });
   }
 } 

@@ -39,7 +39,7 @@ describe('ProposalFinishedTrigger', () => {
       
       expect(mockProposalRepository.listAll).toHaveBeenCalledWith({
         status: ['EXECUTED', 'DEFEATED', 'SUCCEEDED', 'EXPIRED', 'CANCELED'],
-        fromEndDate: initialTimestamp.toString(),
+        fromEndDate: initialTimestamp,
         orderDirection: 'desc',
         limit: 100
       });
@@ -203,7 +203,7 @@ describe('ProposalFinishedTrigger', () => {
         // This ensures A is not fetched again, avoiding duplicates
         expect(mockProposalRepository.listAll).toHaveBeenLastCalledWith({
           status: ['EXECUTED', 'DEFEATED', 'SUCCEEDED', 'EXPIRED', 'CANCELED'],
-          fromEndDate: '2001',  // A's endTimestamp + 1 converted to string for repository
+          fromEndDate: 2001,  // A's endTimestamp + 1
           orderDirection: 'desc',
           limit: 100
         });
