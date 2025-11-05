@@ -70,12 +70,12 @@ export const SafeVotesOnchainsResponseSchema = z.object({
   votesOnchains: z.object({
     items: z.array(z.object({
       daoId: z.string(),
-      txHash: z.string().optional(),
+      txHash: z.string(),
       proposalId: z.string(),
       voterAccountId: z.string(),
-      support: z.string().optional(),
-      votingPower: z.string().optional(),
-      timestamp: z.string().optional(),
+      support: z.string(),
+      votingPower: z.string(),
+      timestamp: z.string(),
       reason: z.string().optional().nullable()
     })),
     totalCount: z.number()

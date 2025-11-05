@@ -89,9 +89,14 @@ describe('VotingReminderTriggerHandler', () => {
       // Setup mocks
       mockSubscriptionClient.getFollowedAddresses.mockResolvedValue(['0x123', '0x456']);
       mockAnticaptureClient.listVotesOnchains.mockResolvedValue([
-        { 
+        {
           daoId: 'test-dao',
-          voterAccountId: '0x123' 
+          txHash: '0xtest',
+          proposalId: 'proposal-123',
+          voterAccountId: '0x123',
+          support: '1',
+          votingPower: '100',
+          timestamp: '1234567890'
         } // Only 0x123 has voted
       ]);
       mockSubscriptionClient.getWalletOwnersBatch.mockResolvedValue({
@@ -137,9 +142,14 @@ describe('VotingReminderTriggerHandler', () => {
 
       mockSubscriptionClient.getFollowedAddresses.mockResolvedValue(['0x123']);
       mockAnticaptureClient.listVotesOnchains.mockResolvedValue([
-        { 
+        {
           daoId: 'test-dao',
-          voterAccountId: '0x123' 
+          txHash: '0xtest',
+          proposalId: 'proposal-123',
+          voterAccountId: '0x123',
+          support: '1',
+          votingPower: '100',
+          timestamp: '1234567890'
         } // All addresses have voted
       ]);
 

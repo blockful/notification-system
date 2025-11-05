@@ -17,8 +17,8 @@ query GetProposalById($id: String!) {
   }
 }
 
-query ListProposals($skip: NonNegativeInt, $limit: PositiveInt, $orderDirection: queryInput_proposals_orderDirection, $status: JSON, $fromDate: Float) {
-  proposals(skip: $skip, limit: $limit, orderDirection: $orderDirection, status: $status, fromDate: $fromDate) {
+query ListProposals($skip: NonNegativeInt, $limit: PositiveInt, $orderDirection: queryInput_proposals_orderDirection, $status: JSON, $fromDate: Float, $fromEndDate: Float) {
+  proposals(skip: $skip, limit: $limit, orderDirection: $orderDirection, status: $status, fromDate: $fromDate, fromEndDate: $fromEndDate) {
     items {
       id
       daoId

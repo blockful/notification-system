@@ -22,10 +22,13 @@ export class ProposalRepository implements ProposalDataSource {
     
     // Date filtering
     if (options?.fromDate) {
-      // Convert string timestamp to Float
-      variables.fromDate = parseFloat(options.fromDate);
+      variables.fromDate = options.fromDate;
     }
-    
+
+    if (options?.fromEndDate) {
+      variables.fromEndDate = options.fromEndDate;
+    }
+
     // Pagination
     if (options?.limit) {
       variables.limit = Math.min(options.limit, limit);

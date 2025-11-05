@@ -349,54 +349,54 @@ export declare const SafeVotesOnchainsResponseSchema: z.ZodObject<{
     votesOnchains: z.ZodObject<{
         items: z.ZodArray<z.ZodObject<{
             daoId: z.ZodString;
-            txHash: z.ZodOptional<z.ZodString>;
+            txHash: z.ZodString;
             proposalId: z.ZodString;
             voterAccountId: z.ZodString;
-            support: z.ZodOptional<z.ZodString>;
-            votingPower: z.ZodOptional<z.ZodString>;
-            timestamp: z.ZodOptional<z.ZodString>;
+            support: z.ZodString;
+            votingPower: z.ZodString;
+            timestamp: z.ZodString;
             reason: z.ZodNullable<z.ZodOptional<z.ZodString>>;
         }, "strip", z.ZodTypeAny, {
+            timestamp: string;
+            votingPower: string;
             daoId: string;
+            txHash: string;
             proposalId: string;
             voterAccountId: string;
-            timestamp?: string | undefined;
-            votingPower?: string | undefined;
-            txHash?: string | undefined;
-            support?: string | undefined;
+            support: string;
             reason?: string | null | undefined;
         }, {
+            timestamp: string;
+            votingPower: string;
             daoId: string;
+            txHash: string;
             proposalId: string;
             voterAccountId: string;
-            timestamp?: string | undefined;
-            votingPower?: string | undefined;
-            txHash?: string | undefined;
-            support?: string | undefined;
+            support: string;
             reason?: string | null | undefined;
         }>, "many">;
         totalCount: z.ZodNumber;
     }, "strip", z.ZodTypeAny, {
         items: {
+            timestamp: string;
+            votingPower: string;
             daoId: string;
+            txHash: string;
             proposalId: string;
             voterAccountId: string;
-            timestamp?: string | undefined;
-            votingPower?: string | undefined;
-            txHash?: string | undefined;
-            support?: string | undefined;
+            support: string;
             reason?: string | null | undefined;
         }[];
         totalCount: number;
     }, {
         items: {
+            timestamp: string;
+            votingPower: string;
             daoId: string;
+            txHash: string;
             proposalId: string;
             voterAccountId: string;
-            timestamp?: string | undefined;
-            votingPower?: string | undefined;
-            txHash?: string | undefined;
-            support?: string | undefined;
+            support: string;
             reason?: string | null | undefined;
         }[];
         totalCount: number;
@@ -404,13 +404,13 @@ export declare const SafeVotesOnchainsResponseSchema: z.ZodObject<{
 }, "strip", z.ZodTypeAny, {
     votesOnchains: {
         items: {
+            timestamp: string;
+            votingPower: string;
             daoId: string;
+            txHash: string;
             proposalId: string;
             voterAccountId: string;
-            timestamp?: string | undefined;
-            votingPower?: string | undefined;
-            txHash?: string | undefined;
-            support?: string | undefined;
+            support: string;
             reason?: string | null | undefined;
         }[];
         totalCount: number;
@@ -418,13 +418,13 @@ export declare const SafeVotesOnchainsResponseSchema: z.ZodObject<{
 }, {
     votesOnchains: {
         items: {
+            timestamp: string;
+            votingPower: string;
             daoId: string;
+            txHash: string;
             proposalId: string;
             voterAccountId: string;
-            timestamp?: string | undefined;
-            votingPower?: string | undefined;
-            txHash?: string | undefined;
-            support?: string | undefined;
+            support: string;
             reason?: string | null | undefined;
         }[];
         totalCount: number;

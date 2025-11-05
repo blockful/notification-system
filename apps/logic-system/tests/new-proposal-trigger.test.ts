@@ -30,7 +30,7 @@ describe('NewProposalTrigger', () => {
       expect(mockDispatcherService.sendMessage).not.toHaveBeenCalled();
     });
 
-    it('should send proposals and update lastFetchedTimestamp', async () => {
+    it('should send proposals and update timestampCursor', async () => {
       const proposals: ProposalOnChain[] = [
         createProposal({ status: 'ACTIVE', timestamp: '1000' }),
         createProposal({ id: '2', status: 'ACTIVE', description: 'Second proposal\nWith details', timestamp: '900' })
@@ -44,8 +44,9 @@ describe('NewProposalTrigger', () => {
         events: proposals
       });
       
-      // Should update to the first proposal's timestamp (highest since ordered desc)
-      expect(trigger['lastFetchedTimestamp']).toBe('1000');
+      // Should update to the first proposal's timestamp + 1 (highest since ordered desc)
+      // +1 to avoid duplicates since API uses >= comparison
+      expect(trigger['timestampCursor']).toBe(1001);
     });
 
     it('should send complete proposal objects including all fields', async () => {
@@ -85,7 +86,7 @@ describe('NewProposalTrigger', () => {
     });
 
     it('should start the interval and fetch proposals with status and timestamp filter', () => {
-      const initialTimestamp = trigger['lastFetchedTimestamp'];
+      const initialTimestamp = trigger['timestampCursor'];
       trigger.start({ status: 'ACTIVE' });
       jest.advanceTimersByTime(60000);
       
@@ -98,7 +99,7 @@ describe('NewProposalTrigger', () => {
     
     it('should stop and restart the interval if start is called twice', () => {
       const stopSpy = jest.spyOn(trigger, 'stop');
-      const initialTimestamp = trigger['lastFetchedTimestamp'];
+      const initialTimestamp = trigger['timestampCursor'];
       trigger.start({ status: 'ACTIVE' });
       trigger.start({ status: 'ACTIVE' });
       expect(stopSpy).toHaveBeenCalledTimes(1);
@@ -111,7 +112,7 @@ describe('NewProposalTrigger', () => {
     });
     
     it('should stop the interval when stop is called', () => {
-      const initialTimestamp = trigger['lastFetchedTimestamp'];
+      const initialTimestamp = trigger['timestampCursor'];
       trigger.start({ status: 'ACTIVE' });
       jest.advanceTimersByTime(60000);
       
@@ -139,7 +140,7 @@ describe('NewProposalTrigger', () => {
         customTimestamp
       );
       
-      expect(customTrigger['lastFetchedTimestamp']).toBe(customTimestamp);
+      expect(customTrigger['timestampCursor']).toBe(parseInt(customTimestamp, 10));
     });
     
     it('should use default timestamp when not provided', () => {
@@ -151,7 +152,7 @@ describe('NewProposalTrigger', () => {
       
       // Should be a timestamp from ~24 hours ago
       const now = Math.floor(Date.now() / 1000);
-      const triggerTimestamp = parseInt(defaultTrigger['lastFetchedTimestamp']);
+      const triggerTimestamp = defaultTrigger['timestampCursor'];
       const difference = now - triggerTimestamp;
       
       // Allow 5 seconds tolerance for test execution time
