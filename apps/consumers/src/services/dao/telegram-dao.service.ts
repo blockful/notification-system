@@ -148,19 +148,29 @@ export class TelegramDAOService extends BaseDAOService {
    * Build Telegram inline keyboard for DAO selection
    */
   private buildInlineKeyboard(daos: any[], selections: Set<string>): any {
+    // Create all DAO buttons
+    const daoButtons = daos.map(dao => {
+      const normalizedDao = dao.id.toUpperCase();
+      const daoWithEmoji = getDaoWithEmoji(dao.id);
+      const isSelected = selections.has(normalizedDao);
+
+      return {
+        text: isSelected ? `${uiMessages.status.success} ${daoWithEmoji}` : daoWithEmoji,
+        callback_data: `dao_toggle_${normalizedDao}`
+      };
+    });
+
+    // Group buttons into rows of 4
+    const BUTTONS_PER_ROW = 3;
+    const daoButtonRows: any[][] = [];
+    
+    for (let i = 0; i < daoButtons.length; i += BUTTONS_PER_ROW) {
+      daoButtonRows.push(daoButtons.slice(i, i + BUTTONS_PER_ROW));
+    }
+
     return {
       inline_keyboard: [
-        // DAO buttons row
-        daos.map(dao => {
-          const normalizedDao = dao.id.toUpperCase();
-          const daoWithEmoji = getDaoWithEmoji(dao.id);
-          const isSelected = selections.has(normalizedDao);
-
-          return {
-            text: isSelected ? `${uiMessages.status.success} ${daoWithEmoji}` : daoWithEmoji,
-            callback_data: `dao_toggle_${normalizedDao}`
-          };
-        }),
+        ...daoButtonRows,
         // Confirm button row
         [
           { text: uiMessages.confirmSelection, callback_data: 'dao_confirm' }
