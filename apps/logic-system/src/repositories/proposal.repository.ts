@@ -29,6 +29,11 @@ export class ProposalRepository implements ProposalDataSource {
       variables.fromEndDate = options.fromEndDate;
     }
 
+    // Proposal type filtering
+    if (options?.proposalType) {
+      variables.proposalType = options.proposalType;
+    }
+
     // Pagination
     if (options?.limit) {
       variables.limit = Math.min(options.limit, limit);
