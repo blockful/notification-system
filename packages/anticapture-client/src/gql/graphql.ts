@@ -41,6 +41,12 @@ export type AverageDelegationPercentagePage = {
   totalCount: Scalars['Int']['output'];
 };
 
+export type DaoList = {
+  __typename?: 'DAOList';
+  items: Array<Dao_200_Response>;
+  totalCount: Scalars['Int']['output'];
+};
+
 export enum HttpMethod {
   Connect = 'CONNECT',
   Delete = 'DELETE',
@@ -77,6 +83,11 @@ export type Query = {
   /** Returns a mapping of the biggest variations to account balances associated by account address */
   accountBalanceVariations?: Maybe<AccountBalanceVariations_200_Response>;
   accountBalances: AccountBalancePage;
+  /**
+   * Returns a mapping of the largest interactions between accounts.
+   * Positive amounts signify net token transfers FROM <accountId>, whilst negative amounts refer to net transfers TO <accountId>
+   */
+  accountInteractions?: Maybe<AccountInteractions_200_Response>;
   accountPower?: Maybe<AccountPower>;
   accountPowers: AccountPowerPage;
   accounts: AccountPage;
@@ -108,10 +119,12 @@ export type Query = {
   compareTreasury?: Maybe<CompareTreasury_200_Response>;
   /** Compare number of votes between time periods */
   compareVotes?: Maybe<CompareVotes_200_Response>;
-  dao?: Maybe<Dao>;
+  /** Returns current governance parameters for this DAO */
+  dao?: Maybe<Dao_200_Response>;
   daoMetricsDayBucket?: Maybe<DaoMetricsDayBucket>;
   daoMetricsDayBuckets: DaoMetricsDayBucketPage;
-  daos: DaoPage;
+  /** Get all DAOs */
+  daos: DaoList;
   delegation?: Maybe<Delegation>;
   /** Get delegation percentage day buckets with forward-fill */
   delegationPercentageByDay?: Maybe<DelegationPercentageByDay_200_Response>;
@@ -191,6 +204,17 @@ export type QueryAccountBalancesArgs = {
   orderBy?: InputMaybe<Scalars['String']['input']>;
   orderDirection?: InputMaybe<Scalars['String']['input']>;
   where?: InputMaybe<AccountBalanceFilter>;
+};
+
+
+export type QueryAccountInteractionsArgs = {
+  accountId: Scalars['String']['input'];
+  days?: InputMaybe<QueryInput_AccountInteractions_Days>;
+  limit?: InputMaybe<Scalars['PositiveInt']['input']>;
+  maxAmount?: InputMaybe<Scalars['String']['input']>;
+  minAmount?: InputMaybe<Scalars['String']['input']>;
+  orderDirection?: InputMaybe<QueryInput_AccountInteractions_OrderDirection>;
+  skip?: InputMaybe<Scalars['NonNegativeInt']['input']>;
 };
 
 
@@ -284,11 +308,6 @@ export type QueryCompareVotesArgs = {
 };
 
 
-export type QueryDaoArgs = {
-  id: Scalars['String']['input'];
-};
-
-
 export type QueryDaoMetricsDayBucketArgs = {
   date: Scalars['BigInt']['input'];
   metricType: Scalars['String']['input'];
@@ -303,16 +322,6 @@ export type QueryDaoMetricsDayBucketsArgs = {
   orderBy?: InputMaybe<Scalars['String']['input']>;
   orderDirection?: InputMaybe<Scalars['String']['input']>;
   where?: InputMaybe<DaoMetricsDayBucketFilter>;
-};
-
-
-export type QueryDaosArgs = {
-  after?: InputMaybe<Scalars['String']['input']>;
-  before?: InputMaybe<Scalars['String']['input']>;
-  limit?: InputMaybe<Scalars['Int']['input']>;
-  orderBy?: InputMaybe<Scalars['String']['input']>;
-  orderDirection?: InputMaybe<Scalars['String']['input']>;
-  where?: InputMaybe<DaoFilter>;
 };
 
 
@@ -386,6 +395,7 @@ export type QueryProposalsArgs = {
   fromEndDate?: InputMaybe<Scalars['Float']['input']>;
   limit?: InputMaybe<Scalars['PositiveInt']['input']>;
   orderDirection?: InputMaybe<QueryInput_Proposals_OrderDirection>;
+  proposalType?: InputMaybe<Scalars['JSON']['input']>;
   skip?: InputMaybe<Scalars['NonNegativeInt']['input']>;
   status?: InputMaybe<Scalars['JSON']['input']>;
 };
@@ -456,6 +466,7 @@ export type QueryTransactionsArgs = {
   affectedSupply?: InputMaybe<Scalars['JSON']['input']>;
   from?: InputMaybe<Scalars['String']['input']>;
   fromDate?: InputMaybe<Scalars['Int']['input']>;
+  includes?: InputMaybe<Scalars['JSON']['input']>;
   limit?: InputMaybe<Scalars['PositiveInt']['input']>;
   maxAmount?: InputMaybe<Scalars['String']['input']>;
   minAmount?: InputMaybe<Scalars['String']['input']>;
@@ -722,6 +733,13 @@ export type AccountFilter = {
   id_starts_with?: InputMaybe<Scalars['String']['input']>;
 };
 
+export type AccountInteractions_200_Response = {
+  __typename?: 'accountInteractions_200_response';
+  items: Array<Maybe<Query_AccountInteractions_Items_Items>>;
+  period: Query_AccountInteractions_Period;
+  totalCount: Scalars['Float']['output'];
+};
+
 export type AccountPage = {
   __typename?: 'accountPage';
   items: Array<Account>;
@@ -897,80 +915,6 @@ export type CompareVotes_200_Response = {
   oldVotes: Scalars['Float']['output'];
 };
 
-export type Dao = {
-  __typename?: 'dao';
-  chainId: Scalars['Int']['output'];
-  id: Scalars['String']['output'];
-  proposalThreshold: Scalars['BigInt']['output'];
-  quorum: Scalars['BigInt']['output'];
-  timelockDelay: Scalars['BigInt']['output'];
-  votingDelay: Scalars['BigInt']['output'];
-  votingPeriod: Scalars['BigInt']['output'];
-};
-
-export type DaoFilter = {
-  AND?: InputMaybe<Array<InputMaybe<DaoFilter>>>;
-  OR?: InputMaybe<Array<InputMaybe<DaoFilter>>>;
-  chainId?: InputMaybe<Scalars['Int']['input']>;
-  chainId_gt?: InputMaybe<Scalars['Int']['input']>;
-  chainId_gte?: InputMaybe<Scalars['Int']['input']>;
-  chainId_in?: InputMaybe<Array<InputMaybe<Scalars['Int']['input']>>>;
-  chainId_lt?: InputMaybe<Scalars['Int']['input']>;
-  chainId_lte?: InputMaybe<Scalars['Int']['input']>;
-  chainId_not?: InputMaybe<Scalars['Int']['input']>;
-  chainId_not_in?: InputMaybe<Array<InputMaybe<Scalars['Int']['input']>>>;
-  id?: InputMaybe<Scalars['String']['input']>;
-  id_contains?: InputMaybe<Scalars['String']['input']>;
-  id_ends_with?: InputMaybe<Scalars['String']['input']>;
-  id_in?: InputMaybe<Array<InputMaybe<Scalars['String']['input']>>>;
-  id_not?: InputMaybe<Scalars['String']['input']>;
-  id_not_contains?: InputMaybe<Scalars['String']['input']>;
-  id_not_ends_with?: InputMaybe<Scalars['String']['input']>;
-  id_not_in?: InputMaybe<Array<InputMaybe<Scalars['String']['input']>>>;
-  id_not_starts_with?: InputMaybe<Scalars['String']['input']>;
-  id_starts_with?: InputMaybe<Scalars['String']['input']>;
-  proposalThreshold?: InputMaybe<Scalars['BigInt']['input']>;
-  proposalThreshold_gt?: InputMaybe<Scalars['BigInt']['input']>;
-  proposalThreshold_gte?: InputMaybe<Scalars['BigInt']['input']>;
-  proposalThreshold_in?: InputMaybe<Array<InputMaybe<Scalars['BigInt']['input']>>>;
-  proposalThreshold_lt?: InputMaybe<Scalars['BigInt']['input']>;
-  proposalThreshold_lte?: InputMaybe<Scalars['BigInt']['input']>;
-  proposalThreshold_not?: InputMaybe<Scalars['BigInt']['input']>;
-  proposalThreshold_not_in?: InputMaybe<Array<InputMaybe<Scalars['BigInt']['input']>>>;
-  quorum?: InputMaybe<Scalars['BigInt']['input']>;
-  quorum_gt?: InputMaybe<Scalars['BigInt']['input']>;
-  quorum_gte?: InputMaybe<Scalars['BigInt']['input']>;
-  quorum_in?: InputMaybe<Array<InputMaybe<Scalars['BigInt']['input']>>>;
-  quorum_lt?: InputMaybe<Scalars['BigInt']['input']>;
-  quorum_lte?: InputMaybe<Scalars['BigInt']['input']>;
-  quorum_not?: InputMaybe<Scalars['BigInt']['input']>;
-  quorum_not_in?: InputMaybe<Array<InputMaybe<Scalars['BigInt']['input']>>>;
-  timelockDelay?: InputMaybe<Scalars['BigInt']['input']>;
-  timelockDelay_gt?: InputMaybe<Scalars['BigInt']['input']>;
-  timelockDelay_gte?: InputMaybe<Scalars['BigInt']['input']>;
-  timelockDelay_in?: InputMaybe<Array<InputMaybe<Scalars['BigInt']['input']>>>;
-  timelockDelay_lt?: InputMaybe<Scalars['BigInt']['input']>;
-  timelockDelay_lte?: InputMaybe<Scalars['BigInt']['input']>;
-  timelockDelay_not?: InputMaybe<Scalars['BigInt']['input']>;
-  timelockDelay_not_in?: InputMaybe<Array<InputMaybe<Scalars['BigInt']['input']>>>;
-  votingDelay?: InputMaybe<Scalars['BigInt']['input']>;
-  votingDelay_gt?: InputMaybe<Scalars['BigInt']['input']>;
-  votingDelay_gte?: InputMaybe<Scalars['BigInt']['input']>;
-  votingDelay_in?: InputMaybe<Array<InputMaybe<Scalars['BigInt']['input']>>>;
-  votingDelay_lt?: InputMaybe<Scalars['BigInt']['input']>;
-  votingDelay_lte?: InputMaybe<Scalars['BigInt']['input']>;
-  votingDelay_not?: InputMaybe<Scalars['BigInt']['input']>;
-  votingDelay_not_in?: InputMaybe<Array<InputMaybe<Scalars['BigInt']['input']>>>;
-  votingPeriod?: InputMaybe<Scalars['BigInt']['input']>;
-  votingPeriod_gt?: InputMaybe<Scalars['BigInt']['input']>;
-  votingPeriod_gte?: InputMaybe<Scalars['BigInt']['input']>;
-  votingPeriod_in?: InputMaybe<Array<InputMaybe<Scalars['BigInt']['input']>>>;
-  votingPeriod_lt?: InputMaybe<Scalars['BigInt']['input']>;
-  votingPeriod_lte?: InputMaybe<Scalars['BigInt']['input']>;
-  votingPeriod_not?: InputMaybe<Scalars['BigInt']['input']>;
-  votingPeriod_not_in?: InputMaybe<Array<InputMaybe<Scalars['BigInt']['input']>>>;
-};
-
 export type DaoMetricsDayBucket = {
   __typename?: 'daoMetricsDayBucket';
   average: Scalars['BigInt']['output'];
@@ -1095,11 +1039,15 @@ export type DaoMetricsDayBucketPage = {
   totalCount: Scalars['Int']['output'];
 };
 
-export type DaoPage = {
-  __typename?: 'daoPage';
-  items: Array<Dao>;
-  pageInfo: PageInfo;
-  totalCount: Scalars['Int']['output'];
+export type Dao_200_Response = {
+  __typename?: 'dao_200_response';
+  chainId: Scalars['Float']['output'];
+  id: Scalars['String']['output'];
+  proposalThreshold: Scalars['String']['output'];
+  quorum: Scalars['String']['output'];
+  timelockDelay: Scalars['String']['output'];
+  votingDelay: Scalars['String']['output'];
+  votingPeriod: Scalars['String']['output'];
 };
 
 export type Delegation = {
@@ -1262,6 +1210,7 @@ export type Proposal_200_Response = {
   endTimestamp: Scalars['String']['output'];
   forVotes: Scalars['String']['output'];
   id: Scalars['String']['output'];
+  proposalType?: Maybe<Scalars['Float']['output']>;
   proposerAccountId: Scalars['String']['output'];
   quorum: Scalars['String']['output'];
   startBlock: Scalars['Float']['output'];
@@ -1297,6 +1246,7 @@ export type ProposalsOnchain = {
   endTimestamp: Scalars['BigInt']['output'];
   forVotes: Scalars['BigInt']['output'];
   id: Scalars['String']['output'];
+  proposalType?: Maybe<Scalars['Int']['output']>;
   proposer?: Maybe<Account>;
   proposerAccountId: Scalars['String']['output'];
   signatures: Scalars['JSON']['output'];
@@ -1392,6 +1342,14 @@ export type ProposalsOnchainFilter = {
   id_not_in?: InputMaybe<Array<InputMaybe<Scalars['String']['input']>>>;
   id_not_starts_with?: InputMaybe<Scalars['String']['input']>;
   id_starts_with?: InputMaybe<Scalars['String']['input']>;
+  proposalType?: InputMaybe<Scalars['Int']['input']>;
+  proposalType_gt?: InputMaybe<Scalars['Int']['input']>;
+  proposalType_gte?: InputMaybe<Scalars['Int']['input']>;
+  proposalType_in?: InputMaybe<Array<InputMaybe<Scalars['Int']['input']>>>;
+  proposalType_lt?: InputMaybe<Scalars['Int']['input']>;
+  proposalType_lte?: InputMaybe<Scalars['Int']['input']>;
+  proposalType_not?: InputMaybe<Scalars['Int']['input']>;
+  proposalType_not_in?: InputMaybe<Array<InputMaybe<Scalars['Int']['input']>>>;
   proposerAccountId?: InputMaybe<Scalars['String']['input']>;
   proposerAccountId_contains?: InputMaybe<Scalars['String']['input']>;
   proposerAccountId_ends_with?: InputMaybe<Scalars['String']['input']>;
@@ -1462,6 +1420,19 @@ export enum QueryInput_AccountBalanceVariations_Days {
 }
 
 export enum QueryInput_AccountBalanceVariations_OrderDirection {
+  Asc = 'asc',
+  Desc = 'desc'
+}
+
+export enum QueryInput_AccountInteractions_Days {
+  '7d' = '_7d',
+  '30d' = '_30d',
+  '90d' = '_90d',
+  '180d' = '_180d',
+  '365d' = '_365d'
+}
+
+export enum QueryInput_AccountInteractions_OrderDirection {
   Asc = 'asc',
   Desc = 'desc'
 }
@@ -1659,6 +1630,21 @@ export type Query_AccountBalanceVariations_Period = {
   startTimestamp: Scalars['String']['output'];
 };
 
+export type Query_AccountInteractions_Items_Items = {
+  __typename?: 'query_accountInteractions_items_items';
+  accountId: Scalars['String']['output'];
+  amountTransferred: Scalars['String']['output'];
+  totalVolume: Scalars['String']['output'];
+  transferCount: Scalars['String']['output'];
+};
+
+export type Query_AccountInteractions_Period = {
+  __typename?: 'query_accountInteractions_period';
+  days: Scalars['String']['output'];
+  endTimestamp: Scalars['String']['output'];
+  startTimestamp: Scalars['String']['output'];
+};
+
 export type Query_DelegationPercentageByDay_Items_Items = {
   __typename?: 'query_delegationPercentageByDay_items_items';
   date: Scalars['String']['output'];
@@ -1743,6 +1729,7 @@ export type Query_Proposals_Items_Items = {
   endTimestamp: Scalars['String']['output'];
   forVotes: Scalars['String']['output'];
   id: Scalars['String']['output'];
+  proposalType?: Maybe<Scalars['Float']['output']>;
   proposerAccountId: Scalars['String']['output'];
   quorum: Scalars['String']['output'];
   startBlock: Scalars['Float']['output'];
@@ -1755,9 +1742,9 @@ export type Query_Proposals_Items_Items = {
   values: Array<Maybe<Scalars['String']['output']>>;
 };
 
-export type Query_Transactions_Transactions_Items = {
-  __typename?: 'query_transactions_transactions_items';
-  delegations: Array<Maybe<Query_Transactions_Transactions_Items_Delegations_Items>>;
+export type Query_Transactions_Items_Items = {
+  __typename?: 'query_transactions_items_items';
+  delegations: Array<Maybe<Query_Transactions_Items_Items_Delegations_Items>>;
   from?: Maybe<Scalars['String']['output']>;
   isCex: Scalars['Boolean']['output'];
   isDex: Scalars['Boolean']['output'];
@@ -1766,11 +1753,11 @@ export type Query_Transactions_Transactions_Items = {
   timestamp: Scalars['String']['output'];
   to?: Maybe<Scalars['String']['output']>;
   transactionHash: Scalars['String']['output'];
-  transfers: Array<Maybe<Query_Transactions_Transactions_Items_Transfers_Items>>;
+  transfers: Array<Maybe<Query_Transactions_Items_Items_Transfers_Items>>;
 };
 
-export type Query_Transactions_Transactions_Items_Delegations_Items = {
-  __typename?: 'query_transactions_transactions_items_delegations_items';
+export type Query_Transactions_Items_Items_Delegations_Items = {
+  __typename?: 'query_transactions_items_items_delegations_items';
   daoId: Scalars['String']['output'];
   delegateAccountId: Scalars['String']['output'];
   delegatedValue: Scalars['String']['output'];
@@ -1785,8 +1772,8 @@ export type Query_Transactions_Transactions_Items_Delegations_Items = {
   transactionHash: Scalars['String']['output'];
 };
 
-export type Query_Transactions_Transactions_Items_Transfers_Items = {
-  __typename?: 'query_transactions_transactions_items_transfers_items';
+export type Query_Transactions_Items_Items_Transfers_Items = {
+  __typename?: 'query_transactions_items_items_transfers_items';
   amount: Scalars['String']['output'];
   daoId: Scalars['String']['output'];
   fromAccountId: Scalars['String']['output'];
@@ -2109,7 +2096,8 @@ export type TransactionPage = {
 
 export type Transactions_200_Response = {
   __typename?: 'transactions_200_response';
-  transactions: Array<Maybe<Query_Transactions_Transactions_Items>>;
+  items: Array<Maybe<Query_Transactions_Items_Items>>;
+  totalCount: Scalars['Float']['output'];
 };
 
 export type Transfer = {
@@ -2448,7 +2436,7 @@ export type VotingPowers_200_Response = {
 export type GetDaOsQueryVariables = Exact<{ [key: string]: never; }>;
 
 
-export type GetDaOsQuery = { __typename?: 'Query', daos: { __typename?: 'daoPage', items: Array<{ __typename?: 'dao', id: string, votingDelay: string, chainId: number }> } };
+export type GetDaOsQuery = { __typename?: 'Query', daos: { __typename?: 'DAOList', items: Array<{ __typename?: 'dao_200_response', id: string, votingDelay: string, chainId: number }> } };
 
 export type GetProposalByIdQueryVariables = Exact<{
   id: Scalars['String']['input'];
@@ -2464,6 +2452,7 @@ export type ListProposalsQueryVariables = Exact<{
   status?: InputMaybe<Scalars['JSON']['input']>;
   fromDate?: InputMaybe<Scalars['Float']['input']>;
   fromEndDate?: InputMaybe<Scalars['Float']['input']>;
+  proposalType?: InputMaybe<Scalars['JSON']['input']>;
 }>;
 
 
@@ -2498,6 +2487,6 @@ export type ListVotingPowerHistorysQuery = { __typename?: 'Query', votingPowerHi
 
 export const GetDaOsDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"query","name":{"kind":"Name","value":"GetDAOs"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"daos"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"items"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"votingDelay"}},{"kind":"Field","name":{"kind":"Name","value":"chainId"}}]}}]}}]}}]} as unknown as DocumentNode<GetDaOsQuery, GetDaOsQueryVariables>;
 export const GetProposalByIdDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"query","name":{"kind":"Name","value":"GetProposalById"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"id"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"String"}}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"proposal"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"id"},"value":{"kind":"Variable","name":{"kind":"Name","value":"id"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"daoId"}},{"kind":"Field","name":{"kind":"Name","value":"proposerAccountId"}},{"kind":"Field","name":{"kind":"Name","value":"title"}},{"kind":"Field","name":{"kind":"Name","value":"description"}},{"kind":"Field","name":{"kind":"Name","value":"startBlock"}},{"kind":"Field","name":{"kind":"Name","value":"endBlock"}},{"kind":"Field","name":{"kind":"Name","value":"endTimestamp"}},{"kind":"Field","name":{"kind":"Name","value":"timestamp"}},{"kind":"Field","name":{"kind":"Name","value":"status"}},{"kind":"Field","name":{"kind":"Name","value":"forVotes"}},{"kind":"Field","name":{"kind":"Name","value":"againstVotes"}},{"kind":"Field","name":{"kind":"Name","value":"abstainVotes"}},{"kind":"Field","name":{"kind":"Name","value":"txHash"}}]}}]}}]} as unknown as DocumentNode<GetProposalByIdQuery, GetProposalByIdQueryVariables>;
-export const ListProposalsDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"query","name":{"kind":"Name","value":"ListProposals"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"skip"}},"type":{"kind":"NamedType","name":{"kind":"Name","value":"NonNegativeInt"}}},{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"limit"}},"type":{"kind":"NamedType","name":{"kind":"Name","value":"PositiveInt"}}},{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"orderDirection"}},"type":{"kind":"NamedType","name":{"kind":"Name","value":"queryInput_proposals_orderDirection"}}},{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"status"}},"type":{"kind":"NamedType","name":{"kind":"Name","value":"JSON"}}},{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"fromDate"}},"type":{"kind":"NamedType","name":{"kind":"Name","value":"Float"}}},{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"fromEndDate"}},"type":{"kind":"NamedType","name":{"kind":"Name","value":"Float"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"proposals"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"skip"},"value":{"kind":"Variable","name":{"kind":"Name","value":"skip"}}},{"kind":"Argument","name":{"kind":"Name","value":"limit"},"value":{"kind":"Variable","name":{"kind":"Name","value":"limit"}}},{"kind":"Argument","name":{"kind":"Name","value":"orderDirection"},"value":{"kind":"Variable","name":{"kind":"Name","value":"orderDirection"}}},{"kind":"Argument","name":{"kind":"Name","value":"status"},"value":{"kind":"Variable","name":{"kind":"Name","value":"status"}}},{"kind":"Argument","name":{"kind":"Name","value":"fromDate"},"value":{"kind":"Variable","name":{"kind":"Name","value":"fromDate"}}},{"kind":"Argument","name":{"kind":"Name","value":"fromEndDate"},"value":{"kind":"Variable","name":{"kind":"Name","value":"fromEndDate"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"items"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"daoId"}},{"kind":"Field","name":{"kind":"Name","value":"proposerAccountId"}},{"kind":"Field","name":{"kind":"Name","value":"title"}},{"kind":"Field","name":{"kind":"Name","value":"description"}},{"kind":"Field","name":{"kind":"Name","value":"startBlock"}},{"kind":"Field","name":{"kind":"Name","value":"endBlock"}},{"kind":"Field","name":{"kind":"Name","value":"endTimestamp"}},{"kind":"Field","name":{"kind":"Name","value":"timestamp"}},{"kind":"Field","name":{"kind":"Name","value":"status"}},{"kind":"Field","name":{"kind":"Name","value":"forVotes"}},{"kind":"Field","name":{"kind":"Name","value":"againstVotes"}},{"kind":"Field","name":{"kind":"Name","value":"abstainVotes"}},{"kind":"Field","name":{"kind":"Name","value":"txHash"}}]}},{"kind":"Field","name":{"kind":"Name","value":"totalCount"}}]}}]}}]} as unknown as DocumentNode<ListProposalsQuery, ListProposalsQueryVariables>;
+export const ListProposalsDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"query","name":{"kind":"Name","value":"ListProposals"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"skip"}},"type":{"kind":"NamedType","name":{"kind":"Name","value":"NonNegativeInt"}}},{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"limit"}},"type":{"kind":"NamedType","name":{"kind":"Name","value":"PositiveInt"}}},{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"orderDirection"}},"type":{"kind":"NamedType","name":{"kind":"Name","value":"queryInput_proposals_orderDirection"}}},{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"status"}},"type":{"kind":"NamedType","name":{"kind":"Name","value":"JSON"}}},{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"fromDate"}},"type":{"kind":"NamedType","name":{"kind":"Name","value":"Float"}}},{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"fromEndDate"}},"type":{"kind":"NamedType","name":{"kind":"Name","value":"Float"}}},{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"proposalType"}},"type":{"kind":"NamedType","name":{"kind":"Name","value":"JSON"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"proposals"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"skip"},"value":{"kind":"Variable","name":{"kind":"Name","value":"skip"}}},{"kind":"Argument","name":{"kind":"Name","value":"limit"},"value":{"kind":"Variable","name":{"kind":"Name","value":"limit"}}},{"kind":"Argument","name":{"kind":"Name","value":"orderDirection"},"value":{"kind":"Variable","name":{"kind":"Name","value":"orderDirection"}}},{"kind":"Argument","name":{"kind":"Name","value":"status"},"value":{"kind":"Variable","name":{"kind":"Name","value":"status"}}},{"kind":"Argument","name":{"kind":"Name","value":"fromDate"},"value":{"kind":"Variable","name":{"kind":"Name","value":"fromDate"}}},{"kind":"Argument","name":{"kind":"Name","value":"fromEndDate"},"value":{"kind":"Variable","name":{"kind":"Name","value":"fromEndDate"}}},{"kind":"Argument","name":{"kind":"Name","value":"proposalType"},"value":{"kind":"Variable","name":{"kind":"Name","value":"proposalType"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"items"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"daoId"}},{"kind":"Field","name":{"kind":"Name","value":"proposerAccountId"}},{"kind":"Field","name":{"kind":"Name","value":"title"}},{"kind":"Field","name":{"kind":"Name","value":"description"}},{"kind":"Field","name":{"kind":"Name","value":"startBlock"}},{"kind":"Field","name":{"kind":"Name","value":"endBlock"}},{"kind":"Field","name":{"kind":"Name","value":"endTimestamp"}},{"kind":"Field","name":{"kind":"Name","value":"timestamp"}},{"kind":"Field","name":{"kind":"Name","value":"status"}},{"kind":"Field","name":{"kind":"Name","value":"forVotes"}},{"kind":"Field","name":{"kind":"Name","value":"againstVotes"}},{"kind":"Field","name":{"kind":"Name","value":"abstainVotes"}},{"kind":"Field","name":{"kind":"Name","value":"txHash"}}]}},{"kind":"Field","name":{"kind":"Name","value":"totalCount"}}]}}]}}]} as unknown as DocumentNode<ListProposalsQuery, ListProposalsQueryVariables>;
 export const ListVotesOnchainsDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"query","name":{"kind":"Name","value":"ListVotesOnchains"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"daoId"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"String"}}}},{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"proposalId_in"}},"type":{"kind":"ListType","type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"String"}}}}},{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"voterAccountId_in"}},"type":{"kind":"ListType","type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"String"}}}}},{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"timestamp_gt"}},"type":{"kind":"NamedType","name":{"kind":"Name","value":"BigInt"}}},{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"timestamp_gte"}},"type":{"kind":"NamedType","name":{"kind":"Name","value":"BigInt"}}},{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"timestamp_lt"}},"type":{"kind":"NamedType","name":{"kind":"Name","value":"BigInt"}}},{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"timestamp_lte"}},"type":{"kind":"NamedType","name":{"kind":"Name","value":"BigInt"}}},{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"limit"}},"type":{"kind":"NamedType","name":{"kind":"Name","value":"Int"}}},{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"orderBy"}},"type":{"kind":"NamedType","name":{"kind":"Name","value":"String"}}},{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"orderDirection"}},"type":{"kind":"NamedType","name":{"kind":"Name","value":"String"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"votesOnchains"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"where"},"value":{"kind":"ObjectValue","fields":[{"kind":"ObjectField","name":{"kind":"Name","value":"daoId"},"value":{"kind":"Variable","name":{"kind":"Name","value":"daoId"}}},{"kind":"ObjectField","name":{"kind":"Name","value":"proposalId_in"},"value":{"kind":"Variable","name":{"kind":"Name","value":"proposalId_in"}}},{"kind":"ObjectField","name":{"kind":"Name","value":"voterAccountId_in"},"value":{"kind":"Variable","name":{"kind":"Name","value":"voterAccountId_in"}}},{"kind":"ObjectField","name":{"kind":"Name","value":"timestamp_gt"},"value":{"kind":"Variable","name":{"kind":"Name","value":"timestamp_gt"}}},{"kind":"ObjectField","name":{"kind":"Name","value":"timestamp_gte"},"value":{"kind":"Variable","name":{"kind":"Name","value":"timestamp_gte"}}},{"kind":"ObjectField","name":{"kind":"Name","value":"timestamp_lt"},"value":{"kind":"Variable","name":{"kind":"Name","value":"timestamp_lt"}}},{"kind":"ObjectField","name":{"kind":"Name","value":"timestamp_lte"},"value":{"kind":"Variable","name":{"kind":"Name","value":"timestamp_lte"}}}]}},{"kind":"Argument","name":{"kind":"Name","value":"limit"},"value":{"kind":"Variable","name":{"kind":"Name","value":"limit"}}},{"kind":"Argument","name":{"kind":"Name","value":"orderBy"},"value":{"kind":"Variable","name":{"kind":"Name","value":"orderBy"}}},{"kind":"Argument","name":{"kind":"Name","value":"orderDirection"},"value":{"kind":"Variable","name":{"kind":"Name","value":"orderDirection"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"items"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"daoId"}},{"kind":"Field","name":{"kind":"Name","value":"txHash"}},{"kind":"Field","name":{"kind":"Name","value":"proposalId"}},{"kind":"Field","name":{"kind":"Name","value":"voterAccountId"}},{"kind":"Field","name":{"kind":"Name","value":"support"}},{"kind":"Field","name":{"kind":"Name","value":"votingPower"}},{"kind":"Field","name":{"kind":"Name","value":"timestamp"}},{"kind":"Field","name":{"kind":"Name","value":"reason"}}]}},{"kind":"Field","name":{"kind":"Name","value":"totalCount"}}]}}]}}]} as unknown as DocumentNode<ListVotesOnchainsQuery, ListVotesOnchainsQueryVariables>;
 export const ListVotingPowerHistorysDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"query","name":{"kind":"Name","value":"ListVotingPowerHistorys"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"where"}},"type":{"kind":"NamedType","name":{"kind":"Name","value":"votingPowerHistoryFilter"}}},{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"limit"}},"type":{"kind":"NamedType","name":{"kind":"Name","value":"Int"}}},{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"orderBy"}},"type":{"kind":"NamedType","name":{"kind":"Name","value":"String"}}},{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"orderDirection"}},"type":{"kind":"NamedType","name":{"kind":"Name","value":"String"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"votingPowerHistorys"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"where"},"value":{"kind":"Variable","name":{"kind":"Name","value":"where"}}},{"kind":"Argument","name":{"kind":"Name","value":"limit"},"value":{"kind":"Variable","name":{"kind":"Name","value":"limit"}}},{"kind":"Argument","name":{"kind":"Name","value":"orderBy"},"value":{"kind":"Variable","name":{"kind":"Name","value":"orderBy"}}},{"kind":"Argument","name":{"kind":"Name","value":"orderDirection"},"value":{"kind":"Variable","name":{"kind":"Name","value":"orderDirection"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"items"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"accountId"}},{"kind":"Field","name":{"kind":"Name","value":"timestamp"}},{"kind":"Field","name":{"kind":"Name","value":"votingPower"}},{"kind":"Field","name":{"kind":"Name","value":"delta"}},{"kind":"Field","name":{"kind":"Name","value":"daoId"}},{"kind":"Field","name":{"kind":"Name","value":"transactionHash"}},{"kind":"Field","name":{"kind":"Name","value":"delegation"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"delegatorAccountId"}},{"kind":"Field","name":{"kind":"Name","value":"delegatedValue"}}]}},{"kind":"Field","name":{"kind":"Name","value":"transfer"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"amount"}},{"kind":"Field","name":{"kind":"Name","value":"fromAccountId"}},{"kind":"Field","name":{"kind":"Name","value":"toAccountId"}}]}}]}}]}}]}}]} as unknown as DocumentNode<ListVotingPowerHistorysQuery, ListVotingPowerHistorysQueryVariables>;
