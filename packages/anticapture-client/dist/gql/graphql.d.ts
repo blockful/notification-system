@@ -363,10 +363,9 @@ export type QueryProposalNonVotersArgs = {
 export type QueryProposalsArgs = {
     fromDate?: InputMaybe<Scalars['Float']['input']>;
     fromEndDate?: InputMaybe<Scalars['Float']['input']>;
+    includeOptimisticProposals?: InputMaybe<Scalars['Boolean']['input']>;
     limit?: InputMaybe<Scalars['PositiveInt']['input']>;
     orderDirection?: InputMaybe<QueryInput_Proposals_OrderDirection>;
-    proposalType?: InputMaybe<Scalars['JSON']['input']>;
-    proposalTypeExclude?: InputMaybe<Scalars['JSON']['input']>;
     skip?: InputMaybe<Scalars['NonNegativeInt']['input']>;
     status?: InputMaybe<Scalars['JSON']['input']>;
 };
@@ -2276,8 +2275,7 @@ export type ListProposalsQueryVariables = Exact<{
     status?: InputMaybe<Scalars['JSON']['input']>;
     fromDate?: InputMaybe<Scalars['Float']['input']>;
     fromEndDate?: InputMaybe<Scalars['Float']['input']>;
-    proposalType?: InputMaybe<Scalars['JSON']['input']>;
-    proposalTypeExclude?: InputMaybe<Scalars['JSON']['input']>;
+    includeOptimisticProposals?: InputMaybe<Scalars['Boolean']['input']>;
 }>;
 export type ListProposalsQuery = {
     __typename?: 'Query';

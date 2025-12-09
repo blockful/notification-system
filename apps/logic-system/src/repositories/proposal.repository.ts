@@ -29,13 +29,9 @@ export class ProposalRepository implements ProposalDataSource {
       variables.fromEndDate = options.fromEndDate;
     }
 
-    // Proposal type filtering
-    if (options?.proposalType) {
-      variables.proposalType = options.proposalType;
-    }
-
-    if (options?.proposalTypeExclude) {
-      variables.proposalTypeExclude = options.proposalTypeExclude;
+    // Optimistic proposal filtering
+    if (options?.includeOptimisticProposals !== undefined) {
+      variables.includeOptimisticProposals = options.includeOptimisticProposals;
     }
 
     // Pagination

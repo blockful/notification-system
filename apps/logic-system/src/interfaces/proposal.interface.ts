@@ -34,10 +34,8 @@ export interface ListProposalsOptions {
     fromEndDate?: number;
     /** Order direction - asc or desc */
     orderDirection?: string;
-    /** Filter by proposal type - include only this type (single number or array) */
-    proposalType?: number | number[];
-    /** Exclude proposals of this type (single number or array) */
-    proposalTypeExclude?: number | number[];
+    /** Whether to include optimistic proposals (true=include, false=exclude, undefined=both) */
+    includeOptimisticProposals?: boolean;
 }
 
 /**

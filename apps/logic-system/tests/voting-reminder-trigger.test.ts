@@ -197,11 +197,11 @@ describe('VotingReminderTrigger', () => {
 
       const result = await trigger['fetchData']();
 
-      // Should include fromDate filter with timestampCursor and exclude proposalType = 2
+      // Should include fromDate filter with timestampCursor and exclude optimistic proposals
       expect(mockProposalRepository.listAll).toHaveBeenCalledWith({
         status: 'ACTIVE',
         fromDate: expect.any(Number),
-        proposalTypeExclude: 2
+        includeOptimisticProposals: false
       });
       expect(result).toEqual(proposals);
     });
