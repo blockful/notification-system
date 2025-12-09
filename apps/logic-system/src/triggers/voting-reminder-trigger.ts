@@ -183,7 +183,7 @@ export class VotingReminderTrigger extends Trigger<ProposalOnChain> {
     return await this.proposalRepository.listAll({
       status: 'ACTIVE',
       fromDate: this.timestampCursor,
-      proposalType: { "$ne": 2 }
+      proposalTypeExclude: 2
     });
   }
 }

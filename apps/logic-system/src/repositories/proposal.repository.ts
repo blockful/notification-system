@@ -34,6 +34,10 @@ export class ProposalRepository implements ProposalDataSource {
       variables.proposalType = options.proposalType;
     }
 
+    if (options?.proposalTypeExclude) {
+      variables.proposalTypeExclude = options.proposalTypeExclude;
+    }
+
     // Pagination
     if (options?.limit) {
       variables.limit = Math.min(options.limit, limit);

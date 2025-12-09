@@ -201,7 +201,7 @@ describe('VotingReminderTrigger', () => {
       expect(mockProposalRepository.listAll).toHaveBeenCalledWith({
         status: 'ACTIVE',
         fromDate: expect.any(Number),
-        proposalType: { "$ne": 2 }
+        proposalTypeExclude: 2
       });
       expect(result).toEqual(proposals);
     });
