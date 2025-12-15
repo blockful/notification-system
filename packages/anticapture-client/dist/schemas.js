@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.SafeVotesOnchainsResponseSchema = exports.SafeVotingPowerHistoryResponseSchema = exports.SafeProposalByIdResponseSchema = exports.SafeProposalsResponseSchema = exports.SafeDaosResponseSchema = void 0;
+exports.SafeProposalNonVotersResponseSchema = exports.SafeVotesOnchainsResponseSchema = exports.SafeVotingPowerHistoryResponseSchema = exports.SafeProposalByIdResponseSchema = exports.SafeProposalsResponseSchema = exports.SafeDaosResponseSchema = void 0;
 exports.processProposals = processProposals;
 exports.processVotingPowerHistory = processVotingPowerHistory;
 const zod_1 = require("zod");
@@ -78,6 +78,23 @@ exports.SafeVotesOnchainsResponseSchema = zod_1.z.object({
         })),
         totalCount: zod_1.z.number()
     })
+});
+exports.SafeProposalNonVotersResponseSchema = zod_1.z.object({
+    proposalNonVoters: zod_1.z.object({
+        items: zod_1.z.array(zod_1.z.object({
+            voter: zod_1.z.string(),
+            votingPower: zod_1.z.string(),
+            lastVoteTimestamp: zod_1.z.number(),
+            votingPowerVariation: zod_1.z.string()
+        })),
+        totalCount: zod_1.z.number()
+    }).nullable()
+}).transform((data) => {
+    if (!data.proposalNonVoters) {
+        console.warn('ProposalNonVotersResponse has null proposalNonVoters:', data);
+        return { proposalNonVoters: { items: [], totalCount: 0 } };
+    }
+    return { proposalNonVoters: data.proposalNonVoters };
 });
 // Internal helper function to process validated proposals
 function processProposals(validated, daoId) {

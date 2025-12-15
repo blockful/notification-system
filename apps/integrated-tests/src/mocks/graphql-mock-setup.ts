@@ -130,6 +130,42 @@ export class GraphQLMockSetup {
         });
       }
 
+      // Handle proposal non-voters
+      if (data.query?.includes('ProposalNonVoters')) {
+        const proposalId = data.variables?.id;
+        const addressesFilter = data.variables?.addresses;
+
+        // Get all addresses that did vote on this proposal
+        const votersForProposal = votesData
+          .filter((v: any) => v.proposalId === proposalId)
+          .map((v: any) => getAddress(v.voterAccountId));
+
+        // Determine which addresses to check
+        // If addressesFilter is provided, use it; otherwise use all addresses that haven't voted
+        let addressesToCheck: string[] = [];
+        if (addressesFilter && addressesFilter.length > 0) {
+          addressesToCheck = addressesFilter.map((addr: string) => getAddress(addr));
+        }
+
+        // Find non-voters (addresses that are in addressesToCheck but not in votersForProposal)
+        const nonVoters = addressesToCheck.filter((addr: string) =>
+          !votersForProposal.some((voter: string) => isAddressEqual(voter, addr))
+        );
+
+        // Create non-voter items with mock voting power data
+        // Simulates API behavior: only returns addresses with voting power > 0
+        const nonVoterItems = nonVoters.map((addr: string) => ({
+          voter: addr,
+          votingPower: '100', // Mock voting power (> 0)
+          lastVoteTimestamp: 0, // Mock last vote timestamp
+          votingPowerVariation: '0' // Mock variation
+        }));
+
+        return Promise.resolve({
+          data: { data: { proposalNonVoters: { items: nonVoterItems, totalCount: nonVoterItems.length } } }
+        });
+      }
+
       // Handle DAOs
       if (data.query?.includes('GetDAOs')) {
         const uniqueDaoIds = [...new Set([
