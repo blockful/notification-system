@@ -50,7 +50,7 @@ describe('VotingReminderTriggerHandler', () => {
     } as any;
 
     mockAnticaptureClient = {
-      listVotesOnchains: jest.fn()
+      getProposalNonVoters: jest.fn()
     } as any;
 
     handler = new VotingReminderTriggerHandler(
@@ -88,16 +88,13 @@ describe('VotingReminderTriggerHandler', () => {
 
       // Setup mocks
       mockSubscriptionClient.getFollowedAddresses.mockResolvedValue(['0x123', '0x456']);
-      mockAnticaptureClient.listVotesOnchains.mockResolvedValue([
+      mockAnticaptureClient.getProposalNonVoters.mockResolvedValue([
         {
-          daoId: 'test-dao',
-          txHash: '0xtest',
-          proposalId: 'proposal-123',
-          voterAccountId: '0x123',
-          support: '1',
+          voter: '0x456',  // Only 0x456 hasn't voted
           votingPower: '100',
-          timestamp: '1234567890'
-        } // Only 0x123 has voted
+          lastVoteTimestamp: 1234567890,
+          votingPowerVariation: '0'
+        }
       ]);
       mockSubscriptionClient.getWalletOwnersBatch.mockResolvedValue({
         '0x456': [mockUser] // Only 0x456 (non-voter) has users
@@ -112,11 +109,11 @@ describe('VotingReminderTriggerHandler', () => {
 
       expect(result.messageId).toMatch(/voting-reminder-/);
       expect(mockSubscriptionClient.getFollowedAddresses).toHaveBeenCalledWith('test-dao');
-      expect(mockAnticaptureClient.listVotesOnchains).toHaveBeenCalledWith({
-        daoId: 'test-dao',
-        proposalId_in: ['proposal-123'],
-        voterAccountId_in: ['0x123', '0x456']
-      });
+      expect(mockAnticaptureClient.getProposalNonVoters).toHaveBeenCalledWith(
+        'proposal-123',
+        'test-dao',
+        ['0x123', '0x456']
+      );
       expect(mockSubscriptionClient.getWalletOwnersBatch).toHaveBeenCalledWith(['0x456']);
     });
 
@@ -131,7 +128,7 @@ describe('VotingReminderTriggerHandler', () => {
       const result = await handler.handleMessage(message);
 
       expect(result.messageId).toMatch(/voting-reminder-/);
-      expect(mockAnticaptureClient.listVotesOnchains).not.toHaveBeenCalled();
+      expect(mockAnticaptureClient.getProposalNonVoters).not.toHaveBeenCalled();
     });
 
     it('should skip when all users have already voted', async () => {
@@ -141,17 +138,7 @@ describe('VotingReminderTriggerHandler', () => {
       };
 
       mockSubscriptionClient.getFollowedAddresses.mockResolvedValue(['0x123']);
-      mockAnticaptureClient.listVotesOnchains.mockResolvedValue([
-        {
-          daoId: 'test-dao',
-          txHash: '0xtest',
-          proposalId: 'proposal-123',
-          voterAccountId: '0x123',
-          support: '1',
-          votingPower: '100',
-          timestamp: '1234567890'
-        } // All addresses have voted
-      ]);
+      mockAnticaptureClient.getProposalNonVoters.mockResolvedValue([]); // Empty array - all have voted
 
       const result = await handler.handleMessage(message);
 
@@ -275,7 +262,14 @@ describe('VotingReminderTriggerHandler', () => {
         .mockRejectedValueOnce(new Error('Network error'))
         .mockResolvedValueOnce(['0x456']);
 
-      mockAnticaptureClient.listVotesOnchains.mockResolvedValue([]);
+      mockAnticaptureClient.getProposalNonVoters.mockResolvedValue([
+        {
+          voter: '0x456',
+          votingPower: '75',
+          lastVoteTimestamp: 1234567890,
+          votingPowerVariation: '10'
+        }
+      ]);
       mockSubscriptionClient.getWalletOwnersBatch.mockResolvedValue({
         '0x456': [mockUser]
       });

@@ -134,17 +134,12 @@ export class VotingReminderTriggerHandler extends BaseTriggerHandler<VotingRemin
     daoId: string,
     subscribedAddresses: string[]
   ): Promise<string[]> {
-    const votes = await this.anticaptureClient!.listVotesOnchains({
+    const nonVoters = await this.anticaptureClient!.getProposalNonVoters(
+      proposalId,
       daoId,
-      proposalId_in: [proposalId],
-      voterAccountId_in: subscribedAddresses
-    });
-    
-    const voterAddresses = new Set(votes.map(vote => vote.voterAccountId.toLowerCase()));
-    
-    return subscribedAddresses.filter(address => 
-      !voterAddresses.has(address.toLowerCase())
+      subscribedAddresses
     );
+    return nonVoters.filter(nv => nv !== null).map(nv => nv.voter);
   }
 
   /**
