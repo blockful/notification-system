@@ -67,12 +67,12 @@ services:
     environment:
       TELEGRAM_BOT_TOKEN: ${TELEGRAM_BOT_TOKEN}
       ANTICAPTURE_GRAPHQL_ENDPOINT: ${ANTICAPTURE_GRAPHQL_ENDPOINT}
-      SLACK_APP_TOKEN: ${SLACK_APP_TOKEN}
       SLACK_SIGNING_SECRET: ${SLACK_SIGNING_SECRET}
       SLACK_CHANNEL_ID: ${SLACK_CHANNEL_ID:-}
       SUBSCRIPTION_SERVER_URL: http://subscription-server:3003
       RABBITMQ_URL: amqp://admin:admin@rabbitmq:5672
       TOKEN_ENCRYPTION_KEY: ${TOKEN_ENCRYPTION_KEY}
+      API_PORT_SLACK: 3002
     depends_on:
       subscription-server:
         condition: service_started
