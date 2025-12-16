@@ -27,18 +27,18 @@ export class SlackClient implements SlackClientInterface {
   private sessionStorage: SlackSessionStorage;
   private subscriptionServerUrl: string;
   private tokenEncryptionKey: string;
-  private apiPortSlack: number;
+  private port: number;
   
   constructor(
     signingSecret: string,
     subscriptionServerUrl: string,
     tokenEncryptionKey: string,
-    apiPortSlack: number
+    port: number
   ) {
     this.sessionStorage = new InMemorySessionStorage();
     this.subscriptionServerUrl = subscriptionServerUrl;
     this.tokenEncryptionKey = tokenEncryptionKey;
-    this.apiPortSlack = apiPortSlack;
+    this.port = port;
     this.boltApp = this.createBoltApp(signingSecret);
   }
 
@@ -290,8 +290,8 @@ export class SlackClient implements SlackClientInterface {
   async launch(): Promise<void> {
     console.log('🚀 Starting Slack Bolt app...');
     try {
-      await this.boltApp.start(this.apiPortSlack);
-      console.log(`⚡ Slack bot is running on port ${this.apiPortSlack}!`);
+      await this.boltApp.start(this.port);
+      console.log(`⚡ Slack bot is running on port ${this.port}!`);
     } catch (error) {
       console.error('❌ Failed to start Slack bot:', error);
       throw error;
@@ -301,8 +301,8 @@ export class SlackClient implements SlackClientInterface {
   /**
    * Stop the Slack bot
    */
-  stop(signal?: string): void {
-    this.boltApp.stop();
+  async stop(signal?: string): Promise<void> {
+    await this.boltApp.stop();
     console.log(`Slack bot stopped (${signal || 'manual'})`);
   }
 
@@ -310,7 +310,7 @@ export class SlackClient implements SlackClientInterface {
    * Check if the bot is running
    */
   isRunning(): boolean {
-    return true; // Always running on port this.apiPortSlack
+    return true; // Always running on port this.port
   }
 }
 

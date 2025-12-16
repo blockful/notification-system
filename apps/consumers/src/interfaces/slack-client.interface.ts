@@ -53,7 +53,7 @@ export interface SlackClientInterface {
    * Stop the Slack bot
    * @param signal The signal that triggered the stop
    */
-  stop?(signal?: string): void;
+  stop?(signal?: string): Promise<void>;
 
   /**
    * Check if the bot is running

@@ -29,7 +29,7 @@ const slackClient = new SlackClient(
   config.slackSigningSecret,
   config.subscriptionServerUrl,
   config.tokenEncryptionKey,
-  config.apiPortSlack
+  config.port
 );
 
 // Create and start the application
