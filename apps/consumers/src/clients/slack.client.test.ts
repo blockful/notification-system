@@ -171,7 +171,7 @@ describe('SlackClient', () => {
       (App as unknown as jest.Mock).mockImplementation(() => mockBoltApp);
     });
 
-    it('should always initialize with Socket Mode', () => {
+    it('should not initialize with Socket Mode', () => {
       const client = new SlackClient(
         TEST_SIGNING_SECRET,
         TEST_SUBSCRIPTION_SERVER_URL,
@@ -179,16 +179,8 @@ describe('SlackClient', () => {
         TEST_API_PORT_SLACK
       );
 
-      expect(App).toHaveBeenCalledWith({
-        signingSecret: TEST_SIGNING_SECRET,
-        socketMode: true,
-        processBeforeResponse: true,
-        installationStore: expect.objectContaining({
-          storeInstallation: expect.any(Function),
-          fetchInstallation: expect.any(Function),
-          deleteInstallation: expect.any(Function)
-        }),
-        authorize: expect.any(Function)
+      expect(App).not.toHaveBeenCalledWith({
+        socketMode: true
       });
     });
 
