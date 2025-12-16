@@ -5,7 +5,7 @@
  */
 
 import { WebClient } from '@slack/web-api';
-import { App, Installation, ViewSubmitAction } from '@slack/bolt';
+import { App, HTTPReceiver, Installation, ViewSubmitAction } from '@slack/bolt';
 import {
   SlackClientInterface,
   SlackSendMessageOptions,
@@ -27,24 +27,25 @@ export class SlackClient implements SlackClientInterface {
   private sessionStorage: SlackSessionStorage;
   private subscriptionServerUrl: string;
   private tokenEncryptionKey: string;
-
+  private apiPortSlack: number;
+  
   constructor(
-    appToken: string,
     signingSecret: string,
     subscriptionServerUrl: string,
-    tokenEncryptionKey: string
+    tokenEncryptionKey: string,
+    apiPortSlack: number
   ) {
     this.sessionStorage = new InMemorySessionStorage();
     this.subscriptionServerUrl = subscriptionServerUrl;
     this.tokenEncryptionKey = tokenEncryptionKey;
-    this.boltApp = this.createBoltApp(appToken, signingSecret);
+    this.apiPortSlack = apiPortSlack;
+    this.boltApp = this.createBoltApp(signingSecret);
   }
 
   /**
    * Create Bolt app with installationStore and authorize callback
    */
   private createBoltApp(
-    appToken: string,
     signingSecret: string
   ): App {
     const installationStore = {
@@ -70,10 +71,12 @@ export class SlackClient implements SlackClientInterface {
 
     console.log('✅ Slack client: OAuth mode initialized');
     return new App({
-      appToken,
       signingSecret,
-      socketMode: true,
-      processBeforeResponse: true,
+      receiver: new HTTPReceiver({
+        signingSecret,
+        endpoints: '/slack/events',
+        processBeforeResponse: true,
+      }),
       installationStore,
       authorize: async (source) => {
         // Fetch installation using the installationStore
@@ -287,8 +290,8 @@ export class SlackClient implements SlackClientInterface {
   async launch(): Promise<void> {
     console.log('🚀 Starting Slack Bolt app...');
     try {
-      await this.boltApp.start();
-      console.log('⚡ Slack bot is running in Socket Mode!');
+      await this.boltApp.start(this.apiPortSlack);
+      console.log(`⚡ Slack bot is running on port ${this.apiPortSlack}!`);
     } catch (error) {
       console.error('❌ Failed to start Slack bot:', error);
       throw error;
@@ -307,7 +310,7 @@ export class SlackClient implements SlackClientInterface {
    * Check if the bot is running
    */
   isRunning(): boolean {
-    return true; // Always in Socket Mode now
+    return true; // Always running on port this.apiPortSlack
   }
 }
 
