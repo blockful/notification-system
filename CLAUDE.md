@@ -125,7 +125,6 @@ DATABASE_URL=postgresql://user:pass@localhost/dbname
 RABBITMQ_URL=amqp://localhost
 TELEGRAM_BOT_TOKEN=your_bot_token
 SLACK_BOT_TOKEN=xoxb-your-token
-SLACK_APP_TOKEN=xapp-your-app-token  # For Socket Mode
 SLACK_SIGNING_SECRET=your-signing-secret
 ANTICAPTURE_GRAPHQL_ENDPOINT=https://api-gateway-production-0879.up.railway.app/graphql
 ```
