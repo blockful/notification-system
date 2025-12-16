@@ -1,12 +1,10 @@
 query ProposalNonVoters(
   $id: String!
   $addresses: JSON
-  $orderDirection: queryInput_proposalNonVoters_orderDirection
 ) {
   proposalNonVoters(
     id: $id
     addresses: $addresses
-    orderDirection: $orderDirection
   ) {
     items {
       voter

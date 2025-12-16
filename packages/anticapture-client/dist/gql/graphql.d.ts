@@ -2273,21 +2273,14 @@ export type GetDaOsQuery = {
 export type ProposalNonVotersQueryVariables = Exact<{
     id: Scalars['String']['input'];
     addresses?: InputMaybe<Scalars['JSON']['input']>;
-    limit?: InputMaybe<Scalars['PositiveInt']['input']>;
-    skip?: InputMaybe<Scalars['NonNegativeInt']['input']>;
-    orderDirection?: InputMaybe<QueryInput_ProposalNonVoters_OrderDirection>;
 }>;
 export type ProposalNonVotersQuery = {
     __typename?: 'Query';
     proposalNonVoters?: {
         __typename?: 'proposalNonVoters_200_response';
-        totalCount: number;
         items: Array<{
             __typename?: 'query_proposalNonVoters_items_items';
             voter: string;
-            votingPower: string;
-            lastVoteTimestamp: number;
-            votingPowerVariation: string;
         } | null>;
     } | null;
 };

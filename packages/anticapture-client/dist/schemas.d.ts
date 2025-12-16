@@ -434,75 +434,48 @@ export declare const SafeProposalNonVotersResponseSchema: z.ZodEffects<z.ZodObje
     proposalNonVoters: z.ZodNullable<z.ZodObject<{
         items: z.ZodArray<z.ZodObject<{
             voter: z.ZodString;
-            votingPower: z.ZodString;
-            lastVoteTimestamp: z.ZodNumber;
-            votingPowerVariation: z.ZodString;
         }, "strip", z.ZodTypeAny, {
-            votingPower: string;
             voter: string;
-            lastVoteTimestamp: number;
-            votingPowerVariation: string;
         }, {
-            votingPower: string;
             voter: string;
-            lastVoteTimestamp: number;
-            votingPowerVariation: string;
         }>, "many">;
         totalCount: z.ZodNumber;
     }, "strip", z.ZodTypeAny, {
         items: {
-            votingPower: string;
             voter: string;
-            lastVoteTimestamp: number;
-            votingPowerVariation: string;
         }[];
         totalCount: number;
     }, {
         items: {
-            votingPower: string;
             voter: string;
-            lastVoteTimestamp: number;
-            votingPowerVariation: string;
         }[];
         totalCount: number;
     }>>;
 }, "strip", z.ZodTypeAny, {
     proposalNonVoters: {
         items: {
-            votingPower: string;
             voter: string;
-            lastVoteTimestamp: number;
-            votingPowerVariation: string;
         }[];
         totalCount: number;
     } | null;
 }, {
     proposalNonVoters: {
         items: {
-            votingPower: string;
             voter: string;
-            lastVoteTimestamp: number;
-            votingPowerVariation: string;
         }[];
         totalCount: number;
     } | null;
 }>, {
     proposalNonVoters: {
         items: {
-            votingPower: string;
             voter: string;
-            lastVoteTimestamp: number;
-            votingPowerVariation: string;
         }[];
         totalCount: number;
     };
 }, {
     proposalNonVoters: {
         items: {
-            votingPower: string;
             voter: string;
-            lastVoteTimestamp: number;
-            votingPowerVariation: string;
         }[];
         totalCount: number;
     } | null;

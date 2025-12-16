@@ -85,10 +85,7 @@ export const SafeVotesOnchainsResponseSchema = z.object({
 export const SafeProposalNonVotersResponseSchema = z.object({
   proposalNonVoters: z.object({
     items: z.array(z.object({
-      voter: z.string(),
-      votingPower: z.string(),
-      lastVoteTimestamp: z.number(),
-      votingPowerVariation: z.string()
+      voter: z.string()
     })),
     totalCount: z.number()
   }).nullable()

@@ -82,10 +82,7 @@ exports.SafeVotesOnchainsResponseSchema = zod_1.z.object({
 exports.SafeProposalNonVotersResponseSchema = zod_1.z.object({
     proposalNonVoters: zod_1.z.object({
         items: zod_1.z.array(zod_1.z.object({
-            voter: zod_1.z.string(),
-            votingPower: zod_1.z.string(),
-            lastVoteTimestamp: zod_1.z.number(),
-            votingPowerVariation: zod_1.z.string()
+            voter: zod_1.z.string()
         })),
         totalCount: zod_1.z.number()
     }).nullable()

@@ -89,12 +89,7 @@ describe('VotingReminderTriggerHandler', () => {
       // Setup mocks
       mockSubscriptionClient.getFollowedAddresses.mockResolvedValue(['0x123', '0x456']);
       mockAnticaptureClient.getProposalNonVoters.mockResolvedValue([
-        {
-          voter: '0x456',  // Only 0x456 hasn't voted
-          votingPower: '100',
-          lastVoteTimestamp: 1234567890,
-          votingPowerVariation: '0'
-        }
+        {voter: '0x456'}  // Only 0x456 hasn't voted
       ]);
       mockSubscriptionClient.getWalletOwnersBatch.mockResolvedValue({
         '0x456': [mockUser] // Only 0x456 (non-voter) has users
@@ -153,7 +148,9 @@ describe('VotingReminderTriggerHandler', () => {
       };
 
       mockSubscriptionClient.getFollowedAddresses.mockResolvedValue(['0x456']);
-      mockAnticaptureClient.listVotesOnchains.mockResolvedValue([]); // No votes
+      mockAnticaptureClient.getProposalNonVoters.mockResolvedValue([
+        {voter: '0x456'}
+      ]);
       mockSubscriptionClient.getWalletOwnersBatch.mockResolvedValue({
         '0x456': [mockUser]
       });
@@ -263,12 +260,7 @@ describe('VotingReminderTriggerHandler', () => {
         .mockResolvedValueOnce(['0x456']);
 
       mockAnticaptureClient.getProposalNonVoters.mockResolvedValue([
-        {
-          voter: '0x456',
-          votingPower: '75',
-          lastVoteTimestamp: 1234567890,
-          votingPowerVariation: '10'
-        }
+        {voter: '0x456'}
       ]);
       mockSubscriptionClient.getWalletOwnersBatch.mockResolvedValue({
         '0x456': [mockUser]
