@@ -10,10 +10,6 @@ query ProposalNonVoters(
   ) {
     items {
       voter
-      votingPower
-      lastVoteTimestamp
-      votingPowerVariation
     }
-    totalCount
   }
 }
