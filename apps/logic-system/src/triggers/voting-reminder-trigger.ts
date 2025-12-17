@@ -177,11 +177,13 @@ export class VotingReminderTrigger extends Trigger<ProposalOnChain> {
 
   /**
    * Fetches active proposals from the repository
+   * Excludes optimistic proposals (includeOptimisticProposals: false)
    */
   protected async fetchData(): Promise<ProposalOnChain[]> {
     return await this.proposalRepository.listAll({
       status: 'ACTIVE',
-      fromDate: this.timestampCursor
+      fromDate: this.timestampCursor,
+      includeOptimisticProposals: false
     });
   }
 }

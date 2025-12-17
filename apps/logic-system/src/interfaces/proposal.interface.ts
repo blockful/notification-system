@@ -34,6 +34,8 @@ export interface ListProposalsOptions {
     fromEndDate?: number;
     /** Order direction - asc or desc */
     orderDirection?: string;
+    /** Whether to include optimistic proposals (true=include, false=exclude, undefined=both) */
+    includeOptimisticProposals?: boolean;
 }
 
 /**
