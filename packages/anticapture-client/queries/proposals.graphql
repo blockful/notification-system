@@ -17,7 +17,7 @@ query GetProposalById($id: String!) {
   }
 }
 
-query ListProposals($skip: NonNegativeInt, $limit: PositiveInt, $orderDirection: queryInput_proposals_orderDirection, $status: JSON, $fromDate: Float, $fromEndDate: Float, $includeOptimisticProposals: Boolean) {
+query ListProposals($skip: NonNegativeInt, $limit: PositiveInt, $orderDirection: queryInput_proposals_orderDirection, $status: JSON, $fromDate: Float, $fromEndDate: Float, $includeOptimisticProposals: queryInput_proposals_includeOptimisticProposals) {
   proposals(skip: $skip, limit: $limit, orderDirection: $orderDirection, status: $status, fromDate: $fromDate, fromEndDate: $fromEndDate, includeOptimisticProposals: $includeOptimisticProposals) {
     items {
       id
