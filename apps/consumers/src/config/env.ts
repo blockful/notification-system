@@ -12,7 +12,7 @@ const envSchema = z.object({
   ANTICAPTURE_GRAPHQL_ENDPOINT: z.string().url("ANTICAPTURE_GRAPHQL_ENDPOINT must be a valid URL"),
   SUBSCRIPTION_SERVER_URL: z.string(),
   RABBITMQ_URL: z.string().url(),
-  PORT: z.coerce.number().positive().optional(),
+  PORT: z.coerce.number().positive().optional().default(3002),
 });
 
 export function loadConfig() {
