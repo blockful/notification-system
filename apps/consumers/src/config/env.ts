@@ -26,6 +26,6 @@ export function loadConfig() {
     anticaptureGraphqlEndpoint: env.ANTICAPTURE_GRAPHQL_ENDPOINT,
     subscriptionServerUrl: env.SUBSCRIPTION_SERVER_URL,
     rabbitmqUrl: env.RABBITMQ_URL,
-    port: env.PORT || 3002,
+    port: env.PORT,
   } as const;
 } 
