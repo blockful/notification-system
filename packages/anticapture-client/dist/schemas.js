@@ -83,7 +83,7 @@ exports.SafeProposalNonVotersResponseSchema = zod_1.z.object({
     proposalNonVoters: zod_1.z.object({
         items: zod_1.z.array(zod_1.z.object({
             voter: zod_1.z.string()
-        })),
+        }).nullable()),
         totalCount: zod_1.z.number()
     }).nullable()
 }).transform((data) => {
@@ -91,7 +91,12 @@ exports.SafeProposalNonVotersResponseSchema = zod_1.z.object({
         console.warn('ProposalNonVotersResponse has null proposalNonVoters:', data);
         return { proposalNonVoters: { items: [], totalCount: 0 } };
     }
-    return { proposalNonVoters: data.proposalNonVoters };
+    return {
+        proposalNonVoters: {
+            ...data.proposalNonVoters,
+            items: data.proposalNonVoters.items.filter((item) => item !== null)
+        }
+    };
 });
 // Internal helper function to process validated proposals
 function processProposals(validated, daoId) {

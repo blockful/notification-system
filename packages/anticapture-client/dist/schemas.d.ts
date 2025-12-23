@@ -432,37 +432,37 @@ export declare const SafeVotesOnchainsResponseSchema: z.ZodObject<{
 }>;
 export declare const SafeProposalNonVotersResponseSchema: z.ZodEffects<z.ZodObject<{
     proposalNonVoters: z.ZodNullable<z.ZodObject<{
-        items: z.ZodArray<z.ZodObject<{
+        items: z.ZodArray<z.ZodNullable<z.ZodObject<{
             voter: z.ZodString;
         }, "strip", z.ZodTypeAny, {
             voter: string;
         }, {
             voter: string;
-        }>, "many">;
+        }>>, "many">;
         totalCount: z.ZodNumber;
     }, "strip", z.ZodTypeAny, {
-        items: {
+        items: ({
             voter: string;
-        }[];
+        } | null)[];
         totalCount: number;
     }, {
-        items: {
+        items: ({
             voter: string;
-        }[];
+        } | null)[];
         totalCount: number;
     }>>;
 }, "strip", z.ZodTypeAny, {
     proposalNonVoters: {
-        items: {
+        items: ({
             voter: string;
-        }[];
+        } | null)[];
         totalCount: number;
     } | null;
 }, {
     proposalNonVoters: {
-        items: {
+        items: ({
             voter: string;
-        }[];
+        } | null)[];
         totalCount: number;
     } | null;
 }>, {
@@ -474,9 +474,9 @@ export declare const SafeProposalNonVotersResponseSchema: z.ZodEffects<z.ZodObje
     };
 }, {
     proposalNonVoters: {
-        items: {
+        items: ({
             voter: string;
-        }[];
+        } | null)[];
         totalCount: number;
     } | null;
 }>;

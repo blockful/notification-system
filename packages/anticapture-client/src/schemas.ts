@@ -86,7 +86,7 @@ export const SafeProposalNonVotersResponseSchema = z.object({
   proposalNonVoters: z.object({
     items: z.array(z.object({
       voter: z.string()
-    })),
+    }).nullable()),
     totalCount: z.number()
   }).nullable()
 }).transform((data) => {
@@ -94,7 +94,12 @@ export const SafeProposalNonVotersResponseSchema = z.object({
     console.warn('ProposalNonVotersResponse has null proposalNonVoters:', data);
     return { proposalNonVoters: { items: [], totalCount: 0 } };
   }
-  return { proposalNonVoters: data.proposalNonVoters };
+  return {
+    proposalNonVoters: {
+      ...data.proposalNonVoters,
+      items: data.proposalNonVoters.items.filter((item): item is { voter: string } => item !== null)
+    }
+  };
 });
 
 

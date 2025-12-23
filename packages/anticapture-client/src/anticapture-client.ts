@@ -11,7 +11,6 @@ import type {
   ListVotingPowerHistorysQueryVariables,
   ListVotesOnchainsQuery,
   ListVotesOnchainsQueryVariables,
-  ProposalNonVotersQuery,
   ProposalNonVotersQueryVariables
 } from './gql/graphql';
 import { GetDaOsDocument, GetProposalByIdDocument, ListProposalsDocument, ListVotingPowerHistorysDocument, ListVotesOnchainsDocument, ProposalNonVotersDocument } from './gql/graphql';
@@ -20,7 +19,7 @@ import { SafeDaosResponseSchema, SafeProposalByIdResponseSchema, SafeProposalsRe
 type ProposalItems = NonNullable<ListProposalsQuery['proposals']>['items'];
 type VotingPowerHistoryItems = ProcessedVotingPowerHistory[];
 type VotesOnchain = NonNullable<ListVotesOnchainsQuery['votesOnchains']['items'][0]>;
-type ProposalNonVoter = NonNullable<ProposalNonVotersQuery['proposalNonVoters']>['items'][0];
+type ProposalNonVoter = z.infer<typeof SafeProposalNonVotersResponseSchema>['proposalNonVoters']['items'][0];
 
 export class AnticaptureClient {
   private readonly httpClient: AxiosInstance;

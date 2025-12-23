@@ -139,7 +139,7 @@ export class VotingReminderTriggerHandler extends BaseTriggerHandler<VotingRemin
       daoId,
       subscribedAddresses
     );
-    return nonVoters.filter(nv => nv !== null).map(nv => nv.voter);
+    return nonVoters.map(nv => nv.voter);
   }
 
   /**
