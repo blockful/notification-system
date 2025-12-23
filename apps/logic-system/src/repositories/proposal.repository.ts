@@ -1,6 +1,7 @@
 import { QueryInput_Proposals_IncludeOptimisticProposals as boolEnum } from '@notification-system/anticapture-client/dist/gql/graphql';
 import { ProposalDataSource, ProposalOnChain, ProposalOrNull, ListProposalsOptions } from '../interfaces/proposal.interface';
 import { AnticaptureClient, ListProposalsQueryVariables } from '@notification-system/anticapture-client';
+import { QueryInput_Proposals_IncludeOptimisticProposals as boolEnum } from '@notification-system/anticapture-client/dist/gql/graphql'
 
 export class ProposalRepository implements ProposalDataSource {
   private anticaptureClient: AnticaptureClient;
