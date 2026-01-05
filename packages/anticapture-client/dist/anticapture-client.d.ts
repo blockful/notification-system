@@ -1,9 +1,11 @@
 import { AxiosInstance } from 'axios';
+import { z } from 'zod';
 import type { GetProposalByIdQuery, ListProposalsQuery, ListProposalsQueryVariables, ListVotingPowerHistorysQueryVariables, ListVotesOnchainsQuery, ListVotesOnchainsQueryVariables } from './gql/graphql';
-import { ProcessedVotingPowerHistory } from './schemas';
+import { SafeProposalNonVotersResponseSchema, ProcessedVotingPowerHistory } from './schemas';
 type ProposalItems = NonNullable<ListProposalsQuery['proposals']>['items'];
 type VotingPowerHistoryItems = ProcessedVotingPowerHistory[];
 type VotesOnchain = NonNullable<ListVotesOnchainsQuery['votesOnchains']['items'][0]>;
+type ProposalNonVoter = z.infer<typeof SafeProposalNonVotersResponseSchema>['proposalNonVoters']['items'][0];
 export declare class AnticaptureClient {
     private readonly httpClient;
     constructor(httpClient: AxiosInstance);
@@ -52,6 +54,15 @@ export declare class AnticaptureClient {
      * @returns List of votes matching the criteria
      */
     listVotesOnchains(variables: ListVotesOnchainsQueryVariables): Promise<VotesOnchain[]>;
+    /**
+     * Fetches addresses that haven't voted on a specific proposal
+     * Note: API already filters for addresses with votingPower > 0
+     * @param proposalId The proposal ID to check
+     * @param daoId The DAO ID for the header
+     * @param addresses Optional array of addresses to filter by
+     * @returns List of non-voters with their voting power details
+     */
+    getProposalNonVoters(proposalId: string, daoId: string, addresses?: string[]): Promise<ProposalNonVoter[]>;
     /**
      * List recent votes from all DAOs since a given timestamp
      * @param timestampGt Fetch votes with timestamp greater than this value

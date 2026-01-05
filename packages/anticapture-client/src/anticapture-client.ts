@@ -10,14 +10,16 @@ import type {
   ListProposalsQueryVariables,
   ListVotingPowerHistorysQueryVariables,
   ListVotesOnchainsQuery,
-  ListVotesOnchainsQueryVariables
+  ListVotesOnchainsQueryVariables,
+  ProposalNonVotersQueryVariables
 } from './gql/graphql';
-import { GetDaOsDocument, GetProposalByIdDocument, ListProposalsDocument, ListVotingPowerHistorysDocument, ListVotesOnchainsDocument } from './gql/graphql';
-import { SafeDaosResponseSchema, SafeProposalByIdResponseSchema, SafeProposalsResponseSchema, SafeVotingPowerHistoryResponseSchema, SafeVotesOnchainsResponseSchema, processProposals, processVotingPowerHistory, ProcessedVotingPowerHistory } from './schemas';
+import { GetDaOsDocument, GetProposalByIdDocument, ListProposalsDocument, ListVotingPowerHistorysDocument, ListVotesOnchainsDocument, ProposalNonVotersDocument } from './gql/graphql';
+import { SafeDaosResponseSchema, SafeProposalByIdResponseSchema, SafeProposalsResponseSchema, SafeVotingPowerHistoryResponseSchema, SafeVotesOnchainsResponseSchema, SafeProposalNonVotersResponseSchema, processProposals, processVotingPowerHistory, ProcessedVotingPowerHistory } from './schemas';
 
 type ProposalItems = NonNullable<ListProposalsQuery['proposals']>['items'];
 type VotingPowerHistoryItems = ProcessedVotingPowerHistory[];
 type VotesOnchain = NonNullable<ListVotesOnchainsQuery['votesOnchains']['items'][0]>;
+type ProposalNonVoter = z.infer<typeof SafeProposalNonVotersResponseSchema>['proposalNonVoters']['items'][0];
 
 export class AnticaptureClient {
   private readonly httpClient: AxiosInstance;
@@ -225,6 +227,39 @@ export class AnticaptureClient {
       return validated.votesOnchains.items;
     } catch (error) {
       console.warn('Error fetching votes', error);
+      return [];
+    }
+  }
+
+  /**
+   * Fetches addresses that haven't voted on a specific proposal
+   * Note: API already filters for addresses with votingPower > 0
+   * @param proposalId The proposal ID to check
+   * @param daoId The DAO ID for the header
+   * @param addresses Optional array of addresses to filter by
+   * @returns List of non-voters with their voting power details
+   */
+  async getProposalNonVoters(
+    proposalId: string,
+    daoId: string,
+    addresses?: string[],
+  ): Promise<ProposalNonVoter[]> {
+    try {
+      const variables: ProposalNonVotersQueryVariables = {
+        id: proposalId,
+        ...(addresses && { addresses: addresses }),
+      };
+
+      const validated = await this.query(
+        ProposalNonVotersDocument,
+        SafeProposalNonVotersResponseSchema,
+        variables,
+        daoId
+      );
+
+      return validated.proposalNonVoters.items;
+    } catch (error) {
+      console.warn(`Error fetching non-voters for proposal ${proposalId}:`, error);
       return [];
     }
   }

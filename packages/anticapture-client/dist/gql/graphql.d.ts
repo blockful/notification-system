@@ -188,7 +188,7 @@ export type Query = {
     tokenPrice?: Maybe<TokenPrice>;
     tokenPrices: TokenPricePage;
     tokens: TokenPage;
-    /** Get total assets */
+    /** Get historical Liquid Treasury (treasury without DAO tokens) directly from provider */
     totalAssets?: Maybe<Array<Maybe<Query_TotalAssets_Items>>>;
     transaction?: Maybe<Transaction>;
     /** Get transactions with their associated transfers and delegations, with optional filtering and sorting */
@@ -417,6 +417,7 @@ export type QueryTokensArgs = {
 };
 export type QueryTotalAssetsArgs = {
     days?: InputMaybe<QueryInput_TotalAssets_Days>;
+    order?: InputMaybe<QueryInput_TotalAssets_Order>;
 };
 export type QueryTransactionArgs = {
     transactionHash: Scalars['String']['input'];
@@ -1451,6 +1452,10 @@ export declare enum QueryInput_TotalAssets_Days {
     '180d' = "_180d",
     '365d' = "_365d"
 }
+export declare enum QueryInput_TotalAssets_Order {
+    Asc = "asc",
+    Desc = "desc"
+}
 export declare enum QueryInput_Transactions_SortOrder {
     Asc = "asc",
     Desc = "desc"
@@ -1590,8 +1595,9 @@ export type Query_Proposals_Items_Items = {
 };
 export type Query_TotalAssets_Items = {
     __typename?: 'query_totalAssets_items';
-    date: Scalars['String']['output'];
-    totalAssets: Scalars['String']['output'];
+    /** Unix timestamp in milliseconds */
+    date: Scalars['Float']['output'];
+    liquidTreasury: Scalars['Float']['output'];
 };
 export type Query_Transactions_Items_Items = {
     __typename?: 'query_transactions_items_items';
@@ -2264,6 +2270,20 @@ export type GetDaOsQuery = {
         }>;
     };
 };
+export type ProposalNonVotersQueryVariables = Exact<{
+    id: Scalars['String']['input'];
+    addresses?: InputMaybe<Scalars['JSON']['input']>;
+}>;
+export type ProposalNonVotersQuery = {
+    __typename?: 'Query';
+    proposalNonVoters?: {
+        __typename?: 'proposalNonVoters_200_response';
+        items: Array<{
+            __typename?: 'query_proposalNonVoters_items_items';
+            voter: string;
+        } | null>;
+    } | null;
+};
 export type GetProposalByIdQueryVariables = Exact<{
     id: Scalars['String']['input'];
 }>;
@@ -2383,6 +2403,7 @@ export type ListVotingPowerHistorysQuery = {
     };
 };
 export declare const GetDaOsDocument: DocumentNode<GetDaOsQuery, GetDaOsQueryVariables>;
+export declare const ProposalNonVotersDocument: DocumentNode<ProposalNonVotersQuery, ProposalNonVotersQueryVariables>;
 export declare const GetProposalByIdDocument: DocumentNode<GetProposalByIdQuery, GetProposalByIdQueryVariables>;
 export declare const ListProposalsDocument: DocumentNode<ListProposalsQuery, ListProposalsQueryVariables>;
 export declare const ListVotesOnchainsDocument: DocumentNode<ListVotesOnchainsQuery, ListVotesOnchainsQueryVariables>;

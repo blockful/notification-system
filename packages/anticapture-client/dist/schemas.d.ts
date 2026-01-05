@@ -430,6 +430,56 @@ export declare const SafeVotesOnchainsResponseSchema: z.ZodObject<{
         totalCount: number;
     };
 }>;
+export declare const SafeProposalNonVotersResponseSchema: z.ZodEffects<z.ZodObject<{
+    proposalNonVoters: z.ZodNullable<z.ZodObject<{
+        items: z.ZodArray<z.ZodNullable<z.ZodObject<{
+            voter: z.ZodString;
+        }, "strip", z.ZodTypeAny, {
+            voter: string;
+        }, {
+            voter: string;
+        }>>, "many">;
+        totalCount: z.ZodNumber;
+    }, "strip", z.ZodTypeAny, {
+        items: ({
+            voter: string;
+        } | null)[];
+        totalCount: number;
+    }, {
+        items: ({
+            voter: string;
+        } | null)[];
+        totalCount: number;
+    }>>;
+}, "strip", z.ZodTypeAny, {
+    proposalNonVoters: {
+        items: ({
+            voter: string;
+        } | null)[];
+        totalCount: number;
+    } | null;
+}, {
+    proposalNonVoters: {
+        items: ({
+            voter: string;
+        } | null)[];
+        totalCount: number;
+    } | null;
+}>, {
+    proposalNonVoters: {
+        items: {
+            voter: string;
+        }[];
+        totalCount: number;
+    };
+}, {
+    proposalNonVoters: {
+        items: ({
+            voter: string;
+        } | null)[];
+        totalCount: number;
+    } | null;
+}>;
 type SafeProposalsResponse = z.infer<typeof SafeProposalsResponseSchema>;
 type SafeVotingPowerHistoryResponse = z.infer<typeof SafeVotingPowerHistoryResponseSchema>;
 export type ProcessedVotingPowerHistory = z.infer<typeof VotingPowerHistoryItemSchema> & {
