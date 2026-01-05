@@ -1,0 +1,13 @@
+query ProposalNonVoters(
+  $id: String!
+  $addresses: JSON
+) {
+  proposalNonVoters(
+    id: $id
+    addresses: $addresses
+  ) {
+    items {
+      voter
+    }
+  }
+}

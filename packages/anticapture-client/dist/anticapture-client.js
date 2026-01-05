@@ -179,6 +179,28 @@ class AnticaptureClient {
         }
     }
     /**
+     * Fetches addresses that haven't voted on a specific proposal
+     * Note: API already filters for addresses with votingPower > 0
+     * @param proposalId The proposal ID to check
+     * @param daoId The DAO ID for the header
+     * @param addresses Optional array of addresses to filter by
+     * @returns List of non-voters with their voting power details
+     */
+    async getProposalNonVoters(proposalId, daoId, addresses) {
+        try {
+            const variables = {
+                id: proposalId,
+                ...(addresses && { addresses: addresses }),
+            };
+            const validated = await this.query(graphql_2.ProposalNonVotersDocument, schemas_1.SafeProposalNonVotersResponseSchema, variables, daoId);
+            return validated.proposalNonVoters.items;
+        }
+        catch (error) {
+            console.warn(`Error fetching non-voters for proposal ${proposalId}:`, error);
+            return [];
+        }
+    }
+    /**
      * List recent votes from all DAOs since a given timestamp
      * @param timestampGt Fetch votes with timestamp greater than this value
      * @param limit Maximum number of votes to fetch per DAO (default: 100)

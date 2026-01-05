@@ -130,6 +130,30 @@ export class GraphQLMockSetup {
         });
       }
 
+      // Handle proposal non-voters
+      if (data.query?.includes('ProposalNonVoters')) {
+        const proposalId = data.variables?.id;
+        const addressesFilter = data.variables?.addresses || [];
+
+        // Get addresses that voted on this proposal
+        const votersSet = new Set(
+          votesData
+            .filter((v: any) => v.proposalId === proposalId)
+            .map((v: any) => getAddress(v.voterAccountId).toLowerCase())
+        );
+
+        // Filter to find non-voters from the provided address list
+        const nonVoterItems = addressesFilter
+          .filter((addr: string) => !votersSet.has(getAddress(addr).toLowerCase()))
+          .map((addr: string) => ({
+            voter: getAddress(addr)
+          }));
+
+        return Promise.resolve({
+          data: { data: { proposalNonVoters: { items: nonVoterItems, totalCount: nonVoterItems.length } } }
+        });
+      }
+
       // Handle DAOs
       if (data.query?.includes('GetDAOs')) {
         const uniqueDaoIds = [...new Set([

@@ -26,10 +26,10 @@ const telegramClient = new TelegramClient(config.telegramBotToken);
 
 // Create Slack client
 const slackClient = new SlackClient(
-  config.slackAppToken,
   config.slackSigningSecret,
   config.subscriptionServerUrl,
-  config.tokenEncryptionKey
+  config.tokenEncryptionKey,
+  config.port
 );
 
 // Create and start the application
