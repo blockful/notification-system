@@ -12,8 +12,8 @@ jest.mock('@slack/web-api');
 jest.mock('@slack/bolt');
 
 // Test configuration constants
-const TEST_APP_TOKEN = 'xapp-test-app-token';
 const TEST_SIGNING_SECRET = 'test-signing-secret';
+const TEST_API_PORT_SLACK = 3002;
 const TEST_SUBSCRIPTION_SERVER_URL = 'http://test-subscription-server';
 const TEST_ENCRYPTION_KEY = '0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef';
 
@@ -27,20 +27,20 @@ describe('SlackClient', () => {
     (WebClient as unknown as jest.Mock).mockImplementation(() => mockWebClient);
 
     slackClient = new SlackClient(
-      TEST_APP_TOKEN,
       TEST_SIGNING_SECRET,
       TEST_SUBSCRIPTION_SERVER_URL,
-      TEST_ENCRYPTION_KEY
+      TEST_ENCRYPTION_KEY,
+      TEST_API_PORT_SLACK
     );
   });
 
   describe('constructor', () => {
     it('should create client with valid token', () => {
       expect(new SlackClient(
-        TEST_APP_TOKEN,
         TEST_SIGNING_SECRET,
         TEST_SUBSCRIPTION_SERVER_URL,
-        TEST_ENCRYPTION_KEY
+        TEST_ENCRYPTION_KEY,
+        TEST_API_PORT_SLACK
       )).toBeInstanceOf(SlackClient);
     });
   });
@@ -171,35 +171,26 @@ describe('SlackClient', () => {
       (App as unknown as jest.Mock).mockImplementation(() => mockBoltApp);
     });
 
-    it('should always initialize with Socket Mode', () => {
+    it('should not initialize with Socket Mode', () => {
       const client = new SlackClient(
-        TEST_APP_TOKEN,
         TEST_SIGNING_SECRET,
         TEST_SUBSCRIPTION_SERVER_URL,
-        TEST_ENCRYPTION_KEY
+        TEST_ENCRYPTION_KEY,
+        TEST_API_PORT_SLACK
       );
 
-      expect(App).toHaveBeenCalledWith({
-        appToken: TEST_APP_TOKEN,
-        signingSecret: TEST_SIGNING_SECRET,
-        socketMode: true,
-        processBeforeResponse: true,
-        installationStore: expect.objectContaining({
-          storeInstallation: expect.any(Function),
-          fetchInstallation: expect.any(Function),
-          deleteInstallation: expect.any(Function)
-        }),
-        authorize: expect.any(Function)
+      expect(App).not.toHaveBeenCalledWith({
+        socketMode: true
       });
     });
 
 
     it('should setup command handlers', () => {
       const client = new SlackClient(
-        TEST_APP_TOKEN,
         TEST_SIGNING_SECRET,
         TEST_SUBSCRIPTION_SERVER_URL,
-        TEST_ENCRYPTION_KEY
+        TEST_ENCRYPTION_KEY,
+        TEST_API_PORT_SLACK
       );
 
       client.setupHandlers?.((handlers) => {
@@ -213,10 +204,10 @@ describe('SlackClient', () => {
 
     it('should setup action handlers', () => {
       const client = new SlackClient(
-        TEST_APP_TOKEN,
         TEST_SIGNING_SECRET,
         TEST_SUBSCRIPTION_SERVER_URL,
-        TEST_ENCRYPTION_KEY
+        TEST_ENCRYPTION_KEY,
+        TEST_API_PORT_SLACK
       );
 
       client.setupHandlers?.((handlers) => {
@@ -230,10 +221,10 @@ describe('SlackClient', () => {
 
     it('should launch the Bolt app', async () => {
       const client = new SlackClient(
-        TEST_APP_TOKEN,
         TEST_SIGNING_SECRET,
         TEST_SUBSCRIPTION_SERVER_URL,
-        TEST_ENCRYPTION_KEY
+        TEST_ENCRYPTION_KEY,
+        TEST_API_PORT_SLACK
       );
 
       await client.launch?.();
@@ -243,10 +234,10 @@ describe('SlackClient', () => {
 
     it('should stop the Bolt app', () => {
       const client = new SlackClient(
-        TEST_APP_TOKEN,
         TEST_SIGNING_SECRET,
         TEST_SUBSCRIPTION_SERVER_URL,
-        TEST_ENCRYPTION_KEY
+        TEST_ENCRYPTION_KEY,
+        TEST_API_PORT_SLACK
       );
 
       client.stop?.('SIGTERM');

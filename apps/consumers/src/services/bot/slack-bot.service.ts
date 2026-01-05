@@ -77,6 +77,14 @@ export class SlackBotService implements BotServiceInterface {
         }
       });
 
+      handlers.action('dao_checkboxes', async (ctx) => {
+        await ctx.ack();
+      });
+
+      handlers.action('wallet_checkboxes', async (ctx) => {
+        await ctx.ack();
+      });
+
       // Wallet actions
       handlers.action('wallet_confirm_remove', async (ctx) => {
         if (this.walletService) {
