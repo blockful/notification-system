@@ -89,42 +89,25 @@ export class NonVotingHandler extends BaseTriggerHandler<ProposalFinishedNotific
    * @param followedAddresses - List of addresses being followed
    * @param lastProposals - Recent finished proposals to check
    * @param daoId - DAO identifier
-   * @returns Array of non-voting addresses
+   * @returns Array of non-voting addresses with voting power > 0
    */
   private async detectNonVoters(
-    followedAddresses: string[], 
-    lastProposals: any[], 
+    followedAddresses: string[],
+    lastProposals: any[],
     daoId: string
   ): Promise<string[]> {
-    const votes = await this.getVotingData(daoId, lastProposals, followedAddresses);
-    
-    const voterAddresses = new Set(votes.map(v => v.voterAccountId.toLowerCase()));
-    
-    const nonVoters = followedAddresses.filter(
-      addr => !voterAddresses.has(addr.toLowerCase())
+    const nonVoterSets = await Promise.all(
+      lastProposals.map(p =>
+        this.anticaptureClient!.getProposalNonVoters(p.id, daoId, followedAddresses)
+      )
     );
 
-    return nonVoters;
-  }
-
-  /**
-   * Fetches voting data for specific addresses across multiple proposals
-   * @param daoId - DAO identifier
-   * @param lastProposals - Proposals to check voting data for
-   * @param followedAddresses - Addresses to get voting data for
-   * @returns Array of vote records
-   */
-  private async getVotingData(
-    daoId: string,
-    lastProposals: any[],
-    followedAddresses: string[]
-  ): Promise<any[]> {
-    const proposalIds = lastProposals.map(p => p.id);
-    return await this.anticaptureClient!.listVotesOnchains({
-      daoId,
-      proposalId_in: proposalIds,
-      voterAccountId_in: followedAddresses
-    });
+    // Only addresses that appear as non-voters in ALL proposals
+    return followedAddresses.filter(addr =>
+      nonVoterSets.every(set =>
+        set.some(nv => nv.voter.toLowerCase() === addr.toLowerCase())
+      )
+    );
   }
 
   /**
