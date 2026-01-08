@@ -1,14 +1,16 @@
 export const votingPowerMessages = {
-  // Delegation received messages - complete
+  // Delegation received messages
   delegationReceived: {
     new: `🥳 {{address}} received a new delegation in {{daoId}}!
-{{delegator}} delegated to {{address}}, increasing voting power by {{delta}}.`,
+{{delegator}} delegated to {{address}}, increasing voting power by {{delta}}.
+Voting power is now {{votingPower}}.`,
 
     removed: `🥺 A delegator just undelegated in {{daoId}}!
-{{delegator}} removed their delegation from {{address}}, reducing voting power by {{delta}}.`
+{{delegator}} removed their delegation from {{address}}, reducing voting power by {{delta}}.
+Voting power is now {{votingPower}}.`
   },
 
-  // Delegation sent messages (when user delegates to someone else) - complete
+  // Delegation sent messages (when user delegates to someone else)
   delegationSent: {
     confirmed: `✅ Delegation confirmed in {{daoId}}!
 Account {{delegatorAccount}} delegated {{delta}} voting power to {{delegate}}.`,
@@ -17,7 +19,7 @@ Account {{delegatorAccount}} delegated {{delta}} voting power to {{delegate}}.`,
 Account {{delegatorAccount}} removed {{delta}} voting power from {{delegate}}.`
   },
 
-  // Self-delegation messages - complete
+  // Self-delegation messages
   selfDelegation: {
     confirmed: `🔄 Self-delegation confirmed in {{daoId}}!
 {{address}} delegated {{delta}} voting power to themselves.
@@ -52,12 +54,12 @@ Voting power is now {{votingPower}}.`,
 Voting power is now {{votingPower}}.`
   },
 
-  // Generic voting power change - complete
+  // Generic voting power change
   generic: {
     increased: `⚡ Voting power increased for {{address}} in {{daoId}}!
-Voting power increased by {{delta}}.`,
+Voting power increased by {{delta}} and now it is {{votingPower}}.`,
 
     decreased: `⚡ Voting power decreased for {{address}} in {{daoId}}!
-Voting power decreased by {{delta}}.`
+Voting power decreased by {{delta}} and now it is {{votingPower}}.`
   }
 };

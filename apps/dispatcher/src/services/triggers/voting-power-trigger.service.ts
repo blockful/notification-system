@@ -97,7 +97,7 @@ export class VotingPowerTriggerHandler extends BaseTriggerHandler {
     walletOwnersMap: Record<string, User[]>,
     daoSubscribersMap: Record<string, User[]>
   ): Promise<void> {
-    const { daoId, accountId, sourceAccountId, delta, transactionHash, chainId } = votingPowerEvent;
+    const { daoId, accountId, sourceAccountId, delta, transactionHash, chainId, votingPower } = votingPowerEvent;
     
     const subscribers = await this.getNotificationSubscribers(
       accountId, // who receives the delegation
@@ -111,6 +111,7 @@ export class VotingPowerTriggerHandler extends BaseTriggerHandler {
     
     const deltaValue = delta ? parseInt(delta) : 0;
     const formattedDelta = formatTokenAmount(Math.abs(deltaValue));
+    const formattedVotingPower = votingPower ? formatTokenAmount(parseInt(votingPower)) : '0';
     
     const messageTemplate = deltaValue >= 0
       ? votingPowerMessages.delegationReceived.new
@@ -118,7 +119,8 @@ export class VotingPowerTriggerHandler extends BaseTriggerHandler {
 
     const notificationMessage = replacePlaceholders(messageTemplate, {
       daoId,
-      delta: formattedDelta
+      delta: formattedDelta,
+      votingPower: formattedVotingPower
     });
 
     const metadata = this.buildNotificationMetadata(chainId, transactionHash, {
@@ -306,14 +308,15 @@ export class VotingPowerTriggerHandler extends BaseTriggerHandler {
    * Build notification for generic voting power change
    */
   private buildGenericNotification(event: any): { message: string; metadata: any } {
-    const { daoId, accountId, delta, chainId, transactionHash } = event;
+    const { daoId, accountId, delta, chainId, transactionHash, votingPower } = event;
     const deltaValue = delta ? parseInt(delta) : 0;
     const isPositive = deltaValue >= 0;
     const formattedDelta = formatTokenAmount(Math.abs(deltaValue));
+    const formattedVotingPower = votingPower ? formatTokenAmount(parseInt(votingPower)) : '0';
 
     const message = replacePlaceholders(
       votingPowerMessages.generic[isPositive ? 'increased' : 'decreased'],
-      { daoId, delta: formattedDelta }
+      { daoId, delta: formattedDelta, votingPower: formattedVotingPower }
     );
 
     return {
