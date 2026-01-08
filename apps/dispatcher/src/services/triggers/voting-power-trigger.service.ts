@@ -222,55 +222,104 @@ export class VotingPowerTriggerHandler extends BaseTriggerHandler {
     walletOwnersMap: Record<string, User[]>,
     daoSubscribersMap: Record<string, User[]>
   ): Promise<void> {
-    const { daoId, accountId, changeType, delta, transactionHash, chainId } = votingPowerEvent;
+    const { daoId, accountId, changeType, transactionHash, chainId, transfer } = votingPowerEvent;
     
     const subscribers = await this.getNotificationSubscribers(
-      accountId,
-      daoId,
-      transactionHash,
-      walletOwnersMap,
-      daoSubscribersMap
+      accountId, daoId, transactionHash, walletOwnersMap, daoSubscribersMap
     );
-    
     if (subscribers.length === 0) return;
-    
-    const deltaValue = delta ? parseInt(delta) : 0;
-    const formattedDelta = formatTokenAmount(Math.abs(deltaValue));
-    
-    let notificationMessage = '';
-    if (changeType === 'transfer') {
-      const messageTemplate = deltaValue >= 0
-        ? votingPowerMessages.transfer.increased
-        : votingPowerMessages.transfer.decreased;
 
-      notificationMessage = replacePlaceholders(messageTemplate, {
-        daoId,
-        delta: formattedDelta
-      });
-    } else {
-      // Generic voting power change
-      const messageTemplate = deltaValue >= 0
-        ? votingPowerMessages.generic.increased
-        : votingPowerMessages.generic.decreased;
+    const { message, metadata } = changeType === 'transfer'
+      ? this.buildTransferTypeNotification(votingPowerEvent)
+      : this.buildGenericNotification(votingPowerEvent);
 
-      notificationMessage = replacePlaceholders(messageTemplate, {
-        daoId,
-        delta: formattedDelta
-      });
+    const buttons = buildButtons({ triggerType: 'votingPowerChange', txHash: transactionHash, chainId });
+    await this.sendNotificationsToSubscribers(subscribers, message, transactionHash, daoId, metadata, buttons);
+  }
+
+  /**
+   * Build notification for transfer type - decides between user transfer or delegator balance change
+   */
+  private buildTransferTypeNotification(event: any): { message: string; metadata: any } {
+    const { accountId, transfer } = event;
+    const isUserSender = accountId === transfer?.fromAccountId;
+    const isUserReceiver = accountId === transfer?.toAccountId;
+
+    if (isUserSender || isUserReceiver) {
+      return this.buildTransferNotification(event, isUserReceiver);
     }
+    return this.buildDelegatorBalanceChangeNotification(event);
+  }
 
-    const metadata = this.buildNotificationMetadata(chainId, transactionHash, {
-      address: accountId
-    });
+  /**
+   * Build notification for transfer (user sent or received tokens)
+   */
+  private buildTransferNotification(
+    event: any,
+    isReceiving: boolean
+  ): { message: string; metadata: any } {
+    const { daoId, accountId, delta, chainId, transactionHash, votingPower, transfer } = event;
+    const formattedDelta = formatTokenAmount(Math.abs(parseInt(delta) || 0));
+    const formattedVotingPower = votingPower ? formatTokenAmount(parseInt(votingPower)) : '0';
+    const counterparty = isReceiving ? transfer?.fromAccountId : transfer?.toAccountId;
 
-    // Build buttons for voting power change
-    const buttons = buildButtons({
-      triggerType: 'votingPowerChange',
-      txHash: transactionHash,
-      chainId
-    });
+    const message = replacePlaceholders(
+      votingPowerMessages.transfer[isReceiving ? 'increased' : 'decreased'],
+      { daoId, delta: formattedDelta, votingPower: formattedVotingPower, counterparty, address: accountId }
+    );
 
-    await this.sendNotificationsToSubscribers(subscribers, notificationMessage, transactionHash, daoId, metadata, buttons);
+    return {
+      message,
+      metadata: this.buildNotificationMetadata(chainId, transactionHash, { 
+        address: accountId,
+        counterparty 
+      })
+    };
+  }
+
+  /**
+   * Build notification for delegator balance change (someone who delegates to user had their balance change)
+   */
+  private buildDelegatorBalanceChangeNotification(event: any): { message: string; metadata: any } {
+    const { daoId, accountId, delta, chainId, transactionHash, votingPower, transfer } = event;
+    const deltaValue = delta ? parseInt(delta) : 0;
+    const isPositive = deltaValue >= 0;
+    const formattedDelta = formatTokenAmount(Math.abs(deltaValue));
+    const formattedVotingPower = votingPower ? formatTokenAmount(parseInt(votingPower)) : '0';
+    const delegatorAccountId = isPositive ? transfer?.toAccountId : transfer?.fromAccountId;
+
+    const message = replacePlaceholders(
+      votingPowerMessages.delegatorBalanceChange[isPositive ? 'increased' : 'decreased'],
+      { daoId, delta: formattedDelta, votingPower: formattedVotingPower, address: accountId }
+    );
+
+    return {
+      message,
+      metadata: this.buildNotificationMetadata(chainId, transactionHash, { 
+        address: accountId,
+        delegator: delegatorAccountId || accountId 
+      })
+    };
+  }
+
+  /**
+   * Build notification for generic voting power change
+   */
+  private buildGenericNotification(event: any): { message: string; metadata: any } {
+    const { daoId, accountId, delta, chainId, transactionHash } = event;
+    const deltaValue = delta ? parseInt(delta) : 0;
+    const isPositive = deltaValue >= 0;
+    const formattedDelta = formatTokenAmount(Math.abs(deltaValue));
+
+    const message = replacePlaceholders(
+      votingPowerMessages.generic[isPositive ? 'increased' : 'decreased'],
+      { daoId, delta: formattedDelta }
+    );
+
+    return {
+      message,
+      metadata: this.buildNotificationMetadata(chainId, transactionHash, { address: accountId })
+    };
   }
 
   /**
