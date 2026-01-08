@@ -30,13 +30,26 @@ Account {{delegatorAccount}} removed {{delta}} voting power from {{delegate}}.`
 💪 Total voting power is now {{votingPower}}.`
   },
 
-  // Transfer-based voting power changes - complete
+  // Transfer - when user is the sender or receiver of tokens
   transfer: {
     increased: `📈 Voting power increased in {{daoId}}!
-{{address}} gained {{delta}} voting power from token transfer activity.`,
+{{address}} received tokens from {{counterparty}}, balance increased by {{delta}}.
+Voting power is now {{votingPower}}.`,
 
     decreased: `📉 Voting power decreased in {{daoId}}!
-{{address}} lost {{delta}} voting power from token transfer activity.`
+{{address}} transferred tokens to {{counterparty}}, balance decreased by {{delta}}.
+Voting power is now {{votingPower}}.`
+  },
+
+  // Delegator balance change - when someone who delegates to user had their balance change
+  delegatorBalanceChange: {
+    increased: `📈 Voting power increased in {{daoId}}!
+{{delegator}}, who delegates to {{address}}, had their balance increased by {{delta}}.
+Voting power is now {{votingPower}}.`,
+
+    decreased: `📉 Voting power decreased in {{daoId}}!
+{{delegator}}, who delegates to {{address}}, had their balance decreased by {{delta}}.
+Voting power is now {{votingPower}}.`
   },
 
   // Generic voting power change - complete
