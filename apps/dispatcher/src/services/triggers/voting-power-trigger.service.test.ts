@@ -434,79 +434,96 @@ describe('VotingPowerTriggerHandler', () => {
   });
 
   describe('transfer notifications', () => {
-    it('should send transfer increase notification', async () => {
+    it('should send notification when user receives tokens', async () => {
+      const userAddress = '0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045';
+      const senderAddress = '0xSender1234567890123456789012345678901234';
       const transferEvent = {
-        accountId: '0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045',
+        accountId: userAddress,
         daoId: 'test-dao',
         transactionHash: 'tx123',
         changeType: 'transfer',
         delta: '1000',
+        votingPower: '5000',
         chainId: 1,
-        timestamp: '2023-01-01T00:00:00Z'
+        timestamp: '2023-01-01T00:00:00Z',
+        transfer: {
+          fromAccountId: senderAddress,
+          toAccountId: userAddress, // user received tokens
+          amount: '1000'
+        }
       };
 
       const mockMessage: DispatcherMessage = {
         triggerId: 'voting-power-changed',
         events: [transferEvent]
       };
-      
+
       await handler.handleMessage(mockMessage);
-      
+
       expect(mockNotificationClient.sendNotification).toHaveBeenCalledWith(
         expect.objectContaining({
           message: expect.stringContaining('📈 Voting power increased in test-dao!')
         })
       );
-    });
-
-    it('should send transfer decrease notification', async () => {
-      const transferEvent = {
-        accountId: '0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045',
-        daoId: 'test-dao',
-        transactionHash: 'tx123',
-        changeType: 'transfer',
-        delta: '-1000',
-        chainId: 1,
-        timestamp: '2023-01-01T00:00:00Z'
-      };
-
-      const mockMessage: DispatcherMessage = {
-        triggerId: 'voting-power-changed',
-        events: [transferEvent]
-      };
-
-      await handler.handleMessage(mockMessage);
-
       expect(mockNotificationClient.sendNotification).toHaveBeenCalledWith(
         expect.objectContaining({
-          message: expect.stringContaining('📉 Voting power decreased in test-dao!')
+          message: expect.stringContaining(`${userAddress} received tokens from ${senderAddress}`)
         })
       );
-    });
-
-    it('should include address in metadata for ENS resolution', async () => {
-      const transferEvent = {
-        accountId: '0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045',
-        daoId: 'test-dao',
-        transactionHash: 'tx123',
-        changeType: 'transfer',
-        delta: '1000',
-        chainId: 1,
-        timestamp: '2023-01-01T00:00:00Z'
-      };
-
-      const mockMessage: DispatcherMessage = {
-        triggerId: 'voting-power-changed',
-        events: [transferEvent]
-      };
-
-      await handler.handleMessage(mockMessage);
-
       expect(mockNotificationClient.sendNotification).toHaveBeenCalledWith(
         expect.objectContaining({
           metadata: expect.objectContaining({
             addresses: expect.objectContaining({
-              address: '0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045'
+              address: userAddress,
+              counterparty: senderAddress
+            })
+          })
+        })
+      );
+    });
+
+    it('should send notification when delegator balance increases', async () => {
+      const userAddress = '0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045';
+      const delegatorAddress = '0x1234567890123456789012345678901234567890';
+      const transferEvent = {
+        accountId: userAddress, // user is NOT sender/receiver
+        daoId: 'test-dao',
+        transactionHash: 'tx123',
+        changeType: 'transfer',
+        delta: '1000',
+        votingPower: '5000',
+        chainId: 1,
+        timestamp: '2023-01-01T00:00:00Z',
+        transfer: {
+          fromAccountId: '0xSomeoneElse',
+          toAccountId: delegatorAddress, // delegator received tokens
+          amount: '1000'
+        }
+      };
+
+      const mockMessage: DispatcherMessage = {
+        triggerId: 'voting-power-changed',
+        events: [transferEvent]
+      };
+
+      await handler.handleMessage(mockMessage);
+
+      expect(mockNotificationClient.sendNotification).toHaveBeenCalledWith(
+        expect.objectContaining({
+          message: expect.stringContaining('📈 Voting power increased in test-dao!')
+        })
+      );
+      expect(mockNotificationClient.sendNotification).toHaveBeenCalledWith(
+        expect.objectContaining({
+          message: expect.stringContaining(`who delegates to ${userAddress}, had their balance increased`)
+        })
+      );
+      expect(mockNotificationClient.sendNotification).toHaveBeenCalledWith(
+        expect.objectContaining({
+          metadata: expect.objectContaining({
+            addresses: expect.objectContaining({
+              address: userAddress,
+              delegator: delegatorAddress
             })
           })
         })
