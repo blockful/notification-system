@@ -68,12 +68,16 @@ export const createVotingPowerHistory = (
   transactionHash: '0x123abc',
   delegation: {
     delegatorAccountId: 'delegator1.eth',
-    delegatedValue: '100'
+    delegateAccountId: 'user1.eth',
+    delegatedValue: '100',
+    previousDelegate: '0x0000000000000000000000000000000000000000'
   },
   transfer: null,
   changeType: 'delegation',
   sourceAccountId: 'delegator1.eth',
   targetAccountId: 'user1.eth',
+  previousDelegate: '0x0000000000000000000000000000000000000000',
+  newDelegate: 'user1.eth',
   votingPower: '1000',
   ...overrides
 });
@@ -110,10 +114,14 @@ export const mockVotingPowerData = [
     transactionHash: '0x456def',
     delegation: {
       delegatorAccountId: 'delegator2.eth',
-      delegatedValue: '50'
+      delegateAccountId: '0x0000000000000000000000000000000000000000',
+      delegatedValue: '50',
+      previousDelegate: 'user2.eth'
     },
     sourceAccountId: 'delegator2.eth',
     targetAccountId: 'user2.eth',
+    previousDelegate: 'user2.eth',
+    newDelegate: '0x0000000000000000000000000000000000000000',
     votingPower: '500'
   })
 ];
