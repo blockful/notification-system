@@ -1,4 +1,5 @@
 import { ProcessedVotingPowerHistory } from '@notification-system/anticapture-client';
+import { zeroAddress } from 'viem';
 import { testConstants } from '../../config';
 
 /**
@@ -13,7 +14,6 @@ export class VotingPowerFactory {
    */
   static createVotingPowerEvent(overrides?: Partial<ProcessedVotingPowerHistory>): ProcessedVotingPowerHistory {
     const baseTimestamp = Math.floor(Date.now() / 1000).toString();
-    const zeroAddress = '0x0000000000000000000000000000000000000000';
     
     return {
       accountId: 'user1.eth',
@@ -102,7 +102,6 @@ export class VotingPowerFactory {
     daoId: string = testConstants.daoIds.votingPowerTest,
     overrides?: Partial<ProcessedVotingPowerHistory>
   ): ProcessedVotingPowerHistory {
-    const zeroAddress = '0x0000000000000000000000000000000000000000';
     const isUndelegation = delegatedValue.startsWith('-');
     
     return this.createVotingPowerEvent({

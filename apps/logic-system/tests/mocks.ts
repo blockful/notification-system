@@ -3,6 +3,7 @@
  */
 
 import { jest } from '@jest/globals';
+import { zeroAddress } from 'viem';
 import { ProposalDataSource, ProposalOnChain } from '../src/interfaces/proposal.interface';
 import { DispatcherService } from '../src/interfaces/dispatcher.interface';
 import { ProcessedVotingPowerHistory } from '@notification-system/anticapture-client';
@@ -70,13 +71,13 @@ export const createVotingPowerHistory = (
     delegatorAccountId: 'delegator1.eth',
     delegateAccountId: 'user1.eth',
     delegatedValue: '100',
-    previousDelegate: '0x0000000000000000000000000000000000000000'
+    previousDelegate: zeroAddress
   },
   transfer: null,
   changeType: 'delegation',
   sourceAccountId: 'delegator1.eth',
   targetAccountId: 'user1.eth',
-  previousDelegate: '0x0000000000000000000000000000000000000000',
+  previousDelegate: zeroAddress,
   newDelegate: 'user1.eth',
   votingPower: '1000',
   ...overrides
@@ -114,14 +115,14 @@ export const mockVotingPowerData = [
     transactionHash: '0x456def',
     delegation: {
       delegatorAccountId: 'delegator2.eth',
-      delegateAccountId: '0x0000000000000000000000000000000000000000',
+      delegateAccountId: zeroAddress,
       delegatedValue: '50',
       previousDelegate: 'user2.eth'
     },
     sourceAccountId: 'delegator2.eth',
     targetAccountId: 'user2.eth',
     previousDelegate: 'user2.eth',
-    newDelegate: '0x0000000000000000000000000000000000000000',
+    newDelegate: zeroAddress,
     votingPower: '500'
   })
 ];

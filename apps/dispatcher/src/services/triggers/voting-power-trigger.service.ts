@@ -5,6 +5,7 @@ import { BaseTriggerHandler } from "./base-trigger.service";
 import { formatTokenAmount } from "../../lib/number-formatter";
 import { votingPowerMessages, replacePlaceholders, buildButtons } from '@notification-system/messages';
 import crypto from 'crypto';
+import { zeroAddress } from 'viem';
 
 /**
  * Handler for processing "voting-power-changed" trigger messages
@@ -174,7 +175,6 @@ export class VotingPowerTriggerHandler extends BaseTriggerHandler {
     const formattedDelta = formatTokenAmount(Math.abs(deltaValue));
 
     // Determine delegation type based on previousDelegate and newDelegate
-    const zeroAddress = '0x0000000000000000000000000000000000000000';
     const isPreviousZero = !previousDelegate || previousDelegate === zeroAddress;
     const isNewZero = !newDelegate || newDelegate === zeroAddress;
 

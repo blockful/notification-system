@@ -4,6 +4,7 @@ import { ISubscriptionClient, User, Notification } from '../../interfaces/subscr
 import { NotificationClientFactory } from '../notification/notification-factory.service';
 import { INotificationClient } from '../../interfaces/notification-client.interface';
 import { DispatcherMessage } from '../../interfaces/dispatcher-message.interface';
+import { zeroAddress } from 'viem';
 
 describe('VotingPowerTriggerHandler', () => {
   let mockSubscriptionClient: jest.Mocked<ISubscriptionClient>;
@@ -183,7 +184,7 @@ describe('VotingPowerTriggerHandler', () => {
         delta: '1000',
         chainId: 1,
         timestamp: '2023-01-01T00:00:00Z',
-        previousDelegate: '0x0000000000000000000000000000000000000000',
+        previousDelegate: zeroAddress,
         newDelegate: '0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045'
       };
 
@@ -306,7 +307,7 @@ describe('VotingPowerTriggerHandler', () => {
         chainId: 1,
         timestamp: '2023-01-01T00:00:00Z',
         previousDelegate: '0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045',
-        newDelegate: '0x0000000000000000000000000000000000000000'
+        newDelegate: zeroAddress
       };
 
       const mockMessage: DispatcherMessage = {
@@ -375,7 +376,7 @@ describe('VotingPowerTriggerHandler', () => {
         delta: '1000',
         chainId: 1,
         timestamp: '2023-01-01T00:00:00Z',
-        previousDelegate: '0x0000000000000000000000000000000000000000',
+        previousDelegate: zeroAddress,
         newDelegate: '0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045'
       };
 
