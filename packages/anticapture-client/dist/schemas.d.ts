@@ -108,13 +108,19 @@ declare const VotingPowerHistoryItemSchema: z.ZodObject<{
     transactionHash: z.ZodString;
     delegation: z.ZodDefault<z.ZodNullable<z.ZodObject<{
         delegatorAccountId: z.ZodString;
+        delegateAccountId: z.ZodString;
         delegatedValue: z.ZodString;
+        previousDelegate: z.ZodNullable<z.ZodString>;
     }, "strip", z.ZodTypeAny, {
         delegatorAccountId: string;
+        delegateAccountId: string;
         delegatedValue: string;
+        previousDelegate: string | null;
     }, {
         delegatorAccountId: string;
+        delegateAccountId: string;
         delegatedValue: string;
+        previousDelegate: string | null;
     }>>>;
     transfer: z.ZodDefault<z.ZodNullable<z.ZodObject<{
         amount: z.ZodNullable<z.ZodString>;
@@ -132,7 +138,9 @@ declare const VotingPowerHistoryItemSchema: z.ZodObject<{
 }, "strip", z.ZodTypeAny, {
     delegation: {
         delegatorAccountId: string;
+        delegateAccountId: string;
         delegatedValue: string;
+        previousDelegate: string | null;
     } | null;
     timestamp: string;
     votingPower: string | null;
@@ -153,7 +161,9 @@ declare const VotingPowerHistoryItemSchema: z.ZodObject<{
     transactionHash: string;
     delegation?: {
         delegatorAccountId: string;
+        delegateAccountId: string;
         delegatedValue: string;
+        previousDelegate: string | null;
     } | null | undefined;
     transfer?: {
         amount: string | null;
@@ -173,13 +183,19 @@ export declare const SafeVotingPowerHistoryResponseSchema: z.ZodEffects<z.ZodObj
             transactionHash: z.ZodString;
             delegation: z.ZodDefault<z.ZodNullable<z.ZodObject<{
                 delegatorAccountId: z.ZodString;
+                delegateAccountId: z.ZodString;
                 delegatedValue: z.ZodString;
+                previousDelegate: z.ZodNullable<z.ZodString>;
             }, "strip", z.ZodTypeAny, {
                 delegatorAccountId: string;
+                delegateAccountId: string;
                 delegatedValue: string;
+                previousDelegate: string | null;
             }, {
                 delegatorAccountId: string;
+                delegateAccountId: string;
                 delegatedValue: string;
+                previousDelegate: string | null;
             }>>>;
             transfer: z.ZodDefault<z.ZodNullable<z.ZodObject<{
                 amount: z.ZodNullable<z.ZodString>;
@@ -197,7 +213,9 @@ export declare const SafeVotingPowerHistoryResponseSchema: z.ZodEffects<z.ZodObj
         }, "strip", z.ZodTypeAny, {
             delegation: {
                 delegatorAccountId: string;
+                delegateAccountId: string;
                 delegatedValue: string;
+                previousDelegate: string | null;
             } | null;
             timestamp: string;
             votingPower: string | null;
@@ -218,7 +236,9 @@ export declare const SafeVotingPowerHistoryResponseSchema: z.ZodEffects<z.ZodObj
             transactionHash: string;
             delegation?: {
                 delegatorAccountId: string;
+                delegateAccountId: string;
                 delegatedValue: string;
+                previousDelegate: string | null;
             } | null | undefined;
             transfer?: {
                 amount: string | null;
@@ -231,7 +251,9 @@ export declare const SafeVotingPowerHistoryResponseSchema: z.ZodEffects<z.ZodObj
         items: {
             delegation: {
                 delegatorAccountId: string;
+                delegateAccountId: string;
                 delegatedValue: string;
+                previousDelegate: string | null;
             } | null;
             timestamp: string;
             votingPower: string | null;
@@ -254,7 +276,9 @@ export declare const SafeVotingPowerHistoryResponseSchema: z.ZodEffects<z.ZodObj
             transactionHash: string;
             delegation?: {
                 delegatorAccountId: string;
+                delegateAccountId: string;
                 delegatedValue: string;
+                previousDelegate: string | null;
             } | null | undefined;
             transfer?: {
                 amount: string | null;
@@ -269,7 +293,9 @@ export declare const SafeVotingPowerHistoryResponseSchema: z.ZodEffects<z.ZodObj
         items: {
             delegation: {
                 delegatorAccountId: string;
+                delegateAccountId: string;
                 delegatedValue: string;
+                previousDelegate: string | null;
             } | null;
             timestamp: string;
             votingPower: string | null;
@@ -294,7 +320,9 @@ export declare const SafeVotingPowerHistoryResponseSchema: z.ZodEffects<z.ZodObj
             transactionHash: string;
             delegation?: {
                 delegatorAccountId: string;
+                delegateAccountId: string;
                 delegatedValue: string;
+                previousDelegate: string | null;
             } | null | undefined;
             transfer?: {
                 amount: string | null;
@@ -309,7 +337,9 @@ export declare const SafeVotingPowerHistoryResponseSchema: z.ZodEffects<z.ZodObj
         items: {
             delegation: {
                 delegatorAccountId: string;
+                delegateAccountId: string;
                 delegatedValue: string;
+                previousDelegate: string | null;
             } | null;
             timestamp: string;
             votingPower: string | null;
@@ -334,7 +364,9 @@ export declare const SafeVotingPowerHistoryResponseSchema: z.ZodEffects<z.ZodObj
             transactionHash: string;
             delegation?: {
                 delegatorAccountId: string;
+                delegateAccountId: string;
                 delegatedValue: string;
+                previousDelegate: string | null;
             } | null | undefined;
             transfer?: {
                 amount: string | null;
@@ -486,6 +518,8 @@ export type ProcessedVotingPowerHistory = z.infer<typeof VotingPowerHistoryItemS
     changeType: 'delegation' | 'transfer' | 'other';
     sourceAccountId: string;
     targetAccountId: string;
+    previousDelegate: string | null;
+    newDelegate: string | null;
     chainId?: number;
 };
 export declare function processProposals(validated: SafeProposalsResponse, daoId: string): any;

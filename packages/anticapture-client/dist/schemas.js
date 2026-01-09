@@ -46,7 +46,9 @@ const VotingPowerHistoryItemSchema = zod_1.z.object({
     transactionHash: zod_1.z.string(),
     delegation: zod_1.z.object({
         delegatorAccountId: zod_1.z.string(),
-        delegatedValue: zod_1.z.string()
+        delegateAccountId: zod_1.z.string(),
+        delegatedValue: zod_1.z.string(),
+        previousDelegate: zod_1.z.string().nullable()
     }).nullable().default(null),
     transfer: zod_1.z.object({
         amount: zod_1.z.string().nullable(),
@@ -123,6 +125,8 @@ function processVotingPowerHistory(validated, daoId, chainId) {
             changeType: item.delegation ? 'delegation' : item.transfer ? 'transfer' : 'other',
             sourceAccountId: item.transfer?.fromAccountId || item.delegation?.delegatorAccountId || '',
             targetAccountId: item.accountId,
+            previousDelegate: item.delegation?.previousDelegate || null,
+            newDelegate: item.delegation?.delegateAccountId || null,
             ...(chainId !== undefined && { chainId })
         };
         return processed;

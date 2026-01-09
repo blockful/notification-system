@@ -46,7 +46,9 @@ const VotingPowerHistoryItemSchema = z.object({
   transactionHash: z.string(),
   delegation: z.object({
     delegatorAccountId: z.string(),
-    delegatedValue: z.string()
+    delegateAccountId: z.string(),
+    delegatedValue: z.string(),
+    previousDelegate: z.string().nullable()
   }).nullable().default(null),
   transfer: z.object({
     amount: z.string().nullable(),
@@ -113,6 +115,8 @@ export type ProcessedVotingPowerHistory = z.infer<typeof VotingPowerHistoryItemS
   changeType: 'delegation' | 'transfer' | 'other';
   sourceAccountId: string;
   targetAccountId: string;
+  previousDelegate: string | null;
+  newDelegate: string | null;
   chainId?: number;
 };
 
@@ -142,6 +146,8 @@ export function processVotingPowerHistory(validated: SafeVotingPowerHistoryRespo
         changeType: item.delegation ? 'delegation' : item.transfer ? 'transfer' : 'other',
         sourceAccountId: item.transfer?.fromAccountId || item.delegation?.delegatorAccountId || '',
         targetAccountId: item.accountId,
+        previousDelegate: item.delegation?.previousDelegate || null,
+        newDelegate: item.delegation?.delegateAccountId || null,
         ...(chainId !== undefined && { chainId })
       };
 

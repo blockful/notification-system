@@ -9,7 +9,9 @@ query ListVotingPowerHistorys($where: votingPowerHistoryFilter, $limit: Int, $or
       transactionHash
       delegation {
         delegatorAccountId
+        delegateAccountId
         delegatedValue
+        previousDelegate
       }
       transfer {
         amount
