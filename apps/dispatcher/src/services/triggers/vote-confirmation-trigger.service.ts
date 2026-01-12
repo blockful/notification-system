@@ -5,6 +5,7 @@ import { ISubscriptionClient } from '../../interfaces/subscription-client.interf
 import { AnticaptureClient } from '@notification-system/anticapture-client';
 import { formatTokenAmount } from '../../lib/number-formatter';
 import { voteConfirmationMessages, replacePlaceholders, buildButtons } from '@notification-system/messages';
+import { FormattingService } from '../formatting.service';
 
 interface VoteEvent {
   daoId: string;
@@ -15,6 +16,7 @@ interface VoteEvent {
   timestamp: string;
   txHash: string;
   reason?: string | null;
+  proposalDescription?: string | null;
 }
 
 interface UserVoteCombination {
@@ -72,7 +74,10 @@ export class VoteConfirmationTriggerHandler extends BaseTriggerHandler<VoteEvent
   /**
    * Creates combinations of users and votes for processing
    */
-  private createUserVoteCombinations(events: VoteEvent[], walletOwners: Record<string, any[]>): UserVoteCombination[] {
+  private createUserVoteCombinations(
+    events: VoteEvent[],
+    walletOwners: Record<string, any[]>
+  ): UserVoteCombination[] {
     return events.flatMap(voteEvent => {
       const usersForWallet = walletOwners[voteEvent.voterAccountId] || [];
       return usersForWallet.map(user => ({ user, vote: voteEvent }));
@@ -165,6 +170,10 @@ export class VoteConfirmationTriggerHandler extends BaseTriggerHandler<VoteEvent
     const supportKey = voteConfirmationMessages.getSupportKey(vote.support);
     const votingPower = formatTokenAmount(vote.votingPower, 18);
     const hasReason = vote.reason && vote.reason.trim();
+    const proposalTitle = FormattingService.extractTitle(
+      vote.proposalDescription || '',
+      vote.proposalId
+    );
 
     const messageTemplate = hasReason
       ? voteConfirmationMessages.withReason[supportKey]
@@ -172,7 +181,7 @@ export class VoteConfirmationTriggerHandler extends BaseTriggerHandler<VoteEvent
 
     return replacePlaceholders(messageTemplate, {
       daoId: vote.daoId,
-      proposalIdShort: vote.proposalId.slice(0, 8) + '...',
+      proposalTitle,
       votingPower,
       ...(hasReason && { reason: vote.reason! })
     });
