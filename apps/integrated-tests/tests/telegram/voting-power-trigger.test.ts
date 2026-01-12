@@ -24,7 +24,7 @@ describe('Voting Power Trigger - Integration Test', () => {
 
   test('should send voting power change notification to subscribed users', async () => {
     const testDaoId = testConstants.daoIds.votingPowerTest;
-    const testUser = testConstants.profiles.p1;
+    const testUser = testConstants.profiles.p2;
     const testUserWithSubscription = testUser.address;
     
     // Create users in database with a timestamp from the past to ensure temporal filtering works

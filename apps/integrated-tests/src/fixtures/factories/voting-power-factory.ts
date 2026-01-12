@@ -112,7 +112,7 @@ export class VotingPowerFactory {
       targetAccountId,
       delegation: {
         delegatorAccountId,
-        delegateAccountId: targetAccountId,
+        delegateAccountId: isUndelegation ? zeroAddress : targetAccountId,
         delegatedValue,
         previousDelegate: isUndelegation ? targetAccountId : zeroAddress
       },

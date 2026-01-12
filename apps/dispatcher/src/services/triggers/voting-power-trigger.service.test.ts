@@ -251,7 +251,7 @@ describe('VotingPowerTriggerHandler', () => {
 
       expect(mockNotificationClient.sendNotification).toHaveBeenCalledWith(
         expect.objectContaining({
-          message: expect.stringContaining('changed delegation from 0xOldDelegate12345678901234567890123456789 to 0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045')
+          message: expect.stringContaining('changed delegation from {{previousDelegate}} to {{delegate}}')
         })
       );
     });
@@ -331,7 +331,7 @@ describe('VotingPowerTriggerHandler', () => {
 
       expect(mockNotificationClient.sendNotification).toHaveBeenCalledWith(
         expect.objectContaining({
-          message: expect.stringContaining('removed delegation from 0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045')
+          message: expect.stringContaining('removed delegation from {{previousDelegate}}')
         })
       );
     });
@@ -485,7 +485,7 @@ describe('VotingPowerTriggerHandler', () => {
       );
       expect(mockNotificationClient.sendNotification).toHaveBeenCalledWith(
         expect.objectContaining({
-          message: expect.stringContaining(`who delegates to ${userAddress}, had their balance increased`)
+          message: expect.stringContaining('who delegates to {{address}}, had their balance increased')
         })
       );
       expect(mockNotificationClient.sendNotification).toHaveBeenCalledWith(
