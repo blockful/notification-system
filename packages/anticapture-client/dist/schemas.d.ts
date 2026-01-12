@@ -388,6 +388,13 @@ export declare const SafeVotesOnchainsResponseSchema: z.ZodObject<{
             votingPower: z.ZodString;
             timestamp: z.ZodString;
             reason: z.ZodNullable<z.ZodOptional<z.ZodString>>;
+            proposal: z.ZodNullable<z.ZodOptional<z.ZodObject<{
+                description: z.ZodString;
+            }, "strip", z.ZodTypeAny, {
+                description: string;
+            }, {
+                description: string;
+            }>>>;
         }, "strip", z.ZodTypeAny, {
             timestamp: string;
             votingPower: string;
@@ -396,6 +403,9 @@ export declare const SafeVotesOnchainsResponseSchema: z.ZodObject<{
             proposalId: string;
             voterAccountId: string;
             support: string;
+            proposal?: {
+                description: string;
+            } | null | undefined;
             reason?: string | null | undefined;
         }, {
             timestamp: string;
@@ -405,6 +415,9 @@ export declare const SafeVotesOnchainsResponseSchema: z.ZodObject<{
             proposalId: string;
             voterAccountId: string;
             support: string;
+            proposal?: {
+                description: string;
+            } | null | undefined;
             reason?: string | null | undefined;
         }>, "many">;
         totalCount: z.ZodNumber;
@@ -417,6 +430,9 @@ export declare const SafeVotesOnchainsResponseSchema: z.ZodObject<{
             proposalId: string;
             voterAccountId: string;
             support: string;
+            proposal?: {
+                description: string;
+            } | null | undefined;
             reason?: string | null | undefined;
         }[];
         totalCount: number;
@@ -429,6 +445,9 @@ export declare const SafeVotesOnchainsResponseSchema: z.ZodObject<{
             proposalId: string;
             voterAccountId: string;
             support: string;
+            proposal?: {
+                description: string;
+            } | null | undefined;
             reason?: string | null | undefined;
         }[];
         totalCount: number;
@@ -443,6 +462,9 @@ export declare const SafeVotesOnchainsResponseSchema: z.ZodObject<{
             proposalId: string;
             voterAccountId: string;
             support: string;
+            proposal?: {
+                description: string;
+            } | null | undefined;
             reason?: string | null | undefined;
         }[];
         totalCount: number;
@@ -457,6 +479,9 @@ export declare const SafeVotesOnchainsResponseSchema: z.ZodObject<{
             proposalId: string;
             voterAccountId: string;
             support: string;
+            proposal?: {
+                description: string;
+            } | null | undefined;
             reason?: string | null | undefined;
         }[];
         totalCount: number;
