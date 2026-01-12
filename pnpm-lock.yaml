@@ -190,6 +190,9 @@ importers:
       uuid:
         specifier: ^9.0.0
         version: 9.0.1
+      viem:
+        specifier: ^2.34.0
+        version: 2.34.0(typescript@5.8.3)(zod@3.24.3)
       zod:
         specifier: ^3.23.8
         version: 3.24.3
