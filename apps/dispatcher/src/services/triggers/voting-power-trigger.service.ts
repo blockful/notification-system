@@ -186,23 +186,19 @@ export class VotingPowerTriggerHandler extends BaseTriggerHandler {
       messageTemplate = votingPowerMessages.delegationSent.new;
       placeholders = {
         daoId,
-        delta: formattedDelta,
-        delegate: newDelegate
+        delta: formattedDelta
       };
     } else if (!isPreviousZero && !isNewZero) {
       // Changed delegation: had a delegate, now delegates to someone else
       messageTemplate = votingPowerMessages.delegationSent.changed;
       placeholders = {
-        daoId,
-        previousDelegate,
-        delegate: newDelegate
+        daoId
       };
     } else {
       // Undelegation: had a delegate, now 0x0
       messageTemplate = votingPowerMessages.delegationSent.removed;
       placeholders = {
-        daoId,
-        previousDelegate: previousDelegate || targetAccountId || accountId
+        daoId
       };
     }
 
@@ -260,7 +256,7 @@ export class VotingPowerTriggerHandler extends BaseTriggerHandler {
 
     const message = replacePlaceholders(
       votingPowerMessages.delegatorBalanceChange[isPositive ? 'increased' : 'decreased'],
-      { daoId, delta: formattedDelta, votingPower: formattedVotingPower, address: accountId }
+      { daoId, delta: formattedDelta, votingPower: formattedVotingPower }
     );
 
     return {
