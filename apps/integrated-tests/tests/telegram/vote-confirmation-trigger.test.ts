@@ -44,6 +44,8 @@ describe('Vote Confirmation Trigger - Integration Test', () => {
     // Create vote event with timestamp in the future to ensure processing
     const eventTimestamp = (Math.floor(Date.now() / 1000) + 10).toString();
 
+    const proposalTitle = 'Enable Community Grants Program';
+
     const voteEvents = [
       {
         daoId: testDaoId,
@@ -53,7 +55,8 @@ describe('Vote Confirmation Trigger - Integration Test', () => {
         support: '1', // FOR
         votingPower: '1000000000000000000000', // 1000 tokens
         timestamp: eventTimestamp,
-        reason: 'Great proposal!'
+        reason: 'Great proposal!',
+        proposal: { description: proposalTitle }
       }
     ];
 
@@ -75,6 +78,7 @@ describe('Vote Confirmation Trigger - Integration Test', () => {
     // Verify message content for FOR vote
     expect(message.text).toContain('✅'); // FOR emoji
     expect(message.text).toMatch(/voted FOR|just voted on/i);
+    expect(message.text).toContain(proposalTitle);
     expect(message.text).not.toContain('{{txLink}}');
     expect(message.chatId).toBe(testUser.chatId);
   });
@@ -97,7 +101,9 @@ describe('Vote Confirmation Trigger - Integration Test', () => {
     await UserFactory.createUserAddress(userWithSub.id, voterAddress, pastTimestamp);
     
     const eventTimestamp = (Math.floor(Date.now() / 1000) + 10).toString();
-    
+
+    const proposalTitle = 'Increase Treasury Allocation';
+
     const voteEvents = [
       {
         daoId: testDaoId,
@@ -107,7 +113,8 @@ describe('Vote Confirmation Trigger - Integration Test', () => {
         support: '0', // AGAINST
         votingPower: '5000000000000000000000', // 5000 tokens
         timestamp: eventTimestamp,
-        reason: 'Needs more discussion'
+        reason: 'Needs more discussion',
+        proposal: { description: proposalTitle }
       }
     ];
     
@@ -127,6 +134,7 @@ describe('Vote Confirmation Trigger - Integration Test', () => {
     // Verify message content for AGAINST vote
     expect(message.text).toContain('❌'); // AGAINST emoji
     expect(message.text).toMatch(/voted AGAINST|just voted on/i);
+    expect(message.text).toContain(proposalTitle);
     expect(message.chatId).toBe(testUser.chatId);
   });
 
@@ -148,7 +156,9 @@ describe('Vote Confirmation Trigger - Integration Test', () => {
     await UserFactory.createUserAddress(userWithSub.id, voterAddress, pastTimestamp);
     
     const eventTimestamp = (Math.floor(Date.now() / 1000) + 10).toString();
-    
+
+    const proposalTitle = 'Protocol Fee Adjustment';
+
     const voteEvents = [
       {
         daoId: testDaoId,
@@ -157,8 +167,9 @@ describe('Vote Confirmation Trigger - Integration Test', () => {
         voterAccountId: voterAddress,
         support: '2', // ABSTAIN
         votingPower: '2000000000000000000000', // 2000 tokens
-        timestamp: eventTimestamp
+        timestamp: eventTimestamp,
         // No reason provided for abstain
+        proposal: { description: proposalTitle }
       }
     ];
     
@@ -178,6 +189,7 @@ describe('Vote Confirmation Trigger - Integration Test', () => {
     // Verify message content for ABSTAIN vote
     expect(message.text).toContain('⚪'); // ABSTAIN emoji
     expect(message.text).toMatch(/voted ABSTAIN|just voted on/i);
+    expect(message.text).toContain(proposalTitle);
     expect(message.chatId).toBe(testUser.chatId);
   });
 
@@ -185,7 +197,7 @@ describe('Vote Confirmation Trigger - Integration Test', () => {
     const testDaoId = testConstants.daoIds.voteTest || 'test-dao-vote';
     const testUser = testConstants.profiles.p1;
     const voterAddress = testUser.address;
-    
+
     const pastTimestamp = new Date(Date.now() - timeouts.wait.long).toISOString();
     
     const { user: userWithSub } = await UserFactory.createUserWithFullSetup(
@@ -199,7 +211,7 @@ describe('Vote Confirmation Trigger - Integration Test', () => {
     await UserFactory.createUserAddress(userWithSub.id, voterAddress, pastTimestamp);
     
     const eventTimestamp = (Math.floor(Date.now() / 1000) + 10).toString();
-    const sameTxHash = '0x4567890123def4567890123def4567890123def4567890123def4567890123def';
+    const sameTxHash = '0x4567890123def4567890123def4567890123def4567890123def4567890123def';   
     
     // Same vote event will be processed twice (simulating duplicate trigger)
     const voteEvents = [
@@ -210,7 +222,8 @@ describe('Vote Confirmation Trigger - Integration Test', () => {
         voterAccountId: voterAddress,
         support: '1',
         votingPower: '1000000000000000000000',
-        timestamp: eventTimestamp
+        timestamp: eventTimestamp,
+        proposal: { description: 'Duplicate Test Proposal' }
       }
     ];
     
@@ -274,7 +287,8 @@ describe('Vote Confirmation Trigger - Integration Test', () => {
         voterAccountId: voterAddress,
         support: '1', // FOR
         votingPower: '1000000000000000000000',
-        timestamp: baseTimestamp.toString()
+        timestamp: baseTimestamp.toString(),
+        proposal: { description: 'Multi Vote Proposal 1' }
       },
       {
         daoId: testDaoId,
@@ -283,7 +297,8 @@ describe('Vote Confirmation Trigger - Integration Test', () => {
         voterAccountId: voterAddress,
         support: '0', // AGAINST
         votingPower: '1000000000000000000000',
-        timestamp: (baseTimestamp + 1).toString()
+        timestamp: (baseTimestamp + 1).toString(),
+        proposal: { description: 'Multi Vote Proposal 2' }
       },
       {
         daoId: testDaoId,
@@ -292,7 +307,8 @@ describe('Vote Confirmation Trigger - Integration Test', () => {
         voterAccountId: voterAddress,
         support: '2', // ABSTAIN
         votingPower: '1000000000000000000000',
-        timestamp: (baseTimestamp + 2).toString()
+        timestamp: (baseTimestamp + 2).toString(),
+        proposal: { description: 'Multi Vote Proposal 3' }
       }
     ];
     
@@ -344,7 +360,7 @@ describe('Vote Confirmation Trigger - Integration Test', () => {
     await UserFactory.createUserAddress(userWithoutSub.id, voterAddress, pastTimestamp);
     
     const eventTimestamp = (Math.floor(Date.now() / 1000) + 10).toString();
-    
+
     const voteEvents = [
       {
         daoId: testDaoId, // Vote is in testDaoId
@@ -353,7 +369,8 @@ describe('Vote Confirmation Trigger - Integration Test', () => {
         voterAccountId: voterAddress,
         support: '1',
         votingPower: '1000000000000000000000',
-        timestamp: eventTimestamp
+        timestamp: eventTimestamp,
+        proposal: { description: 'No Subscription Proposal' }
       }
     ];
     
