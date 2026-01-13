@@ -190,6 +190,9 @@ importers:
       uuid:
         specifier: ^9.0.0
         version: 9.0.1
+      viem:
+        specifier: ^2.34.0
+        version: 2.34.0(typescript@5.8.3)(zod@3.24.3)
       zod:
         specifier: ^3.23.8
         version: 3.24.3
@@ -251,6 +254,9 @@ importers:
       typescript:
         specifier: ^4.9.5
         version: 4.9.5
+      viem:
+        specifier: ^2.34.0
+        version: 2.34.0(typescript@4.9.5)(zod@3.24.3)
 
   apps/subscription-server:
     dependencies:
@@ -1031,6 +1037,7 @@ packages:
   '@graphql-tools/prisma-loader@8.0.17':
     resolution: {integrity: sha512-fnuTLeQhqRbA156pAyzJYN0KxCjKYRU5bz1q/SKOwElSnAU4k7/G1kyVsWLh7fneY78LoMNH5n+KlFV8iQlnyg==}
     engines: {node: '>=16.0.0'}
+    deprecated: 'This package was intended to be used with an older versions of Prisma.\nThe newer versions of Prisma has a different approach to GraphQL integration.\nTherefore, this package is no longer needed and has been deprecated and removed.\nLearn more: https://www.prisma.io/graphql'
     peerDependencies:
       graphql: ^14.0.0 || ^15.0.0 || ^16.0.0 || ^17.0.0
 
@@ -6556,6 +6563,11 @@ snapshots:
   abbrev@1.1.1:
     optional: true
 
+  abitype@1.0.8(typescript@4.9.5)(zod@3.24.3):
+    optionalDependencies:
+      typescript: 4.9.5
+      zod: 3.24.3
+
   abitype@1.0.8(typescript@5.8.2)(zod@3.24.3):
     optionalDependencies:
       typescript: 5.8.2
@@ -9255,6 +9267,21 @@ snapshots:
 
   os-tmpdir@1.0.2: {}
 
+  ox@0.8.7(typescript@4.9.5)(zod@3.24.3):
+    dependencies:
+      '@adraffy/ens-normalize': 1.11.0
+      '@noble/ciphers': 1.3.0
+      '@noble/curves': 1.9.6
+      '@noble/hashes': 1.8.0
+      '@scure/bip32': 1.7.0
+      '@scure/bip39': 1.6.0
+      abitype: 1.0.8(typescript@4.9.5)(zod@3.24.3)
+      eventemitter3: 5.0.1
+    optionalDependencies:
+      typescript: 4.9.5
+    transitivePeerDependencies:
+      - zod
+
   ox@0.8.7(typescript@5.8.2)(zod@3.24.3):
     dependencies:
       '@adraffy/ens-normalize': 1.11.0
@@ -10486,6 +10513,23 @@ snapshots:
       convert-source-map: 2.0.0
 
   vary@1.1.2: {}
+
+  viem@2.34.0(typescript@4.9.5)(zod@3.24.3):
+    dependencies:
+      '@noble/curves': 1.9.6
+      '@noble/hashes': 1.8.0
+      '@scure/bip32': 1.7.0
+      '@scure/bip39': 1.6.0
+      abitype: 1.0.8(typescript@4.9.5)(zod@3.24.3)
+      isows: 1.0.7(ws@8.18.3)
+      ox: 0.8.7(typescript@4.9.5)(zod@3.24.3)
+      ws: 8.18.3
+    optionalDependencies:
+      typescript: 4.9.5
+    transitivePeerDependencies:
+      - bufferutil
+      - utf-8-validate
+      - zod
 
   viem@2.34.0(typescript@5.8.2)(zod@3.24.3):
     dependencies:

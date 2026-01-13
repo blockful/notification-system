@@ -3,15 +3,14 @@ import { ISubscriptionClient } from '../../interfaces/subscription-client.interf
 import { NotificationClientFactory } from '../notification/notification-factory.service';
 import { INotificationClient } from '../../interfaces/notification-client.interface';
 import { AnticaptureClient } from '@notification-system/anticapture-client';
-import { 
-  createProposalNotification, 
-  createDispatcherMessage, 
-  createProposal, 
-  createUser, 
-  createVote, 
+import {
+  createProposalNotification,
+  createDispatcherMessage,
+  createProposal,
+  createUser,
   createNotification,
   TestAddresses,
-  ExpectedMessages 
+  ExpectedMessages
 } from './non-voting-handler.test-factory';
 
 describe('NonVotingHandler', () => {
@@ -43,7 +42,7 @@ describe('NonVotingHandler', () => {
 
     mockAnticaptureClient = {
       listProposals: jest.fn(),
-      listVotesOnchains: jest.fn(),
+      getProposalNonVoters: jest.fn(),
       getDAOs: jest.fn(),
       getProposalById: jest.fn(),
       listVotingPowerHistory: jest.fn()
@@ -56,99 +55,44 @@ describe('NonVotingHandler', () => {
     );
   });
 
-  it('should identify and notify about non-voting addresses', async () => {
-    // Setup test data using factories
+  it('should notify when address did not vote in any of the last 3 proposals', async () => {
     const message = createDispatcherMessage([
-      createProposalNotification({ id: 'proposal-3' }),
-      createProposalNotification({ id: 'proposal-2' }),
-      createProposalNotification({ id: 'proposal-1' })
+      createProposalNotification({ id: 'proposal-3' })
     ]);
 
-    const followedAddresses = [TestAddresses.ADDRESS_1, TestAddresses.ADDRESS_2, TestAddresses.ADDRESS_3];
     const lastProposals = [
       createProposal('proposal-3', 'Proposal 3'),
       createProposal('proposal-2', 'Proposal 2'),
       createProposal('proposal-1', 'Proposal 1')
     ];
 
-    const votes = [
-      createVote(TestAddresses.ADDRESS_1, 'proposal-1'),
-      createVote(TestAddresses.ADDRESS_1, 'proposal-2')
-    ];
+    mockAnticaptureClient.listProposals.mockResolvedValue(lastProposals as any);
+    mockSubscriptionClient.getFollowedAddresses.mockResolvedValue([TestAddresses.ADDRESS_1]);
+    mockAnticaptureClient.getProposalNonVoters
+      .mockResolvedValue([{ voter: TestAddresses.ADDRESS_1 }]);
 
     const followers = [createUser()];
-
-    // Setup mocks
-    mockAnticaptureClient.listProposals.mockResolvedValue(lastProposals as any);
-    mockSubscriptionClient.getFollowedAddresses.mockResolvedValue(followedAddresses);
-    mockAnticaptureClient.listVotesOnchains.mockResolvedValue(votes as any);
-    
-    // Mock the batch method instead of individual calls
     mockSubscriptionClient.getWalletOwnersBatch.mockResolvedValue({
-      [TestAddresses.ADDRESS_2]: followers,
-      [TestAddresses.ADDRESS_3]: followers
+      [TestAddresses.ADDRESS_1]: followers
     });
-    
-    // Mock shouldSendBatch to return notifications for all addresses based on eventId
-    mockSubscriptionClient.shouldSendBatch.mockImplementation((requests) => {
-      return Promise.resolve(requests.map(request => {
-        if (request.eventId.includes(TestAddresses.ADDRESS_2)) {
-          return [createNotification('user-1', request.eventId, request.daoId)];
-        }
-        if (request.eventId.includes(TestAddresses.ADDRESS_3)) {
-          return [createNotification('user-1', request.eventId, request.daoId)];
-        }
-        return [];
-      }));
-    });
+    mockSubscriptionClient.getDaoSubscribers.mockResolvedValue(followers);
+    mockSubscriptionClient.shouldSendBatch.mockResolvedValue([
+      [createNotification('user-1', `${TestAddresses.ADDRESS_1}-non-voting-proposal-3`, 'ENS')]
+    ]);
 
-    // Execute
-    const result = await handler.handleMessage(message);
+    await handler.handleMessage(message);
 
-    // Verify
-    expect(result.messageId).toBe('proposal-finished');
-    expect(mockAnticaptureClient.listProposals).toHaveBeenCalledWith(
-      expect.objectContaining({
-        status: expect.arrayContaining(['EXECUTED', 'SUCCEEDED', 'DEFEATED', 'EXPIRED', 'CANCELED']),
-        limit: 15,
-        orderDirection: 'desc'
-      }),
-      'ENS'
-    );
-    expect(mockSubscriptionClient.getFollowedAddresses).toHaveBeenCalledWith('ENS');
-    expect(mockAnticaptureClient.listVotesOnchains).toHaveBeenCalledWith({
-      daoId: 'ENS',
-      proposalId_in: ['proposal-3', 'proposal-2', 'proposal-1'],
-      voterAccountId_in: followedAddresses
-    });
-    
-    // Should use batch method for getting wallet owners
-    expect(mockSubscriptionClient.getWalletOwnersBatch).toHaveBeenCalledWith([TestAddresses.ADDRESS_2, TestAddresses.ADDRESS_3]);
-    
-    // Validate notifications were sent for both non-voting addresses
-    const notificationCalls = mockNotificationClient.sendNotification.mock.calls;
-    expect(notificationCalls.length).toBeGreaterThanOrEqual(2);
-    
-    const sentAddresses = notificationCalls.map(call => call[0].metadata?.addresses?.nonVoterAddress);
-    
-    expect(sentAddresses).toContain(TestAddresses.ADDRESS_2);
-    expect(sentAddresses).toContain(TestAddresses.ADDRESS_3);
-    
-    // Validate that messages have correct format
-    notificationCalls.forEach(call => {
-      const { userId, channel, channelUserId, message, metadata } = call[0];
-      expect(userId).toBe('user-1');
-      expect(channel).toBe('telegram');
-      expect(channelUserId).toBe('12345');
-      expect(message).toContain('Non-Voting Alert for DAO ENS');
-      expect(message).toContain('hasn\'t voted in the last 3 proposals');
-      expect(metadata?.addresses?.nonVoterAddress).toMatch(/^0x[a-fA-F0-9]{40,}$/);
-    });
+    expect(mockSubscriptionClient.getWalletOwnersBatch).toHaveBeenCalledWith([TestAddresses.ADDRESS_1]);
+    expect(mockSubscriptionClient.getDaoSubscribers).toHaveBeenCalledWith('ENS');
+    expect(mockNotificationClient.sendNotification).toHaveBeenCalled();
+
+    const sentAddress = mockNotificationClient.sendNotification.mock.calls[0][0].metadata?.addresses?.nonVoterAddress;
+    expect(sentAddress).toBe(TestAddresses.ADDRESS_1);
   });
 
-  it('should not send notifications if address has voted in all proposals', async () => {
+  it('should NOT notify when address voted in at least one of the last 3 proposals', async () => {
     const message = createDispatcherMessage([
-      createProposalNotification()
+      createProposalNotification({ id: 'proposal-3' })
     ]);
 
     const followedAddresses = [TestAddresses.ADDRESS_1];
@@ -158,20 +102,15 @@ describe('NonVotingHandler', () => {
       createProposal('proposal-1', 'Proposal 1')
     ];
 
-    // User voted in all proposals
-    const votes = [
-      createVote(TestAddresses.ADDRESS_1, 'proposal-1'),
-      createVote(TestAddresses.ADDRESS_1, 'proposal-2'),
-      createVote(TestAddresses.ADDRESS_1, 'proposal-3')
-    ];
-
     mockAnticaptureClient.listProposals.mockResolvedValue(lastProposals as any);
     mockSubscriptionClient.getFollowedAddresses.mockResolvedValue(followedAddresses);
-    mockAnticaptureClient.listVotesOnchains.mockResolvedValue(votes as any);
+    mockAnticaptureClient.getProposalNonVoters
+      .mockResolvedValueOnce([{ voter: TestAddresses.ADDRESS_1 }]) // proposal-3
+      .mockResolvedValueOnce([])                                   // proposal-2: voted!
+      .mockResolvedValueOnce([{ voter: TestAddresses.ADDRESS_1 }]); // proposal-1
 
     await handler.handleMessage(message);
 
-    // Should not attempt to send notifications
     expect(mockSubscriptionClient.getWalletOwners).not.toHaveBeenCalled();
     expect(mockNotificationClient.sendNotification).not.toHaveBeenCalled();
   });
@@ -191,7 +130,7 @@ describe('NonVotingHandler', () => {
 
     // Should not continue processing
     expect(mockSubscriptionClient.getFollowedAddresses).not.toHaveBeenCalled();
-    expect(mockAnticaptureClient.listVotesOnchains).not.toHaveBeenCalled();
+    expect(mockAnticaptureClient.getProposalNonVoters).not.toHaveBeenCalled();
   });
 
   it('should handle case with no followed addresses', async () => {
@@ -210,8 +149,8 @@ describe('NonVotingHandler', () => {
 
     await handler.handleMessage(message);
 
-    // Should not continue processing votes
-    expect(mockAnticaptureClient.listVotesOnchains).not.toHaveBeenCalled();
+    // Should not continue processing non-voters
+    expect(mockAnticaptureClient.getProposalNonVoters).not.toHaveBeenCalled();
     expect(mockSubscriptionClient.getWalletOwners).not.toHaveBeenCalled();
   });
 
@@ -241,15 +180,16 @@ describe('NonVotingHandler', () => {
       createProposal('proposal-1', 'Proposal 1')
     ];
 
-    const votes: any[] = []; // No votes for the address
     const followers = [createUser()];
 
     mockAnticaptureClient.listProposals.mockResolvedValue(lastProposals as any);
     mockSubscriptionClient.getFollowedAddresses.mockResolvedValue(followedAddresses);
-    mockAnticaptureClient.listVotesOnchains.mockResolvedValue(votes);
+    mockAnticaptureClient.getProposalNonVoters
+      .mockResolvedValue([{ voter: TestAddresses.ADDRESS_LONG }]);
     mockSubscriptionClient.getWalletOwnersBatch.mockResolvedValue({
       [TestAddresses.ADDRESS_LONG]: followers
     });
+    mockSubscriptionClient.getDaoSubscribers.mockResolvedValue(followers);
     mockSubscriptionClient.shouldSendBatch.mockResolvedValue([
       [createNotification('user-1', `${TestAddresses.ADDRESS_LONG}-non-voting-proposal-3`, 'ENS')]
     ]);

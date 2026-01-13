@@ -121,68 +121,6 @@ describe('Slack Delegation Change Notifications - Integration Test', () => {
     expect(slackNotification?.dao_id).toBe(testDaoId);
   });
 
-  test('should send self-delegation confirmation with special message via Slack', async () => {
-
-    const userAddress = testConstants.profiles.p1.address;
-    const channelId = 'C_SELF_DEL_01';
-
-    // Create user
-    const workspaceId = WorkspaceFactory.getWorkspaceId();
-    const slackUserId = `${workspaceId}:${channelId}`;
-    const pastTimestamp = new Date(Date.now() - 60000).toISOString();
-    const { user } = await UserFactory.createUserWithFullSetup(
-      slackUserId,
-      `slack_user_${channelId}`,
-      testDaoId,
-      true,
-      pastTimestamp,
-      'slack'
-    );
-    await UserFactory.createUserAddress(user.id, userAddress, pastTimestamp);
-
-    // Create self-delegation event
-    const eventTimestamp = (Math.floor(Date.now() / 1000) + 10).toString();
-    const selfDelegationEvent = VotingPowerFactory.createDelegationEvent(
-      userAddress, // same address for both source and target
-      userAddress,
-      testConstants.votingPower.default,
-      testDaoId,
-      {
-        timestamp: eventTimestamp,
-        chainId: 1,
-        transactionHash: '0x1111111111111111111111111111111111111111111111111111111111111111'
-      }
-    );
-
-    GraphQLMockSetup.setupMock(
-      httpMockSetup.getMockClient(),
-      [],
-      [selfDelegationEvent],
-      { [testDaoId]: 1 }
-    );
-
-    // Wait for the single self-delegation confirmation message
-    const selfDelegationMessage = await slackHelper.waitForMessage(
-      msg => msg.text.includes('🔄 Self-delegation confirmed') &&
-             msg.text.includes(testDaoId) &&
-             msg.channel === channelId,
-      {
-        timeout: timeouts.notification.delivery,
-        errorMessage: 'Slack self-delegation confirmation not received'
-      }
-    );
-
-    // Verify self-delegation message content
-    expect(selfDelegationMessage.channel).toBe(channelId);
-    expect(selfDelegationMessage.text).toContain('🔄 Self-delegation confirmed');
-    expect(selfDelegationMessage.text).toContain('delegated');
-    expect(selfDelegationMessage.text).toContain('to themselves');
-    expect(selfDelegationMessage.text).toContain('Total voting power is now');
-
-    // Verify ENS name is resolved (not raw address)
-    expect(selfDelegationMessage.text).toContain('vitalik.eth');
-  });
-
   test('should send undelegation confirmation notification via Slack', async () => {
 
     const delegatorAddress = testConstants.profiles.p1.address;

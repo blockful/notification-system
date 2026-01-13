@@ -11,8 +11,8 @@
     "@notification-system/anticapture-client": "workspace:*",
     "@notification-system/consumer": "workspace:*",
     "@notification-system/dispatcher": "workspace:*",
-    "@notification-system/messages": "workspace:*",
     "@notification-system/logic-system": "workspace:*",
+    "@notification-system/messages": "workspace:*",
     "@notification-system/rabbitmq-client": "workspace:*",
     "@notification-system/subscription-server": "workspace:*",
     "@testcontainers/rabbitmq": "^10.15.0",
@@ -27,6 +27,7 @@
     "ts-jest": "^29.3.2",
     "typescript": "^5.8.3",
     "uuid": "^9.0.0",
+    "viem": "^2.34.0",
     "zod": "^3.23.8"
   }
 }

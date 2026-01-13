@@ -25,8 +25,17 @@ export class BatchNotificationService {
   ): Promise<BatchNotificationData[]> {
     // Batch fetch all followers for all addresses in a single request
     const addressFollowersMap = await this.subscriptionClient.getWalletOwnersBatch(addresses);
+
+    // Fetch DAO subscribers to filter by active subscription
+    const daoSubscribers = await this.subscriptionClient.getDaoSubscribers(daoId);
+    const daoSubscriberIds = new Set(daoSubscribers.map(s => s.id));
+
     const addressFollowers = addresses
-      .map(address => ({ address, followers: addressFollowersMap[address] || [] }))
+      .map(address => ({
+        address,
+        // Filter followers to only those subscribed to this DAO
+        followers: (addressFollowersMap[address] || []).filter(f => daoSubscriberIds.has(f.id))
+      }))
       .filter(af => af.followers.length > 0);
     
     if (addressFollowers.length === 0) {

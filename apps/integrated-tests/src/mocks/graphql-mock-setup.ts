@@ -22,7 +22,9 @@ export class GraphQLMockSetup {
       transactionHash: vp.transactionHash,
       delegation: vp.delegation ? {
         delegatorAccountId: vp.delegation.delegatorAccountId,
-        delegatedValue: vp.delegation.delegatedValue
+        delegateAccountId: vp.delegation.delegateAccountId,
+        delegatedValue: vp.delegation.delegatedValue,
+        previousDelegate: vp.delegation.previousDelegate
       } : null,
       transfer: vp.transfer ? {
         amount: vp.transfer.amount,

@@ -9,6 +9,7 @@ export interface VoteEvent {
   timestamp: string;
   txHash: string;
   reason?: string | null;
+  proposalDescription?: string | null;
 }
 
 export class VotesRepository {
@@ -37,7 +38,8 @@ export class VotesRepository {
         votingPower: vote.votingPower || '0',
         timestamp: vote.timestamp || '0',
         txHash: vote.txHash || '',
-        reason: vote.reason
+        reason: vote.reason,
+        proposalDescription: vote.proposal?.description || null
       }));
   }
 }

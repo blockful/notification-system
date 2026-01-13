@@ -46,7 +46,9 @@ const VotingPowerHistoryItemSchema = zod_1.z.object({
     transactionHash: zod_1.z.string(),
     delegation: zod_1.z.object({
         delegatorAccountId: zod_1.z.string(),
-        delegatedValue: zod_1.z.string()
+        delegateAccountId: zod_1.z.string(),
+        delegatedValue: zod_1.z.string(),
+        previousDelegate: zod_1.z.string().nullable()
     }).nullable().default(null),
     transfer: zod_1.z.object({
         amount: zod_1.z.string().nullable(),
@@ -74,7 +76,10 @@ exports.SafeVotesOnchainsResponseSchema = zod_1.z.object({
             support: zod_1.z.string(),
             votingPower: zod_1.z.string(),
             timestamp: zod_1.z.string(),
-            reason: zod_1.z.string().optional().nullable()
+            reason: zod_1.z.string().optional().nullable(),
+            proposal: zod_1.z.object({
+                description: zod_1.z.string()
+            }).optional().nullable()
         })),
         totalCount: zod_1.z.number()
     })
@@ -84,7 +89,7 @@ exports.SafeProposalNonVotersResponseSchema = zod_1.z.object({
         items: zod_1.z.array(zod_1.z.object({
             voter: zod_1.z.string()
         }).nullable()),
-        totalCount: zod_1.z.number()
+        totalCount: zod_1.z.number().optional()
     }).nullable()
 }).transform((data) => {
     if (!data.proposalNonVoters) {
@@ -123,6 +128,8 @@ function processVotingPowerHistory(validated, daoId, chainId) {
             changeType: item.delegation ? 'delegation' : item.transfer ? 'transfer' : 'other',
             sourceAccountId: item.transfer?.fromAccountId || item.delegation?.delegatorAccountId || '',
             targetAccountId: item.accountId,
+            previousDelegate: item.delegation?.previousDelegate || null,
+            newDelegate: item.delegation?.delegateAccountId || null,
             ...(chainId !== undefined && { chainId })
         };
         return processed;

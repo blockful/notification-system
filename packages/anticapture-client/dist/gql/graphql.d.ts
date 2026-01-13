@@ -165,6 +165,12 @@ export type Query = {
     /** Get delegation percentage day buckets with forward-fill */
     delegationPercentageByDay?: Maybe<DelegationPercentageByDay_200_Response>;
     delegations: DelegationPage;
+    /** Get historical DAO Token Treasury value (governance token quantity × token price) */
+    getDaoTokenTreasury?: Maybe<GetDaoTokenTreasury_200_Response>;
+    /** Get historical Liquid Treasury (treasury without DAO tokens) from external providers (DefiLlama/Dune) */
+    getLiquidTreasury?: Maybe<GetLiquidTreasury_200_Response>;
+    /** Get historical Total Treasury (liquid treasury + DAO token treasury) */
+    getTotalTreasury?: Maybe<GetTotalTreasury_200_Response>;
     /** Fetch historical token balances for multiple addresses at a specific time period using multicall */
     historicalBalances?: Maybe<Array<Maybe<Query_HistoricalBalances_Items>>>;
     /** Get historical market data for a specific token */
@@ -188,7 +194,7 @@ export type Query = {
     tokenPrice?: Maybe<TokenPrice>;
     tokenPrices: TokenPricePage;
     tokens: TokenPage;
-    /** Get historical Liquid Treasury (treasury without DAO tokens) directly from provider */
+    /** Get total assets */
     totalAssets?: Maybe<Array<Maybe<Query_TotalAssets_Items>>>;
     transaction?: Maybe<Transaction>;
     /** Get transactions with their associated transfers and delegations, with optional filtering and sorting */
@@ -338,6 +344,18 @@ export type QueryDelegationsArgs = {
     orderDirection?: InputMaybe<Scalars['String']['input']>;
     where?: InputMaybe<DelegationFilter>;
 };
+export type QueryGetDaoTokenTreasuryArgs = {
+    days?: InputMaybe<QueryInput_GetDaoTokenTreasury_Days>;
+    order?: InputMaybe<QueryInput_GetDaoTokenTreasury_Order>;
+};
+export type QueryGetLiquidTreasuryArgs = {
+    days?: InputMaybe<QueryInput_GetLiquidTreasury_Days>;
+    order?: InputMaybe<QueryInput_GetLiquidTreasury_Order>;
+};
+export type QueryGetTotalTreasuryArgs = {
+    days?: InputMaybe<QueryInput_GetTotalTreasury_Days>;
+    order?: InputMaybe<QueryInput_GetTotalTreasury_Order>;
+};
 export type QueryHistoricalBalancesArgs = {
     addresses: Scalars['JSON']['input'];
     days?: InputMaybe<QueryInput_HistoricalBalances_Days>;
@@ -417,7 +435,6 @@ export type QueryTokensArgs = {
 };
 export type QueryTotalAssetsArgs = {
     days?: InputMaybe<QueryInput_TotalAssets_Days>;
-    order?: InputMaybe<QueryInput_TotalAssets_Order>;
 };
 export type QueryTransactionArgs = {
     transactionHash: Scalars['String']['input'];
@@ -1065,6 +1082,24 @@ export type DelegationPercentageByDay_200_Response = {
     pageInfo: Query_DelegationPercentageByDay_PageInfo;
     totalCount: Scalars['Float']['output'];
 };
+export type GetDaoTokenTreasury_200_Response = {
+    __typename?: 'getDaoTokenTreasury_200_response';
+    items: Array<Maybe<Query_GetDaoTokenTreasury_Items_Items>>;
+    /** Total number of items */
+    totalCount: Scalars['Float']['output'];
+};
+export type GetLiquidTreasury_200_Response = {
+    __typename?: 'getLiquidTreasury_200_response';
+    items: Array<Maybe<Query_GetLiquidTreasury_Items_Items>>;
+    /** Total number of items */
+    totalCount: Scalars['Float']['output'];
+};
+export type GetTotalTreasury_200_Response = {
+    __typename?: 'getTotalTreasury_200_response';
+    items: Array<Maybe<Query_GetTotalTreasury_Items_Items>>;
+    /** Total number of items */
+    totalCount: Scalars['Float']['output'];
+};
 export type LastUpdate_200_Response = {
     __typename?: 'lastUpdate_200_response';
     lastUpdate: Scalars['String']['output'];
@@ -1394,6 +1429,39 @@ export declare enum QueryInput_DelegationPercentageByDay_OrderDirection {
     Asc = "asc",
     Desc = "desc"
 }
+export declare enum QueryInput_GetDaoTokenTreasury_Days {
+    '7d' = "_7d",
+    '30d' = "_30d",
+    '90d' = "_90d",
+    '180d' = "_180d",
+    '365d' = "_365d"
+}
+export declare enum QueryInput_GetDaoTokenTreasury_Order {
+    Asc = "asc",
+    Desc = "desc"
+}
+export declare enum QueryInput_GetLiquidTreasury_Days {
+    '7d' = "_7d",
+    '30d' = "_30d",
+    '90d' = "_90d",
+    '180d' = "_180d",
+    '365d' = "_365d"
+}
+export declare enum QueryInput_GetLiquidTreasury_Order {
+    Asc = "asc",
+    Desc = "desc"
+}
+export declare enum QueryInput_GetTotalTreasury_Days {
+    '7d' = "_7d",
+    '30d' = "_30d",
+    '90d' = "_90d",
+    '180d' = "_180d",
+    '365d' = "_365d"
+}
+export declare enum QueryInput_GetTotalTreasury_Order {
+    Asc = "asc",
+    Desc = "desc"
+}
 export declare enum QueryInput_HistoricalBalances_Days {
     '7d' = "_7d",
     '30d' = "_30d",
@@ -1452,11 +1520,15 @@ export declare enum QueryInput_TotalAssets_Days {
     '180d' = "_180d",
     '365d' = "_365d"
 }
-export declare enum QueryInput_TotalAssets_Order {
+export declare enum QueryInput_Transactions_SortOrder {
     Asc = "asc",
     Desc = "desc"
 }
-export declare enum QueryInput_Transactions_SortOrder {
+export declare enum QueryInput_Transfers_SortBy {
+    Amount = "amount",
+    Timestamp = "timestamp"
+}
+export declare enum QueryInput_Transfers_SortOrder {
     Asc = "asc",
     Desc = "desc"
 }
@@ -1516,6 +1588,27 @@ export type Query_DelegationPercentageByDay_PageInfo = {
     endDate?: Maybe<Scalars['String']['output']>;
     hasNextPage: Scalars['Boolean']['output'];
     startDate?: Maybe<Scalars['String']['output']>;
+};
+export type Query_GetDaoTokenTreasury_Items_Items = {
+    __typename?: 'query_getDaoTokenTreasury_items_items';
+    /** Unix timestamp in milliseconds */
+    date: Scalars['Float']['output'];
+    /** Treasury value in USD */
+    value: Scalars['Float']['output'];
+};
+export type Query_GetLiquidTreasury_Items_Items = {
+    __typename?: 'query_getLiquidTreasury_items_items';
+    /** Unix timestamp in milliseconds */
+    date: Scalars['Float']['output'];
+    /** Treasury value in USD */
+    value: Scalars['Float']['output'];
+};
+export type Query_GetTotalTreasury_Items_Items = {
+    __typename?: 'query_getTotalTreasury_items_items';
+    /** Unix timestamp in milliseconds */
+    date: Scalars['Float']['output'];
+    /** Treasury value in USD */
+    value: Scalars['Float']['output'];
 };
 export type Query_HistoricalBalances_Items = {
     __typename?: 'query_historicalBalances_items';
@@ -1595,9 +1688,8 @@ export type Query_Proposals_Items_Items = {
 };
 export type Query_TotalAssets_Items = {
     __typename?: 'query_totalAssets_items';
-    /** Unix timestamp in milliseconds */
-    date: Scalars['Float']['output'];
-    liquidTreasury: Scalars['Float']['output'];
+    date: Scalars['String']['output'];
+    totalAssets: Scalars['String']['output'];
 };
 export type Query_Transactions_Items_Items = {
     __typename?: 'query_transactions_items_items';
@@ -1629,6 +1721,21 @@ export type Query_Transactions_Items_Items_Delegations_Items = {
 };
 export type Query_Transactions_Items_Items_Transfers_Items = {
     __typename?: 'query_transactions_items_items_transfers_items';
+    amount: Scalars['String']['output'];
+    daoId: Scalars['String']['output'];
+    fromAccountId: Scalars['String']['output'];
+    isCex: Scalars['Boolean']['output'];
+    isDex: Scalars['Boolean']['output'];
+    isLending: Scalars['Boolean']['output'];
+    isTotal: Scalars['Boolean']['output'];
+    logIndex: Scalars['Float']['output'];
+    timestamp: Scalars['String']['output'];
+    toAccountId: Scalars['String']['output'];
+    tokenId: Scalars['String']['output'];
+    transactionHash: Scalars['String']['output'];
+};
+export type Query_Transfers_Items_Items = {
+    __typename?: 'query_transfers_items_items';
     amount: Scalars['String']['output'];
     daoId: Scalars['String']['output'];
     fromAccountId: Scalars['String']['output'];
@@ -2052,6 +2159,11 @@ export type TransferPage = {
     pageInfo: PageInfo;
     totalCount: Scalars['Int']['output'];
 };
+export type Transfers_200_Response = {
+    __typename?: 'transfers_200_response';
+    items: Array<Maybe<Query_Transfers_Items_Items>>;
+    totalCount: Scalars['Float']['output'];
+};
 export type VotesOnchain = {
     __typename?: 'votesOnchain';
     daoId: Scalars['String']['output'];
@@ -2367,6 +2479,10 @@ export type ListVotesOnchainsQuery = {
             votingPower: string;
             timestamp: string;
             reason?: string | null;
+            proposal?: {
+                __typename?: 'proposalsOnchain';
+                description: string;
+            } | null;
         }>;
     };
 };
@@ -2391,7 +2507,9 @@ export type ListVotingPowerHistorysQuery = {
             delegation?: {
                 __typename?: 'delegation';
                 delegatorAccountId: string;
+                delegateAccountId: string;
                 delegatedValue: string;
+                previousDelegate?: string | null;
             } | null;
             transfer?: {
                 __typename?: 'transfer';
