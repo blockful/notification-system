@@ -2479,6 +2479,10 @@ export type ListVotesOnchainsQuery = {
             votingPower: string;
             timestamp: string;
             reason?: string | null;
+            proposal?: {
+                __typename?: 'proposalsOnchain';
+                description: string;
+            } | null;
         }>;
     };
 };

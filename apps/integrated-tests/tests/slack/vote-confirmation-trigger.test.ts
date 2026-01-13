@@ -7,7 +7,7 @@
 import { describe, test, expect, beforeAll, afterEach } from '@jest/globals';
 import { db, TestApps } from '../../src/setup';
 import { HttpClientMockSetup, GraphQLMockSetup } from '../../src/mocks';
-import { UserFactory, VoteFactory, WorkspaceFactory } from '../../src/fixtures';
+import { UserFactory, WorkspaceFactory } from '../../src/fixtures';
 import { SlackTestHelper, DatabaseTestHelper, TestCleanup } from '../../src/helpers';
 import { SlackTestClient } from '../../src/test-clients/slack-test.client';
 import { testConstants, timeouts } from '../../src/config';
@@ -67,6 +67,8 @@ describe('Slack Vote Confirmation Trigger - Integration Test', () => {
     // Create vote event with timestamp in the future to ensure processing
     const eventTimestamp = (Math.floor(Date.now() / 1000) + 10).toString();
 
+    const proposalTitle = 'Enable Community Grants Program';
+
     const voteEvents = [
       {
         daoId: testDaoId,
@@ -76,7 +78,8 @@ describe('Slack Vote Confirmation Trigger - Integration Test', () => {
         support: '1', // FOR
         votingPower: '1000000000000000000000', // 1000 tokens
         timestamp: eventTimestamp,
-        reason: 'Great proposal!'
+        reason: 'Great proposal!',
+        proposal: { description: proposalTitle }
       }
     ];
 
@@ -105,6 +108,7 @@ describe('Slack Vote Confirmation Trigger - Integration Test', () => {
     expect(message.channel).toBe(channelId);
     expect(message.text).toContain('✅'); // FOR emoji
     expect(message.text).toMatch(/voted FOR|just voted on/i);
+    expect(message.text).toContain(proposalTitle);
 
     // Verify Slack link formatting
     if (message.text.includes('http')) {
@@ -129,6 +133,8 @@ describe('Slack Vote Confirmation Trigger - Integration Test', () => {
 
     const eventTimestamp = (Math.floor(Date.now() / 1000) + 10).toString();
 
+    const proposalTitle = 'Increase Treasury Allocation';
+
     const voteEvents = [
       {
         daoId: testDaoId,
@@ -138,7 +144,8 @@ describe('Slack Vote Confirmation Trigger - Integration Test', () => {
         support: '0', // AGAINST
         votingPower: '5000000000000000000000', // 5000 tokens
         timestamp: eventTimestamp,
-        reason: 'Needs more discussion'
+        reason: 'Needs more discussion',
+        proposal: { description: proposalTitle }
       }
     ];
 
@@ -165,6 +172,7 @@ describe('Slack Vote Confirmation Trigger - Integration Test', () => {
     expect(message.channel).toBe(channelId);
     expect(message.text).toContain('❌'); // AGAINST emoji
     expect(message.text).toMatch(/voted AGAINST|just voted on/i);
+    expect(message.text).toContain(proposalTitle);
 
     // Verify Slack link formatting
     if (message.text.includes('http')) {
@@ -183,6 +191,8 @@ describe('Slack Vote Confirmation Trigger - Integration Test', () => {
 
     const eventTimestamp = (Math.floor(Date.now() / 1000) + 10).toString();
 
+    const proposalTitle = 'Protocol Fee Adjustment';
+
     const voteEvents = [
       {
         daoId: testDaoId,
@@ -191,8 +201,9 @@ describe('Slack Vote Confirmation Trigger - Integration Test', () => {
         voterAccountId: voterAddress,
         support: '2', // ABSTAIN
         votingPower: '2000000000000000000000', // 2000 tokens
-        timestamp: eventTimestamp
+        timestamp: eventTimestamp,
         // No reason provided for abstain
+        proposal: { description: proposalTitle }
       }
     ];
 
@@ -219,6 +230,7 @@ describe('Slack Vote Confirmation Trigger - Integration Test', () => {
     expect(message.channel).toBe(channelId);
     expect(message.text).toContain('⚪'); // ABSTAIN emoji
     expect(message.text).toMatch(/voted ABSTAIN|just voted on/i);
+    expect(message.text).toContain(proposalTitle);
 
     // Verify Slack link formatting
     if (message.text.includes('http')) {
@@ -247,7 +259,8 @@ describe('Slack Vote Confirmation Trigger - Integration Test', () => {
         voterAccountId: voterAddress,
         support: '1',
         votingPower: '1000000000000000000000',
-        timestamp: eventTimestamp
+        timestamp: eventTimestamp,
+        proposal: { description: 'Duplicate Test Proposal' }
       }
     ];
 
@@ -310,7 +323,8 @@ describe('Slack Vote Confirmation Trigger - Integration Test', () => {
         voterAccountId: voterAddress,
         support: '1', // FOR
         votingPower: '1000000000000000000000',
-        timestamp: baseTimestamp.toString()
+        timestamp: baseTimestamp.toString(),
+        proposal: { description: 'Multi Vote Proposal 1' }
       },
       {
         daoId: testDaoId,
@@ -319,7 +333,8 @@ describe('Slack Vote Confirmation Trigger - Integration Test', () => {
         voterAccountId: voterAddress,
         support: '0', // AGAINST
         votingPower: '1000000000000000000000',
-        timestamp: (baseTimestamp + 1).toString()
+        timestamp: (baseTimestamp + 1).toString(),
+        proposal: { description: 'Multi Vote Proposal 2' }
       },
       {
         daoId: testDaoId,
@@ -328,7 +343,8 @@ describe('Slack Vote Confirmation Trigger - Integration Test', () => {
         voterAccountId: voterAddress,
         support: '2', // ABSTAIN
         votingPower: '1000000000000000000000',
-        timestamp: (baseTimestamp + 2).toString()
+        timestamp: (baseTimestamp + 2).toString(),
+        proposal: { description: 'Multi Vote Proposal 3' }
       }
     ];
 
@@ -345,7 +361,7 @@ describe('Slack Vote Confirmation Trigger - Integration Test', () => {
       3,
       {
         timeout: timeouts.notification.delivery,
-        fromChannel: channelId
+        toChannel: channelId
       }
     );
 
@@ -394,7 +410,8 @@ describe('Slack Vote Confirmation Trigger - Integration Test', () => {
         voterAccountId: voterAddress,
         support: '1',
         votingPower: '1000000000000000000000',
-        timestamp: eventTimestamp
+        timestamp: eventTimestamp,
+        proposal: { description: 'No Subscription Proposal' }
       }
     ];
 

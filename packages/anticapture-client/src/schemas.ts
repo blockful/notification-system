@@ -78,7 +78,10 @@ export const SafeVotesOnchainsResponseSchema = z.object({
       support: z.string(),
       votingPower: z.string(),
       timestamp: z.string(),
-      reason: z.string().optional().nullable()
+      reason: z.string().optional().nullable(),
+      proposal: z.object({
+        description: z.string()
+      }).optional().nullable()
     })),
     totalCount: z.number()
   })
