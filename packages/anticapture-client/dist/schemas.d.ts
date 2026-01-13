@@ -439,45 +439,45 @@ export declare const SafeProposalNonVotersResponseSchema: z.ZodEffects<z.ZodObje
         }, {
             voter: string;
         }>>, "many">;
-        totalCount: z.ZodNumber;
+        totalCount: z.ZodOptional<z.ZodNumber>;
     }, "strip", z.ZodTypeAny, {
         items: ({
             voter: string;
         } | null)[];
-        totalCount: number;
+        totalCount?: number | undefined;
     }, {
         items: ({
             voter: string;
         } | null)[];
-        totalCount: number;
+        totalCount?: number | undefined;
     }>>;
 }, "strip", z.ZodTypeAny, {
     proposalNonVoters: {
         items: ({
             voter: string;
         } | null)[];
-        totalCount: number;
+        totalCount?: number | undefined;
     } | null;
 }, {
     proposalNonVoters: {
         items: ({
             voter: string;
         } | null)[];
-        totalCount: number;
+        totalCount?: number | undefined;
     } | null;
 }>, {
     proposalNonVoters: {
         items: {
             voter: string;
         }[];
-        totalCount: number;
+        totalCount?: number | undefined;
     };
 }, {
     proposalNonVoters: {
         items: ({
             voter: string;
         } | null)[];
-        totalCount: number;
+        totalCount?: number | undefined;
     } | null;
 }>;
 type SafeProposalsResponse = z.infer<typeof SafeProposalsResponseSchema>;
