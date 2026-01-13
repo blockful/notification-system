@@ -87,7 +87,7 @@ export const SafeProposalNonVotersResponseSchema = z.object({
     items: z.array(z.object({
       voter: z.string()
     }).nullable()),
-    totalCount: z.number()
+    totalCount: z.number().optional()
   }).nullable()
 }).transform((data) => {
   if (!data.proposalNonVoters) {
