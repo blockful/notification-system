@@ -33,6 +33,9 @@ query ListVotesOnchains(
       votingPower
       timestamp
       reason
+      proposal {
+        description
+      }
     }
     totalCount
   }

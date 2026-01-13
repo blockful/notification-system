@@ -5,6 +5,7 @@ import { BaseTriggerHandler } from "./base-trigger.service";
 import { formatTokenAmount } from "../../lib/number-formatter";
 import { votingPowerMessages, replacePlaceholders, buildButtons } from '@notification-system/messages';
 import crypto from 'crypto';
+import { zeroAddress } from 'viem';
 
 /**
  * Handler for processing "voting-power-changed" trigger messages
@@ -97,7 +98,7 @@ export class VotingPowerTriggerHandler extends BaseTriggerHandler {
     walletOwnersMap: Record<string, User[]>,
     daoSubscribersMap: Record<string, User[]>
   ): Promise<void> {
-    const { daoId, accountId, sourceAccountId, delta, transactionHash, chainId } = votingPowerEvent;
+    const { daoId, accountId, sourceAccountId, delta, transactionHash, chainId, votingPower } = votingPowerEvent;
     
     const subscribers = await this.getNotificationSubscribers(
       accountId, // who receives the delegation
@@ -111,6 +112,7 @@ export class VotingPowerTriggerHandler extends BaseTriggerHandler {
     
     const deltaValue = delta ? parseInt(delta) : 0;
     const formattedDelta = formatTokenAmount(Math.abs(deltaValue));
+    const formattedVotingPower = votingPower ? formatTokenAmount(parseInt(votingPower)) : '0';
     
     const messageTemplate = deltaValue >= 0
       ? votingPowerMessages.delegationReceived.new
@@ -118,7 +120,8 @@ export class VotingPowerTriggerHandler extends BaseTriggerHandler {
 
     const notificationMessage = replacePlaceholders(messageTemplate, {
       daoId,
-      delta: formattedDelta
+      delta: formattedDelta,
+      votingPower: formattedVotingPower
     });
 
     const metadata = this.buildNotificationMetadata(chainId, transactionHash, {
@@ -144,10 +147,15 @@ export class VotingPowerTriggerHandler extends BaseTriggerHandler {
     walletOwnersMap: Record<string, User[]>,
     daoSubscribersMap: Record<string, User[]>
   ): Promise<void> {
-    const { daoId, accountId, sourceAccountId, targetAccountId, delta, transactionHash, chainId } = votingPowerEvent;
+    const { daoId, accountId, sourceAccountId, targetAccountId, delta, transactionHash, chainId, previousDelegate, newDelegate } = votingPowerEvent;
     
     // Skip if sourceAccountId is not present
     if (!sourceAccountId) {
+      return;
+    }
+
+    // Skip self-delegation notifications
+    if (sourceAccountId === accountId) {
       return;
     }
     
@@ -165,44 +173,42 @@ export class VotingPowerTriggerHandler extends BaseTriggerHandler {
     
     const deltaValue = delta ? parseInt(delta) : 0;
     const formattedDelta = formatTokenAmount(Math.abs(deltaValue));
-    
-    let notificationMessage = '';
 
-    // Check for self-delegation
-    if (sourceAccountId === accountId) {
-      const { votingPower } = votingPowerEvent;
-      const formattedVotingPower = votingPower ? formatTokenAmount(parseInt(votingPower)) : formattedDelta;
+    // Determine delegation type based on previousDelegate and newDelegate
+    const isPreviousZero = !previousDelegate || previousDelegate === zeroAddress;
+    const isNewZero = !newDelegate || newDelegate === zeroAddress;
 
-      const messageTemplate = deltaValue > 0
-        ? votingPowerMessages.selfDelegation.confirmed
-        : votingPowerMessages.selfDelegation.removed;
+    let messageTemplate: string;
+    let placeholders: Record<string, string>;
 
-      notificationMessage = replacePlaceholders(messageTemplate, {
-        daoId,
-        delta: formattedDelta,
-        votingPower: formattedVotingPower
-      });
-    } else {
-      const messageTemplate = deltaValue > 0
-        ? votingPowerMessages.delegationSent.confirmed
-        : votingPowerMessages.delegationSent.removed;
-
-      notificationMessage = replacePlaceholders(messageTemplate, {
+    if (isPreviousZero && !isNewZero) {
+      // New delegation: was 0x0, now delegates to someone
+      messageTemplate = votingPowerMessages.delegationSent.new;
+      placeholders = {
         daoId,
         delta: formattedDelta
-      });
+      };
+    } else if (!isPreviousZero && !isNewZero) {
+      // Changed delegation: had a delegate, now delegates to someone else
+      messageTemplate = votingPowerMessages.delegationSent.changed;
+      placeholders = {
+        daoId
+      };
+    } else {
+      // Undelegation: had a delegate, now 0x0
+      messageTemplate = votingPowerMessages.delegationSent.removed;
+      placeholders = {
+        daoId
+      };
     }
 
-    // Build metadata conditionally based on self-delegation
-    const isSelfDelegation = sourceAccountId === accountId;
-    const metadata = this.buildNotificationMetadata(chainId, transactionHash,
-      isSelfDelegation ? {
-        address: sourceAccountId
-      } : {
-        delegatorAccount: sourceAccountId,
-        delegate: targetAccountId || accountId
-      }
-    );
+    const notificationMessage = replacePlaceholders(messageTemplate, placeholders);
+
+    const metadata = this.buildNotificationMetadata(chainId, transactionHash, {
+      delegatorAccount: sourceAccountId,
+      delegate: newDelegate || targetAccountId || accountId,
+      previousDelegate: previousDelegate || undefined
+    });
 
     // Build buttons for delegation change
     const buttons = buildButtons({
@@ -222,55 +228,65 @@ export class VotingPowerTriggerHandler extends BaseTriggerHandler {
     walletOwnersMap: Record<string, User[]>,
     daoSubscribersMap: Record<string, User[]>
   ): Promise<void> {
-    const { daoId, accountId, changeType, delta, transactionHash, chainId } = votingPowerEvent;
+    const { daoId, accountId, changeType, transactionHash, chainId, transfer } = votingPowerEvent;
     
     const subscribers = await this.getNotificationSubscribers(
-      accountId,
-      daoId,
-      transactionHash,
-      walletOwnersMap,
-      daoSubscribersMap
+      accountId, daoId, transactionHash, walletOwnersMap, daoSubscribersMap
     );
-    
     if (subscribers.length === 0) return;
-    
+
+    const { message, metadata } = changeType === 'transfer'
+      ? this.buildTransferTypeNotification(votingPowerEvent)
+      : this.buildGenericNotification(votingPowerEvent);
+
+    const buttons = buildButtons({ triggerType: 'votingPowerChange', txHash: transactionHash, chainId });
+    await this.sendNotificationsToSubscribers(subscribers, message, transactionHash, daoId, metadata, buttons);
+  }
+
+  /**
+   * Build notification for transfer type - uses delegator balance change notification
+   */
+  private buildTransferTypeNotification(event: any): { message: string; metadata: any } {
+    const { daoId, accountId, delta, chainId, transactionHash, votingPower, transfer } = event;
     const deltaValue = delta ? parseInt(delta) : 0;
+    const isPositive = deltaValue >= 0;
     const formattedDelta = formatTokenAmount(Math.abs(deltaValue));
-    
-    let notificationMessage = '';
-    if (changeType === 'transfer') {
-      const messageTemplate = deltaValue >= 0
-        ? votingPowerMessages.transfer.increased
-        : votingPowerMessages.transfer.decreased;
+    const formattedVotingPower = votingPower ? formatTokenAmount(parseInt(votingPower)) : '0';
+    const delegatorAccountId = isPositive ? transfer?.toAccountId : transfer?.fromAccountId;
 
-      notificationMessage = replacePlaceholders(messageTemplate, {
-        daoId,
-        delta: formattedDelta
-      });
-    } else {
-      // Generic voting power change
-      const messageTemplate = deltaValue >= 0
-        ? votingPowerMessages.generic.increased
-        : votingPowerMessages.generic.decreased;
+    const message = replacePlaceholders(
+      votingPowerMessages.delegatorBalanceChange[isPositive ? 'increased' : 'decreased'],
+      { daoId, delta: formattedDelta, votingPower: formattedVotingPower }
+    );
 
-      notificationMessage = replacePlaceholders(messageTemplate, {
-        daoId,
-        delta: formattedDelta
-      });
-    }
+    return {
+      message,
+      metadata: this.buildNotificationMetadata(chainId, transactionHash, { 
+        address: accountId,
+        delegator: delegatorAccountId || accountId 
+      })
+    };
+  }
 
-    const metadata = this.buildNotificationMetadata(chainId, transactionHash, {
-      address: accountId
-    });
+  /**
+   * Build notification for generic voting power change
+   */
+  private buildGenericNotification(event: any): { message: string; metadata: any } {
+    const { daoId, accountId, delta, chainId, transactionHash, votingPower } = event;
+    const deltaValue = delta ? parseInt(delta) : 0;
+    const isPositive = deltaValue >= 0;
+    const formattedDelta = formatTokenAmount(Math.abs(deltaValue));
+    const formattedVotingPower = votingPower ? formatTokenAmount(parseInt(votingPower)) : '0';
 
-    // Build buttons for voting power change
-    const buttons = buildButtons({
-      triggerType: 'votingPowerChange',
-      txHash: transactionHash,
-      chainId
-    });
+    const message = replacePlaceholders(
+      votingPowerMessages.generic[isPositive ? 'increased' : 'decreased'],
+      { daoId, delta: formattedDelta, votingPower: formattedVotingPower }
+    );
 
-    await this.sendNotificationsToSubscribers(subscribers, notificationMessage, transactionHash, daoId, metadata, buttons);
+    return {
+      message,
+      metadata: this.buildNotificationMetadata(chainId, transactionHash, { address: accountId })
+    };
   }
 
   /**

@@ -3,19 +3,19 @@ export const voteConfirmationMessages = {
   withReason: {
     FOR: `✅ {{address}} just voted on {{daoId}}!
 
-{{address}} voted FOR on proposal #{{proposalIdShort}} with {{votingPower}} voting power.
+{{address}} voted FOR on proposal: {{proposalTitle}} with {{votingPower}} voting power.
 
 Reason: "{{reason}}"`,
 
     AGAINST: `❌ {{address}} just voted on {{daoId}}!
 
-{{address}} voted AGAINST on proposal #{{proposalIdShort}} with {{votingPower}} voting power.
+{{address}} voted AGAINST on proposal: {{proposalTitle}} with {{votingPower}} voting power.
 
 Reason: "{{reason}}"`,
 
     ABSTAIN: `⚪ {{address}} just voted on {{daoId}}!
 
-{{address}} voted ABSTAIN on proposal #{{proposalIdShort}} with {{votingPower}} voting power.
+{{address}} voted ABSTAIN on proposal: {{proposalTitle}} with {{votingPower}} voting power.
 
 Reason: "{{reason}}"`
   },
@@ -24,15 +24,15 @@ Reason: "{{reason}}"`
   withoutReason: {
     FOR: `✅ {{address}} just voted on {{daoId}}!
 
-{{address}} voted FOR on proposal #{{proposalIdShort}} with {{votingPower}} voting power.`,
+{{address}} voted FOR on proposal: {{proposalTitle}} with {{votingPower}} voting power.`,
 
     AGAINST: `❌ {{address}} just voted on {{daoId}}!
 
-{{address}} voted AGAINST on proposal #{{proposalIdShort}} with {{votingPower}} voting power.`,
+{{address}} voted AGAINST on proposal: {{proposalTitle}} with {{votingPower}} voting power.`,
 
     ABSTAIN: `⚪ {{address}} just voted on {{daoId}}!
 
-{{address}} voted ABSTAIN on proposal #{{proposalIdShort}} with {{votingPower}} voting power.`
+{{address}} voted ABSTAIN on proposal: {{proposalTitle}} with {{votingPower}} voting power.`
   },
 
   // Helper to convert support number to key

@@ -1,4 +1,5 @@
 import { ProcessedVotingPowerHistory } from '@notification-system/anticapture-client';
+import { zeroAddress } from 'viem';
 import { testConstants } from '../../config';
 
 /**
@@ -23,12 +24,16 @@ export class VotingPowerFactory {
       chainId: 1, // Default to Ethereum mainnet for tests
       delegation: {
         delegatorAccountId: 'delegator.eth',
-        delegatedValue: testConstants.votingPower.small
+        delegateAccountId: 'user1.eth',
+        delegatedValue: testConstants.votingPower.small,
+        previousDelegate: zeroAddress
       },
       transfer: null,
       changeType: 'delegation',
       sourceAccountId: 'delegator.eth',
       targetAccountId: 'user1.eth',
+      previousDelegate: zeroAddress,
+      newDelegate: 'user1.eth',
       votingPower: testConstants.votingPower.default,
       ...overrides
     };
@@ -97,6 +102,8 @@ export class VotingPowerFactory {
     daoId: string = testConstants.daoIds.votingPowerTest,
     overrides?: Partial<ProcessedVotingPowerHistory>
   ): ProcessedVotingPowerHistory {
+    const isUndelegation = delegatedValue.startsWith('-');
+    
     return this.createVotingPowerEvent({
       accountId: targetAccountId,
       daoId,
@@ -105,10 +112,16 @@ export class VotingPowerFactory {
       targetAccountId,
       delegation: {
         delegatorAccountId,
-        delegatedValue
+        delegateAccountId: isUndelegation ? zeroAddress : targetAccountId,
+        delegatedValue,
+        previousDelegate: isUndelegation ? targetAccountId : zeroAddress
       },
       transfer: null,
       delta: delegatedValue,
+      // For new delegation: previousDelegate is 0x0, newDelegate is target
+      // For undelegation: previousDelegate is target, newDelegate is 0x0
+      previousDelegate: isUndelegation ? targetAccountId : zeroAddress,
+      newDelegate: isUndelegation ? zeroAddress : targetAccountId,
       ...overrides
     });
   }
@@ -142,6 +155,8 @@ export class VotingPowerFactory {
         amount: transferValue
       },
       delta: transferValue,
+      previousDelegate: null,
+      newDelegate: null,
       ...overrides
     });
   }
