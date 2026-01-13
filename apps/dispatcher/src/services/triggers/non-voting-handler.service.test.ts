@@ -75,6 +75,7 @@ describe('NonVotingHandler', () => {
     mockSubscriptionClient.getWalletOwnersBatch.mockResolvedValue({
       [TestAddresses.ADDRESS_1]: followers
     });
+    mockSubscriptionClient.getDaoSubscribers.mockResolvedValue(followers);
     mockSubscriptionClient.shouldSendBatch.mockResolvedValue([
       [createNotification('user-1', `${TestAddresses.ADDRESS_1}-non-voting-proposal-3`, 'ENS')]
     ]);
@@ -82,6 +83,7 @@ describe('NonVotingHandler', () => {
     await handler.handleMessage(message);
 
     expect(mockSubscriptionClient.getWalletOwnersBatch).toHaveBeenCalledWith([TestAddresses.ADDRESS_1]);
+    expect(mockSubscriptionClient.getDaoSubscribers).toHaveBeenCalledWith('ENS');
     expect(mockNotificationClient.sendNotification).toHaveBeenCalled();
 
     const sentAddress = mockNotificationClient.sendNotification.mock.calls[0][0].metadata?.addresses?.nonVoterAddress;
@@ -183,10 +185,11 @@ describe('NonVotingHandler', () => {
     mockAnticaptureClient.listProposals.mockResolvedValue(lastProposals as any);
     mockSubscriptionClient.getFollowedAddresses.mockResolvedValue(followedAddresses);
     mockAnticaptureClient.getProposalNonVoters
-      .mockResolvedValue([{ voter: TestAddresses.ADDRESS_LONG }])
+      .mockResolvedValue([{ voter: TestAddresses.ADDRESS_LONG }]);
     mockSubscriptionClient.getWalletOwnersBatch.mockResolvedValue({
       [TestAddresses.ADDRESS_LONG]: followers
     });
+    mockSubscriptionClient.getDaoSubscribers.mockResolvedValue(followers);
     mockSubscriptionClient.shouldSendBatch.mockResolvedValue([
       [createNotification('user-1', `${TestAddresses.ADDRESS_LONG}-non-voting-proposal-3`, 'ENS')]
     ]);
