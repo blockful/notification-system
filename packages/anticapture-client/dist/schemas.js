@@ -62,7 +62,7 @@ exports.SafeHistoricalVotingPowerResponseSchema = zod_1.z.object({
         totalCount: zod_1.z.number()
     }).nullable()
 }).transform((data) => {
-    // Ensure we always have a valid structure, filter out null items
+    // Ensure we always have a valid structure
     const items = data.historicalVotingPower?.items?.filter((item) => item !== null) || [];
     return {
         historicalVotingPower: {
