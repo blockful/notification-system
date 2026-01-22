@@ -78,7 +78,7 @@ export class GraphQLMockSetup {
         });
       }
 
-      // Handle voting power (new historicalVotingPower query)
+      // Handle voting power
       if (data.query?.includes('ListHistoricalVotingPower')) {
         let filtered = votingPowerData;
         if (data.variables?.fromDate) {
