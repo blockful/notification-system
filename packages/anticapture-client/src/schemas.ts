@@ -35,8 +35,7 @@ export const SafeProposalByIdResponseSchema = z.object({
   proposal: z.any().nullable()
 });
 
-// Define schema for historical voting power item (based on new API response)
-// Uses new field names: from/to/value instead of delegatorAccountId/delegateAccountId/delegatedValue
+// Define schema for historical voting power item
 const HistoricalVotingPowerItemSchema = z.object({
   accountId: z.string(),
   timestamp: z.string(),

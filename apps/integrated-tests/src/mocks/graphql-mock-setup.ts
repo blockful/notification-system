@@ -11,7 +11,6 @@ export class GraphQLMockSetup {
   /**
    * @notice Transforms ProcessedVotingPowerHistory to raw GraphQL format
    * @dev Returns addresses in original format (checksum) like real API
-   * Uses new field names: from/to/value instead of delegatorAccountId/delegateAccountId/delegatedValue
    */
   private static transformToRawGraphQLFormat(votingPowerData: ProcessedVotingPowerHistory[]): any[] {
     return votingPowerData.map(vp => ({
