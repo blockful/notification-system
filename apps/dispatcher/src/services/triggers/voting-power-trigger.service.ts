@@ -252,7 +252,7 @@ export class VotingPowerTriggerHandler extends BaseTriggerHandler {
     const isPositive = deltaValue >= 0;
     const formattedDelta = formatTokenAmount(Math.abs(deltaValue));
     const formattedVotingPower = votingPower ? formatTokenAmount(parseInt(votingPower)) : '0';
-    const delegatorAccountId = isPositive ? transfer?.toAccountId : transfer?.fromAccountId;
+    const delegatorAccountId = isPositive ? transfer?.to : transfer?.from;
 
     const message = replacePlaceholders(
       votingPowerMessages.delegatorBalanceChange[isPositive ? 'increased' : 'decreased'],
