@@ -1,5 +1,5 @@
-query ListVotingPowerHistorys($where: votingPowerHistoryFilter, $limit: Int, $orderBy: String, $orderDirection: String) {
-  votingPowerHistorys(where: $where, limit: $limit, orderBy: $orderBy, orderDirection: $orderDirection) {
+query ListHistoricalVotingPower($limit: PositiveInt, $skip: NonNegativeInt, $orderBy: queryInput_historicalVotingPower_orderBy, $orderDirection: queryInput_historicalVotingPower_orderDirection, $fromDate: String, $accountId: String) {
+  historicalVotingPower(limit: $limit, skip: $skip, orderBy: $orderBy, orderDirection: $orderDirection, fromDate: $fromDate, accountId: $accountId) {
     items {
       accountId
       timestamp
@@ -8,16 +8,17 @@ query ListVotingPowerHistorys($where: votingPowerHistoryFilter, $limit: Int, $or
       daoId
       transactionHash
       delegation {
-        delegatorAccountId
-        delegateAccountId
-        delegatedValue
+        from
+        to
+        value
         previousDelegate
       }
       transfer {
-        amount
-        fromAccountId
-        toAccountId
+        from
+        to
+        value
       }
     }
+    totalCount
   }
 }

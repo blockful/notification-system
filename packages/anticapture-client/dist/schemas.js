@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.SafeProposalNonVotersResponseSchema = exports.SafeVotesOnchainsResponseSchema = exports.SafeVotingPowerHistoryResponseSchema = exports.SafeProposalByIdResponseSchema = exports.SafeProposalsResponseSchema = exports.SafeDaosResponseSchema = void 0;
+exports.SafeProposalNonVotersResponseSchema = exports.SafeVotesOnchainsResponseSchema = exports.SafeHistoricalVotingPowerResponseSchema = exports.SafeProposalByIdResponseSchema = exports.SafeProposalsResponseSchema = exports.SafeDaosResponseSchema = void 0;
 exports.processProposals = processProposals;
 exports.processVotingPowerHistory = processVotingPowerHistory;
 const zod_1 = require("zod");
@@ -35,35 +35,40 @@ exports.SafeProposalsResponseSchema = zod_1.z.object({
 exports.SafeProposalByIdResponseSchema = zod_1.z.object({
     proposal: zod_1.z.any().nullable()
 });
-// Define schema for voting power history item (based on actual API response)
-// Handle real-world scenarios where API might return null values or missing fields
-const VotingPowerHistoryItemSchema = zod_1.z.object({
+// Define schema for historical voting power item (based on new API response)
+// Uses new field names: from/to/value instead of delegatorAccountId/delegateAccountId/delegatedValue
+const HistoricalVotingPowerItemSchema = zod_1.z.object({
     accountId: zod_1.z.string(),
     timestamp: zod_1.z.string(),
-    votingPower: zod_1.z.string().nullable(),
-    delta: zod_1.z.string().nullable(),
-    daoId: zod_1.z.string().nullable().default(null),
+    votingPower: zod_1.z.string(),
+    delta: zod_1.z.string(),
+    daoId: zod_1.z.string(),
     transactionHash: zod_1.z.string(),
     delegation: zod_1.z.object({
-        delegatorAccountId: zod_1.z.string(),
-        delegateAccountId: zod_1.z.string(),
-        delegatedValue: zod_1.z.string(),
+        from: zod_1.z.string(),
+        to: zod_1.z.string(),
+        value: zod_1.z.string(),
         previousDelegate: zod_1.z.string().nullable()
-    }).nullable().default(null),
+    }).nullable(),
     transfer: zod_1.z.object({
-        amount: zod_1.z.string().nullable(),
-        fromAccountId: zod_1.z.string(),
-        toAccountId: zod_1.z.string()
-    }).nullable().default(null)
+        from: zod_1.z.string(),
+        to: zod_1.z.string(),
+        value: zod_1.z.string()
+    }).nullable()
 });
-exports.SafeVotingPowerHistoryResponseSchema = zod_1.z.object({
-    votingPowerHistorys: zod_1.z.object({
-        items: zod_1.z.array(VotingPowerHistoryItemSchema)
+exports.SafeHistoricalVotingPowerResponseSchema = zod_1.z.object({
+    historicalVotingPower: zod_1.z.object({
+        items: zod_1.z.array(HistoricalVotingPowerItemSchema.nullable()),
+        totalCount: zod_1.z.number()
     }).nullable()
 }).transform((data) => {
-    // Ensure we always have a valid structure
+    // Ensure we always have a valid structure, filter out null items
+    const items = data.historicalVotingPower?.items?.filter((item) => item !== null) || [];
     return {
-        votingPowerHistorys: data.votingPowerHistorys || { items: [] }
+        historicalVotingPower: {
+            items,
+            totalCount: data.historicalVotingPower?.totalCount || 0
+        }
     };
 });
 exports.SafeVotesOnchainsResponseSchema = zod_1.z.object({
@@ -117,7 +122,7 @@ function processProposals(validated, daoId) {
 }
 // Internal helper function to process validated voting power history
 function processVotingPowerHistory(validated, daoId, chainId) {
-    return validated.votingPowerHistorys.items
+    return validated.historicalVotingPower.items
         .filter(item => item.accountId)
         .map((item) => {
         const processed = {
@@ -126,10 +131,10 @@ function processVotingPowerHistory(validated, daoId, chainId) {
             daoId: daoId,
             delta: item.delta,
             changeType: item.delegation ? 'delegation' : item.transfer ? 'transfer' : 'other',
-            sourceAccountId: item.transfer?.fromAccountId || item.delegation?.delegatorAccountId || '',
+            sourceAccountId: item.transfer?.from || item.delegation?.from || '',
             targetAccountId: item.accountId,
             previousDelegate: item.delegation?.previousDelegate || null,
-            newDelegate: item.delegation?.delegateAccountId || null,
+            newDelegate: item.delegation?.to || null,
             ...(chainId !== undefined && { chainId })
         };
         return processed;
