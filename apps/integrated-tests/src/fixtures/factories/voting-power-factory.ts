@@ -23,9 +23,9 @@ export class VotingPowerFactory {
       transactionHash: `0x${Math.random().toString(16).substr(2, 40)}`,
       chainId: 1, // Default to Ethereum mainnet for tests
       delegation: {
-        delegatorAccountId: 'delegator.eth',
-        delegateAccountId: 'user1.eth',
-        delegatedValue: testConstants.votingPower.small,
+        from: 'delegator.eth',
+        to: 'user1.eth',
+        value: testConstants.votingPower.small,
         previousDelegate: zeroAddress
       },
       transfer: null,
@@ -111,9 +111,9 @@ export class VotingPowerFactory {
       sourceAccountId: delegatorAccountId,
       targetAccountId,
       delegation: {
-        delegatorAccountId,
-        delegateAccountId: isUndelegation ? zeroAddress : targetAccountId,
-        delegatedValue,
+        from: delegatorAccountId,
+        to: isUndelegation ? zeroAddress : targetAccountId,
+        value: delegatedValue,
         previousDelegate: isUndelegation ? targetAccountId : zeroAddress
       },
       transfer: null,
@@ -150,9 +150,9 @@ export class VotingPowerFactory {
       targetAccountId: toAccountId,
       delegation: null,
       transfer: {
-        fromAccountId,
-        toAccountId,
-        amount: transferValue
+        from: fromAccountId,
+        to: toAccountId,
+        value: transferValue
       },
       delta: transferValue,
       previousDelegate: null,

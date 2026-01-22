@@ -108,11 +108,11 @@ describe('Voting Power Trigger - Integration Test', () => {
     );
 
     expect(delegationEvent.changeType).toBe('delegation');
-    expect(delegationEvent.delegation?.delegatedValue).toBe(testConstants.votingPower.small + '00');
+    expect(delegationEvent.delegation?.value).toBe(testConstants.votingPower.small + '00');
     expect(delegationEvent.transfer).toBeNull();
 
     expect(transferEvent.changeType).toBe('transfer');
-    expect(transferEvent.transfer?.amount).toBe(testConstants.votingPower.default + '00');
+    expect(transferEvent.transfer?.value).toBe(testConstants.votingPower.default + '00');
     expect(transferEvent.delegation).toBeNull();
   });
 
