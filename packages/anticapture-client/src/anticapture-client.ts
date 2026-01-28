@@ -1,4 +1,5 @@
 import { AxiosInstance } from 'axios';
+import axiosRetry, { exponentialDelay, isNetworkOrIdempotentRequestError } from 'axios-retry';
 import { print } from 'graphql';
 import type { TypedDocumentNode } from '@graphql-typed-document-node/core';
 import { z } from 'zod';
@@ -24,8 +25,23 @@ type ProposalNonVoter = z.infer<typeof SafeProposalNonVotersResponseSchema>['pro
 export class AnticaptureClient {
   private readonly httpClient: AxiosInstance;
 
-  constructor(httpClient: AxiosInstance) {
+  constructor(httpClient: AxiosInstance, maxRetries: number = 4, timeout: number = 15000) {
     this.httpClient = httpClient;
+    this.httpClient.defaults.timeout = timeout;
+
+    axiosRetry(this.httpClient, {
+      retries: maxRetries,
+      retryDelay: exponentialDelay, // 1s, 2s, 4s, 8s
+      retryCondition: (error) => {
+        return isNetworkOrIdempotentRequestError(error) ||
+               (error.response?.status !== undefined && error.response.status >= 500);
+      },
+      onRetry: (retryCount, error, requestConfig) => {
+        console.warn(
+          `[AnticaptureClient] Retry ${retryCount}/${maxRetries} for ${requestConfig.url || 'request'}: ${error.message}`
+        );
+      },
+    });
   }
 
   /**
