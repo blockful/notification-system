@@ -5,7 +5,7 @@
 import { describe, it, expect, jest, beforeEach, afterEach } from '@jest/globals';
 import { VotingReminderTrigger } from '../src/triggers/voting-reminder-trigger';
 import { ProposalOnChain } from '../src/interfaces/proposal.interface';
-import { DispatcherService, DispatcherMessage } from '../src/interfaces/dispatcher.interface';
+import { DispatcherService } from '../src/interfaces/dispatcher.interface';
 import { MockedFunction } from 'jest-mock';
 
 describe('VotingReminderTrigger', () => {
@@ -111,30 +111,6 @@ describe('VotingReminderTrigger', () => {
       expect(mockDispatcherService.sendMessage).not.toHaveBeenCalled();
     });
 
-    it('should update timestampCursor after processing', async () => {
-      const proposalStart = baseTime - 3600;
-      const proposalEnd = baseTime + 300; // within 90-95% window
-      
-      const proposal: ProposalOnChain = {
-        id: 'proposal-123',
-        daoId: 'test-dao',
-        description: 'Test proposal',
-        timestamp: proposalStart.toString(),
-        endTimestamp: proposalEnd.toString(),
-        status: 'ACTIVE'
-      } as ProposalOnChain;
-
-      // Process proposal
-      await trigger.process([proposal]);
-
-      // Check that timestampCursor was updated to the proposal's timestamp + 1
-      // +1 to avoid duplicates since API uses >= comparison
-      const updatedTimestamp = (trigger as any).timestampCursor;
-      expect(updatedTimestamp).toBe(proposalStart + 1);
-      
-      expect(mockDispatcherService.sendMessage).toHaveBeenCalledTimes(1);
-    });
-
     it('should skip proposals without required timestamps', async () => {
       const proposal: ProposalOnChain = {
         id: 'proposal-123',
@@ -187,7 +163,7 @@ describe('VotingReminderTrigger', () => {
   });
 
   describe('fetchData', () => {
-    it('should fetch active proposals with fromDate filter', async () => {
+    it('should fetch active proposals without timestamp filter', async () => {
       const proposals = [
         { id: 'prop-1', status: 'ACTIVE' },
         { id: 'prop-2', status: 'ACTIVE' }
@@ -200,40 +176,9 @@ describe('VotingReminderTrigger', () => {
       // Should include fromDate filter with timestampCursor and exclude optimistic proposals
       expect(mockProposalRepository.listAll).toHaveBeenCalledWith({
         status: 'ACTIVE',
-        fromDate: expect.any(Number),
         includeOptimisticProposals: false
       });
       expect(result).toEqual(proposals);
-    });
-  });
-
-  describe('reset', () => {
-    it('should reset the timestampCursor', () => {
-      // Create trigger with initial timestamp
-      const initialTimestamp = '1000000';
-      const triggerWithTimestamp = new VotingReminderTrigger(
-        mockDispatcherService,
-        mockProposalRepository,
-        30000,
-        90,
-        5,
-        initialTimestamp
-      );
-
-      // Reset without timestamp - should default to 24 hours ago
-      triggerWithTimestamp.reset();
-      
-      // Access private property for testing
-      const resetTimestamp = (triggerWithTimestamp as any).timestampCursor;
-      const twentyFourHoursAgo = Math.floor((Date.now() - 24 * 60 * 60 * 1000) / 1000);
-      
-      // Should be around 24 hours ago (within 1 second tolerance)
-      expect(Math.abs(resetTimestamp - twentyFourHoursAgo)).toBeLessThanOrEqual(1);
-
-      // Reset with specific timestamp
-      triggerWithTimestamp.reset('2000000');
-      const specificTimestamp = (triggerWithTimestamp as any).timestampCursor;
-      expect(specificTimestamp).toBe(2000000);
     });
   });
 
