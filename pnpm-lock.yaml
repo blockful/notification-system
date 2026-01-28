@@ -339,6 +339,9 @@ importers:
       axios:
         specifier: ^1.7.2
         version: 1.9.0
+      axios-retry:
+        specifier: ^4.5.0
+        version: 4.5.0(axios@1.9.0)
       graphql:
         specifier: ^16.11.0
         version: 16.11.0
@@ -1800,6 +1803,11 @@ packages:
   avvio@9.1.0:
     resolution: {integrity: sha512-fYASnYi600CsH/j9EQov7lECAniYiBFiiAtBNuZYLA2leLe9qOvZzqYHFjtIj6gD2VMoMLP14834LFWvr4IfDw==}
 
+  axios-retry@4.5.0:
+    resolution: {integrity: sha512-aR99oXhpEDGo0UuAlYcn2iGRds30k366Zfa05XWScR9QaQD4JYiP3/1Qt1u7YlefUOK+cn0CcwoL1oefavQUlQ==}
+    peerDependencies:
+      axios: 0.x || 1.x
+
   axios@1.12.2:
     resolution: {integrity: sha512-vMJzPewAlRyOgxV2dU0Cuz2O8zzzx9VYtbJOaBgXFeLc4IV/Eg50n4LowmehOOR61S8ZMpc2K5Sa7g6A4jfkUw==}
 
@@ -2967,6 +2975,10 @@ packages:
   is-relative@1.0.0:
     resolution: {integrity: sha512-Kw/ReK0iqwKeu0MITLFuj0jbPAmEiOsIwyIXvvbfa6QfmN9pkD1M+8pdk7Rl/dTKbH34/XBFMbgD4iMJhLQbGA==}
     engines: {node: '>=0.10.0'}
+
+  is-retry-allowed@2.2.0:
+    resolution: {integrity: sha512-XVm7LOeLpTW4jV19QSH38vkswxoLud8sQ57YwJVTPWdiaI9I8keEhGFpBlslyVsgdQy4Opg8QOLb8YRgsyZiQg==}
+    engines: {node: '>=10'}
 
   is-stream@1.1.0:
     resolution: {integrity: sha512-uQPm8kcs47jx38atAcWTVxyltQYoPT68y9aWYdV6yWXSyW8mzSat0TL6CiWdZeCdF3KrAvpVtnHbTv4RN+rqdQ==}
@@ -6721,6 +6733,11 @@ snapshots:
       '@fastify/error': 4.1.0
       fastq: 1.19.1
 
+  axios-retry@4.5.0(axios@1.9.0):
+    dependencies:
+      axios: 1.9.0
+      is-retry-allowed: 2.2.0
+
   axios@1.12.2:
     dependencies:
       follow-redirects: 1.15.9
@@ -8109,6 +8126,8 @@ snapshots:
   is-relative@1.0.0:
     dependencies:
       is-unc-path: 1.0.0
+
+  is-retry-allowed@2.2.0: {}
 
   is-stream@1.1.0: {}
 
