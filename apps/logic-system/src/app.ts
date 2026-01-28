@@ -139,15 +139,8 @@ export class App {
     if (this.voteConfirmationTrigger) {
       this.voteConfirmationTrigger.reset(initialTimestamp);
     }
-    if (this.votingReminderTrigger30) {
-      this.votingReminderTrigger30.reset(initialTimestamp);
-    }
-    if (this.votingReminderTrigger60) {
-      this.votingReminderTrigger60.reset(initialTimestamp);
-    }
-    if (this.votingReminderTrigger90) {
-      this.votingReminderTrigger90.reset(initialTimestamp);
-    }
+    // VotingReminderTriggers don't have reset() - they fetch all ACTIVE proposals
+    // and rely on dispatcher deduplication
   }
 
   async stop(): Promise<void> {
