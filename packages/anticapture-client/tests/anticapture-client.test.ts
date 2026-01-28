@@ -102,6 +102,40 @@ describe('AnticaptureClient', () => {
           { id: 'p3', description: 'Proposal 3', title: null, daoId: 'DAO3' }
         ]);
       });
+
+      it('sorts proposals globally by timestamp DESC regardless of DAO order', async () => {
+        // Simulate proposals from different DAOs with unsorted timestamps
+        mockQuery
+          .mockResolvedValueOnce({
+            proposals: {
+              items: [{ id: 'dao1-old', description: 'Old from DAO1', title: null, timestamp: '1000' }],
+              totalCount: 1
+            }
+          })
+          .mockResolvedValueOnce({
+            proposals: {
+              items: [{ id: 'dao2-newest', description: 'Newest from DAO2', title: null, timestamp: '3000' }],
+              totalCount: 1
+            }
+          })
+          .mockResolvedValueOnce({
+            proposals: {
+              items: [{ id: 'dao3-middle', description: 'Middle from DAO3', title: null, timestamp: '2000' }],
+              totalCount: 1
+            }
+          });
+
+        const result = await client.listProposals();
+
+        // Should be sorted by timestamp DESC (newest first)
+        expect(result).toHaveLength(3);
+        expect(result[0]!.id).toBe('dao2-newest');
+        expect(result[0]!.timestamp).toBe('3000');
+        expect(result[1]!.id).toBe('dao3-middle');
+        expect(result[1]!.timestamp).toBe('2000');
+        expect(result[2]!.id).toBe('dao1-old');
+        expect(result[2]!.timestamp).toBe('1000');
+      });
     });
   });
 
