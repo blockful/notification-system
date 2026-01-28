@@ -121,6 +121,13 @@ class AnticaptureClient {
                     console.warn(`Skipping ${dao.id} due to API error: ${error instanceof Error ? error.message : error}`);
                 }
             }
+            // Sort globally by timestamp desc (most recent first)
+            if (variables?.fromEndDate) {
+                allProposals.sort((a, b) => parseInt(b?.endTimestamp || '0') - parseInt(a?.endTimestamp || '0'));
+            }
+            else {
+                allProposals.sort((a, b) => parseInt(b?.timestamp || '0') - parseInt(a?.timestamp || '0') || 0);
+            }
             return allProposals;
         }
         try {

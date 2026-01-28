@@ -166,7 +166,11 @@ export class AnticaptureClient {
       }
 
       // Sort globally by timestamp desc (most recent first)
-      allProposals.sort((a, b) => parseInt(b?.timestamp || '0') - parseInt(a?.timestamp || '0'));
+      if (variables?.fromEndDate) {
+        allProposals.sort((a, b) => parseInt(b?.endTimestamp || '0') - parseInt(a?.endTimestamp || '0'));
+      } else {
+        allProposals.sort((a, b) => parseInt(b?.timestamp || '0') - parseInt(a?.timestamp || '0') || 0);
+      }
 
       return allProposals;
     }
