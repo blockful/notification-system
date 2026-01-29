@@ -56,7 +56,7 @@ jobs:
         run: railway up -s dispatcher -e ${{ steps.env.outputs.environment }} --ci
       - name: Deploy consumers
         if: ${{ needs.changes.outputs.consumers == 'true' }}
-        run: railway up -s consumer-telegram -e ${{ steps.env.outputs.environment }} --ci
+        run: railway up -s consumer -e ${{ steps.env.outputs.environment }} --ci
       - name: Deploy triggers
         if: ${{ needs.changes.outputs.triggers == 'true' }}
         run: railway up -s logic-system -e ${{ steps.env.outputs.environment }} --ci
