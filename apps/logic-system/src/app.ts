@@ -139,15 +139,6 @@ export class App {
     if (this.voteConfirmationTrigger) {
       this.voteConfirmationTrigger.reset(initialTimestamp);
     }
-    if (this.votingReminderTrigger30) {
-      this.votingReminderTrigger30.reset(initialTimestamp);
-    }
-    if (this.votingReminderTrigger60) {
-      this.votingReminderTrigger60.reset(initialTimestamp);
-    }
-    if (this.votingReminderTrigger90) {
-      this.votingReminderTrigger90.reset(initialTimestamp);
-    }
   }
 
   async stop(): Promise<void> {

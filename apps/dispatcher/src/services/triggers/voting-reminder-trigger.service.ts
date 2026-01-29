@@ -105,7 +105,7 @@ export class VotingReminderTriggerHandler extends BaseTriggerHandler<VotingRemin
     });
 
     // Send reminders using batch notification service
-    await this.batchNotificationService.sendBatchNotifications(
+    const sentCount = await this.batchNotificationService.sendBatchNotifications(
       nonVotingAddresses,
       event.daoId,
       () => `${event.id}-${event.thresholdPercentage}-reminder`,
@@ -120,7 +120,7 @@ export class VotingReminderTriggerHandler extends BaseTriggerHandler<VotingRemin
       () => buttons
     );
     return {
-      sent: 1,
+      sent: sentCount,
       skipped: 0,
       failed: 0
     };
