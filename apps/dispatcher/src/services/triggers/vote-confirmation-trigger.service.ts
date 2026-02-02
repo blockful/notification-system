@@ -107,8 +107,10 @@ export class VoteConfirmationTriggerHandler extends BaseTriggerHandler<VoteEvent
    * Processes a single user-vote combination
    */
   private async processUserVote(user: any, vote: VoteEvent): Promise<ProcessingStatus> {
+    const eventId = `${vote.txHash}-${vote.proposalId}-${vote.voterAccountId}-vote`;
+
     // Check if user is subscribed to the DAO
-    const subscribers = await this.getSubscribers(vote.daoId, vote.txHash, vote.timestamp);
+    const subscribers = await this.getSubscribers(vote.daoId, eventId, vote.timestamp);
     const isSubscribed = subscribers.some(sub => sub.id === user.id);
     
     if (!isSubscribed) {
@@ -117,14 +119,14 @@ export class VoteConfirmationTriggerHandler extends BaseTriggerHandler<VoteEvent
     }
 
     // Check deduplication
-    const notifications = await this.subscriptionClient.shouldSend([user], vote.txHash, vote.daoId);
+    const notifications = await this.subscriptionClient.shouldSend([user], eventId, vote.daoId);
     if (notifications.length === 0) {
       console.log(`[VoteConfirmationHandler] Notification already sent for vote ${vote.txHash}`);
       return 'skipped';
     }
 
     // Send notification
-    await this.sendVoteNotification(user, vote);
+    await this.sendVoteNotification(user, vote, eventId);
     console.log(`[VoteConfirmationHandler] Sent vote notification to user ${user.id}`);
     
     return 'sent';
@@ -133,7 +135,7 @@ export class VoteConfirmationTriggerHandler extends BaseTriggerHandler<VoteEvent
   /**
    * Sends notification for a single vote
    */
-  private async sendVoteNotification(user: any, vote: VoteEvent): Promise<void> {
+  private async sendVoteNotification(user: any, vote: VoteEvent, eventId: string): Promise<void> {
     const message = this.formatVoteMessage(vote);
     const chainId = await this.getChainIdForDao(vote.daoId);
 
@@ -147,7 +149,7 @@ export class VoteConfirmationTriggerHandler extends BaseTriggerHandler<VoteEvent
     await this.sendNotificationsToSubscribers(
       [user],
       message,
-      vote.txHash,
+      eventId,
       vote.daoId,
       {
         transaction: {
