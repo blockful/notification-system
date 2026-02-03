@@ -1,5 +1,8 @@
 export { AnticaptureClient } from './anticapture-client';
 
+// Export Vote types
+export type { VoteWithDaoId } from './anticapture-client';
+
 // Export GraphQL types for apps to use
 export type {
   GetDaOsQuery,
@@ -7,9 +10,8 @@ export type {
   GetProposalByIdQueryVariables,
   ListProposalsQuery,
   ListProposalsQueryVariables,
-  ListVotesOnchainsQuery,
-  ListVotesOnchainsQueryVariables,
-  VotesOnchain,
+  ListVotesQuery,
+  ListVotesQueryVariables,
   VotingPowerHistory,
   VotingPowerHistoryFilter,
   ListVotingPowerHistorysQuery,
@@ -18,7 +20,9 @@ export type {
 
 // Export GraphQL enums
 export {
-  QueryInput_Proposals_OrderDirection
+  QueryInput_Proposals_OrderDirection,
+  QueryInput_Votes_OrderBy,
+  QueryInput_Votes_OrderDirection
 } from './gql/graphql';
 
 export type { ProcessedVotingPowerHistory } from './schemas';
