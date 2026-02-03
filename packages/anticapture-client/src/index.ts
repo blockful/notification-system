@@ -12,15 +12,15 @@ export type {
   ListProposalsQueryVariables,
   ListVotesQuery,
   ListVotesQueryVariables,
-  VotingPowerHistory,
-  VotingPowerHistoryFilter,
-  ListVotingPowerHistorysQuery,
-  ListVotingPowerHistorysQueryVariables
+  ListHistoricalVotingPowerQuery,
+  ListHistoricalVotingPowerQueryVariables
 } from './gql/graphql';
 
 // Export GraphQL enums
 export {
   QueryInput_Proposals_OrderDirection,
+  QueryInput_HistoricalVotingPower_OrderBy,
+  QueryInput_HistoricalVotingPower_OrderDirection,
   QueryInput_Votes_OrderBy,
   QueryInput_Votes_OrderDirection
 } from './gql/graphql';

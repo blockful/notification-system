@@ -21,13 +21,14 @@ export function createProposalResponse(id: string, description: string, title?: 
 
 export function createVotingPowerResponse(timestamp: string, accountId: string) {
   return {
-    votingPowerHistorys: {
+    historicalVotingPower: {
       items: [{
         timestamp,
         address: `0x${accountId.replace('acc', '')}`,
         votingPower: '1000',
         accountId
-      }]
+      }],
+      totalCount: 1
     }
   };
 }

@@ -68,9 +68,9 @@ export const createVotingPowerHistory = (
   daoId: 'ENS',
   transactionHash: '0x123abc',
   delegation: {
-    delegatorAccountId: 'delegator1.eth',
-    delegateAccountId: 'user1.eth',
-    delegatedValue: '100',
+    from: 'delegator1.eth',
+    to: 'user1.eth',
+    value: '100',
     previousDelegate: zeroAddress
   },
   transfer: null,
@@ -114,9 +114,9 @@ export const mockVotingPowerData = [
     delta: '-50',
     transactionHash: '0x456def',
     delegation: {
-      delegatorAccountId: 'delegator2.eth',
-      delegateAccountId: zeroAddress,
-      delegatedValue: '50',
+      from: 'delegator2.eth',
+      to: zeroAddress,
+      value: '50',
       previousDelegate: 'user2.eth'
     },
     sourceAccountId: 'delegator2.eth',

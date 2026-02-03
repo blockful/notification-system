@@ -21,15 +21,15 @@ export class GraphQLMockSetup {
       daoId: vp.daoId,
       transactionHash: vp.transactionHash,
       delegation: vp.delegation ? {
-        delegatorAccountId: vp.delegation.delegatorAccountId,
-        delegateAccountId: vp.delegation.delegateAccountId,
-        delegatedValue: vp.delegation.delegatedValue,
+        from: vp.delegation.from,
+        to: vp.delegation.to,
+        value: vp.delegation.value,
         previousDelegate: vp.delegation.previousDelegate
       } : null,
       transfer: vp.transfer ? {
-        amount: vp.transfer.amount,
-        fromAccountId: vp.transfer.fromAccountId,
-        toAccountId: vp.transfer.toAccountId
+        from: vp.transfer.from,
+        to: vp.transfer.to,
+        value: vp.transfer.value
       } : null
     }));
   }
@@ -78,13 +78,15 @@ export class GraphQLMockSetup {
       }
 
       // Handle voting power
-      if (data.query?.includes('ListVotingPowerHistorys')) {
+      if (data.query?.includes('ListHistoricalVotingPower')) {
         let filtered = votingPowerData;
-        if (data.variables?.where?.timestamp_gt) {
-          filtered = filtered.filter(vp => parseInt(vp.timestamp) > parseInt(data.variables.where.timestamp_gt));
+        if (data.variables?.fromDate) {
+          // fromDate is used as timestamp_gt (greater than)
+          filtered = filtered.filter(vp => parseInt(vp.timestamp) > parseInt(data.variables.fromDate));
         }
+        const items = this.transformToRawGraphQLFormat(filtered);
         return Promise.resolve({
-          data: { data: { votingPowerHistorys: { items: this.transformToRawGraphQLFormat(filtered) } } }
+          data: { data: { historicalVotingPower: { items, totalCount: items.length } } }
         });
       }
 
@@ -181,7 +183,7 @@ export class GraphQLMockSetup {
       return Promise.resolve({
         data: {
           data: {
-            votingPowerHistorys: { items: [] },
+            historicalVotingPower: { items: [], totalCount: 0 },
             proposals: { items: [], totalCount: 0 },
             proposal: null,
             daos: { items: [] },

@@ -35,36 +35,40 @@ export const SafeProposalByIdResponseSchema = z.object({
   proposal: z.any().nullable()
 });
 
-// Define schema for voting power history item (based on actual API response)
-// Handle real-world scenarios where API might return null values or missing fields
-const VotingPowerHistoryItemSchema = z.object({
+// Define schema for historical voting power item
+const HistoricalVotingPowerItemSchema = z.object({
   accountId: z.string(),
   timestamp: z.string(),
-  votingPower: z.string().nullable(),
-  delta: z.string().nullable(),
-  daoId: z.string().nullable().default(null),
+  votingPower: z.string(),
+  delta: z.string(),
+  daoId: z.string(),
   transactionHash: z.string(),
   delegation: z.object({
-    delegatorAccountId: z.string(),
-    delegateAccountId: z.string(),
-    delegatedValue: z.string(),
+    from: z.string(),
+    to: z.string(),
+    value: z.string(),
     previousDelegate: z.string().nullable()
-  }).nullable().default(null),
+  }).nullable(),
   transfer: z.object({
-    amount: z.string().nullable(),
-    fromAccountId: z.string(),
-    toAccountId: z.string()
-  }).nullable().default(null)
+    from: z.string(),
+    to: z.string(),
+    value: z.string()
+  }).nullable()
 });
 
-export const SafeVotingPowerHistoryResponseSchema = z.object({
-  votingPowerHistorys: z.object({
-    items: z.array(VotingPowerHistoryItemSchema)
+export const SafeHistoricalVotingPowerResponseSchema = z.object({
+  historicalVotingPower: z.object({
+    items: z.array(HistoricalVotingPowerItemSchema.nullable()),
+    totalCount: z.number()
   }).nullable()
 }).transform((data) => {
   // Ensure we always have a valid structure
+  const items = data.historicalVotingPower?.items?.filter((item)=> item !== null) || [];
   return {
-    votingPowerHistorys: data.votingPowerHistorys || { items: [] }
+    historicalVotingPower: {
+      items,
+      totalCount: data.historicalVotingPower?.totalCount || 0
+    }
   };
 });
 
@@ -118,11 +122,11 @@ export const SafeProposalNonVotersResponseSchema = z.object({
 
 // Internal types for schema validation
 type SafeProposalsResponse = z.infer<typeof SafeProposalsResponseSchema>;
-type SafeVotingPowerHistoryResponse = z.infer<typeof SafeVotingPowerHistoryResponseSchema>;
+type SafeHistoricalVotingPowerResponse = z.infer<typeof SafeHistoricalVotingPowerResponseSchema>;
 type ProposalNonVoter = NonNullable<z.infer<typeof SafeProposalNonVotersResponseSchema>['proposalNonVoters']['items'][0]>;
 
-// Type for processed voting power history with calculated fields (based on actual API)
-export type ProcessedVotingPowerHistory = z.infer<typeof VotingPowerHistoryItemSchema> & {
+// Type for processed voting power history with calculated fields (based on new API)
+export type ProcessedVotingPowerHistory = z.infer<typeof HistoricalVotingPowerItemSchema> & {
   changeType: 'delegation' | 'transfer' | 'other';
   sourceAccountId: string;
   targetAccountId: string;
@@ -145,8 +149,8 @@ export function processProposals(validated: SafeProposalsResponse, daoId: string
 }
 
 // Internal helper function to process validated voting power history
-export function processVotingPowerHistory(validated: SafeVotingPowerHistoryResponse, daoId: string, chainId?: number): ProcessedVotingPowerHistory[] {
-  return validated.votingPowerHistorys.items
+export function processVotingPowerHistory(validated: SafeHistoricalVotingPowerResponse, daoId: string, chainId?: number): ProcessedVotingPowerHistory[] {
+  return validated.historicalVotingPower.items
     .filter(item => item.accountId)
     .map((item) => {
       const processed: ProcessedVotingPowerHistory = {
@@ -155,10 +159,10 @@ export function processVotingPowerHistory(validated: SafeVotingPowerHistoryRespo
         daoId: daoId,
         delta: item.delta,
         changeType: item.delegation ? 'delegation' : item.transfer ? 'transfer' : 'other',
-        sourceAccountId: item.transfer?.fromAccountId || item.delegation?.delegatorAccountId || '',
+        sourceAccountId: item.transfer?.from || item.delegation?.from || '',
         targetAccountId: item.accountId,
         previousDelegate: item.delegation?.previousDelegate || null,
-        newDelegate: item.delegation?.delegateAccountId || null,
+        newDelegate: item.delegation?.to || null,
         ...(chainId !== undefined && { chainId })
       };
 

@@ -2779,18 +2779,21 @@ export type ListVotesQuery = {
         } | null>;
     } | null;
 };
-export type ListVotingPowerHistorysQueryVariables = Exact<{
-    where?: InputMaybe<VotingPowerHistoryFilter>;
-    limit?: InputMaybe<Scalars['Int']['input']>;
-    orderBy?: InputMaybe<Scalars['String']['input']>;
-    orderDirection?: InputMaybe<Scalars['String']['input']>;
+export type ListHistoricalVotingPowerQueryVariables = Exact<{
+    limit?: InputMaybe<Scalars['PositiveInt']['input']>;
+    skip?: InputMaybe<Scalars['NonNegativeInt']['input']>;
+    orderBy?: InputMaybe<QueryInput_HistoricalVotingPower_OrderBy>;
+    orderDirection?: InputMaybe<QueryInput_HistoricalVotingPower_OrderDirection>;
+    fromDate?: InputMaybe<Scalars['String']['input']>;
+    address?: InputMaybe<Scalars['String']['input']>;
 }>;
-export type ListVotingPowerHistorysQuery = {
+export type ListHistoricalVotingPowerQuery = {
     __typename?: 'Query';
-    votingPowerHistorys: {
-        __typename?: 'votingPowerHistoryPage';
+    historicalVotingPower?: {
+        __typename?: 'historicalVotingPower_200_response';
+        totalCount: number;
         items: Array<{
-            __typename?: 'votingPowerHistory';
+            __typename?: 'query_historicalVotingPower_items_items';
             accountId: string;
             timestamp: string;
             votingPower: string;
@@ -2798,24 +2801,24 @@ export type ListVotingPowerHistorysQuery = {
             daoId: string;
             transactionHash: string;
             delegation?: {
-                __typename?: 'delegation';
-                delegatorAccountId: string;
-                delegateAccountId: string;
-                delegatedValue: string;
+                __typename?: 'query_historicalVotingPower_items_items_delegation';
+                from: string;
+                to: string;
+                value: string;
                 previousDelegate?: string | null;
             } | null;
             transfer?: {
-                __typename?: 'transfer';
-                amount: string;
-                fromAccountId: string;
-                toAccountId: string;
+                __typename?: 'query_historicalVotingPower_items_items_transfer';
+                from: string;
+                to: string;
+                value: string;
             } | null;
-        }>;
-    };
+        } | null>;
+    } | null;
 };
 export declare const GetDaOsDocument: DocumentNode<GetDaOsQuery, GetDaOsQueryVariables>;
 export declare const ProposalNonVotersDocument: DocumentNode<ProposalNonVotersQuery, ProposalNonVotersQueryVariables>;
 export declare const GetProposalByIdDocument: DocumentNode<GetProposalByIdQuery, GetProposalByIdQueryVariables>;
 export declare const ListProposalsDocument: DocumentNode<ListProposalsQuery, ListProposalsQueryVariables>;
 export declare const ListVotesDocument: DocumentNode<ListVotesQuery, ListVotesQueryVariables>;
-export declare const ListVotingPowerHistorysDocument: DocumentNode<ListVotingPowerHistorysQuery, ListVotingPowerHistorysQueryVariables>;
+export declare const ListHistoricalVotingPowerDocument: DocumentNode<ListHistoricalVotingPowerQuery, ListHistoricalVotingPowerQueryVariables>;

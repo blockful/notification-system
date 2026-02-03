@@ -187,16 +187,17 @@ class AnticaptureClient {
     }
     /**
      * Lists voting power history with full type safety
-     * @param variables - Query variables for filtering and pagination
+     * Uses the new historicalVotingPower query which properly returns delegation and transfer data
+     * @param variables - Query variables for filtering and pagination (fromDate, limit, skip, orderBy, orderDirection, accountId)
      * @param daoId - Optional specific DAO ID to query. If not provided, queries all DAOs
      * @returns Array of voting power history items
      */
     async listVotingPowerHistory(variables, daoId) {
-        if (!daoId && !variables?.where?.daoId) {
+        if (!daoId) {
             const allDAOs = await this.getDAOs();
             const queryPromises = allDAOs.map(async (dao) => {
                 try {
-                    const validated = await this.query(graphql_2.ListVotingPowerHistorysDocument, schemas_1.SafeVotingPowerHistoryResponseSchema, variables, dao.id);
+                    const validated = await this.query(graphql_2.ListHistoricalVotingPowerDocument, schemas_1.SafeHistoricalVotingPowerResponseSchema, variables, dao.id);
                     return (0, schemas_1.processVotingPowerHistory)(validated, dao.id, dao.chainId);
                 }
                 catch (error) {
@@ -208,7 +209,7 @@ class AnticaptureClient {
             return results.flat().sort((a, b) => parseInt(a.timestamp) - parseInt(b.timestamp));
         }
         try {
-            const validated = await this.query(graphql_2.ListVotingPowerHistorysDocument, schemas_1.SafeVotingPowerHistoryResponseSchema, variables, daoId);
+            const validated = await this.query(graphql_2.ListHistoricalVotingPowerDocument, schemas_1.SafeHistoricalVotingPowerResponseSchema, variables, daoId);
             return (0, schemas_1.processVotingPowerHistory)(validated, daoId);
         }
         catch (error) {

@@ -1,6 +1,6 @@
 import { AxiosInstance } from 'axios';
 import { z } from 'zod';
-import type { GetProposalByIdQuery, ListProposalsQuery, ListProposalsQueryVariables, ListVotingPowerHistorysQueryVariables, ListVotesQuery, ListVotesQueryVariables } from './gql/graphql';
+import type { GetProposalByIdQuery, ListProposalsQuery, ListProposalsQueryVariables, ListHistoricalVotingPowerQueryVariables, ListVotesQuery, ListVotesQueryVariables } from './gql/graphql';
 import { SafeProposalNonVotersResponseSchema, ProcessedVotingPowerHistory } from './schemas';
 type ProposalItems = NonNullable<ListProposalsQuery['proposals']>['items'];
 type VotingPowerHistoryItems = ProcessedVotingPowerHistory[];
@@ -46,11 +46,12 @@ export declare class AnticaptureClient {
     listProposals(variables?: ListProposalsQueryVariables, daoId?: string): Promise<ProposalItems>;
     /**
      * Lists voting power history with full type safety
-     * @param variables - Query variables for filtering and pagination
+     * Uses the new historicalVotingPower query which properly returns delegation and transfer data
+     * @param variables - Query variables for filtering and pagination (fromDate, limit, skip, orderBy, orderDirection, accountId)
      * @param daoId - Optional specific DAO ID to query. If not provided, queries all DAOs
      * @returns Array of voting power history items
      */
-    listVotingPowerHistory(variables?: ListVotingPowerHistorysQueryVariables, daoId?: string): Promise<VotingPowerHistoryItems>;
+    listVotingPowerHistory(variables?: ListHistoricalVotingPowerQueryVariables, daoId?: string): Promise<VotingPowerHistoryItems>;
     /**
      * Fetches votes for specific proposals and voter addresses
      * @param variables Query variables including daoId

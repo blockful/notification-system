@@ -9,13 +9,13 @@ import type {
   GetProposalByIdQueryVariables,
   ListProposalsQuery,
   ListProposalsQueryVariables,
-  ListVotingPowerHistorysQueryVariables,
+  ListHistoricalVotingPowerQueryVariables,
   ListVotesQuery,
   ListVotesQueryVariables,
   ProposalNonVotersQueryVariables
 } from './gql/graphql';
-import { GetDaOsDocument, GetProposalByIdDocument, ListProposalsDocument, ListVotingPowerHistorysDocument, ListVotesDocument, ProposalNonVotersDocument, QueryInput_Votes_OrderBy, QueryInput_Votes_OrderDirection } from './gql/graphql';
-import { SafeDaosResponseSchema, SafeProposalByIdResponseSchema, SafeProposalsResponseSchema, SafeVotingPowerHistoryResponseSchema, SafeVotesResponseSchema, SafeProposalNonVotersResponseSchema, processProposals, processVotingPowerHistory, ProcessedVotingPowerHistory } from './schemas';
+import { GetDaOsDocument, GetProposalByIdDocument, ListProposalsDocument, ListHistoricalVotingPowerDocument, ListVotesDocument, ProposalNonVotersDocument, QueryInput_Votes_OrderBy, QueryInput_Votes_OrderDirection } from './gql/graphql';
+import { SafeDaosResponseSchema, SafeProposalByIdResponseSchema, SafeProposalsResponseSchema, SafeHistoricalVotingPowerResponseSchema, SafeVotesResponseSchema, SafeProposalNonVotersResponseSchema, processProposals, processVotingPowerHistory, ProcessedVotingPowerHistory } from './schemas';
 
 type ProposalItems = NonNullable<ListProposalsQuery['proposals']>['items'];
 type VotingPowerHistoryItems = ProcessedVotingPowerHistory[];
@@ -203,16 +203,17 @@ export class AnticaptureClient {
 
   /**
    * Lists voting power history with full type safety
-   * @param variables - Query variables for filtering and pagination
+   * Uses the new historicalVotingPower query which properly returns delegation and transfer data
+   * @param variables - Query variables for filtering and pagination (fromDate, limit, skip, orderBy, orderDirection, accountId)
    * @param daoId - Optional specific DAO ID to query. If not provided, queries all DAOs
    * @returns Array of voting power history items
    */
-  async listVotingPowerHistory(variables?: ListVotingPowerHistorysQueryVariables, daoId?: string): Promise<VotingPowerHistoryItems> {
-    if (!daoId && !variables?.where?.daoId) {
+  async listVotingPowerHistory(variables?: ListHistoricalVotingPowerQueryVariables, daoId?: string): Promise<VotingPowerHistoryItems> {
+    if (!daoId) {
       const allDAOs = await this.getDAOs();
       const queryPromises = allDAOs.map(async (dao) => {
         try {
-          const validated = await this.query(ListVotingPowerHistorysDocument, SafeVotingPowerHistoryResponseSchema, variables, dao.id);
+          const validated = await this.query(ListHistoricalVotingPowerDocument, SafeHistoricalVotingPowerResponseSchema, variables, dao.id);
           return processVotingPowerHistory(validated, dao.id, dao.chainId);
         } catch (error) {
           console.warn(`Skipping ${dao.id} due to API error: ${error instanceof Error ? error.message : error}`);
@@ -227,7 +228,7 @@ export class AnticaptureClient {
     }
 
     try {
-      const validated = await this.query(ListVotingPowerHistorysDocument, SafeVotingPowerHistoryResponseSchema, variables, daoId);
+      const validated = await this.query(ListHistoricalVotingPowerDocument, SafeHistoricalVotingPowerResponseSchema, variables, daoId);
       return processVotingPowerHistory(validated, daoId!);
     } catch (error) {
       console.warn(`Error querying voting power history for DAO ${daoId}: ${error instanceof Error ? error.message : error}`);
