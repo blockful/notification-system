@@ -5,7 +5,6 @@ import { ISubscriptionClient } from '../../interfaces/subscription-client.interf
 import { AnticaptureClient, VoteWithDaoId } from '@notification-system/anticapture-client';
 import { formatTokenAmount } from '../../lib/number-formatter';
 import { voteConfirmationMessages, replacePlaceholders, buildButtons } from '@notification-system/messages';
-import { FormattingService } from '../formatting.service';
 
 interface UserVoteCombination {
   user: any;
@@ -158,10 +157,6 @@ export class VoteConfirmationTriggerHandler extends BaseTriggerHandler<VoteWithD
     const supportKey = voteConfirmationMessages.getSupportKey(String(vote.support));
     const votingPower = formatTokenAmount(vote.votingPower, 18);
     const hasReason = vote.reason && vote.reason.trim();
-    const proposalTitle = FormattingService.extractTitle(
-      vote.proposalTitle || '',
-      vote.proposalId
-    );
 
     const messageTemplate = hasReason
       ? voteConfirmationMessages.withReason[supportKey]
@@ -169,7 +164,7 @@ export class VoteConfirmationTriggerHandler extends BaseTriggerHandler<VoteWithD
 
     return replacePlaceholders(messageTemplate, {
       daoId: vote.daoId,
-      proposalTitle,
+      proposalTitle: vote.proposalTitle,
       votingPower,
       ...(hasReason && { reason: vote.reason! })
     });
