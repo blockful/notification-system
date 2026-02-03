@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.SafeProposalNonVotersResponseSchema = exports.SafeVotesOnchainsResponseSchema = exports.SafeVotingPowerHistoryResponseSchema = exports.SafeProposalByIdResponseSchema = exports.SafeProposalsResponseSchema = exports.SafeDaosResponseSchema = void 0;
+exports.SafeProposalNonVotersResponseSchema = exports.SafeVotesResponseSchema = exports.SafeVotingPowerHistoryResponseSchema = exports.SafeProposalByIdResponseSchema = exports.SafeProposalsResponseSchema = exports.SafeDaosResponseSchema = void 0;
 exports.processProposals = processProposals;
 exports.processVotingPowerHistory = processVotingPowerHistory;
 const zod_1 = require("zod");
@@ -66,23 +66,32 @@ exports.SafeVotingPowerHistoryResponseSchema = zod_1.z.object({
         votingPowerHistorys: data.votingPowerHistorys || { items: [] }
     };
 });
-exports.SafeVotesOnchainsResponseSchema = zod_1.z.object({
-    votesOnchains: zod_1.z.object({
+// Schema for the new votes API response
+exports.SafeVotesResponseSchema = zod_1.z.object({
+    votes: zod_1.z.object({
         items: zod_1.z.array(zod_1.z.object({
-            daoId: zod_1.z.string(),
-            txHash: zod_1.z.string(),
+            transactionHash: zod_1.z.string(),
             proposalId: zod_1.z.string(),
-            voterAccountId: zod_1.z.string(),
-            support: zod_1.z.string(),
+            voterAddress: zod_1.z.string(),
+            support: zod_1.z.number(),
             votingPower: zod_1.z.string(),
-            timestamp: zod_1.z.string(),
-            reason: zod_1.z.string().optional().nullable(),
-            proposal: zod_1.z.object({
-                description: zod_1.z.string()
-            }).optional().nullable()
-        })),
-        totalCount: zod_1.z.number()
-    })
+            timestamp: zod_1.z.number(),
+            reason: zod_1.z.string().nullable().optional(),
+            proposalTitle: zod_1.z.string(),
+        }).nullable()),
+        totalCount: zod_1.z.number(),
+    }).nullable(),
+}).transform((data) => {
+    if (!data.votes) {
+        console.warn('VotesResponse has null votes:', data);
+        return { votes: { items: [], totalCount: 0 } };
+    }
+    return {
+        votes: {
+            ...data.votes,
+            items: data.votes.items.filter((item) => item !== null)
+        }
+    };
 });
 exports.SafeProposalNonVotersResponseSchema = zod_1.z.object({
     proposalNonVoters: zod_1.z.object({

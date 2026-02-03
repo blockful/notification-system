@@ -217,17 +217,32 @@ class AnticaptureClient {
         }
     }
     /**
-     * Fetches votes for specific proposals and voter addresses
-     * @param variables Query variables including daoId, proposalId_in, voterAccountId_in
+     * Fetches votes for a specific DAO using the votes API
+     * @param daoId The DAO ID (passed via anticapture-dao-id header)
+     * @param variables Query variables for filtering and pagination
      * @returns List of votes matching the criteria
      */
-    async listVotesOnchains(variables) {
+    async listVotes(daoId, variables) {
         try {
-            const validated = await this.query(graphql_2.ListVotesOnchainsDocument, schemas_1.SafeVotesOnchainsResponseSchema, variables, variables.daoId);
-            return validated.votesOnchains.items;
+            // Convert simplified interface to GraphQL types
+            const graphqlVariables = {
+                voterAddressIn: variables?.voterAddressIn,
+                fromDate: variables?.fromDate,
+                toDate: variables?.toDate,
+                limit: variables?.limit,
+                skip: variables?.skip,
+                orderBy: variables?.orderBy === 'timestamp' ? graphql_2.QueryInput_Votes_OrderBy.Timestamp :
+                    variables?.orderBy === 'votingPower' ? graphql_2.QueryInput_Votes_OrderBy.VotingPower : undefined,
+                orderDirection: variables?.orderDirection === 'asc' ? graphql_2.QueryInput_Votes_OrderDirection.Asc :
+                    variables?.orderDirection === 'desc' ? graphql_2.QueryInput_Votes_OrderDirection.Desc : undefined,
+                support: variables?.support,
+            };
+            const validated = await this.query(graphql_2.ListVotesDocument, schemas_1.SafeVotesResponseSchema, graphqlVariables, daoId);
+            // Filter out null items from the response
+            return validated.votes.items.filter((item) => item !== null);
         }
         catch (error) {
-            console.warn('Error fetching votes', error);
+            console.warn(`Error fetching votes for DAO ${daoId}:`, error);
             return [];
         }
     }
@@ -255,31 +270,38 @@ class AnticaptureClient {
     }
     /**
      * List recent votes from all DAOs since a given timestamp
-     * @param timestampGt Fetch votes with timestamp greater than this value
+     * @param timestampGt Fetch votes with timestamp greater than this value (unix timestamp as string)
      * @param limit Maximum number of votes to fetch per DAO (default: 100)
-     * @returns Array of votes from all DAOs
+     * @returns Array of votes from all DAOs with daoId included
      */
     async listRecentVotesFromAllDaos(timestampGt, limit = 100) {
         // First, fetch all DAOs
         const daos = await this.getDAOs();
-        // Fetch votes from each DAO in parallel
-        const votePromises = daos.map(dao => this.listVotesOnchains({
-            daoId: dao.id,
-            timestamp_gt: timestampGt,
-            limit,
-            orderBy: 'timestamp',
-            orderDirection: 'asc'
-        }).catch(error => {
-            console.warn(`Failed to fetch votes for DAO ${dao.id}:`, error);
-            return []; // Return empty array for failed DAOs
-        }));
+        // Fetch votes from each DAO in parallel using the new API
+        const votePromises = daos.map(async (dao) => {
+            try {
+                const votes = await this.listVotes(dao.id, {
+                    fromDate: parseInt(timestampGt),
+                    limit,
+                    orderBy: 'timestamp',
+                    orderDirection: 'asc'
+                });
+                // Add daoId to each vote since the new API doesn't return it
+                return votes.map(vote => ({
+                    ...vote,
+                    daoId: dao.id
+                }));
+            }
+            catch (error) {
+                console.warn(`Failed to fetch votes for DAO ${dao.id}:`, error);
+                return []; // Return empty array for failed DAOs
+            }
+        });
         const voteArrays = await Promise.all(votePromises);
         // Flatten and sort by timestamp
         const allVotes = voteArrays.flat();
         allVotes.sort((a, b) => {
-            const timestampA = parseInt(a.timestamp || '0');
-            const timestampB = parseInt(b.timestamp || '0');
-            return timestampA - timestampB;
+            return a.timestamp - b.timestamp;
         });
         return allVotes;
     }
