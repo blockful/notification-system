@@ -217,28 +217,13 @@ class AnticaptureClient {
         }
     }
     /**
-     * Fetches votes for a specific DAO using the votes API
-     * @param daoId The DAO ID (passed via anticapture-dao-id header)
-     * @param variables Query variables for filtering and pagination
+     * Fetches votes for specific proposals and voter addresses
+     * @param variables Query variables including daoId
      * @returns List of votes matching the criteria
      */
     async listVotes(daoId, variables) {
         try {
-            // Convert simplified interface to GraphQL types
-            const graphqlVariables = {
-                voterAddressIn: variables?.voterAddressIn,
-                fromDate: variables?.fromDate,
-                toDate: variables?.toDate,
-                limit: variables?.limit,
-                skip: variables?.skip,
-                orderBy: variables?.orderBy === 'timestamp' ? graphql_2.QueryInput_Votes_OrderBy.Timestamp :
-                    variables?.orderBy === 'votingPower' ? graphql_2.QueryInput_Votes_OrderBy.VotingPower : undefined,
-                orderDirection: variables?.orderDirection === 'asc' ? graphql_2.QueryInput_Votes_OrderDirection.Asc :
-                    variables?.orderDirection === 'desc' ? graphql_2.QueryInput_Votes_OrderDirection.Desc : undefined,
-                support: variables?.support,
-            };
-            const validated = await this.query(graphql_2.ListVotesDocument, schemas_1.SafeVotesResponseSchema, graphqlVariables, daoId);
-            // Filter out null items from the response
+            const validated = await this.query(graphql_2.ListVotesDocument, schemas_1.SafeVotesResponseSchema, variables, daoId);
             return validated.votes.items.filter((item) => item !== null);
         }
         catch (error) {
@@ -277,16 +262,16 @@ class AnticaptureClient {
     async listRecentVotesFromAllDaos(timestampGt, limit = 100) {
         // First, fetch all DAOs
         const daos = await this.getDAOs();
-        // Fetch votes from each DAO in parallel using the new API
+        // Fetch votes from each DAO in parallel
         const votePromises = daos.map(async (dao) => {
             try {
                 const votes = await this.listVotes(dao.id, {
                     fromDate: parseInt(timestampGt),
                     limit,
-                    orderBy: 'timestamp',
-                    orderDirection: 'asc'
+                    orderBy: graphql_2.QueryInput_Votes_OrderBy.Timestamp,
+                    orderDirection: graphql_2.QueryInput_Votes_OrderDirection.Asc
                 });
-                // Add daoId to each vote since the new API doesn't return it
+                // Add daoId to each vote
                 return votes.map(vote => ({
                     ...vote,
                     daoId: dao.id

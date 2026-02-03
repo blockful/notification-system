@@ -1,33 +1,14 @@
 import { AxiosInstance } from 'axios';
 import { z } from 'zod';
-import type { GetProposalByIdQuery, ListProposalsQuery, ListProposalsQueryVariables, ListVotingPowerHistorysQueryVariables } from './gql/graphql';
+import type { GetProposalByIdQuery, ListProposalsQuery, ListProposalsQueryVariables, ListVotingPowerHistorysQueryVariables, ListVotesQuery, ListVotesQueryVariables } from './gql/graphql';
 import { SafeProposalNonVotersResponseSchema, ProcessedVotingPowerHistory } from './schemas';
-export interface Vote {
-    transactionHash: string;
-    proposalId: string;
-    voterAddress: string;
-    support: number;
-    votingPower: string;
-    timestamp: number;
-    reason?: string | null;
-    proposalTitle: string;
-}
-export interface ListVotesVariables {
-    voterAddressIn?: string[];
-    fromDate?: number;
-    toDate?: number;
-    limit?: number;
-    skip?: number;
-    orderBy?: 'timestamp' | 'votingPower';
-    orderDirection?: 'asc' | 'desc';
-    support?: number;
-}
-export interface VoteWithDaoId extends Vote {
-    daoId: string;
-}
 type ProposalItems = NonNullable<ListProposalsQuery['proposals']>['items'];
 type VotingPowerHistoryItems = ProcessedVotingPowerHistory[];
 type ProposalNonVoter = z.infer<typeof SafeProposalNonVotersResponseSchema>['proposalNonVoters']['items'][0];
+type VoteItem = NonNullable<NonNullable<ListVotesQuery['votes']>['items'][0]>;
+export type VoteWithDaoId = VoteItem & {
+    daoId: string;
+};
 export declare class AnticaptureClient {
     private readonly httpClient;
     constructor(httpClient: AxiosInstance, maxRetries?: number, timeout?: number);
@@ -71,12 +52,11 @@ export declare class AnticaptureClient {
      */
     listVotingPowerHistory(variables?: ListVotingPowerHistorysQueryVariables, daoId?: string): Promise<VotingPowerHistoryItems>;
     /**
-     * Fetches votes for a specific DAO using the votes API
-     * @param daoId The DAO ID (passed via anticapture-dao-id header)
-     * @param variables Query variables for filtering and pagination
+     * Fetches votes for specific proposals and voter addresses
+     * @param variables Query variables including daoId
      * @returns List of votes matching the criteria
      */
-    listVotes(daoId: string, variables?: ListVotesVariables): Promise<Vote[]>;
+    listVotes(daoId: string, variables?: ListVotesQueryVariables): Promise<VoteItem[]>;
     /**
      * Fetches addresses that haven't voted on a specific proposal
      * Note: API already filters for addresses with votingPower > 0

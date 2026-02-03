@@ -66,7 +66,6 @@ exports.SafeVotingPowerHistoryResponseSchema = zod_1.z.object({
         votingPowerHistorys: data.votingPowerHistorys || { items: [] }
     };
 });
-// Schema for the new votes API response
 exports.SafeVotesResponseSchema = zod_1.z.object({
     votes: zod_1.z.object({
         items: zod_1.z.array(zod_1.z.object({
@@ -83,7 +82,7 @@ exports.SafeVotesResponseSchema = zod_1.z.object({
     }).nullable(),
 }).transform((data) => {
     if (!data.votes) {
-        console.warn('VotesResponse has null votes:', data);
+        console.warn('VotesResponse has no votes:', data);
         return { votes: { items: [], totalCount: 0 } };
     }
     return {
