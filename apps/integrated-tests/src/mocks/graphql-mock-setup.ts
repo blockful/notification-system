@@ -91,46 +91,52 @@ export class GraphQLMockSetup {
       }
 
       // Handle votes
-      if (data.query?.includes('ListVotesOnchains')) {
+      if (data.query?.includes('ListVotes')) {
         let filtered = votesData;
-        
-        const daoId = data.variables?.daoId;
-        const proposalIdIn = data.variables?.proposalId_in;
-        const voterAccountIdIn = data.variables?.voterAccountId_in;
-        const timestampGt = data.variables?.timestamp_gt;
-        
-        // Filter by daoId if provided
+
+        const daoId = config?.headers?.['anticapture-dao-id'];
+        const voterAddressIn = data.variables?.voterAddressIn;
+        const fromDate = data.variables?.fromDate;
+        const toDate = data.variables?.toDate;
+
+        // Filter by daoId
         if (daoId) {
           filtered = filtered.filter((v: any) => v.daoId === daoId);
         }
-        
-        // Filter by proposalId_in if provided
-        if (proposalIdIn) {
-          filtered = filtered.filter((v: any) => 
-            proposalIdIn.includes(v.proposalId)
-          );
-        }
-        
-        // Filter by voterAccountId_in if provided
-        // Using case-insensitive comparison (simulates API's internal normalization)
-        if (voterAccountIdIn) {
+
+        // Filter by voterAddressIn if provided
+        if (voterAddressIn && Array.isArray(voterAddressIn)) {
           filtered = filtered.filter((v: any) =>
-            voterAccountIdIn.some((addr: string) =>
-              isAddressEqual(getAddress(v.voterAccountId), getAddress(addr))
+            voterAddressIn.some((addr: string) =>
+              isAddressEqual(getAddress(v.voterAddress), getAddress(addr))
             )
           );
         }
 
-        // Filter by timestamp_gt if provided
-        if (timestampGt) {
-          filtered = filtered.filter((v: any) =>
-            parseInt(v.timestamp || '0') > parseInt(timestampGt)
-          );
+        // Filter by fromDate if provided
+        if (fromDate !== undefined) {
+          filtered = filtered.filter((v: any) => v.timestamp > fromDate);
         }
 
-        // Return votes in original format (checksum) - AnticaptureClient will normalize to lowercase
+        // Filter by toDate if provided
+        if (toDate !== undefined) {
+          filtered = filtered.filter((v: any) => v.timestamp < toDate);
+        }
+
+        // Return items in expected format
+        const items = filtered.map((v: any) => ({
+          transactionHash: v.transactionHash,
+          proposalId: v.proposalId,
+          voterAddress: v.voterAddress,
+          support: v.support,
+          votingPower: v.votingPower,
+          timestamp: v.timestamp,
+          reason: v.reason || null,
+          proposalTitle: v.proposalTitle
+        }));
+
         return Promise.resolve({
-          data: { data: { votesOnchains: { items: filtered, totalCount: filtered.length } } }
+          data: { data: { votes: { items, totalCount: items.length } } }
         });
       }
 
@@ -143,7 +149,7 @@ export class GraphQLMockSetup {
         const votersSet = new Set(
           votesData
             .filter((v: any) => v.proposalId === proposalId)
-            .map((v: any) => getAddress(v.voterAccountId).toLowerCase())
+            .map((v: any) => getAddress(v.voterAddress).toLowerCase())
         );
 
         // Filter to find non-voters from the provided address list
@@ -181,7 +187,7 @@ export class GraphQLMockSetup {
             proposals: { items: [], totalCount: 0 },
             proposal: null,
             daos: { items: [] },
-            votesOnchains: { items: [] }
+            votes: { items: [], totalCount: 0 }
           }
         }
       });

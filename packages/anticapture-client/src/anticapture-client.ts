@@ -10,17 +10,18 @@ import type {
   ListProposalsQuery,
   ListProposalsQueryVariables,
   ListHistoricalVotingPowerQueryVariables,
-  ListVotesOnchainsQuery,
-  ListVotesOnchainsQueryVariables,
+  ListVotesQuery,
+  ListVotesQueryVariables,
   ProposalNonVotersQueryVariables
 } from './gql/graphql';
-import { GetDaOsDocument, GetProposalByIdDocument, ListProposalsDocument, ListHistoricalVotingPowerDocument, ListVotesOnchainsDocument, ProposalNonVotersDocument } from './gql/graphql';
-import { SafeDaosResponseSchema, SafeProposalByIdResponseSchema, SafeProposalsResponseSchema, SafeHistoricalVotingPowerResponseSchema, SafeVotesOnchainsResponseSchema, SafeProposalNonVotersResponseSchema, processProposals, processVotingPowerHistory, ProcessedVotingPowerHistory } from './schemas';
+import { GetDaOsDocument, GetProposalByIdDocument, ListProposalsDocument, ListHistoricalVotingPowerDocument, ListVotesDocument, ProposalNonVotersDocument, QueryInput_Votes_OrderBy, QueryInput_Votes_OrderDirection } from './gql/graphql';
+import { SafeDaosResponseSchema, SafeProposalByIdResponseSchema, SafeProposalsResponseSchema, SafeHistoricalVotingPowerResponseSchema, SafeVotesResponseSchema, SafeProposalNonVotersResponseSchema, processProposals, processVotingPowerHistory, ProcessedVotingPowerHistory } from './schemas';
 
 type ProposalItems = NonNullable<ListProposalsQuery['proposals']>['items'];
 type VotingPowerHistoryItems = ProcessedVotingPowerHistory[];
-type VotesOnchain = NonNullable<ListVotesOnchainsQuery['votesOnchains']['items'][0]>;
 type ProposalNonVoter = z.infer<typeof SafeProposalNonVotersResponseSchema>['proposalNonVoters']['items'][0];
+type VoteItem = NonNullable<NonNullable<ListVotesQuery['votes']>['items'][0]>;
+export type VoteWithDaoId = VoteItem & { daoId: string };
 
 export class AnticaptureClient {
   private readonly httpClient: AxiosInstance;
@@ -237,20 +238,20 @@ export class AnticaptureClient {
 
   /**
    * Fetches votes for specific proposals and voter addresses
-   * @param variables Query variables including daoId, proposalId_in, voterAccountId_in
+   * @param variables Query variables including daoId
    * @returns List of votes matching the criteria
    */
-  async listVotesOnchains(variables: ListVotesOnchainsQueryVariables): Promise<VotesOnchain[]> {
+  async listVotes(daoId: string, variables?: ListVotesQueryVariables): Promise<VoteItem[]> {
     try {
       const validated = await this.query(
-        ListVotesOnchainsDocument,
-        SafeVotesOnchainsResponseSchema,
+        ListVotesDocument,
+        SafeVotesResponseSchema,
         variables,
-        variables.daoId
+        daoId
       );
-      return validated.votesOnchains.items;
+      return validated.votes.items.filter((item): item is VoteItem => item !== null);
     } catch (error) {
-      console.warn('Error fetching votes', error);
+      console.warn(`Error fetching votes for DAO ${daoId}:`, error);
       return [];
     }
   }
@@ -290,36 +291,40 @@ export class AnticaptureClient {
 
   /**
    * List recent votes from all DAOs since a given timestamp
-   * @param timestampGt Fetch votes with timestamp greater than this value
+   * @param timestampGt Fetch votes with timestamp greater than this value (unix timestamp as string)
    * @param limit Maximum number of votes to fetch per DAO (default: 100)
-   * @returns Array of votes from all DAOs
+   * @returns Array of votes from all DAOs with daoId included
    */
-  async listRecentVotesFromAllDaos(timestampGt: string, limit: number = 100): Promise<VotesOnchain[]> {
+  async listRecentVotesFromAllDaos(timestampGt: string, limit: number = 100): Promise<VoteWithDaoId[]> {
     // First, fetch all DAOs
     const daos = await this.getDAOs();
 
     // Fetch votes from each DAO in parallel
-    const votePromises = daos.map(dao =>
-      this.listVotesOnchains({
-        daoId: dao.id,
-        timestamp_gt: timestampGt,
-        limit,
-        orderBy: 'timestamp',
-        orderDirection: 'asc'
-      }).catch(error => {
+    const votePromises = daos.map(async (dao) => {
+      try {
+        const votes = await this.listVotes(dao.id, {
+          fromDate: parseInt(timestampGt),
+          limit,
+          orderBy: QueryInput_Votes_OrderBy.Timestamp,
+          orderDirection: QueryInput_Votes_OrderDirection.Asc
+        });
+        // Add daoId to each vote
+        return votes.map(vote => ({
+          ...vote,
+          daoId: dao.id
+        }));
+      } catch (error) {
         console.warn(`Failed to fetch votes for DAO ${dao.id}:`, error);
         return []; // Return empty array for failed DAOs
-      })
-    );
+      }
+    });
 
     const voteArrays = await Promise.all(votePromises);
 
     // Flatten and sort by timestamp
     const allVotes = voteArrays.flat();
-    allVotes.sort((a: VotesOnchain, b: VotesOnchain) => {
-      const timestampA = parseInt(a.timestamp || '0');
-      const timestampB = parseInt(b.timestamp || '0');
-      return timestampA - timestampB;
+    allVotes.sort((a: VoteWithDaoId, b: VoteWithDaoId) => {
+      return a.timestamp - b.timestamp;
     });
 
     return allVotes;

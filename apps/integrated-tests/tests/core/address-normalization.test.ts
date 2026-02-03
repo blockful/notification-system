@@ -43,18 +43,19 @@ describe('Address Normalization - Integration Test', () => {
     await UserFactory.createUserAddress(userWithSub.id, voterAddress, pastTimestamp);
 
     // Create vote event with timestamp in the future to ensure processing
-    const eventTimestamp = (Math.floor(Date.now() / 1000) + 10).toString();
+    const eventTimestamp = Math.floor(Date.now() / 1000) + 10;
 
     const voteEvents = [
       {
         daoId: testDaoId,
-        txHash: '0xabcdef1234567890abcdef1234567890abcdef1234567890abcdef1234567890',
+        transactionHash: '0xabcdef1234567890abcdef1234567890abcdef1234567890abcdef1234567890',
         proposalId: 'prop-checksum-test',
-        voterAccountId: voterAddressChecksum,
-        support: '1', // FOR
+        voterAddress: voterAddressChecksum,
+        support: 1, // FOR
         votingPower: '1000000000000000000000', // 1000 tokens
         timestamp: eventTimestamp,
-        reason: 'Testing checksum normalization!'
+        reason: 'Testing checksum normalization!',
+        proposalTitle: 'Checksum Test Proposal'
       }
     ];
 

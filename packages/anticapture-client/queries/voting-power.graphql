@@ -1,5 +1,5 @@
-query ListHistoricalVotingPower($limit: PositiveInt, $skip: NonNegativeInt, $orderBy: queryInput_historicalVotingPower_orderBy, $orderDirection: queryInput_historicalVotingPower_orderDirection, $fromDate: String, $accountId: String) {
-  historicalVotingPower(limit: $limit, skip: $skip, orderBy: $orderBy, orderDirection: $orderDirection, fromDate: $fromDate, accountId: $accountId) {
+query ListHistoricalVotingPower($limit: PositiveInt, $skip: NonNegativeInt, $orderBy: queryInput_historicalVotingPower_orderBy, $orderDirection: queryInput_historicalVotingPower_orderDirection, $fromDate: String, $address: String) {
+  historicalVotingPower(limit: $limit, skip: $skip, orderBy: $orderBy, orderDirection: $orderDirection, fromDate: $fromDate, address: $address) {
     items {
       accountId
       timestamp

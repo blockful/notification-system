@@ -1,41 +1,32 @@
-query ListVotesOnchains(
-  $daoId: String!
-  $proposalId_in: [String!]
-  $voterAccountId_in: [String!]
-  $timestamp_gt: BigInt
-  $timestamp_gte: BigInt
-  $timestamp_lt: BigInt
-  $timestamp_lte: BigInt
-  $limit: Int
-  $orderBy: String
-  $orderDirection: String
+query ListVotes(
+  $voterAddressIn: JSON
+  $fromDate: Float
+  $toDate: Float
+  $limit: Float
+  $skip: NonNegativeInt
+  $orderBy: queryInput_votes_orderBy
+  $orderDirection: queryInput_votes_orderDirection
+  $support: Float
 ) {
-  votesOnchains(
-    where: {
-      daoId: $daoId
-      proposalId_in: $proposalId_in
-      voterAccountId_in: $voterAccountId_in
-      timestamp_gt: $timestamp_gt
-      timestamp_gte: $timestamp_gte
-      timestamp_lt: $timestamp_lt
-      timestamp_lte: $timestamp_lte
-    }
+  votes(
+    voterAddressIn: $voterAddressIn
+    fromDate: $fromDate
+    toDate: $toDate
     limit: $limit
+    skip: $skip
     orderBy: $orderBy
     orderDirection: $orderDirection
+    support: $support
   ) {
     items {
-      daoId
-      txHash
+      transactionHash
       proposalId
-      voterAccountId
+      voterAddress
       support
       votingPower
       timestamp
       reason
-      proposal {
-        description
-      }
+      proposalTitle
     }
     totalCount
   }
