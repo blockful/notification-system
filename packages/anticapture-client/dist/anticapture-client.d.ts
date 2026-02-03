@@ -8,7 +8,7 @@ type VotesOnchain = NonNullable<ListVotesOnchainsQuery['votesOnchains']['items']
 type ProposalNonVoter = z.infer<typeof SafeProposalNonVotersResponseSchema>['proposalNonVoters']['items'][0];
 export declare class AnticaptureClient {
     private readonly httpClient;
-    constructor(httpClient: AxiosInstance);
+    constructor(httpClient: AxiosInstance, maxRetries?: number, timeout?: number);
     /**
      * Recursively normalizes Ethereum addresses in an object/array structure
      * @param obj - Any value to process

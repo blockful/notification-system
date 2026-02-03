@@ -165,15 +165,22 @@ export class BatchNotificationService {
     messageGenerator: (address: string) => string,
     metadataGenerator?: (address: string) => Record<string, any>,
     buttonsGenerator?: (address: string) => Array<{ text: string; url: string }>
-  ): Promise<void> {
+  ): Promise<number> {
     const batchData = await this.prepareBatchData(addresses, daoId, eventIdGenerator);
     const validNotifications = this.filterValidNotifications(batchData);
 
     if (validNotifications.length === 0) {
-      return;
+      return 0;
     }
 
+    const totalNotifications = validNotifications.reduce(
+      (sum, item) => sum + item.notificationsToSend.length,
+      0
+    );
+
     await this.executeBatchSend(validNotifications, messageGenerator, metadataGenerator, buttonsGenerator);
+
+    return totalNotifications;
   }
 }
 

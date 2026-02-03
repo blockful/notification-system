@@ -19,6 +19,10 @@ export class HttpClientMockSetup {
       delete: createMockFunction(),
       defaults: {
         baseURL: 'http://mocked-endpoint.com/graphql'
+      },
+      interceptors: {
+        request: { use: () => 0, eject: () => {} },
+        response: { use: () => 0, eject: () => {} }
       }
     } as any;
   }

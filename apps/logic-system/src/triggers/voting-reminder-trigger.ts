@@ -5,7 +5,7 @@
  */
 
 import { Trigger } from './base-trigger';
-import { ProposalOnChain, ListProposalsOptions, ProposalDataSource } from '../interfaces/proposal.interface';
+import { ProposalOnChain, ProposalDataSource } from '../interfaces/proposal.interface';
 import { DispatcherService, DispatcherMessage } from '../interfaces/dispatcher.interface';
 
 /**
@@ -27,7 +27,6 @@ const TRIGGER_ID_PREFIX = 'voting-reminder';
 const DEFAULT_WINDOW_SIZE = 5; 
 
 export class VotingReminderTrigger extends Trigger<ProposalOnChain> {
-  private timestampCursor: number;
   private thresholdPercentage: number;
   private windowSize: number;
 
@@ -36,31 +35,11 @@ export class VotingReminderTrigger extends Trigger<ProposalOnChain> {
     private readonly proposalRepository: ProposalDataSource,
     interval: number,
     thresholdPercentage: number = 75,
-    windowSize: number = DEFAULT_WINDOW_SIZE,
-    initialTimestamp?: string
+    windowSize: number = DEFAULT_WINDOW_SIZE
   ) {
     super(TRIGGER_ID_PREFIX, interval);
     this.thresholdPercentage = thresholdPercentage;
     this.windowSize = windowSize;
-    
-    // Initialize timestamp - look back 24 hours by default
-    if (initialTimestamp) {
-      this.timestampCursor = parseInt(initialTimestamp, 10);
-    } else {
-      this.timestampCursor = Math.floor((Date.now() - 24 * 60 * 60 * 1000) / 1000); // 24 hours ago
-    }
-  }
-
-  /**
-   * Resets the trigger state to initial timestamp
-   * @param timestamp Optional timestamp to reset to, defaults to 24 hours ago
-   */
-  public reset(timestamp?: string): void {
-    if (timestamp) {
-      this.timestampCursor = parseInt(timestamp, 10);
-    } else {
-      this.timestampCursor = Math.floor((Date.now() - 24 * 60 * 60 * 1000) / 1000); // 24 hours ago
-    }
   }
 
   /**
@@ -87,13 +66,6 @@ export class VotingReminderTrigger extends Trigger<ProposalOnChain> {
     };
 
     await this.dispatcherService.sendMessage(message);
-
-    // Update timestamp to the most recent proposal's timestamp + 1
-    // Since data comes ordered by timestamp desc, the first item has the latest timestamp
-    if (proposals[0]?.timestamp) {
-      this.timestampCursor = parseInt(proposals[0].timestamp, 10) + 1;
-    }
-
   }
 
   /**
@@ -182,7 +154,6 @@ export class VotingReminderTrigger extends Trigger<ProposalOnChain> {
   protected async fetchData(): Promise<ProposalOnChain[]> {
     return await this.proposalRepository.listAll({
       status: 'ACTIVE',
-      fromDate: this.timestampCursor,
       includeOptimisticProposals: false
     });
   }
