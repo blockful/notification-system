@@ -68,23 +68,31 @@ export const SafeVotingPowerHistoryResponseSchema = z.object({
   };
 });
 
-export const SafeVotesOnchainsResponseSchema = z.object({
-  votesOnchains: z.object({
+export const SafeVotesResponseSchema = z.object({
+  votes: z.object({
     items: z.array(z.object({
-      daoId: z.string(),
-      txHash: z.string(),
+      transactionHash: z.string(),
       proposalId: z.string(),
-      voterAccountId: z.string(),
-      support: z.string(),
+      voterAddress: z.string(),
+      support: z.number(),
       votingPower: z.string(),
-      timestamp: z.string(),
-      reason: z.string().optional().nullable(),
-      proposal: z.object({
-        description: z.string()
-      }).optional().nullable()
-    })),
-    totalCount: z.number()
-  })
+      timestamp: z.number(),
+      reason: z.string().nullable().optional(),
+      proposalTitle: z.string(),
+    }).nullable()),
+    totalCount: z.number(),
+  }).nullable(),
+}).transform((data) => {
+  if (!data.votes) {
+    console.warn('VotesResponse has no votes:', data);
+    return { votes: { items: [], totalCount: 0 } };
+  }
+  return {
+    votes: {
+      ...data.votes,
+      items: data.votes.items.filter((item): item is NonNullable<typeof item> => item !== null)
+    }
+  };
 });
 
 export const SafeProposalNonVotersResponseSchema = z.object({
