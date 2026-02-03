@@ -147,7 +147,7 @@ describe('Slack Voting Reminder Trigger - Integration Test', () => {
       const voteEvents = [{
         daoId: testDaoId,
         proposalId: proposal.id,
-        voterAccountId: userAddress,
+        voterAddress: userAddress,
         support: '1',
         votingPower: '1000000000000000000000',
         timestamp: Math.floor(Date.now() / 1000).toString()

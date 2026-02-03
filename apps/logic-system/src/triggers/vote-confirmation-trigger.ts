@@ -1,8 +1,9 @@
 import { Trigger } from './base-trigger';
-import { VotesRepository, VoteEvent } from '../repositories/votes.repository';
+import { VotesRepository } from '../repositories/votes.repository';
 import { DispatcherService, DispatcherMessage } from '../interfaces/dispatcher.interface';
+import { VoteWithDaoId } from '@notification-system/anticapture-client';
 
-export class VoteConfirmationTrigger extends Trigger<VoteEvent, void> {
+export class VoteConfirmationTrigger extends Trigger<VoteWithDaoId, void> {
   private lastProcessedTimestamp: string;
   
   constructor(
@@ -15,7 +16,7 @@ export class VoteConfirmationTrigger extends Trigger<VoteEvent, void> {
     this.lastProcessedTimestamp = Math.floor(Date.now() / 1000).toString();
   }
 
-  protected async fetchData(): Promise<VoteEvent[]> {
+  protected async fetchData(): Promise<VoteWithDaoId[]> {
     try {
       const votes = await this.votesRepository.listRecentVotes(this.lastProcessedTimestamp);
       console.log(`[VoteConfirmationTrigger] Fetched ${votes.length} new votes since timestamp ${this.lastProcessedTimestamp}`);
@@ -26,7 +27,7 @@ export class VoteConfirmationTrigger extends Trigger<VoteEvent, void> {
     }
   }
 
-  async process(data: VoteEvent[]): Promise<void> {
+  async process(data: VoteWithDaoId[]): Promise<void> {
     if (!data || data.length === 0) {
       return;
     }
@@ -37,11 +38,11 @@ export class VoteConfirmationTrigger extends Trigger<VoteEvent, void> {
       }
       acc[vote.daoId].push(vote);
       return acc;
-    }, {} as Record<string, VoteEvent[]>);
+    }, {} as Record<string, VoteWithDaoId[]>);
 
     // Send votes to dispatcher - flatten the grouped votes back into array
     const allVotes = Object.values(votesByDao).flat();
-    const message: DispatcherMessage<VoteEvent> = {
+    const message: DispatcherMessage<VoteWithDaoId> = {
       triggerId: 'vote-confirmation',
       events: allVotes
     };
@@ -53,7 +54,7 @@ export class VoteConfirmationTrigger extends Trigger<VoteEvent, void> {
     const lastVote = data[data.length - 1];
     if (lastVote && lastVote.timestamp) {
       // Add 1 second to avoid reprocessing the same vote
-      this.lastProcessedTimestamp = (parseInt(lastVote.timestamp) + 1).toString();
+      this.lastProcessedTimestamp = String(lastVote.timestamp + 1);
       console.log(`[VoteConfirmationTrigger] Updated last processed timestamp to ${this.lastProcessedTimestamp}`);
     }
   }
