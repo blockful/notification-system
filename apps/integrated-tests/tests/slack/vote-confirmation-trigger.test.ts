@@ -74,7 +74,7 @@ describe('Slack Vote Confirmation Trigger - Integration Test', () => {
         daoId: testDaoId,
         txHash: '0x1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef',
         proposalId: 'prop-for-123',
-        voterAccountId: voterAddress,
+        voterAddress: voterAddress,
         support: '1', // FOR
         votingPower: '1000000000000000000000', // 1000 tokens
         timestamp: eventTimestamp,
@@ -140,7 +140,7 @@ describe('Slack Vote Confirmation Trigger - Integration Test', () => {
         daoId: testDaoId,
         txHash: '0x2345678901bcdef2345678901bcdef2345678901bcdef2345678901bcdef2345',
         proposalId: 'prop-against-456',
-        voterAccountId: voterAddress,
+        voterAddress: voterAddress,
         support: '0', // AGAINST
         votingPower: '5000000000000000000000', // 5000 tokens
         timestamp: eventTimestamp,
@@ -198,7 +198,7 @@ describe('Slack Vote Confirmation Trigger - Integration Test', () => {
         daoId: testDaoId,
         txHash: '0x3456789012cdef3456789012cdef3456789012cdef3456789012cdef34567890',
         proposalId: 'prop-abstain-789',
-        voterAccountId: voterAddress,
+        voterAddress: voterAddress,
         support: '2', // ABSTAIN
         votingPower: '2000000000000000000000', // 2000 tokens
         timestamp: eventTimestamp,
@@ -256,7 +256,7 @@ describe('Slack Vote Confirmation Trigger - Integration Test', () => {
         daoId: testDaoId,
         txHash: sameTxHash,
         proposalId: 'prop-dup-123',
-        voterAccountId: voterAddress,
+        voterAddress: voterAddress,
         support: '1',
         votingPower: '1000000000000000000000',
         timestamp: eventTimestamp,
@@ -320,7 +320,7 @@ describe('Slack Vote Confirmation Trigger - Integration Test', () => {
         daoId: testDaoId,
         txHash: '0x5678901234ef5678901234ef5678901234ef5678901234ef5678901234ef5678',
         proposalId: 'prop-multi-1',
-        voterAccountId: voterAddress,
+        voterAddress: voterAddress,
         support: '1', // FOR
         votingPower: '1000000000000000000000',
         timestamp: baseTimestamp.toString(),
@@ -330,7 +330,7 @@ describe('Slack Vote Confirmation Trigger - Integration Test', () => {
         daoId: testDaoId,
         txHash: '0x6789012345f6789012345f6789012345f6789012345f6789012345f6789012345',
         proposalId: 'prop-multi-2',
-        voterAccountId: voterAddress,
+        voterAddress: voterAddress,
         support: '0', // AGAINST
         votingPower: '1000000000000000000000',
         timestamp: (baseTimestamp + 1).toString(),
@@ -340,7 +340,7 @@ describe('Slack Vote Confirmation Trigger - Integration Test', () => {
         daoId: testDaoId,
         txHash: '0x78901234567890123456789012345678901234567890123456789012345678ab',
         proposalId: 'prop-multi-3',
-        voterAccountId: voterAddress,
+        voterAddress: voterAddress,
         support: '2', // ABSTAIN
         votingPower: '1000000000000000000000',
         timestamp: (baseTimestamp + 2).toString(),
@@ -407,7 +407,7 @@ describe('Slack Vote Confirmation Trigger - Integration Test', () => {
         daoId: testDaoId, // Vote is in testDaoId
         txHash: '0x890123456789012345678901234567890123456789012345678901234567890cd',
         proposalId: 'prop-nosub',
-        voterAccountId: voterAddress,
+        voterAddress: voterAddress,
         support: '1',
         votingPower: '1000000000000000000000',
         timestamp: eventTimestamp,

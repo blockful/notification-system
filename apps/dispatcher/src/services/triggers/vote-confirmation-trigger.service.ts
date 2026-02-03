@@ -2,26 +2,14 @@ import { BaseTriggerHandler } from './base-trigger.service';
 import { DispatcherMessage, MessageProcessingResult } from '../../interfaces/dispatcher-message.interface';
 import { NotificationClientFactory } from '../notification/notification-factory.service';
 import { ISubscriptionClient } from '../../interfaces/subscription-client.interface';
-import { AnticaptureClient } from '@notification-system/anticapture-client';
+import { AnticaptureClient, VoteWithDaoId } from '@notification-system/anticapture-client';
 import { formatTokenAmount } from '../../lib/number-formatter';
 import { voteConfirmationMessages, replacePlaceholders, buildButtons } from '@notification-system/messages';
 import { FormattingService } from '../formatting.service';
 
-interface VoteEvent {
-  daoId: string;
-  proposalId: string;
-  voterAccountId: string;
-  support: string;
-  votingPower: string;
-  timestamp: string;
-  txHash: string;
-  reason?: string | null;
-  proposalDescription?: string | null;
-}
-
 interface UserVoteCombination {
   user: any;
-  vote: VoteEvent;
+  vote: VoteWithDaoId;
 }
 
 interface ProcessingResult {
@@ -33,7 +21,7 @@ interface ProcessingResult {
 type ProcessingStatus = 'sent' | 'skipped';
 
 
-export class VoteConfirmationTriggerHandler extends BaseTriggerHandler<VoteEvent> {
+export class VoteConfirmationTriggerHandler extends BaseTriggerHandler<VoteWithDaoId> {
   constructor(
     protected readonly subscriptionClient: ISubscriptionClient,
     protected readonly notificationFactory: NotificationClientFactory,
@@ -42,7 +30,7 @@ export class VoteConfirmationTriggerHandler extends BaseTriggerHandler<VoteEvent
     super(subscriptionClient, notificationFactory, anticaptureClient);
   }
 
-  async handleMessage(message: DispatcherMessage<VoteEvent>): Promise<MessageProcessingResult> {
+  async handleMessage(message: DispatcherMessage<VoteWithDaoId>): Promise<MessageProcessingResult> {
     const events = message.events;
     
     if (!events || events.length === 0) {
@@ -54,7 +42,7 @@ export class VoteConfirmationTriggerHandler extends BaseTriggerHandler<VoteEvent
     }
 
     // Extract unique voter addresses and batch fetch wallet owners
-    const voterAddresses = [...new Set(events.map(event => event.voterAccountId))];
+    const voterAddresses = [...new Set(events.map(event => event.voterAddress))];
     const walletOwners = await this.subscriptionClient.getWalletOwnersBatch(voterAddresses);
     
     // Create all user-vote combinations
@@ -75,11 +63,11 @@ export class VoteConfirmationTriggerHandler extends BaseTriggerHandler<VoteEvent
    * Creates combinations of users and votes for processing
    */
   private createUserVoteCombinations(
-    events: VoteEvent[],
+    events: VoteWithDaoId[],
     walletOwners: Record<string, any[]>
   ): UserVoteCombination[] {
     return events.flatMap(voteEvent => {
-      const usersForWallet = walletOwners[voteEvent.voterAccountId] || [];
+      const usersForWallet = walletOwners[voteEvent.voterAddress] || [];
       return usersForWallet.map(user => ({ user, vote: voteEvent }));
     });
   }
@@ -106,9 +94,9 @@ export class VoteConfirmationTriggerHandler extends BaseTriggerHandler<VoteEvent
   /**
    * Processes a single user-vote combination
    */
-  private async processUserVote(user: any, vote: VoteEvent): Promise<ProcessingStatus> {
+  private async processUserVote(user: any, vote: VoteWithDaoId): Promise<ProcessingStatus> {
     // Check if user is subscribed to the DAO
-    const subscribers = await this.getSubscribers(vote.daoId, vote.txHash, vote.timestamp);
+    const subscribers = await this.getSubscribers(vote.daoId, vote.transactionHash, String(vote.timestamp));
     const isSubscribed = subscribers.some(sub => sub.id === user.id);
     
     if (!isSubscribed) {
@@ -117,9 +105,9 @@ export class VoteConfirmationTriggerHandler extends BaseTriggerHandler<VoteEvent
     }
 
     // Check deduplication
-    const notifications = await this.subscriptionClient.shouldSend([user], vote.txHash, vote.daoId);
+    const notifications = await this.subscriptionClient.shouldSend([user], vote.transactionHash, vote.daoId);
     if (notifications.length === 0) {
-      console.log(`[VoteConfirmationHandler] Notification already sent for vote ${vote.txHash}`);
+      console.log(`[VoteConfirmationHandler] Notification already sent for vote ${vote.transactionHash}`);
       return 'skipped';
     }
 
@@ -133,32 +121,32 @@ export class VoteConfirmationTriggerHandler extends BaseTriggerHandler<VoteEvent
   /**
    * Sends notification for a single vote
    */
-  private async sendVoteNotification(user: any, vote: VoteEvent): Promise<void> {
+  private async sendVoteNotification(user: any, vote: VoteWithDaoId): Promise<void> {
     const message = this.formatVoteMessage(vote);
     const chainId = await this.getChainIdForDao(vote.daoId);
 
     // Build buttons
     const buttons = buildButtons({
       triggerType: 'voteConfirmation',
-      txHash: vote.txHash,
+      txHash: vote.transactionHash,
       chainId
     });
 
     await this.sendNotificationsToSubscribers(
       [user],
       message,
-      vote.txHash,
+      vote.transactionHash,
       vote.daoId,
       {
         transaction: {
-          hash: vote.txHash,
+          hash: vote.transactionHash,
           chainId
         },
         addresses: {
-          address: vote.voterAccountId
+          address: vote.voterAddress
         },
         proposalId: vote.proposalId,
-        support: vote.support,
+        support: String(vote.support),
         votingPower: vote.votingPower,
         reason: vote.reason
       },
@@ -166,12 +154,12 @@ export class VoteConfirmationTriggerHandler extends BaseTriggerHandler<VoteEvent
     );
   }
 
-  private formatVoteMessage(vote: VoteEvent): string {
-    const supportKey = voteConfirmationMessages.getSupportKey(vote.support);
+  private formatVoteMessage(vote: VoteWithDaoId): string {
+    const supportKey = voteConfirmationMessages.getSupportKey(String(vote.support));
     const votingPower = formatTokenAmount(vote.votingPower, 18);
     const hasReason = vote.reason && vote.reason.trim();
     const proposalTitle = FormattingService.extractTitle(
-      vote.proposalDescription || '',
+      vote.proposalTitle || '',
       vote.proposalId
     );
 

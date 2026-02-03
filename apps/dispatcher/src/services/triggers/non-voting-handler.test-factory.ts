@@ -53,9 +53,9 @@ export function createUser(overrides: Partial<User> = {}): User {
   };
 }
 
-export function createVote(voterAccountId: string, proposalId: string) {
+export function createVote(voterAddress: string, proposalId: string) {
   return {
-    voterAccountId,
+    voterAddress,
     proposalId
   };
 }
