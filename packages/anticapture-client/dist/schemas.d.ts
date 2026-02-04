@@ -106,6 +106,7 @@ declare const HistoricalVotingPowerItemSchema: z.ZodObject<{
     delta: z.ZodString;
     daoId: z.ZodString;
     transactionHash: z.ZodString;
+    logIndex: z.ZodNumber;
     delegation: z.ZodNullable<z.ZodObject<{
         from: z.ZodString;
         to: z.ZodString;
@@ -136,41 +137,43 @@ declare const HistoricalVotingPowerItemSchema: z.ZodObject<{
         value: string;
     }>>;
 }, "strip", z.ZodTypeAny, {
+    delta: string;
+    timestamp: string;
+    votingPower: string;
+    daoId: string;
+    transactionHash: string;
+    accountId: string;
+    logIndex: number;
     delegation: {
         from: string;
         to: string;
         value: string;
         previousDelegate: string | null;
     } | null;
-    delta: string;
-    timestamp: string;
-    votingPower: string;
     transfer: {
         from: string;
         to: string;
         value: string;
     } | null;
-    daoId: string;
-    transactionHash: string;
-    accountId: string;
 }, {
+    delta: string;
+    timestamp: string;
+    votingPower: string;
+    daoId: string;
+    transactionHash: string;
+    accountId: string;
+    logIndex: number;
     delegation: {
         from: string;
         to: string;
         value: string;
         previousDelegate: string | null;
     } | null;
-    delta: string;
-    timestamp: string;
-    votingPower: string;
     transfer: {
         from: string;
         to: string;
         value: string;
     } | null;
-    daoId: string;
-    transactionHash: string;
-    accountId: string;
 }>;
 export declare const SafeHistoricalVotingPowerResponseSchema: z.ZodEffects<z.ZodObject<{
     historicalVotingPower: z.ZodNullable<z.ZodObject<{
@@ -181,6 +184,7 @@ export declare const SafeHistoricalVotingPowerResponseSchema: z.ZodEffects<z.Zod
             delta: z.ZodString;
             daoId: z.ZodString;
             transactionHash: z.ZodString;
+            logIndex: z.ZodNumber;
             delegation: z.ZodNullable<z.ZodObject<{
                 from: z.ZodString;
                 to: z.ZodString;
@@ -211,175 +215,183 @@ export declare const SafeHistoricalVotingPowerResponseSchema: z.ZodEffects<z.Zod
                 value: string;
             }>>;
         }, "strip", z.ZodTypeAny, {
+            delta: string;
+            timestamp: string;
+            votingPower: string;
+            daoId: string;
+            transactionHash: string;
+            accountId: string;
+            logIndex: number;
             delegation: {
                 from: string;
                 to: string;
                 value: string;
                 previousDelegate: string | null;
             } | null;
-            delta: string;
-            timestamp: string;
-            votingPower: string;
             transfer: {
                 from: string;
                 to: string;
                 value: string;
             } | null;
-            daoId: string;
-            transactionHash: string;
-            accountId: string;
         }, {
+            delta: string;
+            timestamp: string;
+            votingPower: string;
+            daoId: string;
+            transactionHash: string;
+            accountId: string;
+            logIndex: number;
             delegation: {
                 from: string;
                 to: string;
                 value: string;
                 previousDelegate: string | null;
             } | null;
-            delta: string;
-            timestamp: string;
-            votingPower: string;
             transfer: {
                 from: string;
                 to: string;
                 value: string;
             } | null;
-            daoId: string;
-            transactionHash: string;
-            accountId: string;
         }>>, "many">;
         totalCount: z.ZodNumber;
     }, "strip", z.ZodTypeAny, {
         items: ({
+            delta: string;
+            timestamp: string;
+            votingPower: string;
+            daoId: string;
+            transactionHash: string;
+            accountId: string;
+            logIndex: number;
             delegation: {
                 from: string;
                 to: string;
                 value: string;
                 previousDelegate: string | null;
             } | null;
-            delta: string;
-            timestamp: string;
-            votingPower: string;
             transfer: {
                 from: string;
                 to: string;
                 value: string;
             } | null;
-            daoId: string;
-            transactionHash: string;
-            accountId: string;
         } | null)[];
         totalCount: number;
     }, {
         items: ({
+            delta: string;
+            timestamp: string;
+            votingPower: string;
+            daoId: string;
+            transactionHash: string;
+            accountId: string;
+            logIndex: number;
             delegation: {
                 from: string;
                 to: string;
                 value: string;
                 previousDelegate: string | null;
             } | null;
-            delta: string;
-            timestamp: string;
-            votingPower: string;
             transfer: {
                 from: string;
                 to: string;
                 value: string;
             } | null;
-            daoId: string;
-            transactionHash: string;
-            accountId: string;
         } | null)[];
         totalCount: number;
     }>>;
 }, "strip", z.ZodTypeAny, {
     historicalVotingPower: {
         items: ({
+            delta: string;
+            timestamp: string;
+            votingPower: string;
+            daoId: string;
+            transactionHash: string;
+            accountId: string;
+            logIndex: number;
             delegation: {
                 from: string;
                 to: string;
                 value: string;
                 previousDelegate: string | null;
             } | null;
-            delta: string;
-            timestamp: string;
-            votingPower: string;
             transfer: {
                 from: string;
                 to: string;
                 value: string;
             } | null;
-            daoId: string;
-            transactionHash: string;
-            accountId: string;
         } | null)[];
         totalCount: number;
     } | null;
 }, {
     historicalVotingPower: {
         items: ({
+            delta: string;
+            timestamp: string;
+            votingPower: string;
+            daoId: string;
+            transactionHash: string;
+            accountId: string;
+            logIndex: number;
             delegation: {
                 from: string;
                 to: string;
                 value: string;
                 previousDelegate: string | null;
             } | null;
-            delta: string;
-            timestamp: string;
-            votingPower: string;
             transfer: {
                 from: string;
                 to: string;
                 value: string;
             } | null;
-            daoId: string;
-            transactionHash: string;
-            accountId: string;
         } | null)[];
         totalCount: number;
     } | null;
 }>, {
     historicalVotingPower: {
         items: {
+            delta: string;
+            timestamp: string;
+            votingPower: string;
+            daoId: string;
+            transactionHash: string;
+            accountId: string;
+            logIndex: number;
             delegation: {
                 from: string;
                 to: string;
                 value: string;
                 previousDelegate: string | null;
             } | null;
-            delta: string;
-            timestamp: string;
-            votingPower: string;
             transfer: {
                 from: string;
                 to: string;
                 value: string;
             } | null;
-            daoId: string;
-            transactionHash: string;
-            accountId: string;
         }[];
         totalCount: number;
     };
 }, {
     historicalVotingPower: {
         items: ({
+            delta: string;
+            timestamp: string;
+            votingPower: string;
+            daoId: string;
+            transactionHash: string;
+            accountId: string;
+            logIndex: number;
             delegation: {
                 from: string;
                 to: string;
                 value: string;
                 previousDelegate: string | null;
             } | null;
-            delta: string;
-            timestamp: string;
-            votingPower: string;
             transfer: {
                 from: string;
                 to: string;
                 value: string;
             } | null;
-            daoId: string;
-            transactionHash: string;
-            accountId: string;
         } | null)[];
         totalCount: number;
     } | null;
