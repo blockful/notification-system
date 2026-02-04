@@ -20,6 +20,7 @@ export class GraphQLMockSetup {
       delta: vp.delta || null,
       daoId: vp.daoId,
       transactionHash: vp.transactionHash,
+      logIndex: vp.logIndex,
       delegation: vp.delegation ? {
         from: vp.delegation.from,
         to: vp.delegation.to,
