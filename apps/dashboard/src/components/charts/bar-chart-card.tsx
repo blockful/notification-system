@@ -52,12 +52,19 @@ export default function BarChartCard<T>({
               tickLine={{ stroke: '#334155' }}
             />
             <Tooltip
-              contentStyle={{ background: '#0f172a', border: '1px solid #334155' }}
-              labelStyle={{ color: '#e2e8f0' }}
-              itemStyle={{ color: '#e2e8f0' }}
-              formatter={(value: number) =>
-                valueLabel ? [value, valueLabel] : [value, 'Count']
-              }
+              contentStyle={{
+                background: '#0f172a',
+                border: '1px solid #334155',
+                borderRadius: '6px',
+                padding: '8px 12px',
+              }}
+              labelStyle={{ color: '#e2e8f0', fontWeight: 600, marginBottom: '4px' }}
+              itemStyle={{ color: '#38bdf8', fontWeight: 500 }}
+              formatter={(value: number) => {
+                const formattedValue = typeof value === 'number' ? value.toLocaleString() : value;
+                return [formattedValue, valueLabel || 'Count'];
+              }}
+              cursor={{ fill: 'rgba(56, 189, 248, 0.1)' }}
             />
             <Bar dataKey={barKey} fill="#38bdf8" radius={[4, 4, 0, 0]} />
           </BarChart>
