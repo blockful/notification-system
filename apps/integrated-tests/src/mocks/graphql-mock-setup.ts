@@ -21,15 +21,15 @@ export class GraphQLMockSetup {
       daoId: vp.daoId,
       transactionHash: vp.transactionHash,
       delegation: vp.delegation ? {
-        delegatorAccountId: vp.delegation.delegatorAccountId,
-        delegateAccountId: vp.delegation.delegateAccountId,
-        delegatedValue: vp.delegation.delegatedValue,
+        from: vp.delegation.from,
+        to: vp.delegation.to,
+        value: vp.delegation.value,
         previousDelegate: vp.delegation.previousDelegate
       } : null,
       transfer: vp.transfer ? {
-        amount: vp.transfer.amount,
-        fromAccountId: vp.transfer.fromAccountId,
-        toAccountId: vp.transfer.toAccountId
+        from: vp.transfer.from,
+        to: vp.transfer.to,
+        value: vp.transfer.value
       } : null
     }));
   }
@@ -78,57 +78,65 @@ export class GraphQLMockSetup {
       }
 
       // Handle voting power
-      if (data.query?.includes('ListVotingPowerHistorys')) {
+      if (data.query?.includes('ListHistoricalVotingPower')) {
         let filtered = votingPowerData;
-        if (data.variables?.where?.timestamp_gt) {
-          filtered = filtered.filter(vp => parseInt(vp.timestamp) > parseInt(data.variables.where.timestamp_gt));
+        if (data.variables?.fromDate) {
+          // fromDate is used as timestamp_gt (greater than)
+          filtered = filtered.filter(vp => parseInt(vp.timestamp) > parseInt(data.variables.fromDate));
         }
+        const items = this.transformToRawGraphQLFormat(filtered);
         return Promise.resolve({
-          data: { data: { votingPowerHistorys: { items: this.transformToRawGraphQLFormat(filtered) } } }
+          data: { data: { historicalVotingPower: { items, totalCount: items.length } } }
         });
       }
 
       // Handle votes
-      if (data.query?.includes('ListVotesOnchains')) {
+      if (data.query?.includes('ListVotes')) {
         let filtered = votesData;
-        
-        const daoId = data.variables?.daoId;
-        const proposalIdIn = data.variables?.proposalId_in;
-        const voterAccountIdIn = data.variables?.voterAccountId_in;
-        const timestampGt = data.variables?.timestamp_gt;
-        
-        // Filter by daoId if provided
+
+        const daoId = config?.headers?.['anticapture-dao-id'];
+        const voterAddressIn = data.variables?.voterAddressIn;
+        const fromDate = data.variables?.fromDate;
+        const toDate = data.variables?.toDate;
+
+        // Filter by daoId
         if (daoId) {
           filtered = filtered.filter((v: any) => v.daoId === daoId);
         }
-        
-        // Filter by proposalId_in if provided
-        if (proposalIdIn) {
-          filtered = filtered.filter((v: any) => 
-            proposalIdIn.includes(v.proposalId)
-          );
-        }
-        
-        // Filter by voterAccountId_in if provided
-        // Using case-insensitive comparison (simulates API's internal normalization)
-        if (voterAccountIdIn) {
+
+        // Filter by voterAddressIn if provided
+        if (voterAddressIn && Array.isArray(voterAddressIn)) {
           filtered = filtered.filter((v: any) =>
-            voterAccountIdIn.some((addr: string) =>
-              isAddressEqual(getAddress(v.voterAccountId), getAddress(addr))
+            voterAddressIn.some((addr: string) =>
+              isAddressEqual(getAddress(v.voterAddress), getAddress(addr))
             )
           );
         }
 
-        // Filter by timestamp_gt if provided
-        if (timestampGt) {
-          filtered = filtered.filter((v: any) =>
-            parseInt(v.timestamp || '0') > parseInt(timestampGt)
-          );
+        // Filter by fromDate if provided
+        if (fromDate !== undefined) {
+          filtered = filtered.filter((v: any) => v.timestamp > fromDate);
         }
 
-        // Return votes in original format (checksum) - AnticaptureClient will normalize to lowercase
+        // Filter by toDate if provided
+        if (toDate !== undefined) {
+          filtered = filtered.filter((v: any) => v.timestamp < toDate);
+        }
+
+        // Return items in expected format
+        const items = filtered.map((v: any) => ({
+          transactionHash: v.transactionHash,
+          proposalId: v.proposalId,
+          voterAddress: v.voterAddress,
+          support: v.support,
+          votingPower: v.votingPower,
+          timestamp: v.timestamp,
+          reason: v.reason || null,
+          proposalTitle: v.proposalTitle
+        }));
+
         return Promise.resolve({
-          data: { data: { votesOnchains: { items: filtered, totalCount: filtered.length } } }
+          data: { data: { votes: { items, totalCount: items.length } } }
         });
       }
 
@@ -141,7 +149,7 @@ export class GraphQLMockSetup {
         const votersSet = new Set(
           votesData
             .filter((v: any) => v.proposalId === proposalId)
-            .map((v: any) => getAddress(v.voterAccountId).toLowerCase())
+            .map((v: any) => getAddress(v.voterAddress).toLowerCase())
         );
 
         // Filter to find non-voters from the provided address list
@@ -175,11 +183,11 @@ export class GraphQLMockSetup {
       return Promise.resolve({
         data: {
           data: {
-            votingPowerHistorys: { items: [] },
+            historicalVotingPower: { items: [], totalCount: 0 },
             proposals: { items: [], totalCount: 0 },
             proposal: null,
             daos: { items: [] },
-            votesOnchains: { items: [] }
+            votes: { items: [], totalCount: 0 }
           }
         }
       });

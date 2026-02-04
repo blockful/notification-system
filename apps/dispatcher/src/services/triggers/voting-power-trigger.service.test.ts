@@ -426,9 +426,9 @@ describe('VotingPowerTriggerHandler', () => {
         chainId: 1,
         timestamp: '2023-01-01T00:00:00Z',
         transfer: {
-          fromAccountId: senderAddress,
-          toAccountId: userAddress,
-          amount: '1000'
+          from: senderAddress,
+          to: userAddress,
+          value: '1000'
         }
       };
 
@@ -465,9 +465,9 @@ describe('VotingPowerTriggerHandler', () => {
         chainId: 1,
         timestamp: '2023-01-01T00:00:00Z',
         transfer: {
-          fromAccountId: '0xSomeoneElse',
-          toAccountId: delegatorAddress, // delegator received tokens
-          amount: '1000'
+          from: '0xSomeoneElse',
+          to: delegatorAddress, // delegator received tokens
+          value: '1000'
         }
       };
 
