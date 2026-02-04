@@ -4,6 +4,7 @@ const ensRpcUrl = process.env.ENS_RPC_URL || process.env.ETH_RPC_URL;
 
 const CACHE_TTL_MS = 5 * 60 * 1000;
 const MAX_CACHE_ENTRIES = 2000;
+const MAX_BATCH_SIZE = 25;
 const ensCache = new Map<string, { value: string | null; expiresAt: number }>();
 
 function getCachedValue(address: string): string | null | undefined {
@@ -39,6 +40,15 @@ export type EnsResolutionResult = {
   available: boolean;
 };
 
+export function chunkAddresses(addresses: string[], batchSize: number): string[][] {
+  if (batchSize <= 0) return [addresses];
+  const batches: string[][] = [];
+  for (let i = 0; i < addresses.length; i += batchSize) {
+    batches.push(addresses.slice(i, i + batchSize));
+  }
+  return batches;
+}
+
 export async function resolveEnsNames(addresses: string[]): Promise<EnsResolutionResult> {
   const uniqueAddresses = Array.from(new Set(addresses));
   const resolved: Record<string, string | null> = {};
@@ -51,25 +61,27 @@ export async function resolveEnsNames(addresses: string[]): Promise<EnsResolutio
     return { map: resolved, available: false };
   }
 
-  await Promise.all(
-    uniqueAddresses.map(async (address) => {
-      const cachedValue = getCachedValue(address);
-      if (cachedValue !== undefined) {
-        resolved[address] = cachedValue;
-        return;
-      }
+  for (const batch of chunkAddresses(uniqueAddresses, MAX_BATCH_SIZE)) {
+    await Promise.all(
+      batch.map(async (address) => {
+        const cachedValue = getCachedValue(address);
+        if (cachedValue !== undefined) {
+          resolved[address] = cachedValue;
+          return;
+        }
 
-      try {
-        const name = await ensProvider.lookupAddress(address);
-        resolved[address] = name;
-        setCachedValue(address, name);
-      } catch (error) {
-        console.warn(`Failed ENS lookup for ${address}:`, error);
-        resolved[address] = null;
-        setCachedValue(address, null);
-      }
-    })
-  );
+        try {
+          const name = await ensProvider.lookupAddress(address);
+          resolved[address] = name;
+          setCachedValue(address, name);
+        } catch (error) {
+          console.warn(`Failed ENS lookup for ${address}:`, error);
+          resolved[address] = null;
+          setCachedValue(address, null);
+        }
+      })
+    );
+  }
 
   return { map: resolved, available: true };
 }

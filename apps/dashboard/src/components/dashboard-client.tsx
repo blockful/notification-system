@@ -235,12 +235,6 @@ export default function DashboardClient() {
       </section>
 
       <section className="grid gap-4 lg:grid-cols-2 xl:grid-cols-4">
-        <PieChartCard
-          title="Channel distribution"
-          data={summary.channelDistribution}
-          nameKey="channel"
-          valueKey="count"
-        />
         <BarChartCard
           title="Top DAOs by subscribers"
           data={daoChart}
@@ -248,6 +242,12 @@ export default function DashboardClient() {
           barKey="subscriberCount"
           valueLabel="Subscribers"
           forceAllTicks
+        />
+        <PieChartCard
+          title="Channel distribution"
+          data={summary.channelDistribution}
+          nameKey="channel"
+          valueKey="count"
         />
         <BarChartCard
           title="Notifications per DAO"
