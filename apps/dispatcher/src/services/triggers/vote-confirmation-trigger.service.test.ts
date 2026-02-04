@@ -21,7 +21,7 @@ function createHandler() {
         notifications.forEach(n => sentEventIds.add(n.event_id));
       },
       getWalletOwners: async () => [],
-      getWalletOwnersBatch: async () => ({ '0xVoter123': [stubUser] }),
+      getWalletOwnersBatch: async () => ({ '0xvoter123': [stubUser] }),
       getFollowedAddresses: async () => []
     },
     {
@@ -43,9 +43,9 @@ describe('VoteConfirmationTriggerHandler', () => {
     await handler.handleMessage({
       triggerId: 'vote-confirmation',
       events: [
-        { daoId: 'test-dao', proposalId: 'proposal-1', voterAccountId: '0xVoter123', support: 'for', votingPower: '1000000000000000000', timestamp: '2026-01-01T00:00:00Z', txHash: '0xSameTxHash', proposalDescription: 'Proposal 1' },
-        { daoId: 'test-dao', proposalId: 'proposal-2', voterAccountId: '0xVoter123', support: 'against', votingPower: '1000000000000000000', timestamp: '2026-01-01T00:00:00Z', txHash: '0xSameTxHash', proposalDescription: 'Proposal 2' },
-        { daoId: 'test-dao', proposalId: 'proposal-3', voterAccountId: '0xVoter123', support: 'abstain', votingPower: '1000000000000000000', timestamp: '2026-01-01T00:00:00Z', txHash: '0xSameTxHash', proposalDescription: 'Proposal 3' },
+        { daoId: 'test-dao', proposalId: 'proposal-1', voterAddress: '0xVoter123', support: 1, votingPower: '1000000000000000000', timestamp: 1767225600, transactionHash: '0xSameTxHash', proposalTitle: 'Proposal 1' },
+        { daoId: 'test-dao', proposalId: 'proposal-2', voterAddress: '0xVoter123', support: 0, votingPower: '1000000000000000000', timestamp: 1767225600, transactionHash: '0xSameTxHash', proposalTitle: 'Proposal 2' },
+        { daoId: 'test-dao', proposalId: 'proposal-3', voterAddress: '0xVoter123', support: 2, votingPower: '1000000000000000000', timestamp: 1767225600, transactionHash: '0xSameTxHash', proposalTitle: 'Proposal 3' },
       ]
     });
 
