@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 
-import { getAuthCookieValue } from '../../../../lib/auth';
+import { getAuthCookieValue } from '../../../lib/auth';
 
 export async function POST(request: NextRequest) {
   const secret = process.env.DASHBOARD_SECRET;

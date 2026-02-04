@@ -1,4 +1,4 @@
-import { Pool } from 'pg';
+import { Pool, QueryResultRow } from 'pg';
 
 declare global {
   // eslint-disable-next-line no-var
@@ -21,7 +21,7 @@ if (process.env.NODE_ENV !== 'production') {
   global.__dashboardPool = pool;
 }
 
-export async function query<T>(text: string, values: Array<string | number> = []): Promise<T[]> {
+export async function query<T extends QueryResultRow>(text: string, values: Array<string | number> = []): Promise<T[]> {
   const result = await pool.query<T>(text, values);
   return result.rows;
 }
