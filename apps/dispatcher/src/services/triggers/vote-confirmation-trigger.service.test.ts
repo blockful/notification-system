@@ -21,7 +21,7 @@ function createHandler() {
         notifications.forEach(n => sentEventIds.add(n.event_id));
       },
       getWalletOwners: async () => [],
-      getWalletOwnersBatch: async () => ({ '0xvoter123': [stubUser] }),
+      getWalletOwnersBatch: async () => ({ '0xVoter123': [stubUser] }),
       getFollowedAddresses: async () => []
     },
     {
