@@ -1,3 +1,10 @@
+/**
+ * Dashboard Metrics Module
+ *
+ * This module provides read-only access to database metrics.
+ * All queries are validated to ensure only SELECT operations are executed.
+ * The dashboard never writes to the database.
+ */
 import { query } from './db';
 
 export type GrowthPoint = {
