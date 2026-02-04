@@ -94,8 +94,10 @@ export class VoteConfirmationTriggerHandler extends BaseTriggerHandler<VoteWithD
    * Processes a single user-vote combination
    */
   private async processUserVote(user: any, vote: VoteWithDaoId): Promise<ProcessingStatus> {
+    const eventId = `${vote.transactionHash}-${vote.proposalId}-${vote.voterAddress}-vote`;
+
     // Check if user is subscribed to the DAO
-    const subscribers = await this.getSubscribers(vote.daoId, vote.transactionHash, String(vote.timestamp));
+    const subscribers = await this.getSubscribers(vote.daoId, eventId, String(vote.timestamp));
     const isSubscribed = subscribers.some(sub => sub.id === user.id);
     
     if (!isSubscribed) {
@@ -104,14 +106,14 @@ export class VoteConfirmationTriggerHandler extends BaseTriggerHandler<VoteWithD
     }
 
     // Check deduplication
-    const notifications = await this.subscriptionClient.shouldSend([user], vote.transactionHash, vote.daoId);
+    const notifications = await this.subscriptionClient.shouldSend([user], eventId, vote.daoId);
     if (notifications.length === 0) {
       console.log(`[VoteConfirmationHandler] Notification already sent for vote ${vote.transactionHash}`);
       return 'skipped';
     }
 
     // Send notification
-    await this.sendVoteNotification(user, vote);
+    await this.sendVoteNotification(user, vote, eventId);
     console.log(`[VoteConfirmationHandler] Sent vote notification to user ${user.id}`);
     
     return 'sent';
@@ -120,7 +122,7 @@ export class VoteConfirmationTriggerHandler extends BaseTriggerHandler<VoteWithD
   /**
    * Sends notification for a single vote
    */
-  private async sendVoteNotification(user: any, vote: VoteWithDaoId): Promise<void> {
+  private async sendVoteNotification(user: any, vote: VoteWithDaoId, eventId: string): Promise<void> {
     const message = this.formatVoteMessage(vote);
     const chainId = await this.getChainIdForDao(vote.daoId);
 
@@ -134,7 +136,7 @@ export class VoteConfirmationTriggerHandler extends BaseTriggerHandler<VoteWithD
     await this.sendNotificationsToSubscribers(
       [user],
       message,
-      vote.transactionHash,
+      eventId,
       vote.daoId,
       {
         transaction: {
