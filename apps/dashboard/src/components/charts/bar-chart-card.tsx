@@ -19,6 +19,45 @@ type BarChartCardProps<T> = {
   forceAllTicks?: boolean;
 };
 
+function CustomTooltip({
+  active,
+  payload,
+  label,
+  valueLabel,
+}: {
+  active?: boolean;
+  payload?: Array<{ value: number | string }>;
+  label?: string;
+  valueLabel?: string;
+}) {
+  if (active && payload && payload.length > 0) {
+    const value = payload[0].value;
+    const formattedValue =
+      typeof value === 'number' ? value.toLocaleString() : String(value);
+
+    return (
+      <div
+        style={{
+          background: '#0f172a',
+          border: '1px solid #334155',
+          borderRadius: '6px',
+          padding: '8px 12px',
+          boxShadow: '0 4px 6px rgba(0, 0, 0, 0.3)',
+        }}
+      >
+        <p style={{ color: '#e2e8f0', fontWeight: 600, marginBottom: '4px' }}>
+          {label}
+        </p>
+        <p style={{ color: '#38bdf8', fontWeight: 500, fontSize: '14px' }}>
+          {valueLabel || 'Count'}: {formattedValue}
+        </p>
+      </div>
+    );
+  }
+
+  return null;
+}
+
 export default function BarChartCard<T>({
   title,
   data,
@@ -52,18 +91,7 @@ export default function BarChartCard<T>({
               tickLine={{ stroke: '#334155' }}
             />
             <Tooltip
-              contentStyle={{
-                background: '#0f172a',
-                border: '1px solid #334155',
-                borderRadius: '6px',
-                padding: '8px 12px',
-              }}
-              labelStyle={{ color: '#e2e8f0', fontWeight: 600, marginBottom: '4px' }}
-              itemStyle={{ color: '#38bdf8', fontWeight: 500 }}
-              formatter={(value: number) => {
-                const formattedValue = typeof value === 'number' ? value.toLocaleString() : value;
-                return [formattedValue, valueLabel || 'Count'];
-              }}
+              content={<CustomTooltip valueLabel={valueLabel} />}
               cursor={{ fill: 'rgba(56, 189, 248, 0.1)' }}
             />
             <Bar dataKey={barKey} fill="#38bdf8" radius={[4, 4, 0, 0]} />
