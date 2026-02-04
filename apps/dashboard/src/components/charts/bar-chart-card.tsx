@@ -39,7 +39,7 @@ export default function BarChartCard<T>({
               type="category"
               allowDuplicatedCategory={false}
               interval={forceAllTicks ? 0 : 'preserveEnd'}
-              angle={forceAllTicks ? -30 : 0}
+              angle={forceAllTicks ? -45 : 0}
               textAnchor={forceAllTicks ? 'end' : 'middle'}
               height={forceAllTicks ? 50 : 30}
               tick={{ fill: '#cbd5f5', fontSize: 12 }}

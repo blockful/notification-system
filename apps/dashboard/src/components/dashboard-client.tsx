@@ -255,6 +255,7 @@ export default function DashboardClient() {
           xKey="label"
           barKey="notificationCount"
           valueLabel="Notifications"
+          forceAllTicks
         />
         <BarChartCard
           title="Addresses per user"

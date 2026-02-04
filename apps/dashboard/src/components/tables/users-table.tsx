@@ -26,14 +26,13 @@ type UsersTableProps = {
   channelOptions: string[];
 };
 
-const PAGE_SIZE = 20;
-const PAGE_SIZE_OPTIONS = [20, 50, 100];
+const PAGE_SIZE = 100;
 
 export default function UsersTable({ daoOptions, channelOptions }: UsersTableProps) {
   const [users, setUsers] = useState<UserRow[]>([]);
   const [total, setTotal] = useState(0);
   const [page, setPage] = useState(1);
-  const [pageSize, setPageSize] = useState(PAGE_SIZE);
+  const pageSize = PAGE_SIZE;
   const [minAddresses, setMinAddresses] = useState('');
   const [maxAddresses, setMaxAddresses] = useState('');
   const [dao, setDao] = useState('');
@@ -105,23 +104,6 @@ export default function UsersTable({ daoOptions, channelOptions }: UsersTablePro
           >
             <option value="desc">Newest</option>
             <option value="asc">Oldest</option>
-          </select>
-        </div>
-        <div>
-          <label className="block text-xs text-muted">Rows</label>
-          <select
-            value={pageSize}
-            onChange={(event) => {
-              setPage(1);
-              setPageSize(Number(event.target.value));
-            }}
-            className="mt-1 w-24 rounded-md border border-border bg-background px-2 py-1 text-sm text-text"
-          >
-            {PAGE_SIZE_OPTIONS.map((option) => (
-              <option key={option} value={option}>
-                {option}
-              </option>
-            ))}
           </select>
         </div>
         <div>

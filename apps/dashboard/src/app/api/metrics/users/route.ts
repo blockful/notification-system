@@ -12,7 +12,7 @@ function parseNumber(value: string | null): number | undefined {
 export async function GET(request: NextRequest) {
   const params = request.nextUrl.searchParams;
   const page = Math.max(parseNumber(params.get('page')) ?? 1, 1);
-  const pageSize = Math.min(Math.max(parseNumber(params.get('pageSize')) ?? 20, 1), 100);
+  const pageSize = Math.min(Math.max(parseNumber(params.get('pageSize')) ?? 100, 1), 100);
   const sortDirectionParam = params.get('sortDirection')?.toLowerCase();
   const sortDirection: UsersSortDirection =
     sortDirectionParam === 'asc' || sortDirectionParam === 'desc'
