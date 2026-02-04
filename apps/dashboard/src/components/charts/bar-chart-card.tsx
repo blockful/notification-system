@@ -1,5 +1,6 @@
 'use client';
 
+import type { TooltipProps } from 'recharts';
 import {
   Bar,
   BarChart,
@@ -9,6 +10,29 @@ import {
   XAxis,
   YAxis,
 } from 'recharts';
+
+type BarChartTooltipProps = TooltipProps<number | string, string> & {
+  valueLabel?: string;
+};
+
+function BarChartTooltip({ active, payload, label, valueLabel }: BarChartTooltipProps) {
+  if (!active || !payload?.length) return null;
+
+  const entry = payload[0];
+  const displayValue =
+    typeof entry.value === 'number' ? entry.value.toLocaleString() : String(entry.value ?? '');
+  const displayLabel = valueLabel ?? entry.name ?? 'Count';
+
+  return (
+    <div className="rounded-md border border-slate-700 bg-slate-900 px-3 py-2 text-xs text-slate-200 shadow-sm">
+      <div className="font-medium text-slate-100">{label}</div>
+      <div className="mt-1 flex items-center justify-between gap-2">
+        <span className="text-slate-400">{displayLabel}</span>
+        <span className="font-semibold text-slate-100">{displayValue}</span>
+      </div>
+    </div>
+  );
+}
 
 type BarChartCardProps<T> = {
   title: string;
@@ -27,44 +51,12 @@ export default function BarChartCard<T>({
   valueLabel,
   forceAllTicks = false,
 }: BarChartCardProps<T>) {
-  const renderTooltip = (props: any) => {
-    const { active, payload, label } = props;
-    
-    if (active && payload && payload.length > 0) {
-      const value = payload[0].value;
-      const formattedValue =
-        typeof value === 'number' ? value.toLocaleString() : String(value);
-
-      return (
-        <div
-          style={{
-            background: '#0f172a',
-            border: '1px solid #334155',
-            borderRadius: '6px',
-            padding: '8px 12px',
-            boxShadow: '0 4px 6px rgba(0, 0, 0, 0.3)',
-            zIndex: 1000,
-          }}
-        >
-          <p style={{ color: '#e2e8f0', fontWeight: 600, marginBottom: '4px' }}>
-            {label}
-          </p>
-          <p style={{ color: '#38bdf8', fontWeight: 500, fontSize: '14px' }}>
-            {valueLabel || 'Count'}: {formattedValue}
-          </p>
-        </div>
-      );
-    }
-
-    return null;
-  };
-
   return (
     <div className="rounded-xl border border-border bg-panel p-4 shadow-sm">
       <h3 className="text-sm font-semibold text-text">{title}</h3>
-      <div className="mt-4 h-56">
+      <div className="mt-4 h-60">
         <ResponsiveContainer width="100%" height="100%">
-          <BarChart data={data}>
+          <BarChart data={data} margin={{ top: 8, right: 8, left: 0, bottom: 0 }} barCategoryGap="18%">
             <CartesianGrid stroke="#1f2937" strokeDasharray="4 4" />
             <XAxis
               dataKey={xKey}
@@ -84,8 +76,8 @@ export default function BarChartCard<T>({
               tickLine={{ stroke: '#334155' }}
             />
             <Tooltip
-              content={renderTooltip}
-              cursor={{ fill: 'rgba(56, 189, 248, 0.1)' }}
+              cursor={{ fill: 'rgba(56, 189, 248, 0.12)' }}
+              content={(props) => <BarChartTooltip {...props} valueLabel={valueLabel} />}
             />
             <Bar dataKey={barKey} fill="#38bdf8" radius={[4, 4, 0, 0]} />
           </BarChart>
