@@ -19,45 +19,6 @@ type BarChartCardProps<T> = {
   forceAllTicks?: boolean;
 };
 
-function CustomTooltip({
-  active,
-  payload,
-  label,
-  valueLabel,
-}: {
-  active?: boolean;
-  payload?: Array<{ value: number | string }>;
-  label?: string;
-  valueLabel?: string;
-}) {
-  if (active && payload && payload.length > 0) {
-    const value = payload[0].value;
-    const formattedValue =
-      typeof value === 'number' ? value.toLocaleString() : String(value);
-
-    return (
-      <div
-        style={{
-          background: '#0f172a',
-          border: '1px solid #334155',
-          borderRadius: '6px',
-          padding: '8px 12px',
-          boxShadow: '0 4px 6px rgba(0, 0, 0, 0.3)',
-        }}
-      >
-        <p style={{ color: '#e2e8f0', fontWeight: 600, marginBottom: '4px' }}>
-          {label}
-        </p>
-        <p style={{ color: '#38bdf8', fontWeight: 500, fontSize: '14px' }}>
-          {valueLabel || 'Count'}: {formattedValue}
-        </p>
-      </div>
-    );
-  }
-
-  return null;
-}
-
 export default function BarChartCard<T>({
   title,
   data,
@@ -66,6 +27,38 @@ export default function BarChartCard<T>({
   valueLabel,
   forceAllTicks = false,
 }: BarChartCardProps<T>) {
+  const renderTooltip = (props: any) => {
+    const { active, payload, label } = props;
+    
+    if (active && payload && payload.length > 0) {
+      const value = payload[0].value;
+      const formattedValue =
+        typeof value === 'number' ? value.toLocaleString() : String(value);
+
+      return (
+        <div
+          style={{
+            background: '#0f172a',
+            border: '1px solid #334155',
+            borderRadius: '6px',
+            padding: '8px 12px',
+            boxShadow: '0 4px 6px rgba(0, 0, 0, 0.3)',
+            zIndex: 1000,
+          }}
+        >
+          <p style={{ color: '#e2e8f0', fontWeight: 600, marginBottom: '4px' }}>
+            {label}
+          </p>
+          <p style={{ color: '#38bdf8', fontWeight: 500, fontSize: '14px' }}>
+            {valueLabel || 'Count'}: {formattedValue}
+          </p>
+        </div>
+      );
+    }
+
+    return null;
+  };
+
   return (
     <div className="rounded-xl border border-border bg-panel p-4 shadow-sm">
       <h3 className="text-sm font-semibold text-text">{title}</h3>
@@ -91,7 +84,7 @@ export default function BarChartCard<T>({
               tickLine={{ stroke: '#334155' }}
             />
             <Tooltip
-              content={<CustomTooltip valueLabel={valueLabel} />}
+              content={renderTooltip}
               cursor={{ fill: 'rgba(56, 189, 248, 0.1)' }}
             />
             <Bar dataKey={barKey} fill="#38bdf8" radius={[4, 4, 0, 0]} />
