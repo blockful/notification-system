@@ -42,21 +42,21 @@ describe('Vote Confirmation Trigger - Integration Test', () => {
     await UserFactory.createUserAddress(userWithSub.id, voterAddress, pastTimestamp);
 
     // Create vote event with timestamp in the future to ensure processing
-    const eventTimestamp = (Math.floor(Date.now() / 1000) + 10).toString();
+    const eventTimestamp = Math.floor(Date.now() / 1000) + 10;
 
     const proposalTitle = 'Enable Community Grants Program';
 
     const voteEvents = [
       {
         daoId: testDaoId,
-        txHash: '0x1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef',
+        transactionHash: '0x1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef',
         proposalId: 'prop-for-123',
-        voterAccountId: voterAddress,
-        support: '1', // FOR
+        voterAddress: voterAddress,
+        support: 1, // FOR
         votingPower: '1000000000000000000000', // 1000 tokens
         timestamp: eventTimestamp,
         reason: 'Great proposal!',
-        proposal: { description: proposalTitle }
+        proposalTitle: proposalTitle
       }
     ];
 
@@ -100,21 +100,21 @@ describe('Vote Confirmation Trigger - Integration Test', () => {
     
     await UserFactory.createUserAddress(userWithSub.id, voterAddress, pastTimestamp);
     
-    const eventTimestamp = (Math.floor(Date.now() / 1000) + 10).toString();
+    const eventTimestamp = Math.floor(Date.now() / 1000) + 10;
 
     const proposalTitle = 'Increase Treasury Allocation';
 
     const voteEvents = [
       {
         daoId: testDaoId,
-        txHash: '0x2345678901bcdef2345678901bcdef2345678901bcdef2345678901bcdef2345',
+        transactionHash: '0x2345678901bcdef2345678901bcdef2345678901bcdef2345678901bcdef2345',
         proposalId: 'prop-against-456',
-        voterAccountId: voterAddress,
-        support: '0', // AGAINST
+        voterAddress: voterAddress,
+        support: 0, // AGAINST
         votingPower: '5000000000000000000000', // 5000 tokens
         timestamp: eventTimestamp,
         reason: 'Needs more discussion',
-        proposal: { description: proposalTitle }
+        proposalTitle: proposalTitle
       }
     ];
     
@@ -155,21 +155,21 @@ describe('Vote Confirmation Trigger - Integration Test', () => {
     
     await UserFactory.createUserAddress(userWithSub.id, voterAddress, pastTimestamp);
     
-    const eventTimestamp = (Math.floor(Date.now() / 1000) + 10).toString();
+    const eventTimestamp = Math.floor(Date.now() / 1000) + 10;
 
     const proposalTitle = 'Protocol Fee Adjustment';
 
     const voteEvents = [
       {
         daoId: testDaoId,
-        txHash: '0x3456789012cdef3456789012cdef3456789012cdef3456789012cdef34567890',
+        transactionHash: '0x3456789012cdef3456789012cdef3456789012cdef3456789012cdef34567890',
         proposalId: 'prop-abstain-789',
-        voterAccountId: voterAddress,
-        support: '2', // ABSTAIN
+        voterAddress: voterAddress,
+        support: 2, // ABSTAIN
         votingPower: '2000000000000000000000', // 2000 tokens
         timestamp: eventTimestamp,
         // No reason provided for abstain
-        proposal: { description: proposalTitle }
+        proposalTitle: proposalTitle
       }
     ];
     
@@ -210,20 +210,20 @@ describe('Vote Confirmation Trigger - Integration Test', () => {
     
     await UserFactory.createUserAddress(userWithSub.id, voterAddress, pastTimestamp);
     
-    const eventTimestamp = (Math.floor(Date.now() / 1000) + 10).toString();
+    const eventTimestamp = Math.floor(Date.now() / 1000) + 10;
     const sameTxHash = '0x4567890123def4567890123def4567890123def4567890123def4567890123def';   
     
     // Same vote event will be processed twice (simulating duplicate trigger)
     const voteEvents = [
       {
         daoId: testDaoId,
-        txHash: sameTxHash,
+        transactionHash: sameTxHash,
         proposalId: 'prop-dup-123',
-        voterAccountId: voterAddress,
-        support: '1',
+        voterAddress: voterAddress,
+        support: 1,
         votingPower: '1000000000000000000000',
         timestamp: eventTimestamp,
-        proposal: { description: 'Duplicate Test Proposal' }
+        proposalTitle: 'Duplicate Test Proposal'
       }
     ];
     
@@ -282,33 +282,33 @@ describe('Vote Confirmation Trigger - Integration Test', () => {
     const voteEvents = [
       {
         daoId: testDaoId,
-        txHash: '0x5678901234ef5678901234ef5678901234ef5678901234ef5678901234ef5678',
+        transactionHash: '0x5678901234ef5678901234ef5678901234ef5678901234ef5678901234ef5678',
         proposalId: 'prop-multi-1',
-        voterAccountId: voterAddress,
-        support: '1', // FOR
+        voterAddress: voterAddress,
+        support: 1, // FOR
         votingPower: '1000000000000000000000',
-        timestamp: baseTimestamp.toString(),
-        proposal: { description: 'Multi Vote Proposal 1' }
+        timestamp: baseTimestamp,
+        proposalTitle: 'Multi Vote Proposal 1'
       },
       {
         daoId: testDaoId,
-        txHash: '0x6789012345f6789012345f6789012345f6789012345f6789012345f6789012345',
+        transactionHash: '0x6789012345f6789012345f6789012345f6789012345f6789012345f6789012345',
         proposalId: 'prop-multi-2',
-        voterAccountId: voterAddress,
-        support: '0', // AGAINST
+        voterAddress: voterAddress,
+        support: 0, // AGAINST
         votingPower: '1000000000000000000000',
-        timestamp: (baseTimestamp + 1).toString(),
-        proposal: { description: 'Multi Vote Proposal 2' }
+        timestamp: baseTimestamp + 1,
+        proposalTitle: 'Multi Vote Proposal 2'
       },
       {
         daoId: testDaoId,
-        txHash: '0x78901234567890123456789012345678901234567890123456789012345678ab',
+        transactionHash: '0x78901234567890123456789012345678901234567890123456789012345678ab',
         proposalId: 'prop-multi-3',
-        voterAccountId: voterAddress,
-        support: '2', // ABSTAIN
+        voterAddress: voterAddress,
+        support: 2, // ABSTAIN
         votingPower: '1000000000000000000000',
-        timestamp: (baseTimestamp + 2).toString(),
-        proposal: { description: 'Multi Vote Proposal 3' }
+        timestamp: baseTimestamp + 2,
+        proposalTitle: 'Multi Vote Proposal 3'
       }
     ];
     
@@ -359,18 +359,18 @@ describe('Vote Confirmation Trigger - Integration Test', () => {
     
     await UserFactory.createUserAddress(userWithoutSub.id, voterAddress, pastTimestamp);
     
-    const eventTimestamp = (Math.floor(Date.now() / 1000) + 10).toString();
+    const eventTimestamp = Math.floor(Date.now() / 1000) + 10;
 
     const voteEvents = [
       {
         daoId: testDaoId, // Vote is in testDaoId
-        txHash: '0x890123456789012345678901234567890123456789012345678901234567890cd',
+        transactionHash: '0x890123456789012345678901234567890123456789012345678901234567890cd',
         proposalId: 'prop-nosub',
-        voterAccountId: voterAddress,
-        support: '1',
+        voterAddress: voterAddress,
+        support: 1,
         votingPower: '1000000000000000000000',
         timestamp: eventTimestamp,
-        proposal: { description: 'No Subscription Proposal' }
+        proposalTitle: 'No Subscription Proposal'
       }
     ];
     

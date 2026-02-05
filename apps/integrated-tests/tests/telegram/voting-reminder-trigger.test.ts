@@ -109,7 +109,7 @@ describe('Voting Reminder Integration Tests', () => {
       const voteEvents = [{
         daoId: testDaoId,
         proposalId: proposal.id,
-        voterAccountId: testUser.address,
+        voterAddress: testUser.address,
         support: '1',
         votingPower: '1000000000000000000000',
         timestamp: Math.floor(Date.now() / 1000).toString()

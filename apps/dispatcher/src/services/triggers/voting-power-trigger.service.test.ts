@@ -2,7 +2,7 @@ import { describe, it, expect, jest, beforeEach, afterEach, beforeAll } from '@j
 import { VotingPowerTriggerHandler } from './voting-power-trigger.service';
 import { ISubscriptionClient, User, Notification } from '../../interfaces/subscription-client.interface';
 import { NotificationClientFactory } from '../notification/notification-factory.service';
-import { INotificationClient } from '../../interfaces/notification-client.interface';
+import { INotificationClient, NotificationPayload } from '../../interfaces/notification-client.interface';
 import { DispatcherMessage } from '../../interfaces/dispatcher-message.interface';
 import { zeroAddress } from 'viem';
 
@@ -116,6 +116,7 @@ describe('VotingPowerTriggerHandler', () => {
             accountId: '0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045',
             daoId: 'test-dao',
             transactionHash: 'tx123',
+            logIndex: 0,
             changeType: 'delegation',
             sourceAccountId: '0xEF8305E140ac520225DAf050e2f71d5fBcC543e7',
             targetAccountId: '0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045',
@@ -139,6 +140,7 @@ describe('VotingPowerTriggerHandler', () => {
         accountId: '0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045',
         daoId: 'test-dao',
         transactionHash: 'tx123',
+        logIndex: 0,
         changeType: 'delegation',
         sourceAccountId: '0xEF8305E140ac520225DAf050e2f71d5fBcC543e7',
         targetAccountId: '0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045',
@@ -178,6 +180,7 @@ describe('VotingPowerTriggerHandler', () => {
         accountId: '0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045',
         daoId: 'test-dao',
         transactionHash: 'tx123',
+        logIndex: 0,
         changeType: 'delegation',
         sourceAccountId: '0xEF8305E140ac520225DAf050e2f71d5fBcC543e7',
         targetAccountId: '0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045',
@@ -219,6 +222,7 @@ describe('VotingPowerTriggerHandler', () => {
         accountId: '0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045',
         daoId: 'test-dao',
         transactionHash: 'tx123',
+        logIndex: 0,
         changeType: 'delegation',
         sourceAccountId: '0xEF8305E140ac520225DAf050e2f71d5fBcC543e7',
         targetAccountId: '0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045',
@@ -261,6 +265,7 @@ describe('VotingPowerTriggerHandler', () => {
         accountId: '0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045',
         daoId: 'test-dao',
         transactionHash: 'tx123',
+        logIndex: 0,
         changeType: 'delegation',
         sourceAccountId: '0xEF8305E140ac520225DAf050e2f71d5fBcC543e7',
         targetAccountId: '0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045',
@@ -300,6 +305,7 @@ describe('VotingPowerTriggerHandler', () => {
         accountId: '0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045',
         daoId: 'test-dao',
         transactionHash: 'tx123',
+        logIndex: 0,
         changeType: 'delegation',
         sourceAccountId: '0xEF8305E140ac520225DAf050e2f71d5fBcC543e7',
         targetAccountId: '0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045',
@@ -341,6 +347,7 @@ describe('VotingPowerTriggerHandler', () => {
         accountId: '0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045',
         daoId: 'test-dao',
         transactionHash: 'tx123',
+        logIndex: 0,
         changeType: 'delegation',
         sourceAccountId: undefined,
         targetAccountId: '0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045',
@@ -370,6 +377,7 @@ describe('VotingPowerTriggerHandler', () => {
         accountId: '0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045',
         daoId: 'test-dao',
         transactionHash: 'tx123',
+        logIndex: 0,
         changeType: 'delegation',
         sourceAccountId: '0xEF8305E140ac520225DAf050e2f71d5fBcC543e7',
         targetAccountId: '0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045',
@@ -420,15 +428,16 @@ describe('VotingPowerTriggerHandler', () => {
         accountId: userAddress,
         daoId: 'test-dao',
         transactionHash: 'tx123',
+        logIndex: 0,
         changeType: 'transfer',
         delta: '1000',
         votingPower: '5000',
         chainId: 1,
         timestamp: '2023-01-01T00:00:00Z',
         transfer: {
-          fromAccountId: senderAddress,
-          toAccountId: userAddress,
-          amount: '1000'
+          from: senderAddress,
+          to: userAddress,
+          value: '1000'
         }
       };
 
@@ -459,15 +468,16 @@ describe('VotingPowerTriggerHandler', () => {
         accountId: userAddress, // user is NOT sender/receiver
         daoId: 'test-dao',
         transactionHash: 'tx123',
+        logIndex: 0,
         changeType: 'transfer',
         delta: '1000',
         votingPower: '5000',
         chainId: 1,
         timestamp: '2023-01-01T00:00:00Z',
         transfer: {
-          fromAccountId: '0xSomeoneElse',
-          toAccountId: delegatorAddress, // delegator received tokens
-          amount: '1000'
+          from: '0xSomeoneElse',
+          to: delegatorAddress, // delegator received tokens
+          value: '1000'
         }
       };
 
@@ -507,6 +517,7 @@ describe('VotingPowerTriggerHandler', () => {
         accountId: '0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045',
         daoId: 'test-dao',
         transactionHash: 'tx123',
+        logIndex: 0,
         changeType: 'other',
         delta: '1000',
         chainId: 1,
@@ -537,6 +548,7 @@ describe('VotingPowerTriggerHandler', () => {
         accountId: '0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045',
         daoId: 'test-dao',
         transactionHash: 'tx123',
+        logIndex: 0,
         changeType: 'other',
         delta: '0',
         chainId: 1,
@@ -567,6 +579,7 @@ describe('VotingPowerTriggerHandler', () => {
         accountId: '0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045',
         daoId: 'test-dao',
         transactionHash: 'tx123',
+        logIndex: 0,
         changeType: 'other',
         delta: '-1000',
         chainId: 1,
@@ -597,6 +610,7 @@ describe('VotingPowerTriggerHandler', () => {
         accountId: '0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045',
         daoId: 'test-dao',
         transactionHash: 'tx123',
+        logIndex: 0,
         changeType: 'other',
         delta: '1000',
         chainId: 1,
@@ -630,6 +644,7 @@ describe('VotingPowerTriggerHandler', () => {
         accountId: '0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045',
         daoId: 'test-dao',
         transactionHash: 'tx123',
+        logIndex: 0,
         changeType: 'delegation',
         sourceAccountId: '0xEF8305E140ac520225DAf050e2f71d5fBcC543e7',
         delta: '1000'
@@ -652,6 +667,7 @@ describe('VotingPowerTriggerHandler', () => {
         accountId: '0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045',
         daoId: 'test-dao',
         transactionHash: 'tx123',
+        logIndex: 0,
         changeType: 'delegation',
         sourceAccountId: '0xEF8305E140ac520225DAf050e2f71d5fBcC543e7',
         delta: '1000'
@@ -674,6 +690,7 @@ describe('VotingPowerTriggerHandler', () => {
         accountId: '0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045',
         daoId: 'test-dao',
         transactionHash: 'tx123',
+        logIndex: 0,
         changeType: 'delegation',
         sourceAccountId: '0xEF8305E140ac520225DAf050e2f71d5fBcC543e7',
         delta: '1000'
@@ -688,5 +705,144 @@ describe('VotingPowerTriggerHandler', () => {
       
       expect(mockNotificationClient.sendNotification).not.toHaveBeenCalled();
     });
+  });
+});
+
+/**
+ * 1. Multi-wallet: Same tx affects multiple wallets of same user
+ * 2. Multi-logIndex: Same tx has multiple events for same wallet
+ *
+ * Uses fake shouldSend/markAsSent with Set to simulate real deduplication behavior
+ */
+describe('VotingPowerTriggerHandler - eventId deduplication', () => {
+  function createHandlerWithDeduplication(walletOwnersMap: Record<string, User[]>) {
+    const sentNotifications: { message: string; userId: string }[] = [];
+    const sentEventIds = new Set<string>();
+
+    const stubUser1: User = { id: 'user-1', channel: 'telegram', channel_user_id: '111', created_at: new Date() };
+    const stubUser2: User = { id: 'user-2', channel: 'telegram', channel_user_id: '222', created_at: new Date() };
+    const allUsers = [stubUser1, stubUser2];
+
+    const handler = new VotingPowerTriggerHandler(
+      {
+        getDaoSubscribers: async () => allUsers,
+        shouldSend: async (users, eventId) => {
+          if (sentEventIds.has(eventId)) return [];
+          return users.map(u => ({ user_id: u.id, event_id: eventId, dao_id: 'test-dao' }));
+        },
+        shouldSendBatch: async () => [],
+        markAsSent: async (notifications) => {
+          notifications.forEach(n => sentEventIds.add(n.event_id));
+        },
+        getWalletOwners: async () => [],
+        getWalletOwnersBatch: async () => walletOwnersMap,
+        getFollowedAddresses: async () => []
+      },
+      {
+        getClient: () => ({
+          sendNotification: async (payload: NotificationPayload) => {
+            sentNotifications.push({ message: payload.message, userId: payload.userId });
+          }
+        }),
+        supportsChannel: () => true
+      } as unknown as NotificationClientFactory
+    );
+
+    return { handler, sentNotifications, sentEventIds };
+  }
+
+  it('should send notifications to multiple wallets affected by same transaction', async () => {
+    // User 1 owns wallets A and B
+    // Transaction 0x123: A delegates to B (affects both wallets)
+    // Expected: 2 notifications (one for each wallet)
+
+    const walletA = '0xWalletA000000000000000000000000000000001';
+    const walletB = '0xWalletB000000000000000000000000000000002';
+    const stubUser1: User = { id: 'user-1', channel: 'telegram', channel_user_id: '111', created_at: new Date() };
+
+    const { handler, sentNotifications } = createHandlerWithDeduplication({
+      [walletA]: [stubUser1],
+      [walletB]: [stubUser1]
+    });
+
+    await handler.handleMessage({
+      triggerId: 'voting-power-changed',
+      events: [
+        {
+          daoId: 'test-dao',
+          accountId: walletA,
+          sourceAccountId: walletB,
+          transactionHash: '0xSameTxHash',
+          changeType: 'delegation',
+          delta: '-1000',
+          logIndex: 0,
+          chainId: 1,
+          timestamp: 1234567890
+        },
+        {
+          daoId: 'test-dao',
+          accountId: walletB,
+          sourceAccountId: walletA,
+          transactionHash: '0xSameTxHash',
+          changeType: 'delegation',
+          delta: '1000',
+          logIndex: 1,
+          chainId: 1,
+          timestamp: 1234567890
+        }
+      ]
+    });
+
+    // Should send notifications for BOTH wallets
+    // Each wallet should receive at least one notification about the delegation
+    expect(sentNotifications.length).toBeGreaterThanOrEqual(2);
+  });
+
+  it('should send notifications for multiple events in same tx with different logIndex', async () => {
+    // Transaction 0x456 has 2 delegation events for wallet C (logIndex 0 and 1)
+    // Example: C receives delegation from D and from E in same tx
+    // Expected: 2 notifications
+
+    const walletC = '0xWalletC000000000000000000000000000000003';
+    const walletD = '0xWalletD000000000000000000000000000000004';
+    const walletE = '0xWalletE000000000000000000000000000000005';
+    const stubUser1: User = { id: 'user-1', channel: 'telegram', channel_user_id: '111', created_at: new Date() };
+
+    const { handler, sentNotifications } = createHandlerWithDeduplication({
+      [walletC]: [stubUser1],
+      [walletD]: [],
+      [walletE]: []
+    });
+
+    await handler.handleMessage({
+      triggerId: 'voting-power-changed',
+      events: [
+        {
+          daoId: 'test-dao',
+          accountId: walletC,
+          sourceAccountId: walletD,
+          transactionHash: '0xSameTxHash456',
+          changeType: 'delegation',
+          delta: '1000',
+          logIndex: 0,
+          chainId: 1,
+          timestamp: 1234567890
+        },
+        {
+          daoId: 'test-dao',
+          accountId: walletC,
+          sourceAccountId: walletE,
+          transactionHash: '0xSameTxHash456',
+          changeType: 'delegation',
+          delta: '2000',
+          logIndex: 1,
+          chainId: 1,
+          timestamp: 1234567890
+        }
+      ]
+    });
+
+    // Should send 2 notifications (one for each delegation received)
+    expect(sentNotifications).toHaveLength(2);
   });
 });

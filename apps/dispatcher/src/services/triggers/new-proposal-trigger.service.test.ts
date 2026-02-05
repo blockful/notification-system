@@ -80,7 +80,7 @@ describe('NewProposalTriggerHandler', () => {
       getProposalById: jest.fn(),
       listProposals: jest.fn(),
       listVotingPowerHistory: jest.fn(),
-      listVotesOnchains: jest.fn(),
+      listVotes: jest.fn(),
       listRecentVotesFromAllDaos: jest.fn()
     } as unknown as jest.Mocked<AnticaptureClient>;
 

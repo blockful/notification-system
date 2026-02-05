@@ -99,393 +99,415 @@ export declare const SafeProposalByIdResponseSchema: z.ZodObject<{
 }, {
     proposal?: any;
 }>;
-declare const VotingPowerHistoryItemSchema: z.ZodObject<{
+declare const HistoricalVotingPowerItemSchema: z.ZodObject<{
     accountId: z.ZodString;
     timestamp: z.ZodString;
-    votingPower: z.ZodNullable<z.ZodString>;
-    delta: z.ZodNullable<z.ZodString>;
-    daoId: z.ZodDefault<z.ZodNullable<z.ZodString>>;
+    votingPower: z.ZodString;
+    delta: z.ZodString;
+    daoId: z.ZodString;
     transactionHash: z.ZodString;
-    delegation: z.ZodDefault<z.ZodNullable<z.ZodObject<{
-        delegatorAccountId: z.ZodString;
-        delegateAccountId: z.ZodString;
-        delegatedValue: z.ZodString;
+    logIndex: z.ZodNumber;
+    delegation: z.ZodNullable<z.ZodObject<{
+        from: z.ZodString;
+        to: z.ZodString;
+        value: z.ZodString;
         previousDelegate: z.ZodNullable<z.ZodString>;
     }, "strip", z.ZodTypeAny, {
-        delegatorAccountId: string;
-        delegateAccountId: string;
-        delegatedValue: string;
+        from: string;
+        to: string;
+        value: string;
         previousDelegate: string | null;
     }, {
-        delegatorAccountId: string;
-        delegateAccountId: string;
-        delegatedValue: string;
+        from: string;
+        to: string;
+        value: string;
         previousDelegate: string | null;
-    }>>>;
-    transfer: z.ZodDefault<z.ZodNullable<z.ZodObject<{
-        amount: z.ZodNullable<z.ZodString>;
-        fromAccountId: z.ZodString;
-        toAccountId: z.ZodString;
+    }>>;
+    transfer: z.ZodNullable<z.ZodObject<{
+        from: z.ZodString;
+        to: z.ZodString;
+        value: z.ZodString;
     }, "strip", z.ZodTypeAny, {
-        amount: string | null;
-        fromAccountId: string;
-        toAccountId: string;
+        from: string;
+        to: string;
+        value: string;
     }, {
-        amount: string | null;
-        fromAccountId: string;
-        toAccountId: string;
-    }>>>;
-}, "strip", z.ZodTypeAny, {
-    delegation: {
-        delegatorAccountId: string;
-        delegateAccountId: string;
-        delegatedValue: string;
-        previousDelegate: string | null;
-    } | null;
-    timestamp: string;
-    votingPower: string | null;
-    delta: string | null;
-    transfer: {
-        amount: string | null;
-        fromAccountId: string;
-        toAccountId: string;
-    } | null;
-    daoId: string | null;
-    accountId: string;
-    transactionHash: string;
-}, {
-    timestamp: string;
-    votingPower: string | null;
-    delta: string | null;
-    accountId: string;
-    transactionHash: string;
-    delegation?: {
-        delegatorAccountId: string;
-        delegateAccountId: string;
-        delegatedValue: string;
-        previousDelegate: string | null;
-    } | null | undefined;
-    transfer?: {
-        amount: string | null;
-        fromAccountId: string;
-        toAccountId: string;
-    } | null | undefined;
-    daoId?: string | null | undefined;
-}>;
-export declare const SafeVotingPowerHistoryResponseSchema: z.ZodEffects<z.ZodObject<{
-    votingPowerHistorys: z.ZodNullable<z.ZodObject<{
-        items: z.ZodArray<z.ZodObject<{
-            accountId: z.ZodString;
-            timestamp: z.ZodString;
-            votingPower: z.ZodNullable<z.ZodString>;
-            delta: z.ZodNullable<z.ZodString>;
-            daoId: z.ZodDefault<z.ZodNullable<z.ZodString>>;
-            transactionHash: z.ZodString;
-            delegation: z.ZodDefault<z.ZodNullable<z.ZodObject<{
-                delegatorAccountId: z.ZodString;
-                delegateAccountId: z.ZodString;
-                delegatedValue: z.ZodString;
-                previousDelegate: z.ZodNullable<z.ZodString>;
-            }, "strip", z.ZodTypeAny, {
-                delegatorAccountId: string;
-                delegateAccountId: string;
-                delegatedValue: string;
-                previousDelegate: string | null;
-            }, {
-                delegatorAccountId: string;
-                delegateAccountId: string;
-                delegatedValue: string;
-                previousDelegate: string | null;
-            }>>>;
-            transfer: z.ZodDefault<z.ZodNullable<z.ZodObject<{
-                amount: z.ZodNullable<z.ZodString>;
-                fromAccountId: z.ZodString;
-                toAccountId: z.ZodString;
-            }, "strip", z.ZodTypeAny, {
-                amount: string | null;
-                fromAccountId: string;
-                toAccountId: string;
-            }, {
-                amount: string | null;
-                fromAccountId: string;
-                toAccountId: string;
-            }>>>;
-        }, "strip", z.ZodTypeAny, {
-            delegation: {
-                delegatorAccountId: string;
-                delegateAccountId: string;
-                delegatedValue: string;
-                previousDelegate: string | null;
-            } | null;
-            timestamp: string;
-            votingPower: string | null;
-            delta: string | null;
-            transfer: {
-                amount: string | null;
-                fromAccountId: string;
-                toAccountId: string;
-            } | null;
-            daoId: string | null;
-            accountId: string;
-            transactionHash: string;
-        }, {
-            timestamp: string;
-            votingPower: string | null;
-            delta: string | null;
-            accountId: string;
-            transactionHash: string;
-            delegation?: {
-                delegatorAccountId: string;
-                delegateAccountId: string;
-                delegatedValue: string;
-                previousDelegate: string | null;
-            } | null | undefined;
-            transfer?: {
-                amount: string | null;
-                fromAccountId: string;
-                toAccountId: string;
-            } | null | undefined;
-            daoId?: string | null | undefined;
-        }>, "many">;
-    }, "strip", z.ZodTypeAny, {
-        items: {
-            delegation: {
-                delegatorAccountId: string;
-                delegateAccountId: string;
-                delegatedValue: string;
-                previousDelegate: string | null;
-            } | null;
-            timestamp: string;
-            votingPower: string | null;
-            delta: string | null;
-            transfer: {
-                amount: string | null;
-                fromAccountId: string;
-                toAccountId: string;
-            } | null;
-            daoId: string | null;
-            accountId: string;
-            transactionHash: string;
-        }[];
-    }, {
-        items: {
-            timestamp: string;
-            votingPower: string | null;
-            delta: string | null;
-            accountId: string;
-            transactionHash: string;
-            delegation?: {
-                delegatorAccountId: string;
-                delegateAccountId: string;
-                delegatedValue: string;
-                previousDelegate: string | null;
-            } | null | undefined;
-            transfer?: {
-                amount: string | null;
-                fromAccountId: string;
-                toAccountId: string;
-            } | null | undefined;
-            daoId?: string | null | undefined;
-        }[];
+        from: string;
+        to: string;
+        value: string;
     }>>;
 }, "strip", z.ZodTypeAny, {
-    votingPowerHistorys: {
-        items: {
-            delegation: {
-                delegatorAccountId: string;
-                delegateAccountId: string;
-                delegatedValue: string;
-                previousDelegate: string | null;
-            } | null;
-            timestamp: string;
-            votingPower: string | null;
-            delta: string | null;
-            transfer: {
-                amount: string | null;
-                fromAccountId: string;
-                toAccountId: string;
-            } | null;
-            daoId: string | null;
-            accountId: string;
-            transactionHash: string;
-        }[];
+    delta: string;
+    timestamp: string;
+    votingPower: string;
+    daoId: string;
+    transactionHash: string;
+    accountId: string;
+    logIndex: number;
+    delegation: {
+        from: string;
+        to: string;
+        value: string;
+        previousDelegate: string | null;
+    } | null;
+    transfer: {
+        from: string;
+        to: string;
+        value: string;
     } | null;
 }, {
-    votingPowerHistorys: {
-        items: {
-            timestamp: string;
-            votingPower: string | null;
-            delta: string | null;
-            accountId: string;
-            transactionHash: string;
-            delegation?: {
-                delegatorAccountId: string;
-                delegateAccountId: string;
-                delegatedValue: string;
-                previousDelegate: string | null;
-            } | null | undefined;
-            transfer?: {
-                amount: string | null;
-                fromAccountId: string;
-                toAccountId: string;
-            } | null | undefined;
-            daoId?: string | null | undefined;
-        }[];
+    delta: string;
+    timestamp: string;
+    votingPower: string;
+    daoId: string;
+    transactionHash: string;
+    accountId: string;
+    logIndex: number;
+    delegation: {
+        from: string;
+        to: string;
+        value: string;
+        previousDelegate: string | null;
     } | null;
-}>, {
-    votingPowerHistorys: {
-        items: {
-            delegation: {
-                delegatorAccountId: string;
-                delegateAccountId: string;
-                delegatedValue: string;
-                previousDelegate: string | null;
-            } | null;
-            timestamp: string;
-            votingPower: string | null;
-            delta: string | null;
-            transfer: {
-                amount: string | null;
-                fromAccountId: string;
-                toAccountId: string;
-            } | null;
-            daoId: string | null;
-            accountId: string;
-            transactionHash: string;
-        }[];
-    };
-}, {
-    votingPowerHistorys: {
-        items: {
-            timestamp: string;
-            votingPower: string | null;
-            delta: string | null;
-            accountId: string;
-            transactionHash: string;
-            delegation?: {
-                delegatorAccountId: string;
-                delegateAccountId: string;
-                delegatedValue: string;
-                previousDelegate: string | null;
-            } | null | undefined;
-            transfer?: {
-                amount: string | null;
-                fromAccountId: string;
-                toAccountId: string;
-            } | null | undefined;
-            daoId?: string | null | undefined;
-        }[];
+    transfer: {
+        from: string;
+        to: string;
+        value: string;
     } | null;
 }>;
-export declare const SafeVotesOnchainsResponseSchema: z.ZodObject<{
-    votesOnchains: z.ZodObject<{
-        items: z.ZodArray<z.ZodObject<{
-            daoId: z.ZodString;
-            txHash: z.ZodString;
-            proposalId: z.ZodString;
-            voterAccountId: z.ZodString;
-            support: z.ZodString;
-            votingPower: z.ZodString;
+export declare const SafeHistoricalVotingPowerResponseSchema: z.ZodEffects<z.ZodObject<{
+    historicalVotingPower: z.ZodNullable<z.ZodObject<{
+        items: z.ZodArray<z.ZodNullable<z.ZodObject<{
+            accountId: z.ZodString;
             timestamp: z.ZodString;
-            reason: z.ZodNullable<z.ZodOptional<z.ZodString>>;
-            proposal: z.ZodNullable<z.ZodOptional<z.ZodObject<{
-                description: z.ZodString;
+            votingPower: z.ZodString;
+            delta: z.ZodString;
+            daoId: z.ZodString;
+            transactionHash: z.ZodString;
+            logIndex: z.ZodNumber;
+            delegation: z.ZodNullable<z.ZodObject<{
+                from: z.ZodString;
+                to: z.ZodString;
+                value: z.ZodString;
+                previousDelegate: z.ZodNullable<z.ZodString>;
             }, "strip", z.ZodTypeAny, {
-                description: string;
+                from: string;
+                to: string;
+                value: string;
+                previousDelegate: string | null;
             }, {
-                description: string;
-            }>>>;
+                from: string;
+                to: string;
+                value: string;
+                previousDelegate: string | null;
+            }>>;
+            transfer: z.ZodNullable<z.ZodObject<{
+                from: z.ZodString;
+                to: z.ZodString;
+                value: z.ZodString;
+            }, "strip", z.ZodTypeAny, {
+                from: string;
+                to: string;
+                value: string;
+            }, {
+                from: string;
+                to: string;
+                value: string;
+            }>>;
         }, "strip", z.ZodTypeAny, {
+            delta: string;
             timestamp: string;
             votingPower: string;
             daoId: string;
-            txHash: string;
-            proposalId: string;
-            voterAccountId: string;
-            support: string;
-            proposal?: {
-                description: string;
-            } | null | undefined;
-            reason?: string | null | undefined;
+            transactionHash: string;
+            accountId: string;
+            logIndex: number;
+            delegation: {
+                from: string;
+                to: string;
+                value: string;
+                previousDelegate: string | null;
+            } | null;
+            transfer: {
+                from: string;
+                to: string;
+                value: string;
+            } | null;
         }, {
+            delta: string;
             timestamp: string;
             votingPower: string;
             daoId: string;
-            txHash: string;
-            proposalId: string;
-            voterAccountId: string;
-            support: string;
-            proposal?: {
-                description: string;
-            } | null | undefined;
-            reason?: string | null | undefined;
-        }>, "many">;
+            transactionHash: string;
+            accountId: string;
+            logIndex: number;
+            delegation: {
+                from: string;
+                to: string;
+                value: string;
+                previousDelegate: string | null;
+            } | null;
+            transfer: {
+                from: string;
+                to: string;
+                value: string;
+            } | null;
+        }>>, "many">;
         totalCount: z.ZodNumber;
     }, "strip", z.ZodTypeAny, {
-        items: {
+        items: ({
+            delta: string;
             timestamp: string;
             votingPower: string;
             daoId: string;
-            txHash: string;
-            proposalId: string;
-            voterAccountId: string;
-            support: string;
-            proposal?: {
-                description: string;
-            } | null | undefined;
-            reason?: string | null | undefined;
-        }[];
+            transactionHash: string;
+            accountId: string;
+            logIndex: number;
+            delegation: {
+                from: string;
+                to: string;
+                value: string;
+                previousDelegate: string | null;
+            } | null;
+            transfer: {
+                from: string;
+                to: string;
+                value: string;
+            } | null;
+        } | null)[];
         totalCount: number;
     }, {
-        items: {
+        items: ({
+            delta: string;
             timestamp: string;
             votingPower: string;
             daoId: string;
-            txHash: string;
-            proposalId: string;
-            voterAccountId: string;
-            support: string;
-            proposal?: {
-                description: string;
-            } | null | undefined;
-            reason?: string | null | undefined;
+            transactionHash: string;
+            accountId: string;
+            logIndex: number;
+            delegation: {
+                from: string;
+                to: string;
+                value: string;
+                previousDelegate: string | null;
+            } | null;
+            transfer: {
+                from: string;
+                to: string;
+                value: string;
+            } | null;
+        } | null)[];
+        totalCount: number;
+    }>>;
+}, "strip", z.ZodTypeAny, {
+    historicalVotingPower: {
+        items: ({
+            delta: string;
+            timestamp: string;
+            votingPower: string;
+            daoId: string;
+            transactionHash: string;
+            accountId: string;
+            logIndex: number;
+            delegation: {
+                from: string;
+                to: string;
+                value: string;
+                previousDelegate: string | null;
+            } | null;
+            transfer: {
+                from: string;
+                to: string;
+                value: string;
+            } | null;
+        } | null)[];
+        totalCount: number;
+    } | null;
+}, {
+    historicalVotingPower: {
+        items: ({
+            delta: string;
+            timestamp: string;
+            votingPower: string;
+            daoId: string;
+            transactionHash: string;
+            accountId: string;
+            logIndex: number;
+            delegation: {
+                from: string;
+                to: string;
+                value: string;
+                previousDelegate: string | null;
+            } | null;
+            transfer: {
+                from: string;
+                to: string;
+                value: string;
+            } | null;
+        } | null)[];
+        totalCount: number;
+    } | null;
+}>, {
+    historicalVotingPower: {
+        items: {
+            delta: string;
+            timestamp: string;
+            votingPower: string;
+            daoId: string;
+            transactionHash: string;
+            accountId: string;
+            logIndex: number;
+            delegation: {
+                from: string;
+                to: string;
+                value: string;
+                previousDelegate: string | null;
+            } | null;
+            transfer: {
+                from: string;
+                to: string;
+                value: string;
+            } | null;
         }[];
         totalCount: number;
-    }>;
-}, "strip", z.ZodTypeAny, {
-    votesOnchains: {
-        items: {
+    };
+}, {
+    historicalVotingPower: {
+        items: ({
+            delta: string;
             timestamp: string;
             votingPower: string;
             daoId: string;
-            txHash: string;
+            transactionHash: string;
+            accountId: string;
+            logIndex: number;
+            delegation: {
+                from: string;
+                to: string;
+                value: string;
+                previousDelegate: string | null;
+            } | null;
+            transfer: {
+                from: string;
+                to: string;
+                value: string;
+            } | null;
+        } | null)[];
+        totalCount: number;
+    } | null;
+}>;
+export declare const SafeVotesResponseSchema: z.ZodEffects<z.ZodObject<{
+    votes: z.ZodNullable<z.ZodObject<{
+        items: z.ZodArray<z.ZodNullable<z.ZodObject<{
+            transactionHash: z.ZodString;
+            proposalId: z.ZodString;
+            voterAddress: z.ZodString;
+            support: z.ZodNumber;
+            votingPower: z.ZodString;
+            timestamp: z.ZodNumber;
+            reason: z.ZodOptional<z.ZodNullable<z.ZodString>>;
+            proposalTitle: z.ZodString;
+        }, "strip", z.ZodTypeAny, {
+            timestamp: number;
+            votingPower: string;
+            support: number;
+            transactionHash: string;
             proposalId: string;
-            voterAccountId: string;
-            support: string;
-            proposal?: {
-                description: string;
-            } | null | undefined;
+            voterAddress: string;
+            proposalTitle: string;
+            reason?: string | null | undefined;
+        }, {
+            timestamp: number;
+            votingPower: string;
+            support: number;
+            transactionHash: string;
+            proposalId: string;
+            voterAddress: string;
+            proposalTitle: string;
+            reason?: string | null | undefined;
+        }>>, "many">;
+        totalCount: z.ZodNumber;
+    }, "strip", z.ZodTypeAny, {
+        items: ({
+            timestamp: number;
+            votingPower: string;
+            support: number;
+            transactionHash: string;
+            proposalId: string;
+            voterAddress: string;
+            proposalTitle: string;
+            reason?: string | null | undefined;
+        } | null)[];
+        totalCount: number;
+    }, {
+        items: ({
+            timestamp: number;
+            votingPower: string;
+            support: number;
+            transactionHash: string;
+            proposalId: string;
+            voterAddress: string;
+            proposalTitle: string;
+            reason?: string | null | undefined;
+        } | null)[];
+        totalCount: number;
+    }>>;
+}, "strip", z.ZodTypeAny, {
+    votes: {
+        items: ({
+            timestamp: number;
+            votingPower: string;
+            support: number;
+            transactionHash: string;
+            proposalId: string;
+            voterAddress: string;
+            proposalTitle: string;
+            reason?: string | null | undefined;
+        } | null)[];
+        totalCount: number;
+    } | null;
+}, {
+    votes: {
+        items: ({
+            timestamp: number;
+            votingPower: string;
+            support: number;
+            transactionHash: string;
+            proposalId: string;
+            voterAddress: string;
+            proposalTitle: string;
+            reason?: string | null | undefined;
+        } | null)[];
+        totalCount: number;
+    } | null;
+}>, {
+    votes: {
+        items: {
+            timestamp: number;
+            votingPower: string;
+            support: number;
+            transactionHash: string;
+            proposalId: string;
+            voterAddress: string;
+            proposalTitle: string;
             reason?: string | null | undefined;
         }[];
         totalCount: number;
     };
 }, {
-    votesOnchains: {
-        items: {
-            timestamp: string;
+    votes: {
+        items: ({
+            timestamp: number;
             votingPower: string;
-            daoId: string;
-            txHash: string;
+            support: number;
+            transactionHash: string;
             proposalId: string;
-            voterAccountId: string;
-            support: string;
-            proposal?: {
-                description: string;
-            } | null | undefined;
+            voterAddress: string;
+            proposalTitle: string;
             reason?: string | null | undefined;
-        }[];
+        } | null)[];
         totalCount: number;
-    };
+    } | null;
 }>;
 export declare const SafeProposalNonVotersResponseSchema: z.ZodEffects<z.ZodObject<{
     proposalNonVoters: z.ZodNullable<z.ZodObject<{
@@ -538,8 +560,8 @@ export declare const SafeProposalNonVotersResponseSchema: z.ZodEffects<z.ZodObje
     } | null;
 }>;
 type SafeProposalsResponse = z.infer<typeof SafeProposalsResponseSchema>;
-type SafeVotingPowerHistoryResponse = z.infer<typeof SafeVotingPowerHistoryResponseSchema>;
-export type ProcessedVotingPowerHistory = z.infer<typeof VotingPowerHistoryItemSchema> & {
+type SafeHistoricalVotingPowerResponse = z.infer<typeof SafeHistoricalVotingPowerResponseSchema>;
+export type ProcessedVotingPowerHistory = z.infer<typeof HistoricalVotingPowerItemSchema> & {
     changeType: 'delegation' | 'transfer' | 'other';
     sourceAccountId: string;
     targetAccountId: string;
@@ -548,5 +570,5 @@ export type ProcessedVotingPowerHistory = z.infer<typeof VotingPowerHistoryItemS
     chainId?: number;
 };
 export declare function processProposals(validated: SafeProposalsResponse, daoId: string): any;
-export declare function processVotingPowerHistory(validated: SafeVotingPowerHistoryResponse, daoId: string, chainId?: number): ProcessedVotingPowerHistory[];
+export declare function processVotingPowerHistory(validated: SafeHistoricalVotingPowerResponse, daoId: string, chainId?: number): ProcessedVotingPowerHistory[];
 export {};

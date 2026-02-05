@@ -98,12 +98,13 @@ export class VotingPowerTriggerHandler extends BaseTriggerHandler {
     walletOwnersMap: Record<string, User[]>,
     daoSubscribersMap: Record<string, User[]>
   ): Promise<void> {
-    const { daoId, accountId, sourceAccountId, delta, transactionHash, chainId, votingPower } = votingPowerEvent;
+    const { daoId, accountId, sourceAccountId, delta, transactionHash, chainId, votingPower, logIndex } = votingPowerEvent;
     
     const subscribers = await this.getNotificationSubscribers(
       accountId, // who receives the delegation
       daoId,
       transactionHash,
+      logIndex,
       walletOwnersMap,
       daoSubscribersMap
     );
@@ -147,8 +148,8 @@ export class VotingPowerTriggerHandler extends BaseTriggerHandler {
     walletOwnersMap: Record<string, User[]>,
     daoSubscribersMap: Record<string, User[]>
   ): Promise<void> {
-    const { daoId, accountId, sourceAccountId, targetAccountId, delta, transactionHash, chainId, previousDelegate, newDelegate } = votingPowerEvent;
-    
+    const { daoId, accountId, sourceAccountId, targetAccountId, delta, transactionHash, chainId, previousDelegate, newDelegate, logIndex } = votingPowerEvent;
+
     // Skip if sourceAccountId is not present
     if (!sourceAccountId) {
       return;
@@ -163,6 +164,7 @@ export class VotingPowerTriggerHandler extends BaseTriggerHandler {
       sourceAccountId, // who MADE the delegation
       daoId,
       transactionHash,
+      logIndex,
       walletOwnersMap,
       daoSubscribersMap
     );
@@ -228,10 +230,10 @@ export class VotingPowerTriggerHandler extends BaseTriggerHandler {
     walletOwnersMap: Record<string, User[]>,
     daoSubscribersMap: Record<string, User[]>
   ): Promise<void> {
-    const { daoId, accountId, changeType, transactionHash, chainId, transfer } = votingPowerEvent;
-    
+    const { daoId, accountId, changeType, transactionHash, chainId, transfer, logIndex } = votingPowerEvent;
+
     const subscribers = await this.getNotificationSubscribers(
-      accountId, daoId, transactionHash, walletOwnersMap, daoSubscribersMap
+      accountId, daoId, transactionHash, logIndex, walletOwnersMap, daoSubscribersMap
     );
     if (subscribers.length === 0) return;
 
@@ -252,7 +254,7 @@ export class VotingPowerTriggerHandler extends BaseTriggerHandler {
     const isPositive = deltaValue >= 0;
     const formattedDelta = formatTokenAmount(Math.abs(deltaValue));
     const formattedVotingPower = votingPower ? formatTokenAmount(parseInt(votingPower)) : '0';
-    const delegatorAccountId = isPositive ? transfer?.toAccountId : transfer?.fromAccountId;
+    const delegatorAccountId = isPositive ? transfer?.to : transfer?.from;
 
     const message = replacePlaceholders(
       votingPowerMessages.delegatorBalanceChange[isPositive ? 'increased' : 'decreased'],
@@ -291,11 +293,14 @@ export class VotingPowerTriggerHandler extends BaseTriggerHandler {
 
   /**
    * Shared method to get notification subscribers with deduplication
+   *
+   * eventId format: ${transactionHash}-${logIndex}-${accountId}-voting-power
    */
   private async getNotificationSubscribers(
     accountId: string,
     daoId: string,
     transactionHash: string,
+    logIndex: number,
     walletOwnersMap: Record<string, User[]>,
     daoSubscribersMap: Record<string, User[]>
   ): Promise<User[]> {
@@ -312,11 +317,11 @@ export class VotingPowerTriggerHandler extends BaseTriggerHandler {
     );
     
     if (subscribedOwners.length === 0) return [];
-    
+    const eventId = `${transactionHash}-${logIndex}-${accountId}-voting-power`;
     // Check deduplication for all subscribed owners at once
     const shouldSendNotifications = await this.subscriptionClient.shouldSend(
-      subscribedOwners, 
-      transactionHash, 
+      subscribedOwners,
+      eventId,
       daoId
     );
     
