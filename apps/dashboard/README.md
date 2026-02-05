@@ -40,4 +40,4 @@ npm run build
 
 - `DATABASE_URL` - PostgreSQL connection string (read-only access recommended)
 - `DASHBOARD_SECRET` - Password for dashboard access
-- `ENS_RPC_URL` - Optional ENS resolver RPC endpoint (mainnet)
+- `ETHFOLLOW_API_BASE` - Optional ETHFollow API base URL

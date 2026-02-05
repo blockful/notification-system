@@ -58,6 +58,7 @@ export type UsersFilter = {
   maxAddresses?: number;
   dao?: string;
   channel?: string;
+  address?: string;
 };
 
 export type UsersQueryResult = {
@@ -95,6 +96,20 @@ const daoCache = createTimedCache<DaoItem[]>(30_000);
 const daoNotificationCache = createTimedCache<DaoNotificationItem[]>(30_000);
 const notificationActivityCache = createTimedCache<NotificationActivityPoint[]>(30_000);
 
+export function buildEngagementDistributionQuery() {
+  return `
+      SELECT COALESCE(addr.address_count, 0) as address_count, COUNT(*) as user_count
+      FROM users u
+      LEFT JOIN (
+        SELECT user_id, COUNT(*) FILTER (WHERE is_active) as address_count
+        FROM user_addresses
+        GROUP BY user_id
+      ) addr ON addr.user_id = u.id
+      GROUP BY COALESCE(addr.address_count, 0)
+      ORDER BY COALESCE(addr.address_count, 0)
+    `;
+}
+
 export async function getSummaryMetrics(): Promise<SummaryMetrics> {
   const cached = summaryCache.get();
   if (cached) return cached;
@@ -115,17 +130,7 @@ export async function getSummaryMetrics(): Promise<SummaryMetrics> {
   );
 
   const engagement = await query<{ address_count: number; user_count: string }>(
-    `
-      SELECT COALESCE(addr.address_count, 0) as address_count, COUNT(*) as user_count
-      FROM users u
-      LEFT JOIN (
-        SELECT user_id, COUNT(*) FILTER (WHERE is_active) as address_count
-        FROM user_addresses
-        GROUP BY user_id
-      ) addr ON addr.user_id = u.id
-      GROUP BY address_count
-      ORDER BY address_count
-    `
+    buildEngagementDistributionQuery()
   );
 
   const notificationActivity = await getNotificationActivityByDay();
@@ -164,17 +169,35 @@ export async function getGrowthMetrics(): Promise<GrowthPoint[]> {
     `
   );
 
-  let cumulative = 0;
-  const result = rows.map((row) => {
-    const count = Number(row.count);
-    cumulative += count;
-    return {
-      date: new Date(row.day).toISOString().slice(0, 10),
-      count,
-      cumulative,
-    };
-  });
+  const result = buildGrowthSeries(rows);
   growthCache.set(result);
+  return result;
+}
+
+export function buildGrowthSeries(rows: Array<{ day: string; count: string }>): GrowthPoint[] {
+  if (!rows.length) return [];
+
+  const dailyCounts = new Map<string, number>();
+  rows.forEach((row) => {
+    const date = new Date(row.day).toISOString().slice(0, 10);
+    dailyCounts.set(date, Number(row.count));
+  });
+
+  const startDate = new Date(rows[0].day);
+  const endDate = new Date(rows[rows.length - 1].day);
+  startDate.setUTCHours(0, 0, 0, 0);
+  endDate.setUTCHours(0, 0, 0, 0);
+
+  let cumulative = 0;
+  const result: GrowthPoint[] = [];
+
+  for (const cursor = new Date(startDate); cursor <= endDate; cursor.setUTCDate(cursor.getUTCDate() + 1)) {
+    const date = cursor.toISOString().slice(0, 10);
+    const count = dailyCounts.get(date) ?? 0;
+    cumulative += count;
+    result.push({ date, count, cumulative });
+  }
+
   return result;
 }
 
@@ -268,7 +291,7 @@ export async function getNotificationActivityByDay(
 export function buildNotificationActivityByDaoQuery(limit: number) {
   return {
     text: `
-      SELECT TRIM(dao_id) as dao_id, COUNT(*) as notification_count
+      SELECT TRIM(dao_id) as dao_id, COUNT(DISTINCT event_id) as notification_count
       FROM notifications
       WHERE dao_id IS NOT NULL
         AND TRIM(dao_id) <> ''
@@ -309,6 +332,13 @@ export function buildUsersQueries(
     clauses.push(`u.channel = $${values.length}`);
   }
 
+  if (filters.address) {
+    values.push(filters.address);
+    clauses.push(
+      `EXISTS (SELECT 1 FROM user_addresses ua WHERE ua.user_id = u.id AND ua.is_active = true AND LOWER(ua.address) = LOWER($${values.length}))`
+    );
+  }
+
   if (filters.minAddresses !== undefined) {
     values.push(filters.minAddresses);
     clauses.push(`COALESCE(addr.address_count, 0) >= $${values.length}`);
@@ -326,7 +356,7 @@ export function buildUsersQueries(
     LEFT JOIN channel_workspaces cw
       ON u.channel = 'slack'
       AND split_part(u.channel_user_id, ':', 1) = cw.workspace_id
-      AND cw.is_active = true
+      AND cw.channel = 'slack'
     LEFT JOIN (
       SELECT user_id, COUNT(*) FILTER (WHERE is_active) as address_count,
              ARRAY_AGG(address) FILTER (WHERE is_active) as addresses
@@ -360,8 +390,11 @@ export function buildUsersQueries(
         COALESCE(addr.addresses, ARRAY[]::text[]) as addresses,
         COALESCE(pref.dao_count, 0) as dao_count,
         COALESCE(pref.dao_ids, ARRAY[]::text[]) as dao_ids,
-        cw.workspace_name as slack_workspace_name,
-        cw.workspace_id as slack_workspace_id
+        CASE
+          WHEN u.channel = 'slack' THEN split_part(u.channel_user_id, ':', 1)
+          ELSE NULL
+        END as slack_workspace_id,
+        cw.workspace_name as slack_workspace_name
       ${baseQuery}
       ORDER BY u.created_at ${sortDirection}
       LIMIT $${values.length - 1}

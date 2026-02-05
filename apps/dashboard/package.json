@@ -9,7 +9,6 @@
     "test": "tsx --test src/**/*.test.ts"
   },
   "dependencies": {
-    "ethers": "^6.15.0",
     "next": "^14.2.5",
     "pg": "^8.16.3",
     "react": "^18.3.1",

@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 
-import { resolveEnsNames } from '../../../../lib/ens';
+import { resolveAddressOrEns, resolveEnsNames } from '../../../../lib/ens';
 import { getUsersMetrics, UsersFilter, UsersSortDirection } from '../../../../lib/metrics';
 
 function parseNumber(value: string | null): number | undefined {
@@ -19,6 +19,7 @@ export async function GET(request: NextRequest) {
       ? sortDirectionParam
       : 'desc';
 
+  const addressFilter = params.get('address')?.trim();
   const filters: UsersFilter = {
     dao: params.get('dao') || undefined,
     channel: params.get('channel') || undefined,
@@ -27,6 +28,22 @@ export async function GET(request: NextRequest) {
   };
 
   try {
+    if (addressFilter) {
+      const resolved = await resolveAddressOrEns(addressFilter);
+      if (resolved.address) {
+        filters.address = resolved.address;
+      } else if (resolved.available) {
+        return NextResponse.json({
+          users: [],
+          total: 0,
+          page,
+          pageSize,
+          sortDirection,
+          ensAvailable: true,
+        });
+      }
+    }
+
     const result = await getUsersMetrics(filters, page, pageSize, sortDirection);
     const allAddresses = result.users.flatMap((user) => user.addresses);
     const { map: ensMap, available: ensAvailable } = await resolveEnsNames(allAddresses);

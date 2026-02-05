@@ -37,6 +37,7 @@ export default function UsersTable({ daoOptions, channelOptions }: UsersTablePro
   const [maxAddresses, setMaxAddresses] = useState('');
   const [dao, setDao] = useState('');
   const [channel, setChannel] = useState('');
+  const [address, setAddress] = useState('');
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('desc');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -60,6 +61,7 @@ export default function UsersTable({ daoOptions, channelOptions }: UsersTablePro
       if (maxAddresses.trim()) params.set('maxAddresses', maxAddresses.trim());
       if (dao) params.set('dao', dao);
       if (channel) params.set('channel', channel);
+      if (address.trim()) params.set('address', address.trim());
 
       try {
         const response = await fetch(`/api/metrics/users?${params.toString()}`);
@@ -87,7 +89,7 @@ export default function UsersTable({ daoOptions, channelOptions }: UsersTablePro
     return () => {
       cancelled = true;
     };
-  }, [page, pageSize, sortDirection, minAddresses, maxAddresses, dao, channel]);
+  }, [page, pageSize, sortDirection, minAddresses, maxAddresses, dao, channel, address]);
 
   return (
     <div className="rounded-xl border border-border bg-panel p-4 shadow-sm">
@@ -168,15 +170,25 @@ export default function UsersTable({ daoOptions, channelOptions }: UsersTablePro
             ))}
           </select>
         </div>
+        <div>
+          <label className="block text-xs text-muted">Address or ENS</label>
+          <input
+            value={address}
+            onChange={(event) => {
+              setPage(1);
+              setAddress(event.target.value);
+            }}
+            placeholder="0x... or name.eth"
+            className="mt-1 w-48 rounded-md border border-border bg-background px-2 py-1 text-sm text-text"
+          />
+        </div>
       </div>
 
       {error ? (
         <p className="mt-4 text-sm text-red-300">{error}</p>
       ) : null}
       {!ensAvailable ? (
-        <p className="mt-4 text-xs text-amber-200">
-          ENS lookups disabled. Set ENS_RPC_URL (mainnet) to resolve names.
-        </p>
+        <p className="mt-4 text-xs text-amber-200">ENS lookups unavailable.</p>
       ) : null}
 
       <div className="mt-4 overflow-x-auto">
