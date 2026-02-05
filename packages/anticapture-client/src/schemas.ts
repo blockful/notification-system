@@ -43,6 +43,7 @@ const HistoricalVotingPowerItemSchema = z.object({
   delta: z.string(),
   daoId: z.string(),
   transactionHash: z.string(),
+  logIndex: z.number(),
   delegation: z.object({
     from: z.string(),
     to: z.string(),

@@ -21,6 +21,7 @@ export class VotingPowerFactory {
       delta: testConstants.votingPower.small,
       daoId: testConstants.daoIds.votingPowerTest,
       transactionHash: `0x${Math.random().toString(16).substr(2, 40)}`,
+      logIndex: 0, // Required for eventId deduplication
       chainId: 1, // Default to Ethereum mainnet for tests
       delegation: {
         from: 'delegator.eth',
