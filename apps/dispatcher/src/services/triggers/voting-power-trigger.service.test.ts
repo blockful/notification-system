@@ -845,4 +845,41 @@ describe('VotingPowerTriggerHandler - eventId deduplication', () => {
     // Should send 2 notifications (one for each delegation received)
     expect(sentNotifications).toHaveLength(2);
   });
+
+  it('should NOT send duplicate notifications when same message is processed twice (idempotency)', async () => {
+    // Simulates the Logic System re-sending the same event due to cursor not advancing
+    // The deduplication should block the second run entirely
+
+    const walletA = '0xWalletA000000000000000000000000000000001';
+    const stubUser1: User = { id: 'user-1', channel: 'telegram', channel_user_id: '111', created_at: new Date() };
+
+    const { handler, sentNotifications } = createHandlerWithDeduplication({
+      [walletA]: [stubUser1]
+    });
+
+    const message: DispatcherMessage = {
+      triggerId: 'voting-power-changed',
+      events: [
+        {
+          daoId: 'test-dao',
+          accountId: walletA,
+          transactionHash: '0xDuplicateTxHash',
+          changeType: 'other',
+          delta: '1000',
+          logIndex: 0,
+          chainId: 1,
+          timestamp: 1234567890
+        }
+      ]
+    };
+
+    // First run: should send notification
+    await handler.handleMessage(message);
+    const firstRunCount = sentNotifications.length;
+    expect(firstRunCount).toBe(1);
+
+    // Second run (same message): deduplication should block it
+    await handler.handleMessage(message);
+    expect(sentNotifications.length).toBe(firstRunCount);
+  });
 });

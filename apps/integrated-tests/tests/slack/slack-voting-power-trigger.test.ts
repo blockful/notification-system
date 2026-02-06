@@ -119,10 +119,12 @@ describe('Slack Voting Power Trigger - Integration Test', () => {
     }
 
     // Verify database records
+    // eventId format: ${transactionHash}-${logIndex}-${accountId}-voting-power
+    const expectedEventId = `0x1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef-0-${userWalletAddress}-voting-power`;
     const notifications = await dbHelper.getNotifications();
     const vpNotification = notifications.find(n =>
       n.user_id === user.id &&
-      n.event_id === '0x1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef' &&
+      n.event_id === expectedEventId &&
       n.dao_id === TEST_DAO_ID
     );
     expect(vpNotification).toBeDefined();
