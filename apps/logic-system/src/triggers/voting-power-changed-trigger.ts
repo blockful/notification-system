@@ -47,9 +47,10 @@ export class VotingPowerChangedTrigger extends Trigger<ProcessedVotingPowerHisto
 
     await this.dispatcherService.sendMessage(message);
 
-    // Update the last processed timestamp to the most recent timestamp
+    // Update the last processed timestamp to the most recent timestamp + 1 second
     // Since data comes ordered by timestamp asc, the last item has the latest timestamp
-    this.lastProcessedTimestamp = data[data.length - 1].timestamp;
+    // Adding 1 avoids reprocessing the same event since the API uses >= (gte) for fromDate
+    this.lastProcessedTimestamp = String(Number(data[data.length - 1].timestamp) + 1);
   }
 
   /**

@@ -66,12 +66,12 @@ describe('VotingPowerChangedTrigger', () => {
       });
     });
 
-    it('should update timestamp to the last item in array', async () => {
+    it('should update timestamp to the last item in array + 1 second', async () => {
       await trigger.process(mockVotingPowerData);
       
       // Should update to timestamp of last item (chronologically last)
       const lastProcessed = (trigger as any).lastProcessedTimestamp;
-      expect(lastProcessed).toBe('1625184000'); // Last item timestamp
+      expect(lastProcessed).toBe('1625184001'); // Last item timestamp + 1
     });
 
     it('should handle single item correctly', async () => {
@@ -85,7 +85,7 @@ describe('VotingPowerChangedTrigger', () => {
       });
       
       const lastProcessed = (trigger as any).lastProcessedTimestamp;
-      expect(lastProcessed).toBe('1625097600');
+      expect(lastProcessed).toBe('1625097601'); // timestamp + 1
     });
   });
 
@@ -109,7 +109,7 @@ describe('VotingPowerChangedTrigger', () => {
       
       // Verify the second call used the updated timestamp
       const secondCallArgs = mockVotingPowerRepository.listVotingPowerHistory.mock.calls[1][0];
-      expect(secondCallArgs).toBe('1625097600'); // Timestamp from first execution
+      expect(secondCallArgs).toBe('1625097601'); // Timestamp from first execution
     });
 
     it('should not process when no new data available', async () => {
