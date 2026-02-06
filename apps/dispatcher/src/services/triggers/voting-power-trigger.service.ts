@@ -100,7 +100,7 @@ export class VotingPowerTriggerHandler extends BaseTriggerHandler {
   ): Promise<void> {
     const { daoId, accountId, sourceAccountId, delta, transactionHash, chainId, votingPower, logIndex } = votingPowerEvent;
     
-    const subscribers = await this.getNotificationSubscribers(
+    const { subscribers, eventId } = await this.getNotificationSubscribers(
       accountId, // who receives the delegation
       daoId,
       transactionHash,
@@ -137,7 +137,7 @@ export class VotingPowerTriggerHandler extends BaseTriggerHandler {
       chainId
     });
 
-    await this.sendNotificationsToSubscribers(subscribers, notificationMessage, transactionHash, daoId, metadata, buttons);
+    await this.sendNotificationsToSubscribers(subscribers, notificationMessage, eventId, daoId, metadata, buttons);
   }
 
   /**
@@ -160,7 +160,7 @@ export class VotingPowerTriggerHandler extends BaseTriggerHandler {
       return;
     }
     
-    const subscribers = await this.getNotificationSubscribers(
+    const { subscribers, eventId } = await this.getNotificationSubscribers(
       sourceAccountId, // who MADE the delegation
       daoId,
       transactionHash,
@@ -219,7 +219,7 @@ export class VotingPowerTriggerHandler extends BaseTriggerHandler {
       chainId
     });
 
-    await this.sendNotificationsToSubscribers(subscribers, notificationMessage, transactionHash, daoId, metadata, buttons);
+    await this.sendNotificationsToSubscribers(subscribers, notificationMessage, eventId, daoId, metadata, buttons);
   }
 
   /**
@@ -232,7 +232,7 @@ export class VotingPowerTriggerHandler extends BaseTriggerHandler {
   ): Promise<void> {
     const { daoId, accountId, changeType, transactionHash, chainId, transfer, logIndex } = votingPowerEvent;
 
-    const subscribers = await this.getNotificationSubscribers(
+    const { subscribers, eventId } = await this.getNotificationSubscribers(
       accountId, daoId, transactionHash, logIndex, walletOwnersMap, daoSubscribersMap
     );
     if (subscribers.length === 0) return;
@@ -242,7 +242,7 @@ export class VotingPowerTriggerHandler extends BaseTriggerHandler {
       : this.buildGenericNotification(votingPowerEvent);
 
     const buttons = buildButtons({ triggerType: 'votingPowerChange', txHash: transactionHash, chainId });
-    await this.sendNotificationsToSubscribers(subscribers, message, transactionHash, daoId, metadata, buttons);
+    await this.sendNotificationsToSubscribers(subscribers, message, eventId, daoId, metadata, buttons);
   }
 
   /**
@@ -293,7 +293,6 @@ export class VotingPowerTriggerHandler extends BaseTriggerHandler {
 
   /**
    * Shared method to get notification subscribers with deduplication
-   *
    * eventId format: ${transactionHash}-${logIndex}-${accountId}-voting-power
    */
   private async getNotificationSubscribers(
@@ -303,10 +302,12 @@ export class VotingPowerTriggerHandler extends BaseTriggerHandler {
     logIndex: number,
     walletOwnersMap: Record<string, User[]>,
     daoSubscribersMap: Record<string, User[]>
-  ): Promise<User[]> {
+  ): Promise<{ subscribers: User[]; eventId: string }> {
+    const eventId = `${transactionHash}-${logIndex}-${accountId}-voting-power`;
+
     // Get wallet owners from cache
     const walletOwners = walletOwnersMap[accountId] || [];
-    if (walletOwners.length === 0) return [];
+    if (walletOwners.length === 0) return { subscribers: [], eventId };
     
     // Get DAO subscribers from cache
     const daoSubscribers = daoSubscribersMap[daoId] || [];
@@ -316,8 +317,8 @@ export class VotingPowerTriggerHandler extends BaseTriggerHandler {
       daoSubscribers.some(sub => sub.id === owner.id)
     );
     
-    if (subscribedOwners.length === 0) return [];
-    const eventId = `${transactionHash}-${logIndex}-${accountId}-voting-power`;
+    if (subscribedOwners.length === 0) return { subscribers: [], eventId };
+
     // Check deduplication for all subscribed owners at once
     const shouldSendNotifications = await this.subscriptionClient.shouldSend(
       subscribedOwners,
@@ -326,10 +327,10 @@ export class VotingPowerTriggerHandler extends BaseTriggerHandler {
     );
     
     // Final filtered list of subscribers
-    const finalSubscribers = subscribedOwners.filter(owner => 
+    const subscribers = subscribedOwners.filter(owner => 
       shouldSendNotifications.some(notification => notification.user_id === owner.id)
     );
-    return finalSubscribers;
+    return { subscribers, eventId };
   }
 
   /**
