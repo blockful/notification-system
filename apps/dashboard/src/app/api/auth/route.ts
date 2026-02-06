@@ -15,7 +15,7 @@ export async function POST(request: NextRequest) {
   const password = formData.get('password');
 
   if (typeof password !== 'string' || password !== secret) {
-    return NextResponse.redirect(new URL('/login?error=1', request.url));
+    return NextResponse.redirect(new URL('/login?error=1', request.url), 303);
   }
 
   const cookieValue = await getAuthCookieValue();
@@ -26,7 +26,7 @@ export async function POST(request: NextRequest) {
     );
   }
 
-  const response = NextResponse.redirect(new URL('/', request.url));
+  const response = NextResponse.redirect(new URL('/', request.url), 303);
   response.cookies.set('dashboard_auth', cookieValue, {
     httpOnly: true,
     sameSite: 'lax',
