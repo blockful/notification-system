@@ -15,7 +15,8 @@
     "subscription-server": "pnpm --filter @notification-system/subscription-server",
     "dispatcher": "pnpm --filter @notification-system/dispatcher",
     "integrated-tests": "pnpm --filter @notification-system/integrated-tests",
-    "client": "pnpm --filter @notification-system/anticapture-client"
+    "client": "pnpm --filter @notification-system/anticapture-client",
+    "flow-editor": "pnpm --filter @notification-system/flow-editor"
   },
   "devDependencies": {
     "@types/pg": "^8.15.5",
