@@ -76,6 +76,7 @@ export default function FlowEditorPage() {
   const [lastSaved, setLastSaved] = useState<Date | null>(null);
   const [isExporting, setIsExporting] = useState(false);
   const flowCanvasRef = useRef<HTMLDivElement>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Load saved flow from localStorage on mount (before fetching)
   useEffect(() => {
@@ -265,6 +266,46 @@ export default function FlowEditorPage() {
     }
   }, [activeTab]);
 
+  // Import from JSON file
+  const handleImportJSON = useCallback((event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      try {
+        const content = e.target?.result as string;
+        const imported = JSON.parse(content) as Flow;
+
+        // Validate structure
+        if (!imported.nodes || !Array.isArray(imported.nodes)) {
+          throw new Error('Invalid JSON: missing "nodes" array');
+        }
+        if (!imported.edges || !Array.isArray(imported.edges)) {
+          throw new Error('Invalid JSON: missing "edges" array');
+        }
+        if (!imported.metadata) {
+          throw new Error('Invalid JSON: missing "metadata" object');
+        }
+
+        // Set as design flow
+        setDesignFlow(imported);
+        setHasUnsavedChanges(true);
+        
+        // Switch to design tab
+        setActiveTab('design');
+        
+        alert(`✅ Imported successfully!\n\n${imported.nodes.length} nodes\n${imported.edges.length} edges`);
+      } catch (err) {
+        alert(`❌ Import failed: ${err instanceof Error ? err.message : 'Invalid JSON file'}`);
+      }
+    };
+    reader.readAsText(file);
+
+    // Reset input so same file can be imported again
+    event.target.value = '';
+  }, []);
+
   const handleRefresh = () => {
     fetchCodeFlow(false);
   };
@@ -327,7 +368,16 @@ export default function FlowEditorPage() {
               </>
             )}
             
-            {/* Export dropdown */}
+            {/* Hidden file input for import */}
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept=".json"
+              onChange={handleImportJSON}
+              className="hidden"
+            />
+
+            {/* Export/Import dropdown */}
             <div className="relative group">
               <button
                 className="px-3 py-1.5 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 transition-colors shadow-sm flex items-center gap-1"
@@ -342,7 +392,7 @@ export default function FlowEditorPage() {
                   <>📤 Export</>
                 )}
               </button>
-              <div className="absolute right-0 top-full mt-1 bg-white border border-slate-200 rounded-lg shadow-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all z-50 min-w-[140px]">
+              <div className="absolute right-0 top-full mt-1 bg-white border border-slate-200 rounded-lg shadow-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all z-50 min-w-[160px]">
                 <button
                   onClick={handleExportJSON}
                   className="w-full px-4 py-2 text-left text-sm text-slate-700 hover:bg-slate-50 flex items-center gap-2"
@@ -355,6 +405,12 @@ export default function FlowEditorPage() {
                   className="w-full px-4 py-2 text-left text-sm text-slate-700 hover:bg-slate-50 flex items-center gap-2 border-t border-slate-100"
                 >
                   📑 Export PDF
+                </button>
+                <button
+                  onClick={() => fileInputRef.current?.click()}
+                  className="w-full px-4 py-2 text-left text-sm text-slate-700 hover:bg-slate-50 flex items-center gap-2 border-t border-slate-100"
+                >
+                  📥 Import JSON
                 </button>
               </div>
             </div>

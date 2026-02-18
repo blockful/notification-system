@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useMemo, DragEvent, useState } from 'react';
+import { useCallback, useMemo, DragEvent, useState, useEffect } from 'react';
 import {
   ReactFlow,
   Background,
@@ -208,6 +208,14 @@ function FlowCanvasInner({
 
   const [nodes, setNodes, onNodesChange] = useNodesState(initialNodes);
   const [edges, setEdges, onEdgesChange] = useEdgesState(initialEdges);
+
+  // Sync nodes/edges when flow prop changes (e.g., after import)
+  useEffect(() => {
+    if (flow) {
+      setNodes(convertToReactFlowNodes(flow.nodes, !readOnly));
+      setEdges(convertToReactFlowEdges(flow.edges));
+    }
+  }, [flow, readOnly, setNodes, setEdges]);
 
   // Handle new connections (only in design mode)
   const onConnect = useCallback(
