@@ -1,0 +1,263 @@
+{
+  "nodes": [
+    {
+      "id": "start",
+      "type": "start",
+      "position": { "x": 50, "y": 300 },
+      "data": {
+        "label": "User starts conversation",
+        "trigger": "/start"
+      }
+    },
+    {
+      "id": "welcome",
+      "type": "message",
+      "position": { "x": 300, "y": 300 },
+      "data": {
+        "label": "Welcome Message",
+        "message": "🔔 Welcome to the Anticapture notification system!\nSpotting the \"oh no\" before it hits your treasury.\n\n➡️ To start using the system, you'll need to add the DAOs you want to receive notifications from by clicking on \"DAOs\".\n➡️ After that, click on \"Tracked Wallets\" and add your wallet address to receive custom notifications.",
+        "buttons": [
+          { "text": "🌐 DAOs", "action": "daos_init" },
+          { "text": "📝 Tracked Wallets", "action": "wallets_init" },
+          { "text": "💡 Learn More", "action": "learn_more" }
+        ]
+      }
+    },
+    {
+      "id": "learn_more",
+      "type": "message",
+      "position": { "x": 300, "y": 100 },
+      "data": {
+        "label": "Learn More / Help",
+        "message": "<b>What is Anticapture?</b>\nA governance security research, notification system and dashboard that tracks social dynamics, governance models, and contracts, ensuring security and preventing malicious capture.\n\n<b>What is this bot for?</b>\nGet notified about risks, changes and proposals that you care about the DAOs you're in.\n\n<b>Commands that might be useful</b>\n/start\n/learn_more\n/daos",
+        "parseMode": "HTML"
+      }
+    },
+    {
+      "id": "daos_init",
+      "type": "message",
+      "position": { "x": 600, "y": 300 },
+      "data": {
+        "label": "DAO Selection",
+        "message": "Select the DAOs you want to track (you can select multiple):",
+        "dynamicButtons": true,
+        "buttonPattern": "dao_toggle_{DAO_ID}",
+        "confirmButton": { "text": "✅ Confirm selection", "action": "dao_confirm" }
+      }
+    },
+    {
+      "id": "dao_toggle",
+      "type": "action",
+      "position": { "x": 850, "y": 200 },
+      "data": {
+        "label": "Toggle DAO Selection",
+        "action": "Toggle DAO in user session",
+        "note": "Updates inline keyboard to show ✅ for selected DAOs"
+      }
+    },
+    {
+      "id": "dao_confirm",
+      "type": "condition",
+      "position": { "x": 850, "y": 400 },
+      "data": {
+        "label": "DAOs Selected?",
+        "condition": "selectedDAOs.size > 0"
+      }
+    },
+    {
+      "id": "dao_success",
+      "type": "message",
+      "position": { "x": 1100, "y": 300 },
+      "data": {
+        "label": "DAO Success Message",
+        "message": "Success! Your DAOs are now under surveillance (the good kind).\nYou'll be notified when things get spicy:\n\n{DAO_LIST}\n\nYou can edit this list by clicking on 🌐 DAOs"
+      }
+    },
+    {
+      "id": "dao_unsubscribed",
+      "type": "message",
+      "position": { "x": 1100, "y": 500 },
+      "data": {
+        "label": "All DAOs Unsubscribed",
+        "message": "You have unsubscribed from all DAOs. You can subscribe again anytime by clicking on DAOs"
+      }
+    },
+    {
+      "id": "wallets_init",
+      "type": "message",
+      "position": { "x": 600, "y": 550 },
+      "data": {
+        "label": "Wallet Management",
+        "message": "Here's the wallets you have added to receive custom notifications:\n\n{WALLET_LIST}",
+        "emptyMessage": "You haven't added any wallets yet. Click \"Add wallet\" to get started.",
+        "buttons": [
+          { "text": "➕ Add wallet", "action": "wallet_add" },
+          { "text": "❌ Remove wallet", "action": "wallet_remove" }
+        ]
+      }
+    },
+    {
+      "id": "wallet_add",
+      "type": "message",
+      "position": { "x": 850, "y": 550 },
+      "data": {
+        "label": "Add Wallet Prompt",
+        "message": "👉 Please enter your address or ENS name:",
+        "awaitInput": true
+      }
+    },
+    {
+      "id": "wallet_processing",
+      "type": "message",
+      "position": { "x": 1100, "y": 550 },
+      "data": {
+        "label": "Processing Wallet",
+        "message": "⏱️ Hang tight, we're just connecting your data…"
+      }
+    },
+    {
+      "id": "wallet_add_result",
+      "type": "condition",
+      "position": { "x": 1100, "y": 700 },
+      "data": {
+        "label": "Wallet Valid?",
+        "condition": "isValidAddress || isValidENS"
+      }
+    },
+    {
+      "id": "wallet_add_success",
+      "type": "message",
+      "position": { "x": 1350, "y": 600 },
+      "data": {
+        "label": "Wallet Added Success",
+        "message": "✅ All set! Your wallet has been added."
+      }
+    },
+    {
+      "id": "wallet_add_error",
+      "type": "message",
+      "position": { "x": 1350, "y": 800 },
+      "data": {
+        "label": "Wallet Invalid Error",
+        "message": "❌ Invalid wallet address. Please try again."
+      }
+    },
+    {
+      "id": "wallet_remove",
+      "type": "message",
+      "position": { "x": 850, "y": 800 },
+      "data": {
+        "label": "Remove Wallet Selection",
+        "message": "Select the wallets you want to remove:",
+        "dynamicButtons": true,
+        "buttonPattern": "wallet_toggle_{ADDRESS}",
+        "confirmButton": { "text": "🗑️ Confirm removal", "action": "wallet_confirm_remove" }
+      }
+    },
+    {
+      "id": "wallet_remove_result",
+      "type": "condition",
+      "position": { "x": 1100, "y": 900 },
+      "data": {
+        "label": "Wallets Selected?",
+        "condition": "walletsToRemove.size > 0"
+      }
+    },
+    {
+      "id": "wallet_remove_success",
+      "type": "message",
+      "position": { "x": 1350, "y": 900 },
+      "data": {
+        "label": "Wallets Removed Success",
+        "message": "✅ Selected wallets have been removed."
+      }
+    },
+    {
+      "id": "wallet_remove_warning",
+      "type": "message",
+      "position": { "x": 1100, "y": 1050 },
+      "data": {
+        "label": "No Wallet Selected Warning",
+        "message": "Please select at least one wallet to remove."
+      }
+    },
+    {
+      "id": "unknown_command",
+      "type": "message",
+      "position": { "x": 300, "y": 550 },
+      "data": {
+        "label": "Unknown Command",
+        "message": "Please use the buttons below or type /learn_more for more information."
+      }
+    },
+    {
+      "id": "error_loading_daos",
+      "type": "message",
+      "position": { "x": 600, "y": 100 },
+      "data": {
+        "label": "Error: Loading DAOs",
+        "message": "Sorry, there was an error loading the DAOs. Please try again later."
+      }
+    },
+    {
+      "id": "error_loading_wallets",
+      "type": "message",
+      "position": { "x": 600, "y": 800 },
+      "data": {
+        "label": "Error: Loading Wallets",
+        "message": "Sorry, there was an error loading your wallets. Please try again later."
+      }
+    },
+    {
+      "id": "error_generic",
+      "type": "message",
+      "position": { "x": 1350, "y": 1050 },
+      "data": {
+        "label": "Generic Error",
+        "message": "Sorry, there was an error. Please try again later."
+      }
+    }
+  ],
+  "edges": [
+    { "id": "e1", "source": "start", "target": "welcome" },
+    { "id": "e2", "source": "welcome", "target": "daos_init", "label": "🌐 DAOs" },
+    { "id": "e3", "source": "welcome", "target": "wallets_init", "label": "📝 Tracked Wallets" },
+    { "id": "e4", "source": "welcome", "target": "learn_more", "label": "💡 Learn More" },
+    { "id": "e5", "source": "daos_init", "target": "dao_toggle", "label": "Toggle DAO" },
+    { "id": "e6", "source": "dao_toggle", "target": "daos_init", "label": "Update UI" },
+    { "id": "e7", "source": "daos_init", "target": "dao_confirm", "label": "✅ Confirm" },
+    { "id": "e8", "source": "dao_confirm", "target": "dao_success", "label": "Yes" },
+    { "id": "e9", "source": "dao_confirm", "target": "dao_unsubscribed", "label": "No DAOs" },
+    { "id": "e10", "source": "wallets_init", "target": "wallet_add", "label": "➕ Add wallet" },
+    { "id": "e11", "source": "wallets_init", "target": "wallet_remove", "label": "❌ Remove wallet" },
+    { "id": "e12", "source": "wallet_add", "target": "wallet_processing", "label": "Input received" },
+    { "id": "e13", "source": "wallet_processing", "target": "wallet_add_result" },
+    { "id": "e14", "source": "wallet_add_result", "target": "wallet_add_success", "label": "Valid" },
+    { "id": "e15", "source": "wallet_add_result", "target": "wallet_add_error", "label": "Invalid" },
+    { "id": "e16", "source": "wallet_remove", "target": "wallet_remove_result", "label": "🗑️ Confirm" },
+    { "id": "e17", "source": "wallet_remove_result", "target": "wallet_remove_success", "label": "Selected" },
+    { "id": "e18", "source": "wallet_remove_result", "target": "wallet_remove_warning", "label": "None" },
+    { "id": "e19", "source": "learn_more", "target": "welcome", "label": "Back to menu" },
+    { "id": "e20", "source": "dao_success", "target": "welcome", "label": "Continue" },
+    { "id": "e21", "source": "dao_unsubscribed", "target": "welcome", "label": "Continue" },
+    { "id": "e22", "source": "wallet_add_success", "target": "wallets_init", "label": "Back" },
+    { "id": "e23", "source": "wallet_add_error", "target": "wallet_add", "label": "Retry" },
+    { "id": "e24", "source": "wallet_remove_success", "target": "wallets_init", "label": "Back" }
+  ],
+  "metadata": {
+    "name": "Anticapture Notification Bot Flow",
+    "description": "Complete conversation flow for the Anticapture notification Telegram bot",
+    "version": "1.0.0",
+    "platform": "telegram",
+    "commands": [
+      { "command": "/start", "description": "Initialize bot and show welcome message" },
+      { "command": "/daos", "description": "Manage DAO notification preferences" },
+      { "command": "/wallets", "description": "Manage tracked wallet addresses" },
+      { "command": "/learn_more", "description": "Learn about Anticapture platform" }
+    ],
+    "persistentKeyboard": [
+      ["🌐 DAOs", "📝 Tracked Wallets"],
+      ["💡 Learn More"]
+    ]
+  }
+}
