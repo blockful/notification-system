@@ -26,6 +26,7 @@ import { ConditionNode } from './nodes/ConditionNode';
 import { InputNode } from './nodes/InputNode';
 import { StartNode } from './nodes/StartNode';
 import { ErrorNode } from './nodes/ErrorNode';
+import { CommentNode } from './nodes/CommentNode';
 import { ZoomSlider } from '@/components/zoom-slider';
 import { NodePalette, AddNodeButton } from './NodePalette';
 
@@ -37,6 +38,7 @@ const nodeTypes: NodeTypes = {
   condition: ConditionNode,
   input: InputNode,
   error: ErrorNode,
+  comment: CommentNode,
 };
 
 interface FlowCanvasProps {
@@ -162,6 +164,14 @@ function createDefaultNodeData(type: string) {
         ...baseData,
         title: 'New Error',
         content: 'Error message here...',
+      };
+    case 'comment':
+      return {
+        ...baseData,
+        title: 'Note',
+        content: 'Add your comment here...',
+        sourceKey: 'comment',
+        sourceFile: 'design/notes',
       };
     default:
       return {
@@ -381,6 +391,7 @@ function FlowCanvasInner({
               case 'condition': return '#f59e0b';
               case 'input': return '#06b6d4';
               case 'error': return '#ef4444';
+              case 'comment': return '#fbbf24';
               default: return '#94a3b8';
             }
           }}

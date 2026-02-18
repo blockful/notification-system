@@ -72,7 +72,10 @@ function InputNodeComponent({ id, data, selected }: InputNodeProps) {
             value={editTitle}
             onChange={(e) => setEditTitle(e.target.value)}
             onBlur={handleTitleSave}
-            onKeyDown={(e) => e.key === 'Enter' && handleTitleSave()}
+            onKeyDown={(e) => {
+              e.stopPropagation();
+              if (e.key === 'Enter') handleTitleSave();
+            }}
             className="flex-1 bg-white/20 text-white text-sm font-semibold px-2 py-0.5 rounded outline-none"
             autoFocus
           />
@@ -106,6 +109,7 @@ function InputNodeComponent({ id, data, selected }: InputNodeProps) {
             value={editContent}
             onChange={(e) => setEditContent(e.target.value)}
             onBlur={handleContentSave}
+            onKeyDown={(e) => e.stopPropagation()}
             className="w-full text-xs text-slate-600 leading-relaxed bg-slate-50 border border-slate-200 rounded p-2 outline-none resize-none min-h-[40px]"
             autoFocus
           />

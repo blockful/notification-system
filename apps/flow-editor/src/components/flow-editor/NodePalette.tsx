@@ -38,6 +38,13 @@ const nodeTypes = [
     color: 'bg-red-500',
     description: 'Error state message',
   },
+  {
+    type: 'comment',
+    label: 'Comment',
+    icon: '📝',
+    color: 'bg-amber-400',
+    description: 'Add notes or annotations',
+  },
 ];
 
 interface NodePaletteProps {

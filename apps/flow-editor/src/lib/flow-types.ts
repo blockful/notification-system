@@ -3,7 +3,7 @@
  * These types represent the conversation flow structure with UX copy
  */
 
-export type NodeType = 'start' | 'message' | 'action' | 'condition' | 'input' | 'error';
+export type NodeType = 'start' | 'message' | 'action' | 'condition' | 'input' | 'error' | 'comment';
 
 export interface FlowButton {
   /** Button label text from code */
