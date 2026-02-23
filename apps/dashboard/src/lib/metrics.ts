@@ -40,6 +40,16 @@ export type NotificationActivityPoint = {
   count: number;
 };
 
+export type TopFollowedAddress = {
+  address: string;
+  followerCount: number;
+};
+
+export type UsersByDaoCount = {
+  daoCount: number;
+  userCount: number;
+};
+
 export type UserMetricsRow = {
   id: string;
   channel: string;
@@ -95,6 +105,8 @@ const growthCache = createTimedCache<GrowthPoint[]>(30_000);
 const daoCache = createTimedCache<DaoItem[]>(30_000);
 const daoNotificationCache = createTimedCache<DaoNotificationItem[]>(30_000);
 const notificationActivityCache = createTimedCache<NotificationActivityPoint[]>(30_000);
+const topFollowedAddressesCache = createTimedCache<TopFollowedAddress[]>(30_000);
+const usersByDaoCountCache = createTimedCache<UsersByDaoCount[]>(30_000);
 
 export function buildEngagementDistributionQuery() {
   return `
@@ -301,6 +313,64 @@ export function buildNotificationActivityByDaoQuery(limit: number) {
     `,
     values: [limit],
   };
+}
+
+export function buildTopFollowedAddressesQuery(limit: number) {
+  return {
+    text: `
+      SELECT LOWER(ua.address) as address, COUNT(DISTINCT ua.user_id) as follower_count
+      FROM user_addresses ua
+      WHERE ua.is_active = true
+      GROUP BY LOWER(ua.address)
+      ORDER BY follower_count DESC
+      LIMIT $1
+    `,
+    values: [limit],
+  };
+}
+
+export async function getTopFollowedAddresses(limit = 10): Promise<TopFollowedAddress[]> {
+  const cached = topFollowedAddressesCache.get();
+  if (cached && limit === 10) return cached;
+
+  const { text, values } = buildTopFollowedAddressesQuery(limit);
+  const rows = await query<{ address: string; follower_count: string }>(text, values);
+
+  const result = rows.map((row) => ({
+    address: row.address,
+    followerCount: Number(row.follower_count),
+  }));
+  if (limit === 10) topFollowedAddressesCache.set(result);
+  return result;
+}
+
+export function buildUsersByDaoCountQuery() {
+  return `
+    SELECT dao_count, COUNT(*) as user_count
+    FROM (
+      SELECT u.id, COUNT(p.id) as dao_count
+      FROM users u
+      LEFT JOIN user_preferences p ON p.user_id = u.id AND p.is_active = true
+      GROUP BY u.id
+    ) user_dao_counts
+    GROUP BY dao_count
+    ORDER BY dao_count
+  `;
+}
+
+export async function getUsersByDaoCount(): Promise<UsersByDaoCount[]> {
+  const cached = usersByDaoCountCache.get();
+  if (cached) return cached;
+
+  const text = buildUsersByDaoCountQuery();
+  const rows = await query<{ dao_count: number; user_count: string }>(text);
+
+  const result = rows.map((row) => ({
+    daoCount: Number(row.dao_count),
+    userCount: Number(row.user_count),
+  }));
+  usersByDaoCountCache.set(result);
+  return result;
 }
 
 export function buildUsersQueries(

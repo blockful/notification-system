@@ -6,6 +6,7 @@ import MetricCard from './metric-card';
 import BarChartCard from './charts/bar-chart-card';
 import LineChartCard from './charts/line-chart-card';
 import PieChartCard from './charts/pie-chart-card';
+import TopFollowedAccountsCard from './charts/top-followed-accounts-card';
 import UsersTable from './tables/users-table';
 
 type SummaryTotals = {
@@ -69,12 +70,34 @@ type NotificationActivityResponse = {
   points: NotificationPoint[];
 };
 
+type TopFollowedAddress = {
+  address: string;
+  followerCount: number;
+  ens: string | null;
+};
+
+type TopFollowedAddressResponse = {
+  items: TopFollowedAddress[];
+  ensAvailable: boolean;
+};
+
+type UsersByDaoCount = {
+  daoCount: number;
+  userCount: number;
+};
+
+type UsersByDaoCountResponse = {
+  items: UsersByDaoCount[];
+};
+
 export default function DashboardClient() {
   const [summary, setSummary] = useState<SummaryResponse | null>(null);
   const [growth, setGrowth] = useState<GrowthPoint[]>([]);
   const [daos, setDaos] = useState<DaoItem[]>([]);
   const [daoNotifications, setDaoNotifications] = useState<DaoNotificationItem[]>([]);
   const [notificationActivity, setNotificationActivity] = useState<NotificationPoint[]>([]);
+  const [topAddresses, setTopAddresses] = useState<TopFollowedAddress[]>([]);
+  const [usersByDaoCount, setUsersByDaoCount] = useState<UsersByDaoCount[]>([]);
   const [notificationDaoFilter, setNotificationDaoFilter] = useState('');
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -86,12 +109,14 @@ export default function DashboardClient() {
       setLoading(true);
       setError(null);
       try {
-        const [summaryRes, growthRes, daosRes, notificationsRes, activityRes] = await Promise.all([
+        const [summaryRes, growthRes, daosRes, notificationsRes, activityRes, topAddressesRes, usersByDaoCountRes] = await Promise.all([
           fetch('/api/metrics/summary'),
           fetch('/api/metrics/growth'),
           fetch('/api/metrics/daos'),
           fetch('/api/metrics/notifications-by-dao'),
           fetch('/api/metrics/notification-activity'),
+          fetch('/api/metrics/top-addresses'),
+          fetch('/api/metrics/users-by-dao-count'),
         ]);
 
         if (
@@ -99,7 +124,9 @@ export default function DashboardClient() {
           !growthRes.ok ||
           !daosRes.ok ||
           !notificationsRes.ok ||
-          !activityRes.ok
+          !activityRes.ok ||
+          !topAddressesRes.ok ||
+          !usersByDaoCountRes.ok
         ) {
           throw new Error('Failed to load dashboard metrics.');
         }
@@ -109,6 +136,8 @@ export default function DashboardClient() {
         const daosJson = (await daosRes.json()) as DaoResponse;
         const notificationsJson = (await notificationsRes.json()) as DaoNotificationResponse;
         const activityJson = (await activityRes.json()) as NotificationActivityResponse;
+        const topAddressesJson = (await topAddressesRes.json()) as TopFollowedAddressResponse;
+        const usersByDaoCountJson = (await usersByDaoCountRes.json()) as UsersByDaoCountResponse;
 
         if (!cancelled) {
           setSummary(summaryJson);
@@ -116,6 +145,8 @@ export default function DashboardClient() {
           setDaos(daosJson.items ?? []);
           setDaoNotifications(notificationsJson.items ?? []);
           setNotificationActivity(activityJson.points ?? summaryJson.notificationActivity ?? []);
+          setTopAddresses(topAddressesJson.items ?? []);
+          setUsersByDaoCount(usersByDaoCountJson.items ?? []);
         }
       } catch (err) {
         if (!cancelled) {
@@ -234,7 +265,7 @@ export default function DashboardClient() {
         </div>
       </section>
 
-      <section className="grid gap-4 lg:grid-cols-2 xl:grid-cols-4">
+      <section className="grid gap-4 lg:grid-cols-2 xl:grid-cols-3">
         <BarChartCard
           title="Top DAOs by subscribers"
           data={daoChart}
@@ -260,6 +291,17 @@ export default function DashboardClient() {
         <BarChartCard
           title="Addresses per user"
           data={engagementChart}
+          xKey="label"
+          barKey="userCount"
+          valueLabel="Users"
+        />
+        <TopFollowedAccountsCard data={topAddresses} />
+        <BarChartCard
+          title="DAOs tracked per user"
+          data={usersByDaoCount.map((item) => ({
+            ...item,
+            label: String(item.daoCount),
+          }))}
           xKey="label"
           barKey="userCount"
           valueLabel="Users"

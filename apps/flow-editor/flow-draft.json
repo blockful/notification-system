@@ -1,0 +1,447 @@
+{
+  "nodes": [
+    {
+      "id": "start",
+      "type": "start",
+      "title": "User Starts",
+      "content": "User sends /start command",
+      "sourceKey": "command:/start",
+      "sourceFile": "apps/consumers/src/services/bot/telegram-bot.service.ts",
+      "position": {
+        "x": 50,
+        "y": 300
+      },
+      "command": "/start"
+    },
+    {
+      "id": "welcome",
+      "type": "message",
+      "title": "Welcome Message",
+      "content": "🔔 Welcome to the Anticapture notification system!\nSpotting the \"oh no\" before it hits your treasury.\n\n➡️ To start using the system, you'll need to add the DAOs you want to receive notifications from by clicking on \"DAOs\".\n➡️ After that, click on \"Tracked Wallets\" and add your wallet address to receive custom notifications.",
+      "sourceKey": "uiMessages.welcome",
+      "sourceFile": "packages/messages/src/ui/common.ts",
+      "position": {
+        "x": 300,
+        "y": 300
+      },
+      "buttons": [
+        {
+          "text": "🌐 DAOs",
+          "targetNodeId": "daos_init",
+          "sourceKey": "uiMessages.buttons.daos"
+        },
+        {
+          "text": "📝 Tracked Wallets",
+          "targetNodeId": "wallets_init",
+          "sourceKey": "uiMessages.buttons.myWallets"
+        },
+        {
+          "text": "💡 Learn More",
+          "targetNodeId": "learn_more",
+          "sourceKey": "uiMessages.buttons.learnMore"
+        }
+      ]
+    },
+    {
+      "id": "learn_more",
+      "type": "message",
+      "title": "Learn More / Help",
+      "content": "<b>What is Anticapture?</b>\nA governance security research, notification system and dashboard that tracks social dynamics, governance models, and contracts, ensuring security and preventing malicious capture.\n\n<b>What is this bot for?</b>\nGet notified about risks, changes and proposals that you care about the DAOs you're in.\n\n<b>Commands that might be useful</b>\n/start\n/learn_more\n/daos",
+      "sourceKey": "uiMessages.help",
+      "sourceFile": "packages/messages/src/ui/common.ts",
+      "position": {
+        "x": 300,
+        "y": 100
+      },
+      "parseMode": "HTML",
+      "command": "/learn_more"
+    },
+    {
+      "id": "daos_init",
+      "type": "message",
+      "title": "DAO Selection",
+      "content": "Select the DAOs you want to track (you can select multiple):",
+      "sourceKey": "uiMessages.daoSelection",
+      "sourceFile": "packages/messages/src/ui/common.ts",
+      "position": {
+        "x": 600,
+        "y": 250
+      },
+      "command": "/daos",
+      "buttons": [
+        {
+          "text": "✅ Confirm selection",
+          "targetNodeId": "dao_confirm",
+          "sourceKey": "uiMessages.confirmSelection",
+          "actionId": "dao_confirm"
+        }
+      ]
+    },
+    {
+      "id": "dao_toggle",
+      "type": "action",
+      "title": "Toggle DAO Selection",
+      "content": "User toggles a DAO checkbox. Selection is stored in session.",
+      "sourceKey": "action:dao_toggle",
+      "sourceFile": "apps/consumers/src/services/dao/telegram-dao.service.ts",
+      "position": {
+        "x": 600,
+        "y": 100
+      }
+    },
+    {
+      "id": "dao_confirm",
+      "type": "condition",
+      "title": "DAOs Selected?",
+      "content": "Check if user selected at least one DAO",
+      "sourceKey": "condition:selectedDAOs.size > 0",
+      "sourceFile": "apps/consumers/src/services/dao/telegram-dao.service.ts",
+      "position": {
+        "x": 900,
+        "y": 200
+      }
+    },
+    {
+      "id": "dao_success",
+      "type": "message",
+      "title": "DAO Selection Success",
+      "content": "Success! Your DAOs are now under surveillance (the good kind).\nYou'll be notified when things get spicy:\n\n{DAO_LIST}\n\nYou can edit this list by clicking on 🌐 DAOs",
+      "sourceKey": "uiMessages.selectedDaos + uiMessages.editDaos",
+      "sourceFile": "packages/messages/src/ui/common.ts",
+      "position": {
+        "x": 1100,
+        "y": 150
+      }
+    },
+    {
+      "id": "dao_unsubscribed",
+      "type": "message",
+      "title": "All DAOs Unsubscribed",
+      "content": "You have unsubscribed from all DAOs. You can subscribe again anytime by clicking on DAOs",
+      "sourceKey": "telegramMessages.dao.allUnsubscribed",
+      "sourceFile": "packages/messages/src/ui/telegram.ts",
+      "position": {
+        "x": 1100,
+        "y": 300
+      }
+    },
+    {
+      "id": "wallets_init",
+      "type": "message",
+      "title": "Wallet Management",
+      "content": "Here's the wallets you have added to receive custom notifications:\n\n{WALLET_LIST}",
+      "sourceKey": "uiMessages.wallet.selection",
+      "sourceFile": "packages/messages/src/ui/common.ts",
+      "position": {
+        "x": 600,
+        "y": 450
+      },
+      "command": "/wallets",
+      "buttons": [
+        {
+          "text": "➕ Add wallet",
+          "targetNodeId": "wallet_add",
+          "sourceKey": "uiMessages.buttons.addWallet",
+          "actionId": "wallet_add"
+        },
+        {
+          "text": "❌ Remove wallet",
+          "targetNodeId": "wallet_remove",
+          "sourceKey": "uiMessages.buttons.removeWallet",
+          "actionId": "wallet_remove"
+        }
+      ]
+    },
+    {
+      "id": "wallets_empty",
+      "type": "message",
+      "title": "No Wallets Yet",
+      "content": "You haven't added any wallets yet. Click \"Add wallet\" to get started.",
+      "sourceKey": "uiMessages.wallet.noWallets",
+      "sourceFile": "packages/messages/src/ui/common.ts",
+      "position": {
+        "x": 600,
+        "y": 600
+      },
+      "buttons": [
+        {
+          "text": "➕ Add wallet",
+          "targetNodeId": "wallet_add",
+          "sourceKey": "uiMessages.buttons.addWallet"
+        }
+      ]
+    },
+    {
+      "id": "wallet_add",
+      "type": "input",
+      "title": "Add Wallet Prompt",
+      "content": "👉 Please enter your address or ENS name:",
+      "sourceKey": "uiMessages.wallet.input",
+      "sourceFile": "packages/messages/src/ui/common.ts",
+      "position": {
+        "x": 900,
+        "y": 400
+      },
+      "awaitInput": true
+    },
+    {
+      "id": "wallet_processing",
+      "type": "message",
+      "title": "Processing Wallet",
+      "content": "⏱️ Hang tight, we're just connecting your data…",
+      "sourceKey": "uiMessages.wallet.processing",
+      "sourceFile": "packages/messages/src/ui/common.ts",
+      "position": {
+        "x": 1100,
+        "y": 350
+      }
+    },
+    {
+      "id": "wallet_add_success",
+      "type": "message",
+      "title": "Wallet Added Success",
+      "content": "✅ All set! Your wallet has been added.",
+      "sourceKey": "uiMessages.wallet.success",
+      "sourceFile": "packages/messages/src/ui/common.ts",
+      "position": {
+        "x": 1300,
+        "y": 300
+      }
+    },
+    {
+      "id": "wallet_add_error",
+      "type": "message",
+      "title": "Invalid Wallet Error",
+      "content": "❌ Invalid wallet address. Please try again.",
+      "sourceKey": "uiMessages.wallet.error",
+      "sourceFile": "packages/messages/src/ui/common.ts",
+      "position": {
+        "x": 1300,
+        "y": 450
+      }
+    },
+    {
+      "id": "wallet_remove",
+      "type": "message",
+      "title": "Remove Wallet Selection",
+      "content": "Select the wallets you want to remove:",
+      "sourceKey": "uiMessages.wallet.removeConfirmation",
+      "sourceFile": "packages/messages/src/ui/common.ts",
+      "position": {
+        "x": 900,
+        "y": 550
+      },
+      "buttons": [
+        {
+          "text": "🗑️ Confirm removal",
+          "targetNodeId": "wallet_remove_confirm",
+          "sourceKey": "uiMessages.buttons.confirmRemoval",
+          "actionId": "wallet_confirm_remove"
+        }
+      ]
+    },
+    {
+      "id": "wallet_remove_success",
+      "type": "message",
+      "title": "Wallets Removed Success",
+      "content": "✅ Selected wallets have been removed.",
+      "sourceKey": "uiMessages.wallet.removeSuccess",
+      "sourceFile": "packages/messages/src/ui/common.ts",
+      "position": {
+        "x": 1100,
+        "y": 550
+      }
+    },
+    {
+      "id": "unknown_command",
+      "type": "message",
+      "title": "Unknown Command",
+      "content": "Please use the buttons below or type /learn_more for more information.",
+      "sourceKey": "telegramMessages.bot.unknownCommand",
+      "sourceFile": "packages/messages/src/ui/telegram.ts",
+      "position": {
+        "x": 300,
+        "y": 550
+      }
+    },
+    {
+      "id": "error_loading_daos",
+      "type": "message",
+      "title": "Error: Loading DAOs",
+      "content": "Sorry, there was an error loading the DAOs. Please try again later.",
+      "sourceKey": "uiMessages.errors.loadingDaos",
+      "sourceFile": "packages/messages/src/ui/common.ts",
+      "position": {
+        "x": 700,
+        "y": 50
+      }
+    },
+    {
+      "id": "error_loading_wallets",
+      "type": "message",
+      "title": "Error: Loading Wallets",
+      "content": "Sorry, there was an error loading your wallets. Please try again later.",
+      "sourceKey": "uiMessages.errors.loadingWallets",
+      "sourceFile": "packages/messages/src/ui/common.ts",
+      "position": {
+        "x": 900,
+        "y": 700
+      }
+    },
+    {
+      "id": "error_generic",
+      "type": "message",
+      "title": "Generic Error",
+      "content": "Sorry, there was an error. Please try again later.",
+      "sourceKey": "uiMessages.errors.generic",
+      "sourceFile": "packages/messages/src/ui/common.ts",
+      "position": {
+        "x": 1200,
+        "y": 650
+      }
+    }
+  ],
+  "edges": [
+    {
+      "id": "e-start-welcome",
+      "source": "start",
+      "target": "welcome"
+    },
+    {
+      "id": "e-welcome-learn",
+      "source": "welcome",
+      "target": "learn_more",
+      "label": "💡 Learn More",
+      "type": "button"
+    },
+    {
+      "id": "e-welcome-daos",
+      "source": "welcome",
+      "target": "daos_init",
+      "label": "🌐 DAOs",
+      "type": "button"
+    },
+    {
+      "id": "e-daos-toggle",
+      "source": "daos_init",
+      "target": "dao_toggle",
+      "label": "Toggle DAO",
+      "type": "button"
+    },
+    {
+      "id": "e-toggle-daos",
+      "source": "dao_toggle",
+      "target": "daos_init",
+      "label": "Update UI"
+    },
+    {
+      "id": "e-daos-confirm",
+      "source": "daos_init",
+      "target": "dao_confirm",
+      "label": "✅ Confirm selection",
+      "type": "button"
+    },
+    {
+      "id": "e-confirm-success",
+      "source": "dao_confirm",
+      "target": "dao_success",
+      "label": "Yes (has selections)",
+      "type": "condition"
+    },
+    {
+      "id": "e-confirm-unsub",
+      "source": "dao_confirm",
+      "target": "dao_unsubscribed",
+      "label": "No DAOs selected",
+      "type": "condition"
+    },
+    {
+      "id": "e-welcome-wallets",
+      "source": "welcome",
+      "target": "wallets_init",
+      "label": "📝 Tracked Wallets",
+      "type": "button"
+    },
+    {
+      "id": "e-wallets-add",
+      "source": "wallets_init",
+      "target": "wallet_add",
+      "label": "➕ Add wallet",
+      "type": "button"
+    },
+    {
+      "id": "e-add-processing",
+      "source": "wallet_add",
+      "target": "wallet_processing",
+      "label": "User enters address"
+    },
+    {
+      "id": "e-processing-success",
+      "source": "wallet_processing",
+      "target": "wallet_add_success",
+      "label": "Valid address",
+      "type": "condition"
+    },
+    {
+      "id": "e-processing-error",
+      "source": "wallet_processing",
+      "target": "wallet_add_error",
+      "label": "Invalid address",
+      "type": "condition"
+    },
+    {
+      "id": "e-error-retry",
+      "source": "wallet_add_error",
+      "target": "wallet_add",
+      "label": "Retry"
+    },
+    {
+      "id": "e-wallets-remove",
+      "source": "wallets_init",
+      "target": "wallet_remove",
+      "label": "❌ Remove wallet",
+      "type": "button"
+    },
+    {
+      "id": "e-remove-success",
+      "source": "wallet_remove",
+      "target": "wallet_remove_success",
+      "label": "🗑️ Confirm removal",
+      "type": "button"
+    }
+  ],
+  "metadata": {
+    "platform": "telegram",
+    "version": "1.0.0",
+    "generatedAt": "static-640",
+    "commands": [
+      {
+        "command": "/start",
+        "description": "Initialize bot and show welcome message"
+      },
+      {
+        "command": "/daos",
+        "description": "Manage DAO notification preferences"
+      },
+      {
+        "command": "/wallets",
+        "description": "Manage tracked wallet addresses"
+      },
+      {
+        "command": "/learn_more",
+        "description": "Learn about Anticapture platform"
+      }
+    ],
+    "persistentKeyboard": [
+      [
+        "🌐 DAOs",
+        "📝 Tracked Wallets"
+      ],
+      [
+        "💡 Learn More"
+      ]
+    ]
+  },
+  "lastModified": "2026-02-18T17:08:46.940Z",
+  "basedOnVersion": "1.0.0"
+}

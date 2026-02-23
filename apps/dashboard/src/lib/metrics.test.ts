@@ -5,6 +5,8 @@ import {
   buildEngagementDistributionQuery,
   buildGrowthSeries,
   buildNotificationActivityByDaoQuery,
+  buildTopFollowedAddressesQuery,
+  buildUsersByDaoCountQuery,
   buildUsersQueries,
 } from './metrics';
 
@@ -68,6 +70,27 @@ test('buildEngagementDistributionQuery groups by coalesced address count', () =>
 
   assert.match(text, /GROUP BY COALESCE\(addr\.address_count, 0\)/);
   assert.match(text, /ORDER BY COALESCE\(addr\.address_count, 0\)/);
+});
+
+test('buildTopFollowedAddressesQuery groups by address and limits results', () => {
+  const { text, values } = buildTopFollowedAddressesQuery(5);
+
+  assert.match(text, /FROM user_addresses/);
+  assert.match(text, /COUNT\(DISTINCT ua\.user_id\)/);
+  assert.match(text, /LOWER\(ua\.address\)/);
+  assert.match(text, /ORDER BY follower_count DESC/);
+  assert.match(text, /LIMIT \$1/);
+  assert.equal(values[0], 5);
+});
+
+test('buildUsersByDaoCountQuery counts active preferences per user', () => {
+  const text = buildUsersByDaoCountQuery();
+
+  assert.match(text, /FROM users u/);
+  assert.match(text, /LEFT JOIN user_preferences p ON p\.user_id = u\.id AND p\.is_active = true/);
+  assert.match(text, /COUNT\(p\.id\) as dao_count/);
+  assert.match(text, /GROUP BY dao_count/);
+  assert.match(text, /ORDER BY dao_count/);
 });
 
 test('buildGrowthSeries fills missing days with zero counts', () => {
