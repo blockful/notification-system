@@ -177,3 +177,113 @@ describe('NewProposalTriggerHandler', () => {
     });
   });
 }); 
+
+describe('NewProposalTriggerHandler - cross-DAO eventId deduplication', () => {
+  const stubUser1: User = { id: 'user-1', channel: 'telegram', channel_user_id: '111', created_at: new Date() };
+  const stubUser2: User = { id: 'user-2', channel: 'telegram', channel_user_id: '222', created_at: new Date() };
+  const allUsers = [stubUser1, stubUser2];
+
+  /**
+   * Creates a handler with fake dedup that mirrors the real composite key logic:
+   *   key = `${user_id}-${dao_id}-${event_id}`
+   */
+  function createHandlerWithDeduplication() {
+    const sentNotifications: { message: string; userId: string }[] = [];
+    const sentCompositeKeys = new Set<string>();
+
+    const handler = new NewProposalTriggerHandler(
+      {
+        getDaoSubscribers: async () => allUsers,
+        shouldSend: async (users, eventId, daoId) => {
+          return users
+            .map(u => ({ user_id: u.id, event_id: eventId, dao_id: daoId }))
+            .filter(n => !sentCompositeKeys.has(`${n.user_id}-${n.dao_id}-${n.event_id}`));
+        },
+        shouldSendBatch: async () => [],
+        markAsSent: async (notifications) => {
+          notifications.forEach(n => sentCompositeKeys.add(`${n.user_id}-${n.dao_id}-${n.event_id}`));
+        },
+        getWalletOwners: async () => [],
+        getWalletOwnersBatch: async () => ({}),
+        getFollowedAddresses: async () => []
+      },
+      {
+        getClient: () => ({
+          sendNotification: async (payload: any) => {
+            sentNotifications.push({ message: payload.message, userId: payload.userId });
+          }
+        }),
+        supportsChannel: () => true
+      } as unknown as NotificationClientFactory,
+      {
+        getDAOs: async () => [
+          { id: 'ens.eth', chainId: 1 },
+          { id: 'uniswap.eth', chainId: 1 }
+        ],
+      } as unknown as AnticaptureClient
+    );
+
+    return { handler, sentNotifications, sentCompositeKeys };
+  }
+
+  function makeProposal(id: string, daoId: string) {
+    return {
+      id,
+      daoId,
+      proposerAccountId: '0xProposer',
+      targets: ['0x123'],
+      values: ['0'],
+      signatures: ['vote()'],
+      calldatas: ['0x0'],
+      startBlock: 100,
+      endBlock: 200,
+      description: `Proposal ${id} from ${daoId}`,
+      timestamp: '2023-01-01T00:00:00Z',
+      status: 'active' as const,
+      forVotes: BigInt(0),
+      againstVotes: BigInt(0),
+      abstainVotes: BigInt(0),
+    };
+  }
+
+  it('should send notifications for same proposal ID from different DAOs (no cross-DAO collision)', async () => {
+    // ENS and UNI both have a proposal with id "5"
+    const { handler, sentNotifications } = createHandlerWithDeduplication();
+
+    // First: ENS proposal #5
+    await handler.handleMessage({
+      triggerId: 'new-proposal',
+      events: [makeProposal('5', 'ens.eth')]
+    });
+
+    const afterENS = sentNotifications.length;
+    expect(afterENS).toBe(2); // 2 users notified
+
+    // Second: UNI proposal #5 (same proposal ID, different DAO)
+    await handler.handleMessage({
+      triggerId: 'new-proposal',
+      events: [makeProposal('5', 'uniswap.eth')]
+    });
+
+    // Should ALSO send 2 notifications — no collision with ENS
+    expect(sentNotifications.length).toBe(4);
+  });
+
+  it('should NOT send duplicate notifications when same DAO + same proposal is processed twice (idempotency)', async () => {
+    // Simulates the logic system re-sending the same event (e.g., cursor not advancing)
+    const { handler, sentNotifications } = createHandlerWithDeduplication();
+
+    const message: DispatcherMessage = {
+      triggerId: 'new-proposal',
+      events: [makeProposal('10', 'ens.eth')]
+    };
+
+    // First run: should send
+    await handler.handleMessage(message);
+    expect(sentNotifications.length).toBe(2);
+
+    // Second run (same DAO + same proposal): dedup should block
+    await handler.handleMessage(message);
+    expect(sentNotifications.length).toBe(2); // no new notifications
+  });
+}); 
