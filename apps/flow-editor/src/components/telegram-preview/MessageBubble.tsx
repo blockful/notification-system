@@ -9,15 +9,18 @@ interface MessageBubbleProps {
 }
 
 export function MessageBubble({ node, isBot, onButtonClick }: MessageBubbleProps) {
-  // Parse HTML-like tags for display
+  // Parse HTML-like tags for display using React elements (safe, no raw HTML injection)
   const formatContent = (content: string): React.ReactNode => {
-    // Simple HTML tag handling for <b>, <i>, <code>
-    let formatted = content
-      .replace(/<b>(.*?)<\/b>/g, '<strong>$1</strong>')
-      .replace(/<i>(.*?)<\/i>/g, '<em>$1</em>')
-      .replace(/<code>(.*?)<\/code>/g, '<code class="bg-slate-100 px-1 rounded text-sm">$1</code>');
-    
-    return <span dangerouslySetInnerHTML={{ __html: formatted }} />;
+    const parts = content.split(/(<b>.*?<\/b>|<i>.*?<\/i>|<code>.*?<\/code>)/g);
+    return parts.map((part, i) => {
+      const bold = part.match(/^<b>(.*?)<\/b>$/);
+      if (bold) return <strong key={i}>{bold[1]}</strong>;
+      const italic = part.match(/^<i>(.*?)<\/i>$/);
+      if (italic) return <em key={i}>{italic[1]}</em>;
+      const code = part.match(/^<code>(.*?)<\/code>$/);
+      if (code) return <code key={i} className="bg-slate-100 px-1 rounded text-sm">{code[1]}</code>;
+      return part;
+    });
   };
 
   return (
