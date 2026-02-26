@@ -5,6 +5,7 @@ import { SubscriptionClient } from './services/subscription-client.service';
 import { NotificationClientFactory } from './services/notification/notification-factory.service';
 import { RabbitMQNotificationService } from './services/notification/rabbitmq-notification.service';
 import { NewProposalTriggerHandler } from './services/triggers/new-proposal-trigger.service';
+import { NewOffchainProposalTriggerHandler } from './services/triggers/new-offchain-proposal-trigger.service';
 import { VotingPowerTriggerHandler } from './services/triggers/voting-power-trigger.service';
 import { ProposalFinishedTriggerHandler } from './services/triggers/proposal-finished-trigger.service';
 import { NonVotingHandler } from './services/triggers/non-voting-handler.service';
@@ -57,6 +58,11 @@ export class App {
     triggerProcessorService.addHandler(
       'new-proposal',
       new NewProposalTriggerHandler(subscriptionClient, notificationFactory, anticaptureClient)
+    );
+
+    triggerProcessorService.addHandler(
+      'new-offchain-proposal',
+      new NewOffchainProposalTriggerHandler(subscriptionClient, notificationFactory)
     );
 
     triggerProcessorService.addHandler(
