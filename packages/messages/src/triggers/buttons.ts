@@ -38,6 +38,10 @@ export const callToActionButtons = {
   votingReminder: {
     text: 'Check about the delegates and proposal information',
     url: 'https://anticapture.com/'
+  },
+  newOffchainProposal: {
+    text: 'Review DAO data before voting',
+    url: 'https://anticapture.com/'
   }
 } as const;
 
@@ -47,12 +51,18 @@ export const callToActionButtons = {
 export const scanButtonText = 'View Transaction';
 
 /**
+ * Text for forum discussion button
+ */
+export const discussionButtonText = 'View Discussion';
+
+/**
  * Parameters for building notification buttons
  */
 export interface BuildButtonsParams {
   triggerType: keyof typeof callToActionButtons;
   txHash?: string;
   chainId?: number;
+  discussionUrl?: string;
 }
 
 const explorerService = new ExplorerService();
@@ -66,6 +76,11 @@ export function buildButtons(params: BuildButtonsParams): Button[] {
 
   // Always add CTA button
   buttons.push(callToActionButtons[params.triggerType]);
+
+  // Add discussion button if forum URL is available
+  if (params.discussionUrl) {
+    buttons.push({ text: discussionButtonText, url: params.discussionUrl });
+  }
 
   // Add scan button if transaction info is available
   if (params.txHash && params.chainId) {

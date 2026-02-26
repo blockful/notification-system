@@ -4,6 +4,7 @@
 
 // Export trigger messages
 export * from './triggers/new-proposal';
+export * from './triggers/new-offchain-proposal';
 export * from './triggers/vote-confirmation';
 export * from './triggers/voting-reminder';
 export * from './triggers/proposal-finished';
