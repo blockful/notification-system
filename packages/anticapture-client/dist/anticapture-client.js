@@ -105,6 +105,22 @@ class AnticaptureClient {
         }
         return schema.parse(this.toLowercase(response.data.data));
     }
+    /**
+     * Executes a raw GraphQL query string (for queries not yet in codegen)
+     * Same as query() but accepts a string instead of a TypedDocumentNode
+     */
+    async queryRaw(queryString, schema, variables, daoId) {
+        const headers = this.buildHeaders(daoId);
+        const checksummedVariables = variables ? this.toChecksum(variables) : variables;
+        const response = await this.httpClient.post('', {
+            query: queryString,
+            variables: checksummedVariables,
+        }, { headers });
+        if (response.data.errors) {
+            throw new Error(JSON.stringify(response.data.errors));
+        }
+        return schema.parse(this.toLowercase(response.data.data));
+    }
     buildHeaders(daoId) {
         const headers = {
             'Content-Type': 'application/json',
@@ -290,6 +306,66 @@ class AnticaptureClient {
             return a.timestamp - b.timestamp;
         });
         return allVotes;
+    }
+    /**
+     * Lists offchain (Snapshot) proposals from all DAOs or a specific DAO
+     * Uses raw query string since codegen hasn't been run against the updated gateway yet.
+     * TODO: Switch to typed document after running codegen with offchain proposals in the gateway schema
+     * @param variables Query variables (skip, limit, orderDirection, status, fromDate)
+     * @param daoId Optional specific DAO ID. If not provided, queries all DAOs
+     * @returns Array of offchain proposal items with daoId attached
+     */
+    async listOffchainProposals(variables, daoId) {
+        const query = `
+      query ListOffchainProposals($skip: NonNegativeInt, $limit: PositiveInt, $orderDirection: queryInput_offchainProposals_orderDirection, $status: JSON, $fromDate: Float) {
+        offchainProposals(skip: $skip, limit: $limit, orderDirection: $orderDirection, status: $status, fromDate: $fromDate) {
+          items {
+            id
+            spaceId
+            author
+            title
+            body
+            discussion
+            type
+            start
+            end
+            state
+            created
+            updated
+            link
+            flagged
+          }
+          totalCount
+        }
+      }
+    `;
+        if (!daoId) {
+            const allDAOs = await this.getDAOs();
+            const allProposals = [];
+            for (const dao of allDAOs) {
+                try {
+                    const validated = await this.queryRaw(query, schemas_1.SafeOffchainProposalsResponseSchema, variables, dao.id);
+                    const items = validated.offchainProposals.items.map(item => ({ ...item, daoId: dao.id }));
+                    if (items.length > 0) {
+                        allProposals.push(...items);
+                    }
+                }
+                catch (error) {
+                    console.warn(`Skipping offchain proposals for ${dao.id} due to API error: ${error instanceof Error ? error.message : error}`);
+                }
+            }
+            // Sort by created timestamp desc (most recent first)
+            allProposals.sort((a, b) => b.created - a.created);
+            return allProposals;
+        }
+        try {
+            const validated = await this.queryRaw(query, schemas_1.SafeOffchainProposalsResponseSchema, variables, daoId);
+            return validated.offchainProposals.items.map(item => ({ ...item, daoId }));
+        }
+        catch (error) {
+            console.warn(`Error querying offchain proposals for DAO ${daoId}: ${error instanceof Error ? error.message : error}`);
+            return [];
+        }
     }
 }
 exports.AnticaptureClient = AnticaptureClient;

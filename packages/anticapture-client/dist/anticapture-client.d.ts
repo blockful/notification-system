@@ -2,6 +2,7 @@ import { AxiosInstance } from 'axios';
 import { z } from 'zod';
 import type { GetProposalByIdQuery, ListProposalsQuery, ListProposalsQueryVariables, ListHistoricalVotingPowerQueryVariables, ListVotesQuery, ListVotesQueryVariables } from './gql/graphql';
 import { SafeProposalNonVotersResponseSchema, ProcessedVotingPowerHistory } from './schemas';
+import type { OffchainProposalItem } from './schemas';
 type ProposalItems = NonNullable<ListProposalsQuery['proposals']>['items'];
 type VotingPowerHistoryItems = ProcessedVotingPowerHistory[];
 type ProposalNonVoter = z.infer<typeof SafeProposalNonVotersResponseSchema>['proposalNonVoters']['items'][0];
@@ -28,6 +29,11 @@ export declare class AnticaptureClient {
      */
     private toLowercase;
     private query;
+    /**
+     * Executes a raw GraphQL query string (for queries not yet in codegen)
+     * Same as query() but accepts a string instead of a TypedDocumentNode
+     */
+    private queryRaw;
     private buildHeaders;
     /**
      * Fetches all DAOs from the anticapture GraphQL API with full type safety
@@ -74,5 +80,22 @@ export declare class AnticaptureClient {
      * @returns Array of votes from all DAOs with daoId included
      */
     listRecentVotesFromAllDaos(timestampGt: string, limit?: number): Promise<VoteWithDaoId[]>;
+    /**
+     * Lists offchain (Snapshot) proposals from all DAOs or a specific DAO
+     * Uses raw query string since codegen hasn't been run against the updated gateway yet.
+     * TODO: Switch to typed document after running codegen with offchain proposals in the gateway schema
+     * @param variables Query variables (skip, limit, orderDirection, status, fromDate)
+     * @param daoId Optional specific DAO ID. If not provided, queries all DAOs
+     * @returns Array of offchain proposal items with daoId attached
+     */
+    listOffchainProposals(variables?: {
+        skip?: number;
+        limit?: number;
+        orderDirection?: string;
+        status?: string | string[];
+        fromDate?: number;
+    }, daoId?: string): Promise<(OffchainProposalItem & {
+        daoId: string;
+    })[]>;
 }
 export {};

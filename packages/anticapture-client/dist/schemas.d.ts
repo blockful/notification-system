@@ -559,6 +559,220 @@ export declare const SafeProposalNonVotersResponseSchema: z.ZodEffects<z.ZodObje
         totalCount?: number | undefined;
     } | null;
 }>;
+export declare const OffchainProposalItemSchema: z.ZodObject<{
+    id: z.ZodString;
+    spaceId: z.ZodString;
+    author: z.ZodString;
+    title: z.ZodString;
+    body: z.ZodString;
+    discussion: z.ZodString;
+    type: z.ZodString;
+    start: z.ZodNumber;
+    end: z.ZodNumber;
+    state: z.ZodString;
+    created: z.ZodNumber;
+    updated: z.ZodNumber;
+    link: z.ZodString;
+    flagged: z.ZodBoolean;
+}, "strip", z.ZodTypeAny, {
+    link: string;
+    id: string;
+    type: string;
+    title: string;
+    spaceId: string;
+    author: string;
+    body: string;
+    discussion: string;
+    start: number;
+    end: number;
+    state: string;
+    created: number;
+    updated: number;
+    flagged: boolean;
+}, {
+    link: string;
+    id: string;
+    type: string;
+    title: string;
+    spaceId: string;
+    author: string;
+    body: string;
+    discussion: string;
+    start: number;
+    end: number;
+    state: string;
+    created: number;
+    updated: number;
+    flagged: boolean;
+}>;
+export type OffchainProposalItem = z.infer<typeof OffchainProposalItemSchema>;
+export declare const SafeOffchainProposalsResponseSchema: z.ZodEffects<z.ZodObject<{
+    offchainProposals: z.ZodNullable<z.ZodObject<{
+        items: z.ZodArray<z.ZodNullable<z.ZodObject<{
+            id: z.ZodString;
+            spaceId: z.ZodString;
+            author: z.ZodString;
+            title: z.ZodString;
+            body: z.ZodString;
+            discussion: z.ZodString;
+            type: z.ZodString;
+            start: z.ZodNumber;
+            end: z.ZodNumber;
+            state: z.ZodString;
+            created: z.ZodNumber;
+            updated: z.ZodNumber;
+            link: z.ZodString;
+            flagged: z.ZodBoolean;
+        }, "strip", z.ZodTypeAny, {
+            link: string;
+            id: string;
+            type: string;
+            title: string;
+            spaceId: string;
+            author: string;
+            body: string;
+            discussion: string;
+            start: number;
+            end: number;
+            state: string;
+            created: number;
+            updated: number;
+            flagged: boolean;
+        }, {
+            link: string;
+            id: string;
+            type: string;
+            title: string;
+            spaceId: string;
+            author: string;
+            body: string;
+            discussion: string;
+            start: number;
+            end: number;
+            state: string;
+            created: number;
+            updated: number;
+            flagged: boolean;
+        }>>, "many">;
+        totalCount: z.ZodNumber;
+    }, "strip", z.ZodTypeAny, {
+        items: ({
+            link: string;
+            id: string;
+            type: string;
+            title: string;
+            spaceId: string;
+            author: string;
+            body: string;
+            discussion: string;
+            start: number;
+            end: number;
+            state: string;
+            created: number;
+            updated: number;
+            flagged: boolean;
+        } | null)[];
+        totalCount: number;
+    }, {
+        items: ({
+            link: string;
+            id: string;
+            type: string;
+            title: string;
+            spaceId: string;
+            author: string;
+            body: string;
+            discussion: string;
+            start: number;
+            end: number;
+            state: string;
+            created: number;
+            updated: number;
+            flagged: boolean;
+        } | null)[];
+        totalCount: number;
+    }>>;
+}, "strip", z.ZodTypeAny, {
+    offchainProposals: {
+        items: ({
+            link: string;
+            id: string;
+            type: string;
+            title: string;
+            spaceId: string;
+            author: string;
+            body: string;
+            discussion: string;
+            start: number;
+            end: number;
+            state: string;
+            created: number;
+            updated: number;
+            flagged: boolean;
+        } | null)[];
+        totalCount: number;
+    } | null;
+}, {
+    offchainProposals: {
+        items: ({
+            link: string;
+            id: string;
+            type: string;
+            title: string;
+            spaceId: string;
+            author: string;
+            body: string;
+            discussion: string;
+            start: number;
+            end: number;
+            state: string;
+            created: number;
+            updated: number;
+            flagged: boolean;
+        } | null)[];
+        totalCount: number;
+    } | null;
+}>, {
+    offchainProposals: {
+        items: {
+            link: string;
+            id: string;
+            type: string;
+            title: string;
+            spaceId: string;
+            author: string;
+            body: string;
+            discussion: string;
+            start: number;
+            end: number;
+            state: string;
+            created: number;
+            updated: number;
+            flagged: boolean;
+        }[];
+        totalCount: number;
+    };
+}, {
+    offchainProposals: {
+        items: ({
+            link: string;
+            id: string;
+            type: string;
+            title: string;
+            spaceId: string;
+            author: string;
+            body: string;
+            discussion: string;
+            start: number;
+            end: number;
+            state: string;
+            created: number;
+            updated: number;
+            flagged: boolean;
+        } | null)[];
+        totalCount: number;
+    } | null;
+}>;
 type SafeProposalsResponse = z.infer<typeof SafeProposalsResponseSchema>;
 type SafeHistoricalVotingPowerResponse = z.infer<typeof SafeHistoricalVotingPowerResponseSchema>;
 export type ProcessedVotingPowerHistory = z.infer<typeof HistoricalVotingPowerItemSchema> & {
