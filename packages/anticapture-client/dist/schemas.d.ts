@@ -113,14 +113,14 @@ declare const HistoricalVotingPowerItemSchema: z.ZodObject<{
         value: z.ZodString;
         previousDelegate: z.ZodNullable<z.ZodString>;
     }, "strip", z.ZodTypeAny, {
+        value: string;
         from: string;
         to: string;
-        value: string;
         previousDelegate: string | null;
     }, {
+        value: string;
         from: string;
         to: string;
-        value: string;
         previousDelegate: string | null;
     }>>;
     transfer: z.ZodNullable<z.ZodObject<{
@@ -128,51 +128,51 @@ declare const HistoricalVotingPowerItemSchema: z.ZodObject<{
         to: z.ZodString;
         value: z.ZodString;
     }, "strip", z.ZodTypeAny, {
+        value: string;
         from: string;
         to: string;
-        value: string;
     }, {
+        value: string;
         from: string;
         to: string;
-        value: string;
     }>>;
 }, "strip", z.ZodTypeAny, {
-    delta: string;
     timestamp: string;
+    delta: string;
     votingPower: string;
     daoId: string;
     transactionHash: string;
     accountId: string;
     logIndex: number;
     delegation: {
+        value: string;
         from: string;
         to: string;
-        value: string;
         previousDelegate: string | null;
     } | null;
     transfer: {
+        value: string;
         from: string;
         to: string;
-        value: string;
     } | null;
 }, {
-    delta: string;
     timestamp: string;
+    delta: string;
     votingPower: string;
     daoId: string;
     transactionHash: string;
     accountId: string;
     logIndex: number;
     delegation: {
+        value: string;
         from: string;
         to: string;
-        value: string;
         previousDelegate: string | null;
     } | null;
     transfer: {
+        value: string;
         from: string;
         to: string;
-        value: string;
     } | null;
 }>;
 export declare const SafeHistoricalVotingPowerResponseSchema: z.ZodEffects<z.ZodObject<{
@@ -191,14 +191,14 @@ export declare const SafeHistoricalVotingPowerResponseSchema: z.ZodEffects<z.Zod
                 value: z.ZodString;
                 previousDelegate: z.ZodNullable<z.ZodString>;
             }, "strip", z.ZodTypeAny, {
+                value: string;
                 from: string;
                 to: string;
-                value: string;
                 previousDelegate: string | null;
             }, {
+                value: string;
                 from: string;
                 to: string;
-                value: string;
                 previousDelegate: string | null;
             }>>;
             transfer: z.ZodNullable<z.ZodObject<{
@@ -206,95 +206,95 @@ export declare const SafeHistoricalVotingPowerResponseSchema: z.ZodEffects<z.Zod
                 to: z.ZodString;
                 value: z.ZodString;
             }, "strip", z.ZodTypeAny, {
+                value: string;
                 from: string;
                 to: string;
-                value: string;
             }, {
+                value: string;
                 from: string;
                 to: string;
-                value: string;
             }>>;
         }, "strip", z.ZodTypeAny, {
-            delta: string;
             timestamp: string;
+            delta: string;
             votingPower: string;
             daoId: string;
             transactionHash: string;
             accountId: string;
             logIndex: number;
             delegation: {
+                value: string;
                 from: string;
                 to: string;
-                value: string;
                 previousDelegate: string | null;
             } | null;
             transfer: {
+                value: string;
                 from: string;
                 to: string;
-                value: string;
             } | null;
         }, {
-            delta: string;
             timestamp: string;
+            delta: string;
             votingPower: string;
             daoId: string;
             transactionHash: string;
             accountId: string;
             logIndex: number;
             delegation: {
+                value: string;
                 from: string;
                 to: string;
-                value: string;
                 previousDelegate: string | null;
             } | null;
             transfer: {
+                value: string;
                 from: string;
                 to: string;
-                value: string;
             } | null;
         }>>, "many">;
         totalCount: z.ZodNumber;
     }, "strip", z.ZodTypeAny, {
         items: ({
-            delta: string;
             timestamp: string;
+            delta: string;
             votingPower: string;
             daoId: string;
             transactionHash: string;
             accountId: string;
             logIndex: number;
             delegation: {
+                value: string;
                 from: string;
                 to: string;
-                value: string;
                 previousDelegate: string | null;
             } | null;
             transfer: {
+                value: string;
                 from: string;
                 to: string;
-                value: string;
             } | null;
         } | null)[];
         totalCount: number;
     }, {
         items: ({
-            delta: string;
             timestamp: string;
+            delta: string;
             votingPower: string;
             daoId: string;
             transactionHash: string;
             accountId: string;
             logIndex: number;
             delegation: {
+                value: string;
                 from: string;
                 to: string;
-                value: string;
                 previousDelegate: string | null;
             } | null;
             transfer: {
+                value: string;
                 from: string;
                 to: string;
-                value: string;
             } | null;
         } | null)[];
         totalCount: number;
@@ -302,23 +302,23 @@ export declare const SafeHistoricalVotingPowerResponseSchema: z.ZodEffects<z.Zod
 }, "strip", z.ZodTypeAny, {
     historicalVotingPower: {
         items: ({
-            delta: string;
             timestamp: string;
+            delta: string;
             votingPower: string;
             daoId: string;
             transactionHash: string;
             accountId: string;
             logIndex: number;
             delegation: {
+                value: string;
                 from: string;
                 to: string;
-                value: string;
                 previousDelegate: string | null;
             } | null;
             transfer: {
+                value: string;
                 from: string;
                 to: string;
-                value: string;
             } | null;
         } | null)[];
         totalCount: number;
@@ -326,23 +326,23 @@ export declare const SafeHistoricalVotingPowerResponseSchema: z.ZodEffects<z.Zod
 }, {
     historicalVotingPower: {
         items: ({
-            delta: string;
             timestamp: string;
+            delta: string;
             votingPower: string;
             daoId: string;
             transactionHash: string;
             accountId: string;
             logIndex: number;
             delegation: {
+                value: string;
                 from: string;
                 to: string;
-                value: string;
                 previousDelegate: string | null;
             } | null;
             transfer: {
+                value: string;
                 from: string;
                 to: string;
-                value: string;
             } | null;
         } | null)[];
         totalCount: number;
@@ -350,23 +350,23 @@ export declare const SafeHistoricalVotingPowerResponseSchema: z.ZodEffects<z.Zod
 }>, {
     historicalVotingPower: {
         items: {
-            delta: string;
             timestamp: string;
+            delta: string;
             votingPower: string;
             daoId: string;
             transactionHash: string;
             accountId: string;
             logIndex: number;
             delegation: {
+                value: string;
                 from: string;
                 to: string;
-                value: string;
                 previousDelegate: string | null;
             } | null;
             transfer: {
+                value: string;
                 from: string;
                 to: string;
-                value: string;
             } | null;
         }[];
         totalCount: number;
@@ -374,23 +374,23 @@ export declare const SafeHistoricalVotingPowerResponseSchema: z.ZodEffects<z.Zod
 }, {
     historicalVotingPower: {
         items: ({
-            delta: string;
             timestamp: string;
+            delta: string;
             votingPower: string;
             daoId: string;
             transactionHash: string;
             accountId: string;
             logIndex: number;
             delegation: {
+                value: string;
                 from: string;
                 to: string;
-                value: string;
                 previousDelegate: string | null;
             } | null;
             transfer: {
+                value: string;
                 from: string;
                 to: string;
-                value: string;
             } | null;
         } | null)[];
         totalCount: number;
@@ -561,214 +561,106 @@ export declare const SafeProposalNonVotersResponseSchema: z.ZodEffects<z.ZodObje
 }>;
 export declare const OffchainProposalItemSchema: z.ZodObject<{
     id: z.ZodString;
-    spaceId: z.ZodString;
-    author: z.ZodString;
     title: z.ZodString;
-    body: z.ZodString;
     discussion: z.ZodString;
-    type: z.ZodString;
-    start: z.ZodNumber;
-    end: z.ZodNumber;
     state: z.ZodString;
     created: z.ZodNumber;
-    updated: z.ZodNumber;
-    link: z.ZodString;
-    flagged: z.ZodBoolean;
 }, "strip", z.ZodTypeAny, {
-    link: string;
-    id: string;
-    type: string;
-    title: string;
-    spaceId: string;
-    author: string;
-    body: string;
-    discussion: string;
-    start: number;
-    end: number;
-    state: string;
     created: number;
-    updated: number;
-    flagged: boolean;
+    id: string;
+    title: string;
+    discussion: string;
+    state: string;
 }, {
-    link: string;
-    id: string;
-    type: string;
-    title: string;
-    spaceId: string;
-    author: string;
-    body: string;
-    discussion: string;
-    start: number;
-    end: number;
-    state: string;
     created: number;
-    updated: number;
-    flagged: boolean;
+    id: string;
+    title: string;
+    discussion: string;
+    state: string;
 }>;
 export type OffchainProposalItem = z.infer<typeof OffchainProposalItemSchema>;
 export declare const SafeOffchainProposalsResponseSchema: z.ZodEffects<z.ZodObject<{
     offchainProposals: z.ZodNullable<z.ZodObject<{
         items: z.ZodArray<z.ZodNullable<z.ZodObject<{
             id: z.ZodString;
-            spaceId: z.ZodString;
-            author: z.ZodString;
             title: z.ZodString;
-            body: z.ZodString;
             discussion: z.ZodString;
-            type: z.ZodString;
-            start: z.ZodNumber;
-            end: z.ZodNumber;
             state: z.ZodString;
             created: z.ZodNumber;
-            updated: z.ZodNumber;
-            link: z.ZodString;
-            flagged: z.ZodBoolean;
         }, "strip", z.ZodTypeAny, {
-            link: string;
-            id: string;
-            type: string;
-            title: string;
-            spaceId: string;
-            author: string;
-            body: string;
-            discussion: string;
-            start: number;
-            end: number;
-            state: string;
             created: number;
-            updated: number;
-            flagged: boolean;
+            id: string;
+            title: string;
+            discussion: string;
+            state: string;
         }, {
-            link: string;
-            id: string;
-            type: string;
-            title: string;
-            spaceId: string;
-            author: string;
-            body: string;
-            discussion: string;
-            start: number;
-            end: number;
-            state: string;
             created: number;
-            updated: number;
-            flagged: boolean;
+            id: string;
+            title: string;
+            discussion: string;
+            state: string;
         }>>, "many">;
         totalCount: z.ZodNumber;
     }, "strip", z.ZodTypeAny, {
         items: ({
-            link: string;
-            id: string;
-            type: string;
-            title: string;
-            spaceId: string;
-            author: string;
-            body: string;
-            discussion: string;
-            start: number;
-            end: number;
-            state: string;
             created: number;
-            updated: number;
-            flagged: boolean;
+            id: string;
+            title: string;
+            discussion: string;
+            state: string;
         } | null)[];
         totalCount: number;
     }, {
         items: ({
-            link: string;
-            id: string;
-            type: string;
-            title: string;
-            spaceId: string;
-            author: string;
-            body: string;
-            discussion: string;
-            start: number;
-            end: number;
-            state: string;
             created: number;
-            updated: number;
-            flagged: boolean;
+            id: string;
+            title: string;
+            discussion: string;
+            state: string;
         } | null)[];
         totalCount: number;
     }>>;
 }, "strip", z.ZodTypeAny, {
     offchainProposals: {
         items: ({
-            link: string;
-            id: string;
-            type: string;
-            title: string;
-            spaceId: string;
-            author: string;
-            body: string;
-            discussion: string;
-            start: number;
-            end: number;
-            state: string;
             created: number;
-            updated: number;
-            flagged: boolean;
+            id: string;
+            title: string;
+            discussion: string;
+            state: string;
         } | null)[];
         totalCount: number;
     } | null;
 }, {
     offchainProposals: {
         items: ({
-            link: string;
-            id: string;
-            type: string;
-            title: string;
-            spaceId: string;
-            author: string;
-            body: string;
-            discussion: string;
-            start: number;
-            end: number;
-            state: string;
             created: number;
-            updated: number;
-            flagged: boolean;
+            id: string;
+            title: string;
+            discussion: string;
+            state: string;
         } | null)[];
         totalCount: number;
     } | null;
 }>, {
     offchainProposals: {
         items: {
-            link: string;
-            id: string;
-            type: string;
-            title: string;
-            spaceId: string;
-            author: string;
-            body: string;
-            discussion: string;
-            start: number;
-            end: number;
-            state: string;
             created: number;
-            updated: number;
-            flagged: boolean;
+            id: string;
+            title: string;
+            discussion: string;
+            state: string;
         }[];
         totalCount: number;
     };
 }, {
     offchainProposals: {
         items: ({
-            link: string;
-            id: string;
-            type: string;
-            title: string;
-            spaceId: string;
-            author: string;
-            body: string;
-            discussion: string;
-            start: number;
-            end: number;
-            state: string;
             created: number;
-            updated: number;
-            flagged: boolean;
+            id: string;
+            title: string;
+            discussion: string;
+            state: string;
         } | null)[];
         totalCount: number;
     } | null;

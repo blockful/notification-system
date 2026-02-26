@@ -1,0 +1,12 @@
+query ListOffchainProposals($skip: NonNegativeInt, $limit: PositiveInt, $orderDirection: queryInput_offchainProposals_orderDirection, $status: JSON, $fromDate: Float) {
+  offchainProposals(skip: $skip, limit: $limit, orderDirection: $orderDirection, status: $status, fromDate: $fromDate) {
+    items {
+      id
+      title
+      discussion
+      state
+      created
+    }
+    totalCount
+  }
+}

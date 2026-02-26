@@ -118,19 +118,10 @@ exports.SafeProposalNonVotersResponseSchema = zod_1.z.object({
 });
 exports.OffchainProposalItemSchema = zod_1.z.object({
     id: zod_1.z.string(),
-    spaceId: zod_1.z.string(),
-    author: zod_1.z.string(),
     title: zod_1.z.string(),
-    body: zod_1.z.string(),
     discussion: zod_1.z.string(),
-    type: zod_1.z.string(),
-    start: zod_1.z.number(),
-    end: zod_1.z.number(),
     state: zod_1.z.string(),
     created: zod_1.z.number(),
-    updated: zod_1.z.number(),
-    link: zod_1.z.string(),
-    flagged: zod_1.z.boolean(),
 });
 exports.SafeOffchainProposalsResponseSchema = zod_1.z.object({
     offchainProposals: zod_1.z.object({
