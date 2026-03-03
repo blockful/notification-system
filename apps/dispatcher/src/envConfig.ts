@@ -11,6 +11,7 @@ const envSchema = z.object({
   SUBSCRIPTION_SERVER_URL: z.string().url(),
   RABBITMQ_URL: z.string().url(),
   ANTICAPTURE_GRAPHQL_ENDPOINT: z.string().url(),
+  BLOCKFUL_API_TOKEN: z.string().optional(),
 });
 
 export function loadConfig() {
@@ -21,5 +22,6 @@ export function loadConfig() {
     subscriptionServerUrl: env.SUBSCRIPTION_SERVER_URL,
     rabbitmqUrl: env.RABBITMQ_URL,
     anticaptureGraphqlEndpoint: env.ANTICAPTURE_GRAPHQL_ENDPOINT,
+    blockfulApiToken: env.BLOCKFUL_API_TOKEN,
   } as const;
 } 

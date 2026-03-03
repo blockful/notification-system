@@ -35,7 +35,14 @@ const slackClient = new SlackClient(
 // Create and start the application
 const app = new App(
   config.subscriptionServerUrl,
-  axios.create({ baseURL: config.anticaptureGraphqlEndpoint }),
+  axios.create({
+    baseURL: config.anticaptureGraphqlEndpoint,
+    headers: {
+      ...(config.blockfulApiToken && {
+        Authorization: `Bearer ${config.blockfulApiToken}`,
+      }),
+    },
+  }),
   config.rabbitmqUrl,
   ensResolver,
   telegramClient,
