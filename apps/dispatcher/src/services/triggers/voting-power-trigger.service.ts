@@ -134,10 +134,12 @@ export class VotingPowerTriggerHandler extends BaseTriggerHandler {
     const buttons = buildButtons({
       triggerType: 'delegationChange',
       txHash: transactionHash,
-      chainId
+      chainId,
+      daoId,
+      address: accountId
     });
 
-    await this.sendNotificationsToSubscribers(subscribers, notificationMessage, eventId, daoId, metadata, buttons);
+    await this.sendNotificationsToSubscribers(subscribers, notificationMessage, eventId, daoId, { ...metadata, triggerType: 'delegationChange' }, buttons);
   }
 
   /**
@@ -216,10 +218,12 @@ export class VotingPowerTriggerHandler extends BaseTriggerHandler {
     const buttons = buildButtons({
       triggerType: 'delegationChange',
       txHash: transactionHash,
-      chainId
+      chainId,
+      daoId,
+      address: sourceAccountId
     });
 
-    await this.sendNotificationsToSubscribers(subscribers, notificationMessage, eventId, daoId, metadata, buttons);
+    await this.sendNotificationsToSubscribers(subscribers, notificationMessage, eventId, daoId, { ...metadata, triggerType: 'delegationChange' }, buttons);
   }
 
   /**
@@ -241,8 +245,8 @@ export class VotingPowerTriggerHandler extends BaseTriggerHandler {
       ? this.buildTransferTypeNotification(votingPowerEvent)
       : this.buildGenericNotification(votingPowerEvent);
 
-    const buttons = buildButtons({ triggerType: 'votingPowerChange', txHash: transactionHash, chainId });
-    await this.sendNotificationsToSubscribers(subscribers, message, eventId, daoId, metadata, buttons);
+    const buttons = buildButtons({ triggerType: 'votingPowerChange', txHash: transactionHash, chainId, daoId, address: accountId });
+    await this.sendNotificationsToSubscribers(subscribers, message, eventId, daoId, { ...metadata, triggerType: 'votingPowerChange' }, buttons);
   }
 
   /**
