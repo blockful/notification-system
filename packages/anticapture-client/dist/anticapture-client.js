@@ -225,7 +225,7 @@ class AnticaptureClient {
     async listVotes(daoId, variables) {
         try {
             const validated = await this.query(graphql_2.ListVotesDocument, schemas_1.SafeVotesResponseSchema, variables, daoId);
-            return validated.votes.items.filter((item) => item !== null);
+            return validated.votes.items.filter(item => item !== null);
         }
         catch (error) {
             console.warn(`Error fetching votes for DAO ${daoId}:`, error);
@@ -290,6 +290,30 @@ class AnticaptureClient {
             return a.timestamp - b.timestamp;
         });
         return allVotes;
+    }
+    /**
+     * Fetches the event relevance threshold for a given DAO, event type, and relevance level.
+     * Used to filter out low-impact events (e.g., small delegation changes).
+     * @returns Threshold as a numeric string, or null if unavailable (fail-open)
+     */
+    async getEventThreshold(daoId, type, relevance) {
+        try {
+            const headers = this.buildHeaders(daoId);
+            const response = await this.httpClient.post('', {
+                query: (0, graphql_1.print)(graphql_2.GetEventRelevanceThresholdDocument),
+                variables: { type, relevance },
+            }, { headers });
+            if (response.data.errors) {
+                console.warn('[AnticaptureClient] Threshold query errors:', response.data.errors);
+                return null;
+            }
+            const validated = schemas_1.EventThresholdResponseSchema.parse(response.data.data);
+            return validated.getEventRelevanceThreshold.threshold;
+        }
+        catch (error) {
+            console.warn(`[AnticaptureClient] Error fetching threshold for ${daoId}/${type}:`, error instanceof Error ? error.message : error);
+            return null;
+        }
     }
 }
 exports.AnticaptureClient = AnticaptureClient;

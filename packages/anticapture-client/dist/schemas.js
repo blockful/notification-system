@@ -1,9 +1,12 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.SafeProposalNonVotersResponseSchema = exports.SafeVotesResponseSchema = exports.SafeHistoricalVotingPowerResponseSchema = exports.SafeProposalByIdResponseSchema = exports.SafeProposalsResponseSchema = exports.SafeDaosResponseSchema = void 0;
+exports.EventThresholdResponseSchema = exports.SafeProposalNonVotersResponseSchema = exports.SafeVotesResponseSchema = exports.SafeHistoricalVotingPowerResponseSchema = exports.SafeProposalByIdResponseSchema = exports.SafeProposalsResponseSchema = exports.SafeDaosResponseSchema = exports.FeedRelevance = exports.FeedEventType = void 0;
 exports.processProposals = processProposals;
 exports.processVotingPowerHistory = processVotingPowerHistory;
 const zod_1 = require("zod");
+var graphql_1 = require("./gql/graphql");
+Object.defineProperty(exports, "FeedEventType", { enumerable: true, get: function () { return graphql_1.QueryInput_GetEventRelevanceThreshold_Type; } });
+Object.defineProperty(exports, "FeedRelevance", { enumerable: true, get: function () { return graphql_1.QueryInput_GetEventRelevanceThreshold_Relevance; } });
 // Schema with built-in transformation and fallbacks
 exports.SafeDaosResponseSchema = zod_1.z.object({
     daos: zod_1.z.object({
@@ -115,6 +118,11 @@ exports.SafeProposalNonVotersResponseSchema = zod_1.z.object({
             items: data.proposalNonVoters.items.filter((item) => item !== null)
         }
     };
+});
+exports.EventThresholdResponseSchema = zod_1.z.object({
+    getEventRelevanceThreshold: zod_1.z.object({
+        threshold: zod_1.z.string()
+    })
 });
 // Internal helper function to process validated proposals
 function processProposals(validated, daoId) {
