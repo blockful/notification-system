@@ -26,3 +26,4 @@ export {
 } from './gql/graphql';
 
 export type { ProcessedVotingPowerHistory } from './schemas';
+export { FeedEventType, FeedRelevance } from './schemas';

@@ -1,5 +1,10 @@
 import { z } from 'zod';
 
+export {
+  QueryInput_GetEventRelevanceThreshold_Type as FeedEventType,
+  QueryInput_GetEventRelevanceThreshold_Relevance as FeedRelevance,
+} from './gql/graphql';
+
 // Schema with built-in transformation and fallbacks
 export const SafeDaosResponseSchema = z.object({
   daos: z.object({
@@ -120,6 +125,12 @@ export const SafeProposalNonVotersResponseSchema = z.object({
   };
 });
 
+
+export const EventThresholdResponseSchema = z.object({
+  getEventRelevanceThreshold: z.object({
+    threshold: z.string()
+  })
+});
 
 // Internal types for schema validation
 type SafeProposalsResponse = z.infer<typeof SafeProposalsResponseSchema>;
