@@ -5,6 +5,7 @@ import { VoteConfirmationTrigger } from './triggers/vote-confirmation-trigger';
 import { VotingReminderTrigger } from './triggers/voting-reminder-trigger';
 import { ProposalRepository } from './repositories/proposal.repository';
 import { VotingPowerRepository } from './repositories/voting-power.repository';
+import { ThresholdRepository } from './repositories/threshold.repository';
 import { VotesRepository } from './repositories/votes.repository';
 import { RabbitMQDispatcherService } from './api-clients/rabbitmq-dispatcher.service';
 import { AnticaptureClient } from '@notification-system/anticapture-client';
@@ -37,15 +38,17 @@ export class App {
     const anticaptureClient = new AnticaptureClient(anticaptureHttpClient);
     const proposalRepository = new ProposalRepository(anticaptureClient);
     const votingPowerRepository = new VotingPowerRepository(anticaptureClient);
+    const thresholdRepository = new ThresholdRepository(anticaptureClient);
     const votesRepository = new VotesRepository(anticaptureClient);
 
-    this.initPromise = this.initializeRabbitMQ(rabbitmqUrl, proposalRepository, votingPowerRepository, votesRepository, triggerInterval, initialTimestamp);
+    this.initPromise = this.initializeRabbitMQ(rabbitmqUrl, proposalRepository, votingPowerRepository, thresholdRepository, votesRepository, triggerInterval, initialTimestamp);
   }
 
   private async initializeRabbitMQ(
     rabbitmqUrl: string, 
     proposalRepository: ProposalRepository,
     votingPowerRepository: VotingPowerRepository,
+    thresholdRepository: ThresholdRepository,
     votesRepository: VotesRepository,
     triggerInterval: number,
     initialTimestamp?: string
@@ -66,6 +69,7 @@ export class App {
     this.votingPowerTrigger = new VotingPowerChangedTrigger(
       dispatcherService,
       votingPowerRepository,
+      thresholdRepository,
       triggerInterval
     );
 
