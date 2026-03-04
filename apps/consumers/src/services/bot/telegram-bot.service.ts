@@ -5,7 +5,7 @@
  */
 
 import { Markup } from 'telegraf';
-import { telegramMessages, uiMessages, ExplorerService } from '@notification-system/messages';
+import { telegramMessages, uiMessages, ExplorerService, appendUtmParams } from '@notification-system/messages';
 import { TelegramDAOService } from '../dao/telegram-dao.service';
 import { TelegramWalletService } from '../wallet/telegram-wallet.service';
 import { EnsResolverService } from '../ens-resolver.service';
@@ -160,10 +160,19 @@ export class TelegramBotService implements BotServiceInterface {
       }
     }
 
+    // Append UTM tracking params to button URLs
+    const triggerType = payload.metadata?.triggerType;
+    const buttons = payload.metadata?.buttons?.map(btn => ({
+      text: btn.text,
+      url: triggerType
+        ? appendUtmParams(btn.url, { source: 'notification', medium: 'telegram', campaign: triggerType })
+        : btn.url
+    }));
+
     // Build inline keyboard if buttons are provided
-    const replyMarkup = payload.metadata?.buttons ? {
+    const replyMarkup = buttons ? {
       inline_keyboard: [[
-        ...payload.metadata.buttons.map(btn => ({ text: btn.text, url: btn.url }))
+        ...buttons.map(btn => ({ text: btn.text, url: btn.url }))
       ]]
     } : undefined;
 
