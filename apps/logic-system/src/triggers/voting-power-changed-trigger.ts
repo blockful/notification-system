@@ -5,8 +5,9 @@
 
 import { Trigger } from './base-trigger';
 import { VotingPowerRepository } from '../repositories/voting-power.repository';
+import { ThresholdRepository } from '../repositories/threshold.repository';
 import { DispatcherService, DispatcherMessage } from '../interfaces/dispatcher.interface';
-import { ProcessedVotingPowerHistory } from '@notification-system/anticapture-client';
+import { ProcessedVotingPowerHistory, FeedEventType } from '@notification-system/anticapture-client';
 
 const triggerId = 'voting-power-changed';
 
@@ -16,6 +17,7 @@ export class VotingPowerChangedTrigger extends Trigger<ProcessedVotingPowerHisto
   constructor(
     private readonly dispatcherService: DispatcherService,
     private readonly votingPowerRepository: VotingPowerRepository,
+    private readonly thresholdRepository: ThresholdRepository,
     interval: number
   ) {
     super(triggerId, interval);
@@ -40,17 +42,37 @@ export class VotingPowerChangedTrigger extends Trigger<ProcessedVotingPowerHisto
       return;
     }
 
+    // Always advance the timestamp cursor even if all events are filtered out,
+    // to avoid reprocessing the same events on every cycle
+    this.lastProcessedTimestamp = String(Number(data[data.length - 1].timestamp) + 1);
+
+    const filtered = await this.filterByThreshold(data);
+    if (filtered.length === 0) {
+      return;
+    }
+
     const message: DispatcherMessage<ProcessedVotingPowerHistory> = {
       triggerId: this.id,
-      events: data
+      events: filtered
     };
 
     await this.dispatcherService.sendMessage(message);
+  }
 
-    // Update the last processed timestamp to the most recent timestamp + 1 second
-    // Since data comes ordered by timestamp asc, the last item has the latest timestamp
-    // Adding 1 avoids reprocessing the same event since the API uses >= (gte) for fromDate
-    this.lastProcessedTimestamp = String(Number(data[data.length - 1].timestamp) + 1);
+  private async filterByThreshold(
+    data: ProcessedVotingPowerHistory[]
+  ): Promise<ProcessedVotingPowerHistory[]> {
+    const keep = await Promise.all(
+      data.map(async (event) => {
+        const type = event.changeType.toUpperCase();
+        if (!Object.values(FeedEventType).includes(type as FeedEventType)) return true;
+
+        const threshold = await this.thresholdRepository.getThreshold(event.daoId, type as FeedEventType);
+        return threshold === null || Math.abs(Number(event.delta)) >= Number(threshold);
+      })
+    );
+
+    return data.filter((_, i) => keep[i]);
   }
 
   /**
