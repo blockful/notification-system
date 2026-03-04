@@ -298,16 +298,7 @@ class AnticaptureClient {
      */
     async getEventThreshold(daoId, type, relevance) {
         try {
-            const headers = this.buildHeaders(daoId);
-            const response = await this.httpClient.post('', {
-                query: (0, graphql_1.print)(graphql_2.GetEventRelevanceThresholdDocument),
-                variables: { type, relevance },
-            }, { headers });
-            if (response.data.errors) {
-                console.warn('[AnticaptureClient] Threshold query errors:', response.data.errors);
-                return null;
-            }
-            const validated = schemas_1.EventThresholdResponseSchema.parse(response.data.data);
+            const validated = await this.query(graphql_2.GetEventRelevanceThresholdDocument, schemas_1.EventThresholdResponseSchema, { type, relevance }, daoId);
             return validated.getEventRelevanceThreshold.threshold;
         }
         catch (error) {

@@ -14,8 +14,8 @@ import type {
   ListVotesQueryVariables,
   ProposalNonVotersQueryVariables
 } from './gql/graphql';
-import { GetDaOsDocument, GetProposalByIdDocument, ListProposalsDocument, ListHistoricalVotingPowerDocument, ListVotesDocument, ProposalNonVotersDocument, QueryInput_Votes_OrderBy, QueryInput_Votes_OrderDirection } from './gql/graphql';
-import { SafeDaosResponseSchema, SafeProposalByIdResponseSchema, SafeProposalsResponseSchema, SafeHistoricalVotingPowerResponseSchema, SafeVotesResponseSchema, SafeProposalNonVotersResponseSchema, processProposals, processVotingPowerHistory, ProcessedVotingPowerHistory } from './schemas';
+import { GetDaOsDocument, GetProposalByIdDocument, ListProposalsDocument, ListHistoricalVotingPowerDocument, ListVotesDocument, ProposalNonVotersDocument, GetEventRelevanceThresholdDocument, QueryInput_Votes_OrderBy, QueryInput_Votes_OrderDirection } from './gql/graphql';
+import { SafeDaosResponseSchema, SafeProposalByIdResponseSchema, SafeProposalsResponseSchema, SafeHistoricalVotingPowerResponseSchema, SafeVotesResponseSchema, SafeProposalNonVotersResponseSchema, EventThresholdResponseSchema, processProposals, processVotingPowerHistory, ProcessedVotingPowerHistory, FeedEventType, FeedRelevance } from './schemas';
 
 type ProposalItems = NonNullable<ListProposalsQuery['proposals']>['items'];
 type VotingPowerHistoryItems = ProcessedVotingPowerHistory[];
@@ -249,7 +249,7 @@ export class AnticaptureClient {
         variables,
         daoId
       );
-      return validated.votes.items.filter((item): item is VoteItem => item !== null);
+      return validated.votes.items.filter(item => item !== null) as VoteItem[];
     } catch (error) {
       console.warn(`Error fetching votes for DAO ${daoId}:`, error);
       return [];
@@ -328,5 +328,32 @@ export class AnticaptureClient {
     });
 
     return allVotes;
+  }
+
+  /**
+   * Fetches the event relevance threshold for a given DAO, event type, and relevance level.
+   * Used to filter out low-impact events (e.g., small delegation changes).
+   * @returns Threshold as a numeric string, or null if unavailable (fail-open)
+   */
+  async getEventThreshold(
+    daoId: string,
+    type: FeedEventType,
+    relevance: FeedRelevance
+  ): Promise<string | null> {
+    try {
+      const validated = await this.query(
+        GetEventRelevanceThresholdDocument,
+        EventThresholdResponseSchema,
+        { type, relevance },
+        daoId
+      );
+      return validated.getEventRelevanceThreshold.threshold;
+    } catch (error) {
+      console.warn(
+        `[AnticaptureClient] Error fetching threshold for ${daoId}/${type}:`,
+        error instanceof Error ? error.message : error
+      );
+      return null;
+    }
   }
 }
