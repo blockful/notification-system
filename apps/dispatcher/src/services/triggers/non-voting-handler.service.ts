@@ -123,11 +123,6 @@ export class NonVotingHandler extends BaseTriggerHandler<ProposalFinishedNotific
   ): Promise<void> {
     const proposalTitles = FormattingService.formatProposalList(lastProposals);
 
-    // Build buttons for non-voting (no tx hash)
-    const buttons = buildButtons({
-      triggerType: 'nonVoting'
-    });
-
     await this.batchNotificationService.sendBatchNotifications(
       nonVoters,
       daoId,
@@ -140,11 +135,16 @@ export class NonVotingHandler extends BaseTriggerHandler<ProposalFinishedNotific
         });
       },
       (address) => ({
+        triggerType: 'nonVoting',
         addresses: {
           'nonVoterAddress': address
         }
       }),
-      () => buttons
+      (address) => buildButtons({
+        triggerType: 'nonVoting',
+        daoId,
+        address
+      })
     );
   }
 

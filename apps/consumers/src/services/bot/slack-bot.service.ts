@@ -8,7 +8,7 @@
 import { SlackClientInterface } from '../../interfaces/slack-client.interface';
 import { NotificationPayload } from '../../interfaces/notification.interface';
 import { BotServiceInterface } from '../../interfaces/bot-service.interface';
-import { slackMessages, convertMarkdownToSlack } from '@notification-system/messages';
+import { slackMessages, convertMarkdownToSlack, appendUtmParams } from '@notification-system/messages';
 import { EnsResolverService } from '../ens-resolver.service';
 import { SlackDAOService } from '../dao/slack-dao.service';
 import { SlackWalletService } from '../wallet/slack-wallet.service';
@@ -212,8 +212,17 @@ export class SlackBotService implements BotServiceInterface {
       throw new Error('Slack notification requires workspace OAuth token. No bot_token provided in notification payload.');
     }
 
+    // Append UTM tracking params to button URLs
+    const triggerType = payload.metadata?.triggerType;
+    const buttons = payload.metadata?.buttons?.map(btn => ({
+      text: btn.text,
+      url: triggerType
+        ? appendUtmParams(btn.url, { source: 'notification', medium: 'slack', campaign: triggerType })
+        : btn.url
+    }));
+
     // Build message options with buttons if provided
-    const messageOptions = payload.metadata?.buttons ? {
+    const messageOptions = buttons ? {
       blocks: [
         {
           type: 'section' as const,
@@ -221,7 +230,7 @@ export class SlackBotService implements BotServiceInterface {
         },
         {
           type: 'actions' as const,
-          elements: payload.metadata.buttons.map(btn => ({
+          elements: buttons.map(btn => ({
             type: 'button' as const,
             text: { type: 'plain_text' as const, text: btn.text },
             url: btn.url
