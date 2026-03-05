@@ -23,7 +23,8 @@ export class App {
     private subscriptionServerUrl: string, 
     private rabbitmqUrl: string,
     private anticaptureGraphqlEndpoint: string,
-    private anticaptureHttpClient?: any
+    private anticaptureHttpClient?: any,
+    private blockfulApiToken?: string
   ) {}
 
   private async setupServices(): Promise<void> {
@@ -42,6 +43,9 @@ export class App {
       baseURL: this.anticaptureGraphqlEndpoint,
       headers: {
         'Content-Type': 'application/json',
+        ...(this.blockfulApiToken && {
+          Authorization: `Bearer ${this.blockfulApiToken}`,
+        }),
       },
     });
     const anticaptureClient = new AnticaptureClient(anticaptureAxiosClient);
