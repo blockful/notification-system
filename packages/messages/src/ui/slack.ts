@@ -20,7 +20,9 @@ export const slackMessages = {
 
   // Wallet management messages
   wallet: {
-    listHeader: '*Your Wallet Addresses:*',
+    listHeader: '*Add your wallet address*\n\nThis allows us to personalize alerts based on your governance activity and delegations.',
+    selectionPrefix: '*Next step:* ',
+    onboardingComplete: '🎉 You\'re all set! Stay tuned — we\'ll notify you as soon as something important happens in your DAOs.',
     emptyList: "You can add wallets and receive custom notifications related to them and the DAOs you follow!",
     instructions: "Use '/anticapture wallet add' or '/anticapture wallet remove' to manage your wallets",
     buttonAdd: 'Add Wallet',
@@ -75,18 +77,12 @@ export const slackMessages = {
         type: 'section',
         text: {
           type: 'mrkdwn',
-          text: '✨ *[Mission Initiated: Navigating the Governance Space]*\n\n' +
-            'Set up your dashboard to stay on course with proposal signals from the DAOs you participate in.\n\n' +
-            '\n\n' +
-            '*💎 Mission Features:*\n' +
-            '• Receive real-time alerts for new proposals\n' +
-            '• Be reminded when a voting window is open — don\'t miss your chance to engage\n' +
-            '• Get mission reports with proposal outcomes\n' +
-            '• Lock in the DAOs you want to monitor directly\n' +
-            '• Connect your wallet and sync your DAOs of interest\n' +
-            '• Track if your addresses are actively voting\n\n' +
-            '\n\n' +
-            '*Another links that might be useful*'
+          text: '*What is Anticapture?*\n' +
+            'A governance security research, notification system and dashboard that tracks social dynamics, governance models, and contracts, ensuring security and preventing malicious capture.\n\n' +
+            '*What is this bot for?*\n' +
+            'Get notified about risks, changes and proposals that you care about in the DAOs you follow.\n\n' +
+            'Use the `/anticapture` command to get started.\n\n' +
+            '*Links that might be useful*'
         }
       },
       {
@@ -133,9 +129,13 @@ export const slackMessages = {
         type: 'section',
         text: {
           type: 'mrkdwn',
-          text: '🚨 *Anticapture Notification System*\n\n' +
-            'Spot the "oh no" before it reaches your treasury.\n\n' +
-            '*Manage your notification preferences:*'
+          text: '🔔 *Welcome to the Anticapture notification system!*\n\n' +
+            '_Spotting the "oh no" before it hits your treasury._\n\n' +
+            'You will receive alerts for:\n' +
+            '• New Proposals on the DAO\n' +
+            '• Proposal results when it finishes\n' +
+            '• Vote reminders\n\n' +
+            'Stay ahead of governance risk. Stay informed.'
         }
       },
       {
