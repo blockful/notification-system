@@ -118,64 +118,6 @@ export class SlackDAOService extends BaseDAOService {
     }
   }
 
-  /**
-   * Select all DAOs - re-render checkboxes with all selected
-   */
-  async selectAll(context: SlackActionContext): Promise<void> {
-    try {
-      await context.ack();
-
-      const daos = await this.fetchAvailableDAOs();
-      const allSelected = new Set(daos.map(dao => dao.id.toUpperCase()));
-
-      const blocks = daoSelectionList(
-        daos,
-        allSelected,
-        'dao_checkboxes',
-        'dao_confirm_subscribe',
-        slackMessages.dao.subscribeInstructions
-      );
-
-      if (context.respond) {
-        await context.respond({
-          blocks,
-          response_type: 'in_channel',
-          replace_original: true
-        });
-      }
-    } catch (error) {
-      console.error('Error selecting all DAOs:', error);
-    }
-  }
-
-  /**
-   * Unselect all DAOs - re-render checkboxes with none selected
-   */
-  async unselectAll(context: SlackActionContext): Promise<void> {
-    try {
-      await context.ack();
-
-      const daos = await this.fetchAvailableDAOs();
-
-      const blocks = daoSelectionList(
-        daos,
-        new Set(),
-        'dao_checkboxes',
-        'dao_confirm_subscribe',
-        slackMessages.dao.subscribeInstructions
-      );
-
-      if (context.respond) {
-        await context.respond({
-          blocks,
-          response_type: 'in_channel',
-          replace_original: true
-        });
-      }
-    } catch (error) {
-      console.error('Error unselecting all DAOs:', error);
-    }
-  }
 
   /**
    * Confirm DAO selection changes from checkboxes

@@ -100,9 +100,7 @@ export const checkboxSelectionList = (
     },
     { type: 'divider' },
     actions(
-      button(slackMessages.dao.confirmButton, confirmActionId, { style: confirmButtonStyle }),
-      button('Select all', 'dao_select_all'),
-      button('Unselect all', 'dao_unselect_all')
+      button(slackMessages.dao.confirmButton, confirmActionId, { style: confirmButtonStyle })
     )
   ];
 };
