@@ -33,6 +33,14 @@ export abstract class BaseDAOService {
   }
 
   /**
+   * Check if user has any DAO subscriptions
+   */
+  public async hasSubscriptions(userId: string): Promise<boolean> {
+    const subs = await this.getUserSubscriptions(userId);
+    return subs.length > 0;
+  }
+
+  /**
    * Get user's current DAO subscriptions
    */
   protected async getUserSubscriptions(userId: string): Promise<string[]> {

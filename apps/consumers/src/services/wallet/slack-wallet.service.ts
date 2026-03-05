@@ -51,7 +51,8 @@ export class SlackWalletService extends BaseWalletService {
                 type: 'button',
                 text: { type: 'plain_text', text: slackMessages.wallet.buttonAdd, emoji: true },
                 style: 'primary',
-                action_id: 'wallet_add'
+                action_id: 'wallet_add',
+                value: 'onboarding'
               }
             ]
           }
@@ -312,6 +313,7 @@ export class SlackWalletService extends BaseWalletService {
             channel: channelId,
             text: slackMessages.wallet.onboardingComplete
           });
+          context.session.fromStart = false;
         }
       }
     } catch (error) {
