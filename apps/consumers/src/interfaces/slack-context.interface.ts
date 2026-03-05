@@ -56,6 +56,7 @@ export interface SlackSession {
     type: 'wallet' | 'dao';
     action: 'add' | 'remove';
   };
+  fromStart?: boolean;
 }
 
 /**

@@ -11,7 +11,7 @@ import { EnsResolverService } from '../ens-resolver.service';
 import {
   SlackCommandContext,
   SlackActionContext,
-  SlackViewContext
+  SlackViewContext,
 } from '../../interfaces/slack-context.interface';
 import {
   walletEmptyState,
@@ -27,6 +27,38 @@ export class SlackWalletService extends BaseWalletService {
     ensResolver: EnsResolverService
   ) {
     super(subscriptionApi, ensResolver);
+  }
+
+  /**
+   * Show wallet prompt during onboarding flow (after DAO selection)
+   */
+  async showOnboardingWallet(context: SlackActionContext): Promise<void> {
+    if (context.respond) {
+      await context.respond({
+        replace_original: false,
+        blocks: [
+          {
+            type: 'section',
+            text: {
+              type: 'mrkdwn',
+              text: slackMessages.wallet.selectionPrefix + slackMessages.wallet.listHeader
+            }
+          },
+          {
+            type: 'actions',
+            elements: [
+              {
+                type: 'button',
+                text: { type: 'plain_text', text: slackMessages.wallet.buttonAdd, emoji: true },
+                style: 'primary',
+                action_id: 'wallet_add'
+              }
+            ]
+          }
+        ],
+        response_type: 'in_channel'
+      });
+    }
   }
 
   /**
@@ -147,13 +179,17 @@ export class SlackWalletService extends BaseWalletService {
         throw new Error('No trigger_id available for modal');
       }
 
+      // Encode channel + fromStart flag in private_metadata
+      const fromStart = context.session?.fromStart || false;
+      const metadata = JSON.stringify({ channelId, fromStart });
+
       // Open modal with wallet input
       await context.client.views.open({
         trigger_id: triggerId,
         view: {
           type: 'modal',
           callback_id: 'wallet_add_modal',
-          private_metadata: channelId,
+          private_metadata: metadata,
           title: {
             type: 'plain_text',
             text: 'Add Wallet'
@@ -214,7 +250,18 @@ export class SlackWalletService extends BaseWalletService {
    */
   async processWalletSubmission(context: SlackViewContext): Promise<void> {
     const workspaceId = context.body.team?.id || context.body.user?.team_id;
-    const channelId = context.view.private_metadata || context.body.user?.id;
+
+    // Parse private_metadata (may be JSON with fromStart flag or plain channelId)
+    let channelId: string | undefined;
+    let fromStart = false;
+    try {
+      const parsed = JSON.parse(context.view.private_metadata);
+      channelId = parsed.channelId;
+      fromStart = parsed.fromStart || false;
+    } catch {
+      channelId = context.view.private_metadata || context.body.user?.id;
+    }
+
     const fullUserId = `${workspaceId}:${channelId}`;
 
     try {
@@ -258,6 +305,14 @@ export class SlackWalletService extends BaseWalletService {
           channel: channelId,
           blocks: successMessage(replacePlaceholders(slackMessages.wallet.addSuccess, { displayName }))
         });
+
+        // Send onboarding complete message if from start flow
+        if (fromStart) {
+          await context.client.chat.postMessage({
+            channel: channelId,
+            text: slackMessages.wallet.onboardingComplete
+          });
+        }
       }
     } catch (error) {
       console.error('Error processing wallet submission:', error);
