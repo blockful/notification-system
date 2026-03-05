@@ -106,9 +106,8 @@ export class SlackBotService implements BotServiceInterface {
 
       handlers.action('wallet_add', async (ctx) => {
         if (this.walletService) {
-          // Set fromStart only when wallet_add comes from onboarding button
-          const actions = (ctx.body as any).actions;
-          ctx.session.fromStart = actions?.[0]?.value === 'onboarding';
+          const firstAction = ctx.body.actions?.[0];
+          ctx.session.fromStart = firstAction?.value === 'onboarding';
           await this.walletService.startAddWallet(ctx);
         }
       });

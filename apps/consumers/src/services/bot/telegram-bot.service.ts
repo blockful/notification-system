@@ -130,22 +130,22 @@ export class TelegramBotService implements BotServiceInterface {
         await this.walletService.confirmRemoval(ctx);
       });
 
-      handlers.action(/^lm_start$/, async (ctx) => {
+      handlers.action(/^learn_more_start$/, async (ctx) => {
         await ctx.answerCbQuery();
         await this.replyStartFlow(ctx);
       });
 
-      handlers.action(/^lm_daos$/, async (ctx) => {
+      handlers.action(/^learn_more_daos$/, async (ctx) => {
         await ctx.answerCbQuery();
         await this.daoService.initialize(ctx);
       });
 
-      handlers.action(/^lm_wallets$/, async (ctx) => {
+      handlers.action(/^learn_more_wallets$/, async (ctx) => {
         await ctx.answerCbQuery();
         await this.walletService.initialize(ctx);
       });
 
-      handlers.action(/^lm_settings$/, async (ctx) => {
+      handlers.action(/^learn_more_settings$/, async (ctx) => {
         await ctx.answerCbQuery(uiMessages.buttons.settingsComingSoon);
       });
 
@@ -181,12 +181,12 @@ export class TelegramBotService implements BotServiceInterface {
       reply_markup: {
         inline_keyboard: [
           [
-            { text: uiMessages.buttons.start, callback_data: 'lm_start' },
-            { text: uiMessages.buttons.daos, callback_data: 'lm_daos' },
+            { text: uiMessages.buttons.start, callback_data: 'learn_more_start' },
+            { text: uiMessages.buttons.daos, callback_data: 'learn_more_daos' },
           ],
           [
-            { text: uiMessages.buttons.wallets, callback_data: 'lm_wallets' },
-            { text: uiMessages.buttons.settings, callback_data: 'lm_settings' },
+            { text: uiMessages.buttons.wallets, callback_data: 'learn_more_wallets' },
+            { text: uiMessages.buttons.settings, callback_data: 'learn_more_settings' },
           ]
         ]
       }

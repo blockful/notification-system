@@ -20,7 +20,18 @@ export const slackMessages = {
 
   // Wallet management messages
   wallet: {
-    listHeader: '*Add your wallet address*\n\nThis allows us to personalize alerts based on your governance activity and delegations.',
+    /** Same content as Telegram wallet onboarding (common.ts wallet.selection) for consistency */
+    listHeader: `*Add your wallet address*
+
+This allows us to personalize alerts based on your governance activity and delegations.
+
+You'll receive notifications for:
+• Delegation changes that affect your voting power
+• Transfers that affect your voting power
+• Non-voting alerts
+• Vote confirmations
+
+Stay aware of how changes in governance affect you.`,
     selectionPrefix: '*Next step:* ',
     onboardingComplete: '🎉 You\'re all set! Stay tuned — we\'ll notify you as soon as something important happens in your DAOs.',
     emptyList: "You can add wallets and receive custom notifications related to them and the DAOs you follow!",

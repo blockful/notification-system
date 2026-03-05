@@ -15,6 +15,7 @@ import {
 } from '../../interfaces/slack-context.interface';
 import {
   walletEmptyState,
+  walletOnboardingPromptBlocks,
   successMessage,
   walletSelectionList
 } from '../../utils/slack-blocks-templates';
@@ -36,27 +37,7 @@ export class SlackWalletService extends BaseWalletService {
     if (context.respond) {
       await context.respond({
         replace_original: false,
-        blocks: [
-          {
-            type: 'section',
-            text: {
-              type: 'mrkdwn',
-              text: slackMessages.wallet.selectionPrefix + slackMessages.wallet.listHeader
-            }
-          },
-          {
-            type: 'actions',
-            elements: [
-              {
-                type: 'button',
-                text: { type: 'plain_text', text: slackMessages.wallet.buttonAdd, emoji: true },
-                style: 'primary',
-                action_id: 'wallet_add',
-                value: 'onboarding'
-              }
-            ]
-          }
-        ],
+        blocks: walletOnboardingPromptBlocks(),
         response_type: 'in_channel'
       });
     }

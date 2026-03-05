@@ -33,6 +33,7 @@ export interface SlackBodyWithIds {
       };
     };
   } | string; // Can be string for DialogSubmitAction or object for BlockAction
+  actions?: Array<{ action_id?: string; value?: string; type?: string }>;
 }
 
 /**

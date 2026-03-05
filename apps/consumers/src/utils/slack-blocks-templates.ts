@@ -165,6 +165,15 @@ export const walletSelectionList = (
 };
 
 /**
+ * Onboarding wallet prompt (after DAO selection): "Next step" message + Add wallet button.
+ * Shared so showOnboardingWallet and list logic use the same block structure.
+ */
+export const walletOnboardingPromptBlocks = (): KnownBlock[] => [
+  section(slackMessages.wallet.selectionPrefix + slackMessages.wallet.listHeader),
+  actions(button(slackMessages.wallet.buttonAdd, 'wallet_add', { style: 'primary', value: 'onboarding' }))
+];
+
+/**
  * Wallet empty state
  */
 export const walletEmptyState = (): KnownBlock[] => [

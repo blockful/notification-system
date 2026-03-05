@@ -118,7 +118,6 @@ export class SlackDAOService extends BaseDAOService {
     }
   }
 
-
   /**
    * Confirm DAO selection changes from checkboxes
    */
