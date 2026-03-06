@@ -155,6 +155,10 @@ export type Query = {
     delegators?: Maybe<Delegators_200_Response>;
     /** Get feed events */
     feedEvents?: Maybe<FeedEvents_200_Response>;
+    /** Returns label information from Arkham, ENS data, and whether the address is an EOA or contract. Arkham data is stored permanently. ENS data is cached with a configurable TTL. */
+    getAddress?: Maybe<GetAddress_200_Response>;
+    /** Returns label information from Arkham, ENS data, and address type for multiple addresses. Maximum 100 addresses per request. Arkham data is stored permanently. ENS data is cached with a configurable TTL. */
+    getAddresses?: Maybe<GetAddresses_200_Response>;
     /** Get historical DAO Token Treasury value (governance token quantity × token price) */
     getDaoTokenTreasury?: Maybe<GetDaoTokenTreasury_200_Response>;
     /** Get event relevance threshold */
@@ -322,6 +326,12 @@ export type QueryFeedEventsArgs = {
     skip?: InputMaybe<Scalars['Float']['input']>;
     toDate?: InputMaybe<Scalars['Float']['input']>;
     type?: InputMaybe<QueryInput_FeedEvents_Type>;
+};
+export type QueryGetAddressArgs = {
+    address: Scalars['String']['input'];
+};
+export type QueryGetAddressesArgs = {
+    addresses: Scalars['JSON']['input'];
 };
 export type QueryGetDaoTokenTreasuryArgs = {
     days?: InputMaybe<QueryInput_GetDaoTokenTreasury_Days>;
@@ -655,6 +665,17 @@ export type FeedEvents_200_Response = {
     items: Array<Maybe<Query_FeedEvents_Items_Items>>;
     totalCount: Scalars['Float']['output'];
 };
+export type GetAddress_200_Response = {
+    __typename?: 'getAddress_200_response';
+    address: Scalars['String']['output'];
+    arkham?: Maybe<Query_GetAddress_Arkham>;
+    ens?: Maybe<Query_GetAddress_Ens>;
+    isContract: Scalars['Boolean']['output'];
+};
+export type GetAddresses_200_Response = {
+    __typename?: 'getAddresses_200_response';
+    results: Array<Maybe<Query_GetAddresses_Results_Items>>;
+};
 export type GetDaoTokenTreasury_200_Response = {
     __typename?: 'getDaoTokenTreasury_200_response';
     items: Array<Maybe<Query_GetDaoTokenTreasury_Items_Items>>;
@@ -773,6 +794,7 @@ export declare enum QueryInput_AccountBalanceVariations_OrderDirection {
 }
 export declare enum QueryInput_AccountBalances_OrderBy {
     Balance = "balance",
+    SignedVariation = "signedVariation",
     Variation = "variation"
 }
 export declare enum QueryInput_AccountBalances_OrderDirection {
@@ -1044,16 +1066,16 @@ export declare enum QueryInput_VotesByProposalId_OrderDirection {
     Desc = "desc"
 }
 export declare enum QueryInput_VotesOffchainByProposalId_OrderBy {
-    Created = "created",
-    Vp = "vp"
+    Timestamp = "timestamp",
+    VotingPower = "votingPower"
 }
 export declare enum QueryInput_VotesOffchainByProposalId_OrderDirection {
     Asc = "asc",
     Desc = "desc"
 }
 export declare enum QueryInput_VotesOffchain_OrderBy {
-    Created = "created",
-    Vp = "vp"
+    Timestamp = "timestamp",
+    VotingPower = "votingPower"
 }
 export declare enum QueryInput_VotesOffchain_OrderDirection {
     Asc = "asc",
@@ -1073,6 +1095,7 @@ export declare enum QueryInput_VotingPowerVariations_OrderDirection {
 }
 export declare enum QueryInput_VotingPowers_OrderBy {
     DelegationsCount = "delegationsCount",
+    SignedVariation = "signedVariation",
     Variation = "variation",
     VotingPower = "votingPower"
 }
@@ -1203,6 +1226,39 @@ export declare enum Query_FeedEvents_Items_Items_Type {
     Transfer = "TRANSFER",
     Vote = "VOTE"
 }
+export type Query_GetAddress_Arkham = {
+    __typename?: 'query_getAddress_arkham';
+    entity?: Maybe<Scalars['String']['output']>;
+    entityType?: Maybe<Scalars['String']['output']>;
+    label?: Maybe<Scalars['String']['output']>;
+    twitter?: Maybe<Scalars['String']['output']>;
+};
+export type Query_GetAddress_Ens = {
+    __typename?: 'query_getAddress_ens';
+    avatar?: Maybe<Scalars['String']['output']>;
+    banner?: Maybe<Scalars['String']['output']>;
+    name?: Maybe<Scalars['String']['output']>;
+};
+export type Query_GetAddresses_Results_Items = {
+    __typename?: 'query_getAddresses_results_items';
+    address: Scalars['String']['output'];
+    arkham?: Maybe<Query_GetAddresses_Results_Items_Arkham>;
+    ens?: Maybe<Query_GetAddresses_Results_Items_Ens>;
+    isContract: Scalars['Boolean']['output'];
+};
+export type Query_GetAddresses_Results_Items_Arkham = {
+    __typename?: 'query_getAddresses_results_items_arkham';
+    entity?: Maybe<Scalars['String']['output']>;
+    entityType?: Maybe<Scalars['String']['output']>;
+    label?: Maybe<Scalars['String']['output']>;
+    twitter?: Maybe<Scalars['String']['output']>;
+};
+export type Query_GetAddresses_Results_Items_Ens = {
+    __typename?: 'query_getAddresses_results_items_ens';
+    avatar?: Maybe<Scalars['String']['output']>;
+    banner?: Maybe<Scalars['String']['output']>;
+    name?: Maybe<Scalars['String']['output']>;
+};
 export type Query_GetDaoTokenTreasury_Items_Items = {
     __typename?: 'query_getDaoTokenTreasury_items_items';
     /** Unix timestamp in milliseconds */
@@ -1469,7 +1525,7 @@ export type Query_VotesOffchainByProposalId_Items_Items = {
     proposalTitle: Scalars['String']['output'];
     reason: Scalars['String']['output'];
     voter: Scalars['String']['output'];
-    vp: Scalars['Float']['output'];
+    vp?: Maybe<Scalars['Float']['output']>;
 };
 export type Query_VotesOffchain_Items_Items = {
     __typename?: 'query_votesOffchain_items_items';
@@ -1479,7 +1535,7 @@ export type Query_VotesOffchain_Items_Items = {
     proposalTitle: Scalars['String']['output'];
     reason: Scalars['String']['output'];
     voter: Scalars['String']['output'];
-    vp: Scalars['Float']['output'];
+    vp?: Maybe<Scalars['Float']['output']>;
 };
 export type Query_Votes_Items_Items = {
     __typename?: 'query_votes_items_items';

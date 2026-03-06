@@ -22,6 +22,7 @@ var QueryInput_AccountBalanceVariations_OrderDirection;
 var QueryInput_AccountBalances_OrderBy;
 (function (QueryInput_AccountBalances_OrderBy) {
     QueryInput_AccountBalances_OrderBy["Balance"] = "balance";
+    QueryInput_AccountBalances_OrderBy["SignedVariation"] = "signedVariation";
     QueryInput_AccountBalances_OrderBy["Variation"] = "variation";
 })(QueryInput_AccountBalances_OrderBy || (exports.QueryInput_AccountBalances_OrderBy = QueryInput_AccountBalances_OrderBy = {}));
 var QueryInput_AccountBalances_OrderDirection;
@@ -346,8 +347,8 @@ var QueryInput_VotesByProposalId_OrderDirection;
 })(QueryInput_VotesByProposalId_OrderDirection || (exports.QueryInput_VotesByProposalId_OrderDirection = QueryInput_VotesByProposalId_OrderDirection = {}));
 var QueryInput_VotesOffchainByProposalId_OrderBy;
 (function (QueryInput_VotesOffchainByProposalId_OrderBy) {
-    QueryInput_VotesOffchainByProposalId_OrderBy["Created"] = "created";
-    QueryInput_VotesOffchainByProposalId_OrderBy["Vp"] = "vp";
+    QueryInput_VotesOffchainByProposalId_OrderBy["Timestamp"] = "timestamp";
+    QueryInput_VotesOffchainByProposalId_OrderBy["VotingPower"] = "votingPower";
 })(QueryInput_VotesOffchainByProposalId_OrderBy || (exports.QueryInput_VotesOffchainByProposalId_OrderBy = QueryInput_VotesOffchainByProposalId_OrderBy = {}));
 var QueryInput_VotesOffchainByProposalId_OrderDirection;
 (function (QueryInput_VotesOffchainByProposalId_OrderDirection) {
@@ -356,8 +357,8 @@ var QueryInput_VotesOffchainByProposalId_OrderDirection;
 })(QueryInput_VotesOffchainByProposalId_OrderDirection || (exports.QueryInput_VotesOffchainByProposalId_OrderDirection = QueryInput_VotesOffchainByProposalId_OrderDirection = {}));
 var QueryInput_VotesOffchain_OrderBy;
 (function (QueryInput_VotesOffchain_OrderBy) {
-    QueryInput_VotesOffchain_OrderBy["Created"] = "created";
-    QueryInput_VotesOffchain_OrderBy["Vp"] = "vp";
+    QueryInput_VotesOffchain_OrderBy["Timestamp"] = "timestamp";
+    QueryInput_VotesOffchain_OrderBy["VotingPower"] = "votingPower";
 })(QueryInput_VotesOffchain_OrderBy || (exports.QueryInput_VotesOffchain_OrderBy = QueryInput_VotesOffchain_OrderBy = {}));
 var QueryInput_VotesOffchain_OrderDirection;
 (function (QueryInput_VotesOffchain_OrderDirection) {
@@ -382,6 +383,7 @@ var QueryInput_VotingPowerVariations_OrderDirection;
 var QueryInput_VotingPowers_OrderBy;
 (function (QueryInput_VotingPowers_OrderBy) {
     QueryInput_VotingPowers_OrderBy["DelegationsCount"] = "delegationsCount";
+    QueryInput_VotingPowers_OrderBy["SignedVariation"] = "signedVariation";
     QueryInput_VotingPowers_OrderBy["Variation"] = "variation";
     QueryInput_VotingPowers_OrderBy["VotingPower"] = "votingPower";
 })(QueryInput_VotingPowers_OrderBy || (exports.QueryInput_VotingPowers_OrderBy = QueryInput_VotingPowers_OrderBy = {}));
