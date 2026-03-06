@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.EventThresholdResponseSchema = exports.SafeProposalNonVotersResponseSchema = exports.SafeVotesResponseSchema = exports.SafeHistoricalVotingPowerResponseSchema = exports.SafeProposalByIdResponseSchema = exports.SafeProposalsResponseSchema = exports.SafeDaosResponseSchema = exports.FeedRelevance = exports.FeedEventType = void 0;
+exports.SafeOffchainProposalsResponseSchema = exports.OffchainProposalItemSchema = exports.EventThresholdResponseSchema = exports.SafeProposalNonVotersResponseSchema = exports.SafeVotesResponseSchema = exports.SafeHistoricalVotingPowerResponseSchema = exports.SafeProposalByIdResponseSchema = exports.SafeProposalsResponseSchema = exports.SafeDaosResponseSchema = exports.FeedRelevance = exports.FeedEventType = void 0;
 exports.processProposals = processProposals;
 exports.processVotingPowerHistory = processVotingPowerHistory;
 const zod_1 = require("zod");
@@ -123,6 +123,31 @@ exports.EventThresholdResponseSchema = zod_1.z.object({
     getEventRelevanceThreshold: zod_1.z.object({
         threshold: zod_1.z.string()
     })
+});
+exports.OffchainProposalItemSchema = zod_1.z.object({
+    id: zod_1.z.string(),
+    title: zod_1.z.string(),
+    discussion: zod_1.z.string(),
+    link: zod_1.z.string(),
+    state: zod_1.z.string(),
+    created: zod_1.z.number(),
+});
+exports.SafeOffchainProposalsResponseSchema = zod_1.z.object({
+    offchainProposals: zod_1.z.object({
+        items: zod_1.z.array(exports.OffchainProposalItemSchema.nullable()),
+        totalCount: zod_1.z.number(),
+    }).nullable(),
+}).transform((data) => {
+    if (!data.offchainProposals) {
+        console.warn('OffchainProposalsResponse has null offchainProposals:', data);
+        return { offchainProposals: { items: [], totalCount: 0 } };
+    }
+    return {
+        offchainProposals: {
+            ...data.offchainProposals,
+            items: data.offchainProposals.items.filter((item) => item !== null),
+        },
+    };
 });
 // Internal helper function to process validated proposals
 function processProposals(validated, daoId) {

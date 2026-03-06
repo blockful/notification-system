@@ -5,6 +5,7 @@ import { SubscriptionClient } from './services/subscription-client.service';
 import { NotificationClientFactory } from './services/notification/notification-factory.service';
 import { RabbitMQNotificationService } from './services/notification/rabbitmq-notification.service';
 import { NewProposalTriggerHandler } from './services/triggers/new-proposal-trigger.service';
+import { NewOffchainProposalTriggerHandler } from './services/triggers/new-offchain-proposal-trigger.service';
 import { VotingPowerTriggerHandler } from './services/triggers/voting-power-trigger.service';
 import { ProposalFinishedTriggerHandler } from './services/triggers/proposal-finished-trigger.service';
 import { NonVotingHandler } from './services/triggers/non-voting-handler.service';
@@ -23,7 +24,8 @@ export class App {
     private subscriptionServerUrl: string, 
     private rabbitmqUrl: string,
     private anticaptureGraphqlEndpoint: string,
-    private anticaptureHttpClient?: any
+    private anticaptureHttpClient?: any,
+    private blockfulApiToken?: string
   ) {}
 
   private async setupServices(): Promise<void> {
@@ -42,6 +44,9 @@ export class App {
       baseURL: this.anticaptureGraphqlEndpoint,
       headers: {
         'Content-Type': 'application/json',
+        ...(this.blockfulApiToken && {
+          Authorization: `Bearer ${this.blockfulApiToken}`,
+        }),
       },
     });
     const anticaptureClient = new AnticaptureClient(anticaptureAxiosClient);
@@ -57,6 +62,11 @@ export class App {
     triggerProcessorService.addHandler(
       'new-proposal',
       new NewProposalTriggerHandler(subscriptionClient, notificationFactory, anticaptureClient)
+    );
+
+    triggerProcessorService.addHandler(
+      'new-offchain-proposal',
+      new NewOffchainProposalTriggerHandler(subscriptionClient, notificationFactory)
     );
 
     triggerProcessorService.addHandler(

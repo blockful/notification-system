@@ -4,6 +4,7 @@
 
 // Export trigger messages
 export * from './triggers/new-proposal';
+export * from './triggers/new-offchain-proposal';
 export * from './triggers/vote-confirmation';
 export * from './triggers/voting-reminder';
 export * from './triggers/proposal-finished';
@@ -23,3 +24,4 @@ export type * from './formatters/placeholders';
 export * from './formatters/dao-emoji';
 export * from './formatters/explorer.service';
 export * from './formatters/markdown-slack-converter';
+export * from './formatters/utm';

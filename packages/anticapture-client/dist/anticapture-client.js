@@ -306,5 +306,41 @@ class AnticaptureClient {
             return null;
         }
     }
+    ;
+    /*
+     * Lists offchain (Snapshot) proposals from all DAOs or a specific DAO
+     * @param variables Query variables (skip, limit, orderDirection, status, fromDate)
+     * @param daoId Optional specific DAO ID. If not provided, queries all DAOs
+     * @returns Array of offchain proposal items with daoId attached
+     */
+    async listOffchainProposals(variables, daoId) {
+        if (!daoId) {
+            const allDAOs = await this.getDAOs();
+            const allProposals = [];
+            for (const dao of allDAOs) {
+                try {
+                    const validated = await this.query(graphql_2.ListOffchainProposalsDocument, schemas_1.SafeOffchainProposalsResponseSchema, variables, dao.id);
+                    const items = validated.offchainProposals.items.map(item => ({ ...item, daoId: dao.id }));
+                    if (items.length > 0) {
+                        allProposals.push(...items);
+                    }
+                }
+                catch (error) {
+                    console.warn(`Skipping offchain proposals for ${dao.id} due to API error: ${error instanceof Error ? error.message : error}`);
+                }
+            }
+            // Sort by created timestamp desc (most recent first)
+            allProposals.sort((a, b) => b.created - a.created);
+            return allProposals;
+        }
+        try {
+            const validated = await this.query(graphql_2.ListOffchainProposalsDocument, schemas_1.SafeOffchainProposalsResponseSchema, variables, daoId);
+            return validated.offchainProposals.items.map(item => ({ ...item, daoId }));
+        }
+        catch (error) {
+            console.warn(`Error querying offchain proposals for DAO ${daoId}: ${error instanceof Error ? error.message : error}`);
+            return [];
+        }
+    }
 }
 exports.AnticaptureClient = AnticaptureClient;

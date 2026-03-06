@@ -5,7 +5,9 @@ const config = loadConfig();
 const app = new App(
   config.subscriptionServerUrl, 
   config.rabbitmqUrl, 
-  config.anticaptureGraphqlEndpoint
+  config.anticaptureGraphqlEndpoint,
+  undefined,
+  config.blockfulApiToken
 );
 
 (async () => {

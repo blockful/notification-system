@@ -99,7 +99,9 @@ export const checkboxSelectionList = (
       ]
     },
     { type: 'divider' },
-    actions(button(slackMessages.dao.confirmButton, confirmActionId, { style: confirmButtonStyle }))
+    actions(
+      button(slackMessages.dao.confirmButton, confirmActionId, { style: confirmButtonStyle })
+    )
   ];
 };
 
@@ -161,6 +163,15 @@ export const walletSelectionList = (
     'danger'
   );
 };
+
+/**
+ * Onboarding wallet prompt (after DAO selection): "Next step" message + Add wallet button.
+ * Shared so showOnboardingWallet and list logic use the same block structure.
+ */
+export const walletOnboardingPromptBlocks = (): KnownBlock[] => [
+  section(slackMessages.wallet.selectionPrefix + slackMessages.wallet.listHeader),
+  actions(button(slackMessages.wallet.buttonAdd, 'wallet_add', { style: 'primary', value: 'onboarding' }))
+];
 
 /**
  * Wallet empty state

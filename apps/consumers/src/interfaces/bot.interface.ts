@@ -10,6 +10,7 @@ export interface ContextWithSession extends Context {
         walletAction?: 'add' | 'remove';
         walletsToRemove?: Set<string>;
         awaitingWalletInput?: boolean;
+        fromStart?: boolean;
     };
 }
 

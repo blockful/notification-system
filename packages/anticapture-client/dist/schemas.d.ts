@@ -577,6 +577,124 @@ export declare const EventThresholdResponseSchema: z.ZodObject<{
         threshold: string;
     };
 }>;
+export declare const OffchainProposalItemSchema: z.ZodObject<{
+    id: z.ZodString;
+    title: z.ZodString;
+    discussion: z.ZodString;
+    link: z.ZodString;
+    state: z.ZodString;
+    created: z.ZodNumber;
+}, "strip", z.ZodTypeAny, {
+    link: string;
+    created: number;
+    id: string;
+    title: string;
+    discussion: string;
+    state: string;
+}, {
+    link: string;
+    created: number;
+    id: string;
+    title: string;
+    discussion: string;
+    state: string;
+}>;
+export type OffchainProposalItem = z.infer<typeof OffchainProposalItemSchema>;
+export declare const SafeOffchainProposalsResponseSchema: z.ZodEffects<z.ZodObject<{
+    offchainProposals: z.ZodNullable<z.ZodObject<{
+        items: z.ZodArray<z.ZodNullable<z.ZodObject<{
+            id: z.ZodString;
+            title: z.ZodString;
+            discussion: z.ZodString;
+            link: z.ZodString;
+            state: z.ZodString;
+            created: z.ZodNumber;
+        }, "strip", z.ZodTypeAny, {
+            link: string;
+            created: number;
+            id: string;
+            title: string;
+            discussion: string;
+            state: string;
+        }, {
+            link: string;
+            created: number;
+            id: string;
+            title: string;
+            discussion: string;
+            state: string;
+        }>>, "many">;
+        totalCount: z.ZodNumber;
+    }, "strip", z.ZodTypeAny, {
+        items: ({
+            link: string;
+            created: number;
+            id: string;
+            title: string;
+            discussion: string;
+            state: string;
+        } | null)[];
+        totalCount: number;
+    }, {
+        items: ({
+            link: string;
+            created: number;
+            id: string;
+            title: string;
+            discussion: string;
+            state: string;
+        } | null)[];
+        totalCount: number;
+    }>>;
+}, "strip", z.ZodTypeAny, {
+    offchainProposals: {
+        items: ({
+            link: string;
+            created: number;
+            id: string;
+            title: string;
+            discussion: string;
+            state: string;
+        } | null)[];
+        totalCount: number;
+    } | null;
+}, {
+    offchainProposals: {
+        items: ({
+            link: string;
+            created: number;
+            id: string;
+            title: string;
+            discussion: string;
+            state: string;
+        } | null)[];
+        totalCount: number;
+    } | null;
+}>, {
+    offchainProposals: {
+        items: {
+            link: string;
+            created: number;
+            id: string;
+            title: string;
+            discussion: string;
+            state: string;
+        }[];
+        totalCount: number;
+    };
+}, {
+    offchainProposals: {
+        items: ({
+            link: string;
+            created: number;
+            id: string;
+            title: string;
+            discussion: string;
+            state: string;
+        } | null)[];
+        totalCount: number;
+    } | null;
+}>;
 type SafeProposalsResponse = z.infer<typeof SafeProposalsResponseSchema>;
 type SafeHistoricalVotingPowerResponse = z.infer<typeof SafeHistoricalVotingPowerResponseSchema>;
 export type ProcessedVotingPowerHistory = z.infer<typeof HistoricalVotingPowerItemSchema> & {

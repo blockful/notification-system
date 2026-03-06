@@ -1,4 +1,4 @@
-import { ProposalData } from '../fixtures';
+import { ProposalData, OffchainProposalData } from '../fixtures';
 import { ProcessedVotingPowerHistory } from '@notification-system/anticapture-client';
 import { getAddress, isAddressEqual } from 'viem';
 
@@ -39,7 +39,7 @@ export class GraphQLMockSetup {
   /**
    * @notice Generic mock implementation that handles all query types
    */
-  private static createMockImplementation(proposals: ProposalData[] = [], votingPowerData: ProcessedVotingPowerHistory[] = [], daoChainMapping: Record<string, number> = {}, votesData: any[] = []) {
+  private static createMockImplementation(proposals: ProposalData[] = [], votingPowerData: ProcessedVotingPowerHistory[] = [], daoChainMapping: Record<string, number> = {}, votesData: any[] = [], offchainProposalsData: OffchainProposalData[] = []) {
     return (url: string, data: any, config: any) => {
       // Handle proposals
       if (data.query?.includes('ListProposals')) {
@@ -66,6 +66,20 @@ export class GraphQLMockSetup {
         }
         return Promise.resolve({
           data: { data: { proposals: { items: filtered, totalCount: filtered.length } } }
+        });
+      }
+
+      // Handle offchain proposals
+      if (data.query?.includes('ListOffchainProposals')) {
+        let filtered = offchainProposalsData;
+        if (data.variables?.fromDate) {
+          filtered = filtered.filter(p => p.created >= data.variables.fromDate);
+        }
+        if (config?.headers?.['anticapture-dao-id']) {
+          filtered = filtered.filter(p => p.daoId === config.headers['anticapture-dao-id']);
+        }
+        return Promise.resolve({
+          data: { data: { offchainProposals: { items: filtered.map(p => ({ id: p.id, title: p.title, discussion: p.discussion, state: p.state, created: p.created })), totalCount: filtered.length } } }
         });
       }
 
@@ -170,7 +184,8 @@ export class GraphQLMockSetup {
         const uniqueDaoIds = [...new Set([
           ...proposals.map(p => p.daoId).filter(Boolean),
           ...votingPowerData.map(vp => vp.daoId).filter(Boolean),
-          ...votesData.map((v: any) => v.daoId).filter(Boolean)
+          ...votesData.map((v: any) => v.daoId).filter(Boolean),
+          ...offchainProposalsData.map(p => p.daoId).filter(Boolean)
         ])];
         return Promise.resolve({
           data: { data: { daos: { items: uniqueDaoIds.map(id => ({ 
@@ -201,15 +216,17 @@ export class GraphQLMockSetup {
    * @param votingPowerData Array of voting power history data  
    * @param daoChainMapping Optional mapping of DAO IDs to chain IDs
    * @param votesData Array of vote data
+   * @param offchainProposalsData Array of offchain (Snapshot) proposal data
    */
   static setupMock(
     mockHttpClient: any, 
     proposals: ProposalData[] = [], 
     votingPowerData: ProcessedVotingPowerHistory[] = [],
     daoChainMapping: Record<string, number> = {},
-    votesData: any[] = []
+    votesData: any[] = [],
+    offchainProposalsData: OffchainProposalData[] = []
   ): void {
-    mockHttpClient.post.mockImplementation(this.createMockImplementation(proposals, votingPowerData, daoChainMapping, votesData));
+    mockHttpClient.post.mockImplementation(this.createMockImplementation(proposals, votingPowerData, daoChainMapping, votesData, offchainProposalsData));
   }
 
   /**

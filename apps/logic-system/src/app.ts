@@ -1,9 +1,11 @@
 import { NewProposalTrigger } from './triggers/new-proposal-trigger';
+import { NewOffchainProposalTrigger } from './triggers/new-offchain-proposal-trigger';
 import { VotingPowerChangedTrigger } from './triggers/voting-power-changed-trigger';
 import { ProposalFinishedTrigger } from './triggers/proposal-finished-trigger';
 import { VoteConfirmationTrigger } from './triggers/vote-confirmation-trigger';
 import { VotingReminderTrigger } from './triggers/voting-reminder-trigger';
 import { ProposalRepository } from './repositories/proposal.repository';
+import { OffchainProposalRepository } from './repositories/offchain-proposal.repository';
 import { VotingPowerRepository } from './repositories/voting-power.repository';
 import { ThresholdRepository } from './repositories/threshold.repository';
 import { VotesRepository } from './repositories/votes.repository';
@@ -15,6 +17,7 @@ import { AxiosInstance } from 'axios';
 
 export class App {
   private trigger!: NewProposalTrigger;
+  private offchainProposalTrigger!: NewOffchainProposalTrigger;
   private votingPowerTrigger!: VotingPowerChangedTrigger;
   private proposalFinishedTrigger!: ProposalFinishedTrigger;
   private voteConfirmationTrigger!: VoteConfirmationTrigger;
@@ -37,16 +40,18 @@ export class App {
     
     const anticaptureClient = new AnticaptureClient(anticaptureHttpClient);
     const proposalRepository = new ProposalRepository(anticaptureClient);
+    const offchainProposalRepository = new OffchainProposalRepository(anticaptureClient);
     const votingPowerRepository = new VotingPowerRepository(anticaptureClient);
     const thresholdRepository = new ThresholdRepository(anticaptureClient);
     const votesRepository = new VotesRepository(anticaptureClient);
 
-    this.initPromise = this.initializeRabbitMQ(rabbitmqUrl, proposalRepository, votingPowerRepository, thresholdRepository, votesRepository, triggerInterval, initialTimestamp);
+    this.initPromise = this.initializeRabbitMQ(rabbitmqUrl, proposalRepository, offchainProposalRepository, votingPowerRepository, thresholdRepository, votesRepository, triggerInterval, initialTimestamp);
   }
 
   private async initializeRabbitMQ(
-    rabbitmqUrl: string, 
+    rabbitmqUrl: string,
     proposalRepository: ProposalRepository,
+    offchainProposalRepository: OffchainProposalRepository,
     votingPowerRepository: VotingPowerRepository,
     thresholdRepository: ThresholdRepository,
     votesRepository: VotesRepository,
@@ -62,6 +67,13 @@ export class App {
     this.trigger = new NewProposalTrigger(
       dispatcherService,
       proposalRepository,
+      triggerInterval,
+      initialTimestamp
+    );
+
+    this.offchainProposalTrigger = new NewOffchainProposalTrigger(
+      dispatcherService,
+      offchainProposalRepository,
       triggerInterval,
       initialTimestamp
     );
@@ -112,6 +124,7 @@ export class App {
   async start(): Promise<void> {
     await this.initPromise;
     this.trigger.start({ status: this.proposalStatus });
+    this.offchainProposalTrigger.start({ status: ['active', 'pending'] });
     this.votingPowerTrigger.start();
     this.proposalFinishedTrigger.start();
     this.voteConfirmationTrigger.start();
@@ -143,10 +156,14 @@ export class App {
     if (this.voteConfirmationTrigger) {
       this.voteConfirmationTrigger.reset(initialTimestamp);
     }
+    if (this.offchainProposalTrigger) {
+      this.offchainProposalTrigger.reset(initialTimestamp);
+    }
   }
 
   async stop(): Promise<void> {
     await this.trigger.stop();
+    await this.offchainProposalTrigger.stop();
     await this.votingPowerTrigger.stop();
     await this.proposalFinishedTrigger.stop();
     await this.voteConfirmationTrigger.stop();

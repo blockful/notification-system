@@ -8,7 +8,7 @@
 import { SlackClientInterface } from '../../interfaces/slack-client.interface';
 import { NotificationPayload } from '../../interfaces/notification.interface';
 import { BotServiceInterface } from '../../interfaces/bot-service.interface';
-import { slackMessages, convertMarkdownToSlack } from '@notification-system/messages';
+import { slackMessages, convertMarkdownToSlack, appendUtmParams } from '@notification-system/messages';
 import { EnsResolverService } from '../ens-resolver.service';
 import { SlackDAOService } from '../dao/slack-dao.service';
 import { SlackWalletService } from '../wallet/slack-wallet.service';
@@ -48,6 +48,11 @@ export class SlackBotService implements BotServiceInterface {
       // Welcome message actions
       handlers.action('welcome_select_daos', async (ctx) => {
         if (this.daoService) {
+          const channelId = ctx.body.channel?.id;
+          const workspaceId = ctx.body.team?.id || ctx.body.user?.team_id;
+          const fullUserId = `${workspaceId}:${channelId}`;
+          const hasDaos = await this.daoService.hasSubscriptions(fullUserId);
+          ctx.session.fromStart = !hasDaos;
           await this.daoService.initialize(ctx);
         }
       });
@@ -74,12 +79,19 @@ export class SlackBotService implements BotServiceInterface {
       handlers.action('dao_confirm_subscribe', async (ctx) => {
         if (this.daoService) {
           await this.daoService.confirm(ctx);
+
+          // If from onboarding flow, trigger wallet setup
+          if (ctx.session.fromStart && this.walletService) {
+            await this.walletService.showOnboardingWallet(ctx);
+            ctx.session.fromStart = false;
+          }
         }
       });
 
       handlers.action('dao_checkboxes', async (ctx) => {
         await ctx.ack();
       });
+
 
       handlers.action('wallet_checkboxes', async (ctx) => {
         await ctx.ack();
@@ -94,6 +106,8 @@ export class SlackBotService implements BotServiceInterface {
 
       handlers.action('wallet_add', async (ctx) => {
         if (this.walletService) {
+          const firstAction = ctx.body.actions?.[0];
+          ctx.session.fromStart = firstAction?.value === 'onboarding';
           await this.walletService.startAddWallet(ctx);
         }
       });
@@ -212,8 +226,17 @@ export class SlackBotService implements BotServiceInterface {
       throw new Error('Slack notification requires workspace OAuth token. No bot_token provided in notification payload.');
     }
 
+    // Append UTM tracking params to button URLs
+    const triggerType = payload.metadata?.triggerType;
+    const buttons = payload.metadata?.buttons?.map(btn => ({
+      text: btn.text,
+      url: triggerType
+        ? appendUtmParams(btn.url, { source: 'notification', medium: 'slack', campaign: triggerType })
+        : btn.url
+    }));
+
     // Build message options with buttons if provided
-    const messageOptions = payload.metadata?.buttons ? {
+    const messageOptions = buttons ? {
       blocks: [
         {
           type: 'section' as const,
@@ -221,7 +244,7 @@ export class SlackBotService implements BotServiceInterface {
         },
         {
           type: 'actions' as const,
-          elements: payload.metadata.buttons.map(btn => ({
+          elements: buttons.map(btn => ({
             type: 'button' as const,
             text: { type: 'plain_text' as const, text: btn.text },
             url: btn.url

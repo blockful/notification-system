@@ -175,6 +175,10 @@ export type Query = {
     historicalVotingPowerByAccountId?: Maybe<HistoricalVotingPowerByAccountId_200_Response>;
     /** Get the last update time */
     lastUpdate?: Maybe<LastUpdate_200_Response>;
+    /** Returns a single offchain (Snapshot) proposal by its ID */
+    offchainProposalById?: Maybe<OffchainProposalById_200_Response>;
+    /** Returns a list of offchain (Snapshot) proposals */
+    offchainProposals?: Maybe<OffchainProposals_200_Response>;
     /** Returns a single proposal by its ID */
     proposal?: Maybe<Proposal_200_Response>;
     /** Returns the active delegates that did not vote on a given proposal */
@@ -195,6 +199,10 @@ export type Query = {
     votes?: Maybe<Votes_200_Response>;
     /** Returns a paginated list of votes cast on a specific proposal */
     votesByProposalId?: Maybe<VotesByProposalId_200_Response>;
+    /** Returns a list of offchain (Snapshot) votes */
+    votesOffchain?: Maybe<VotesOffchain_200_Response>;
+    /** Returns a paginated list of offchain (Snapshot) votes for a specific proposal */
+    votesOffchainByProposalId?: Maybe<VotesOffchainByProposalId_200_Response>;
     /** Returns voting power information for a specific address (account) */
     votingPowerByAccountId?: Maybe<VotingPowerByAccountId_200_Response>;
     /** Returns a mapping of the voting power changes within a time frame for the given addresses */
@@ -380,6 +388,16 @@ export type QueryHistoricalVotingPowerByAccountIdArgs = {
 export type QueryLastUpdateArgs = {
     chart: QueryInput_LastUpdate_Chart;
 };
+export type QueryOffchainProposalByIdArgs = {
+    id: Scalars['String']['input'];
+};
+export type QueryOffchainProposalsArgs = {
+    fromDate?: InputMaybe<Scalars['Float']['input']>;
+    limit?: InputMaybe<Scalars['PositiveInt']['input']>;
+    orderDirection?: InputMaybe<QueryInput_OffchainProposals_OrderDirection>;
+    skip?: InputMaybe<Scalars['NonNegativeInt']['input']>;
+    status?: InputMaybe<Scalars['JSON']['input']>;
+};
 export type QueryProposalArgs = {
     id: Scalars['String']['input'];
 };
@@ -466,6 +484,25 @@ export type QueryVotesByProposalIdArgs = {
     support?: InputMaybe<Scalars['Float']['input']>;
     toDate?: InputMaybe<Scalars['Float']['input']>;
     voterAddressIn?: InputMaybe<Scalars['JSON']['input']>;
+};
+export type QueryVotesOffchainArgs = {
+    fromDate?: InputMaybe<Scalars['Float']['input']>;
+    limit?: InputMaybe<Scalars['Float']['input']>;
+    orderBy?: InputMaybe<QueryInput_VotesOffchain_OrderBy>;
+    orderDirection?: InputMaybe<QueryInput_VotesOffchain_OrderDirection>;
+    skip?: InputMaybe<Scalars['NonNegativeInt']['input']>;
+    toDate?: InputMaybe<Scalars['Float']['input']>;
+    voterAddresses?: InputMaybe<Scalars['JSON']['input']>;
+};
+export type QueryVotesOffchainByProposalIdArgs = {
+    fromDate?: InputMaybe<Scalars['Float']['input']>;
+    id: Scalars['String']['input'];
+    limit?: InputMaybe<Scalars['Float']['input']>;
+    orderBy?: InputMaybe<QueryInput_VotesOffchainByProposalId_OrderBy>;
+    orderDirection?: InputMaybe<QueryInput_VotesOffchainByProposalId_OrderDirection>;
+    skip?: InputMaybe<Scalars['NonNegativeInt']['input']>;
+    toDate?: InputMaybe<Scalars['Float']['input']>;
+    voterAddresses?: InputMaybe<Scalars['JSON']['input']>;
 };
 export type QueryVotingPowerByAccountIdArgs = {
     accountId: Scalars['String']['input'];
@@ -663,6 +700,28 @@ export type HistoricalVotingPower_200_Response = {
 export type LastUpdate_200_Response = {
     __typename?: 'lastUpdate_200_response';
     lastUpdate: Scalars['String']['output'];
+};
+export type OffchainProposalById_200_Response = {
+    __typename?: 'offchainProposalById_200_response';
+    author: Scalars['String']['output'];
+    body: Scalars['String']['output'];
+    created: Scalars['Float']['output'];
+    discussion: Scalars['String']['output'];
+    end: Scalars['Float']['output'];
+    flagged: Scalars['Boolean']['output'];
+    id: Scalars['String']['output'];
+    link: Scalars['String']['output'];
+    spaceId: Scalars['String']['output'];
+    start: Scalars['Float']['output'];
+    state: Scalars['String']['output'];
+    title: Scalars['String']['output'];
+    type: Scalars['String']['output'];
+    updated: Scalars['Float']['output'];
+};
+export type OffchainProposals_200_Response = {
+    __typename?: 'offchainProposals_200_response';
+    items: Array<Maybe<Query_OffchainProposals_Items_Items>>;
+    totalCount: Scalars['Float']['output'];
 };
 export type ProposalNonVoters_200_Response = {
     __typename?: 'proposalNonVoters_200_response';
@@ -915,6 +974,10 @@ export declare enum QueryInput_LastUpdate_Chart {
     CostComparison = "cost_comparison",
     TokenDistribution = "token_distribution"
 }
+export declare enum QueryInput_OffchainProposals_OrderDirection {
+    Asc = "asc",
+    Desc = "desc"
+}
 export declare enum QueryInput_ProposalNonVoters_OrderDirection {
     Asc = "asc",
     Desc = "desc"
@@ -977,6 +1040,22 @@ export declare enum QueryInput_VotesByProposalId_OrderBy {
     VotingPower = "votingPower"
 }
 export declare enum QueryInput_VotesByProposalId_OrderDirection {
+    Asc = "asc",
+    Desc = "desc"
+}
+export declare enum QueryInput_VotesOffchainByProposalId_OrderBy {
+    Created = "created",
+    Vp = "vp"
+}
+export declare enum QueryInput_VotesOffchainByProposalId_OrderDirection {
+    Asc = "asc",
+    Desc = "desc"
+}
+export declare enum QueryInput_VotesOffchain_OrderBy {
+    Created = "created",
+    Vp = "vp"
+}
+export declare enum QueryInput_VotesOffchain_OrderDirection {
     Asc = "asc",
     Desc = "desc"
 }
@@ -1225,6 +1304,23 @@ export type Query_HistoricalVotingPower_Items_Items_Transfer = {
     to: Scalars['String']['output'];
     value: Scalars['String']['output'];
 };
+export type Query_OffchainProposals_Items_Items = {
+    __typename?: 'query_offchainProposals_items_items';
+    author: Scalars['String']['output'];
+    body: Scalars['String']['output'];
+    created: Scalars['Float']['output'];
+    discussion: Scalars['String']['output'];
+    end: Scalars['Float']['output'];
+    flagged: Scalars['Boolean']['output'];
+    id: Scalars['String']['output'];
+    link: Scalars['String']['output'];
+    spaceId: Scalars['String']['output'];
+    start: Scalars['Float']['output'];
+    state: Scalars['String']['output'];
+    title: Scalars['String']['output'];
+    type: Scalars['String']['output'];
+    updated: Scalars['Float']['output'];
+};
 export type Query_ProposalNonVoters_Items_Items = {
     __typename?: 'query_proposalNonVoters_items_items';
     lastVoteTimestamp: Scalars['Float']['output'];
@@ -1365,6 +1461,26 @@ export type Query_VotesByProposalId_Items_Items = {
     voterAddress: Scalars['String']['output'];
     votingPower: Scalars['String']['output'];
 };
+export type Query_VotesOffchainByProposalId_Items_Items = {
+    __typename?: 'query_votesOffchainByProposalId_items_items';
+    choice?: Maybe<Scalars['JSON']['output']>;
+    created: Scalars['Float']['output'];
+    proposalId: Scalars['String']['output'];
+    proposalTitle: Scalars['String']['output'];
+    reason: Scalars['String']['output'];
+    voter: Scalars['String']['output'];
+    vp: Scalars['Float']['output'];
+};
+export type Query_VotesOffchain_Items_Items = {
+    __typename?: 'query_votesOffchain_items_items';
+    choice?: Maybe<Scalars['JSON']['output']>;
+    created: Scalars['Float']['output'];
+    proposalId: Scalars['String']['output'];
+    proposalTitle: Scalars['String']['output'];
+    reason: Scalars['String']['output'];
+    voter: Scalars['String']['output'];
+    vp: Scalars['Float']['output'];
+};
 export type Query_Votes_Items_Items = {
     __typename?: 'query_votes_items_items';
     proposalId: Scalars['String']['output'];
@@ -1458,6 +1574,16 @@ export type VotesByProposalId_200_Response = {
     items: Array<Maybe<Query_VotesByProposalId_Items_Items>>;
     totalCount: Scalars['Float']['output'];
 };
+export type VotesOffchainByProposalId_200_Response = {
+    __typename?: 'votesOffchainByProposalId_200_response';
+    items: Array<Maybe<Query_VotesOffchainByProposalId_Items_Items>>;
+    totalCount: Scalars['Float']['output'];
+};
+export type VotesOffchain_200_Response = {
+    __typename?: 'votesOffchain_200_response';
+    items: Array<Maybe<Query_VotesOffchain_Items_Items>>;
+    totalCount: Scalars['Float']['output'];
+};
 export type Votes_200_Response = {
     __typename?: 'votes_200_response';
     items: Array<Maybe<Query_Votes_Items_Items>>;
@@ -1501,6 +1627,29 @@ export type GetDaOsQuery = {
             chainId: number;
         }>;
     };
+};
+export type ListOffchainProposalsQueryVariables = Exact<{
+    skip?: InputMaybe<Scalars['NonNegativeInt']['input']>;
+    limit?: InputMaybe<Scalars['PositiveInt']['input']>;
+    orderDirection?: InputMaybe<QueryInput_OffchainProposals_OrderDirection>;
+    status?: InputMaybe<Scalars['JSON']['input']>;
+    fromDate?: InputMaybe<Scalars['Float']['input']>;
+}>;
+export type ListOffchainProposalsQuery = {
+    __typename?: 'Query';
+    offchainProposals?: {
+        __typename?: 'offchainProposals_200_response';
+        totalCount: number;
+        items: Array<{
+            __typename?: 'query_offchainProposals_items_items';
+            id: string;
+            title: string;
+            discussion: string;
+            link: string;
+            state: string;
+            created: number;
+        } | null>;
+    } | null;
 };
 export type ProposalNonVotersQueryVariables = Exact<{
     id: Scalars['String']['input'];
@@ -1650,6 +1799,7 @@ export type ListHistoricalVotingPowerQuery = {
     } | null;
 };
 export declare const GetDaOsDocument: DocumentNode<GetDaOsQuery, GetDaOsQueryVariables>;
+export declare const ListOffchainProposalsDocument: DocumentNode<ListOffchainProposalsQuery, ListOffchainProposalsQueryVariables>;
 export declare const ProposalNonVotersDocument: DocumentNode<ProposalNonVotersQuery, ProposalNonVotersQueryVariables>;
 export declare const GetProposalByIdDocument: DocumentNode<GetProposalByIdQuery, GetProposalByIdQueryVariables>;
 export declare const ListProposalsDocument: DocumentNode<ListProposalsQuery, ListProposalsQueryVariables>;
