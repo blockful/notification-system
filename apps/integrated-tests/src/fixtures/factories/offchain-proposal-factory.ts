@@ -7,6 +7,7 @@ export interface OffchainProposalData {
   daoId: string;
   title: string;
   discussion: string;
+  link: string;
   state: string;
   created: number;
 }
@@ -35,6 +36,7 @@ export class OffchainProposalFactory {
       daoId,
       title: `Test Snapshot Proposal ${proposalId}`,
       discussion: '',
+      link: '',
       state: 'active',
       created: futureTimestamp,
       ...overrides,
