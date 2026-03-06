@@ -5,21 +5,24 @@
 export const uiMessages = {
   // Welcome and help messages
   welcome: `🔔 Welcome to the Anticapture notification system!
-Spotting the "oh no" before it hits your treasury.
+Spotting the "oh no" before it hits your treasury.`,
 
-➡️ To start using the system, you'll need to add the DAOs you want to receive notifications from by clicking on "DAOs".
-➡️ After that, click on "Tracked Wallets" and add your wallet address to receive custom notifications.`,
+  welcomeDao:`➡️ To get started, add the DAOs you want to track.
+
+  You will receive alerts for:
+- New Proposals on the DAO
+- Proposal results when it finishes 
+- Vote reminders
+
+Stay ahead of governance risk. Stay informed.`,
 
   help: `<b>What is Anticapture?</b>
 A governance security research, notification system and dashboard that tracks social dynamics, governance models, and contracts, ensuring security and preventing malicious capture.
 
 <b>What is this bot for?</b>
-Get notified about risks, changes and proposals that you care about the DAOs you're in.
+Get notified about risks, changes and proposals that you care about in the DAOs you follow.
 
-<b>Commands that might be useful</b>
-/start
-/learn_more
-/daos`,
+<b>Actions that might be useful</b>`,
 
   unknownCommand: '❌ Unknown command. Use /learn_more to see available commands.',
 
@@ -38,15 +41,33 @@ You'll be notified when things get spicy:`,
     myWallets: '📝 Tracked Wallets',
     addWallet: '➕ Add wallet',
     removeWallet: '❌ Remove wallet',
-    confirmRemoval: '🗑️ Confirm removal'
+    confirmRemoval: '🗑️ Confirm removal',
+    start: '🚀 Start',
+    wallets: '📝 Wallets',
+    settings: '⚙️ Settings',
+    selectAll: 'Select all',
+    unselectAll: 'Unselect all',
+    settingsComingSoon: '⚙️ Settings coming soon!'
   },
 
   // Wallet management messages
   wallet: {
-    selection: `Here's the wallets you have added to receive custom notifications:`,
+    selectionPrefix: '👉 Next step: ',
+    selection: `Add your wallet address
+
+This allows us to personalize alerts based on your governance activity and delegations.
+
+You'll receive notifications for:
+- Delegation changes that affect your voting power
+- Transfers that affect your voting power
+- Non-voting alerts
+- Vote confirmations
+
+Stay aware of how changes in governance affect you.`,
     input: '👉 Please enter your address or ENS name:',
     processing: '⏱️ Hang tight, we\'re just connecting your data…',
     success: '✅ All set! Your wallet has been added.',
+    onboardingComplete: `🎉 You're all set! Stay tuned — we'll notify you as soon as something important happens in your DAOs.`,
     error: '❌ Invalid wallet address. Please try again.',
     removeConfirmation: 'Select the wallets you want to remove:',
     removeSuccess: '✅ Selected wallets have been removed.',

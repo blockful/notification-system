@@ -9,7 +9,7 @@ import { telegramMessages, uiMessages, ExplorerService, appendUtmParams } from '
 import { TelegramDAOService } from '../dao/telegram-dao.service';
 import { TelegramWalletService } from '../wallet/telegram-wallet.service';
 import { EnsResolverService } from '../ens-resolver.service';
-import { MatchedContext } from '../../interfaces/bot.interface';
+import { ContextWithSession, MatchedContext } from '../../interfaces/bot.interface';
 import { NotificationPayload } from '../../interfaces/notification.interface';
 import { TelegramClientInterface } from '../../interfaces/telegram-client.interface';
 import { BotServiceInterface } from '../../interfaces/bot-service.interface';
@@ -51,14 +51,11 @@ export class TelegramBotService implements BotServiceInterface {
   private setupCommands(): void {
     this.telegramClient.setupHandlers((handlers) => {
       handlers.command(/^start$/i, async (ctx) => {
-        await ctx.reply(uiMessages.welcome, this.createPersistentKeyboard());
+        await this.replyStartFlow(ctx);
       });
 
       handlers.command(/^learn_more$/i, async (ctx) => {
-        await ctx.reply(uiMessages.help, {
-          parse_mode: 'HTML',
-          ...this.createPersistentKeyboard()
-        });
+        await this.replyLearnMore(ctx);
       });
 
       handlers.command(/^daos$/i, async (ctx) => {
@@ -78,45 +75,78 @@ export class TelegramBotService implements BotServiceInterface {
       });
 
       handlers.hears(uiMessages.buttons.learnMore, async (ctx) => {
-        await ctx.reply(uiMessages.help, {
-          parse_mode: 'HTML',
-          ...this.createPersistentKeyboard()
-        });
+        await this.replyLearnMore(ctx);
+      });
+
+      handlers.action(/^start$/, async (ctx) => {
+        await ctx.answerCbQuery();
+        if (ctx.session) ctx.session.fromStart = true;
+        await this.daoService.initialize(ctx);
       });
 
       handlers.action(/^dao_toggle_(\w+)$/, async (ctx) => {
+        await ctx.answerCbQuery();
         const matchedCtx = ctx as MatchedContext;
         const daoName = matchedCtx.match[1];
         await this.daoService.toggle(ctx, daoName);
-        await ctx.answerCbQuery();
       });
 
       handlers.action(/^dao_confirm$/, async (ctx) => {
-        await this.daoService.confirm(ctx);
         await ctx.answerCbQuery();
+        await this.daoService.confirm(ctx);
+        await this.triggerWalletFlowIfFromStart(ctx);
+      });
+
+      handlers.action(/^dao_select_all$/, async (ctx) => {
+        await ctx.answerCbQuery();
+        await this.daoService.selectAll(ctx);
+      });
+
+      handlers.action(/^dao_unselect_all$/, async (ctx) => {
+        await ctx.answerCbQuery();
+        await this.daoService.unselectAll(ctx);
       });
 
       // Wallet action handlers
       handlers.action(/^wallet_add$/, async (ctx) => {
-        await this.walletService.addWallet(ctx);
         await ctx.answerCbQuery();
+        await this.walletService.addWallet(ctx);
       });
 
       handlers.action(/^wallet_remove$/, async (ctx) => {
-        await this.walletService.removeWallet(ctx);
         await ctx.answerCbQuery();
+        await this.walletService.removeWallet(ctx);
       });
 
       handlers.action(/^wallet_toggle_(.+)$/, async (ctx) => {
+        await ctx.answerCbQuery();
         const matchedCtx = ctx as MatchedContext;
         const address = matchedCtx.match[1];
         await this.walletService.toggleWalletForRemoval(ctx, address);
-        await ctx.answerCbQuery();
       });
 
       handlers.action(/^wallet_confirm_remove$/, async (ctx) => {
-        await this.walletService.confirmRemoval(ctx);
         await ctx.answerCbQuery();
+        await this.walletService.confirmRemoval(ctx);
+      });
+
+      handlers.action(/^learn_more_start$/, async (ctx) => {
+        await ctx.answerCbQuery();
+        await this.replyStartFlow(ctx);
+      });
+
+      handlers.action(/^learn_more_daos$/, async (ctx) => {
+        await ctx.answerCbQuery();
+        await this.daoService.initialize(ctx);
+      });
+
+      handlers.action(/^learn_more_wallets$/, async (ctx) => {
+        await ctx.answerCbQuery();
+        await this.walletService.initialize(ctx);
+      });
+
+      handlers.action(/^learn_more_settings$/, async (ctx) => {
+        await ctx.answerCbQuery(uiMessages.buttons.settingsComingSoon);
       });
 
       handlers.on('message', async (ctx, next) => {
@@ -132,6 +162,46 @@ export class TelegramBotService implements BotServiceInterface {
       return next();
       });
     });
+  }
+
+  private async replyStartFlow(ctx: ContextWithSession): Promise<void> {
+    await ctx.reply(uiMessages.welcome, this.createPersistentKeyboard());
+    await ctx.reply(uiMessages.welcomeDao, {
+      reply_markup: {
+        inline_keyboard: [
+          [{ text: uiMessages.buttons.daos, callback_data: 'start' }]
+        ]
+      }
+    });
+  }
+
+  private async replyLearnMore(ctx: ContextWithSession): Promise<void> {
+    await ctx.reply(uiMessages.help, {
+      parse_mode: 'HTML',
+      reply_markup: {
+        inline_keyboard: [
+          [
+            { text: uiMessages.buttons.start, callback_data: 'learn_more_start' },
+            { text: uiMessages.buttons.daos, callback_data: 'learn_more_daos' },
+          ],
+          [
+            { text: uiMessages.buttons.wallets, callback_data: 'learn_more_wallets' },
+            { text: uiMessages.buttons.settings, callback_data: 'learn_more_settings' },
+          ]
+        ]
+      }
+    });
+  }
+
+  private async triggerWalletFlowIfFromStart(ctx: ContextWithSession): Promise<void> {
+    if (!ctx.session?.fromStart) return;
+    const user = ctx.from?.id;
+    if (user) {
+      const userWallets = await this.walletService.getUserWalletsWithDisplayNames(user.toString(), 'telegram');
+      if (!userWallets || userWallets.length === 0) {
+        await this.walletService.initialize(ctx, true);
+      }
+    }
   }
 
   async launch(): Promise<void> {

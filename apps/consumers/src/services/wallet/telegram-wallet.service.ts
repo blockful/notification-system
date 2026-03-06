@@ -33,7 +33,7 @@ export class TelegramWalletService extends BaseWalletService {
   /**
    * Display the wallet management interface
    */
-  async initialize(ctx: ContextWithSession): Promise<void> {
+  async initialize(ctx: ContextWithSession, fromStart: boolean = false): Promise<void> {
     const userId = ctx.from?.id;
     if (!userId) return;
 
@@ -43,17 +43,14 @@ export class TelegramWalletService extends BaseWalletService {
       // Get user's current wallets
       const wallets = await this.getUserWalletsWithDisplayNames(userId.toString(), 'telegram');
 
-      let message = uiMessages.wallet.selection;
+      const prefix = fromStart ? uiMessages.wallet.selectionPrefix : '';
+      let message = `${prefix}${uiMessages.wallet.selection}`;
 
-      if (wallets.length === 0) {
-        message = uiMessages.wallet.noWallets;
-      } else {
-        // Show current wallets with ENS names when available
+      if (wallets.length > 0) {
         const walletList = wallets.map((wallet, index) =>
           `${index + 1}. ${wallet.displayName || wallet.address}`
         );
-
-        message = `${uiMessages.wallet.selection}\n\n${walletList.join('\n')}`;
+        message += `\n\n${walletList.join('\n')}`;
       }
 
       const keyboard = {
@@ -145,6 +142,10 @@ export class TelegramWalletService extends BaseWalletService {
 
       if (result.success) {
         await ctx.reply(uiMessages.wallet.success);
+        if (ctx.session.fromStart) {
+          await ctx.reply(uiMessages.wallet.onboardingComplete);
+          ctx.session.fromStart = false;
+        }
       } else {
         await ctx.reply(`${uiMessages.status.error} ${result.message}`);
       }

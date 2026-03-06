@@ -48,6 +48,11 @@ export class SlackBotService implements BotServiceInterface {
       // Welcome message actions
       handlers.action('welcome_select_daos', async (ctx) => {
         if (this.daoService) {
+          const channelId = ctx.body.channel?.id;
+          const workspaceId = ctx.body.team?.id || ctx.body.user?.team_id;
+          const fullUserId = `${workspaceId}:${channelId}`;
+          const hasDaos = await this.daoService.hasSubscriptions(fullUserId);
+          ctx.session.fromStart = !hasDaos;
           await this.daoService.initialize(ctx);
         }
       });
@@ -74,12 +79,19 @@ export class SlackBotService implements BotServiceInterface {
       handlers.action('dao_confirm_subscribe', async (ctx) => {
         if (this.daoService) {
           await this.daoService.confirm(ctx);
+
+          // If from onboarding flow, trigger wallet setup
+          if (ctx.session.fromStart && this.walletService) {
+            await this.walletService.showOnboardingWallet(ctx);
+            ctx.session.fromStart = false;
+          }
         }
       });
 
       handlers.action('dao_checkboxes', async (ctx) => {
         await ctx.ack();
       });
+
 
       handlers.action('wallet_checkboxes', async (ctx) => {
         await ctx.ack();
@@ -94,6 +106,8 @@ export class SlackBotService implements BotServiceInterface {
 
       handlers.action('wallet_add', async (ctx) => {
         if (this.walletService) {
+          const firstAction = ctx.body.actions?.[0];
+          ctx.session.fromStart = firstAction?.value === 'onboarding';
           await this.walletService.startAddWallet(ctx);
         }
       });
