@@ -63,6 +63,11 @@ const ctaButtonConfigs: Record<string, CtaButtonConfig> = {
       daoId && proposalId
         ? `${BASE_URL}/${daoId}/governance/proposal/${proposalId}`
         : BASE_URL
+  },
+  newOffchainProposal: {
+    text: 'Cast your vote',
+    buildUrl: ({ proposalUrl }) =>
+      proposalUrl || BASE_URL
   }
 };
 
@@ -72,15 +77,22 @@ const ctaButtonConfigs: Record<string, CtaButtonConfig> = {
 export const scanButtonText = 'View Transaction';
 
 /**
+ * Text for forum discussion button
+ */
+export const discussionButtonText = 'View Discussion';
+
+/**
  * Parameters for building notification buttons
  */
 export interface BuildButtonsParams {
   triggerType: keyof typeof ctaButtonConfigs;
   txHash?: string;
   chainId?: number;
+  discussionUrl?: string;
   daoId?: string;
   address?: string;
   proposalId?: string;
+  proposalUrl?: string;
 }
 
 const explorerService = new ExplorerService();
@@ -96,10 +108,16 @@ export function buildButtons(params: BuildButtonsParams): Button[] {
   const url = config.buildUrl({
     daoId: params.daoId,
     address: params.address,
-    proposalId: params.proposalId
+    proposalId: params.proposalId,
+    proposalUrl: params.proposalUrl
   });
 
   buttons.push({ text: config.text, url });
+
+  // Add discussion button if forum URL is available
+  if (params.discussionUrl) {
+    buttons.push({ text: discussionButtonText, url: params.discussionUrl });
+  }
 
   // Add scan button if transaction info is available
   if (params.txHash && params.chainId) {

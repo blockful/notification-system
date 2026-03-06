@@ -1,7 +1,7 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.QueryInput_VotingPowers_OrderDirection = exports.QueryInput_VotingPowers_OrderBy = exports.QueryInput_VotingPowerVariations_OrderDirection = exports.QueryInput_Votes_OrderDirection = exports.QueryInput_Votes_OrderBy = exports.QueryInput_VotesByProposalId_OrderDirection = exports.QueryInput_VotesByProposalId_OrderBy = exports.QueryInput_Transfers_SortOrder = exports.QueryInput_Transfers_SortBy = exports.QueryInput_Transactions_SortOrder = exports.QueryInput_Token_Currency = exports.QueryInput_TokenMetrics_OrderDirection = exports.QueryInput_TokenMetrics_MetricType = exports.QueryInput_Proposals_OrderDirection = exports.QueryInput_Proposals_IncludeOptimisticProposals = exports.QueryInput_ProposalsActivity_UserVoteFilter = exports.QueryInput_ProposalsActivity_OrderDirection = exports.QueryInput_ProposalsActivity_OrderBy = exports.QueryInput_ProposalNonVoters_OrderDirection = exports.QueryInput_LastUpdate_Chart = exports.QueryInput_HistoricalVotingPower_OrderDirection = exports.QueryInput_HistoricalVotingPower_OrderBy = exports.QueryInput_HistoricalVotingPowerByAccountId_OrderDirection = exports.QueryInput_HistoricalVotingPowerByAccountId_OrderBy = exports.QueryInput_HistoricalDelegations_OrderDirection = exports.QueryInput_HistoricalBalances_OrderDirection = exports.QueryInput_HistoricalBalances_OrderBy = exports.QueryInput_GetTotalTreasury_Order = exports.QueryInput_GetTotalTreasury_Days = exports.QueryInput_GetLiquidTreasury_Order = exports.QueryInput_GetLiquidTreasury_Days = exports.QueryInput_GetDaoTokenTreasury_Order = exports.QueryInput_GetDaoTokenTreasury_Days = exports.QueryInput_DelegationPercentageByDay_OrderDirection = exports.QueryInput_CompareVotes_Days = exports.QueryInput_CompareTreasury_Days = exports.QueryInput_CompareTotalSupply_Days = exports.QueryInput_CompareProposals_Days = exports.QueryInput_CompareLendingSupply_Days = exports.QueryInput_CompareDexSupply_Days = exports.QueryInput_CompareDelegatedSupply_Days = exports.QueryInput_CompareCirculatingSupply_Days = exports.QueryInput_CompareCexSupply_Days = exports.QueryInput_CompareAverageTurnout_Days = exports.QueryInput_CompareActiveSupply_Days = exports.QueryInput_AccountInteractions_OrderDirection = exports.QueryInput_AccountInteractions_OrderBy = exports.QueryInput_AccountBalances_OrderDirection = exports.QueryInput_AccountBalanceVariations_OrderDirection = exports.HttpMethod = void 0;
-exports.ListHistoricalVotingPowerDocument = exports.ListVotesDocument = exports.ListProposalsDocument = exports.GetProposalByIdDocument = exports.ProposalNonVotersDocument = exports.GetDaOsDocument = exports.Timestamp_Const = void 0;
+exports.QueryInput_Token_Currency = exports.QueryInput_TokenMetrics_OrderDirection = exports.QueryInput_TokenMetrics_MetricType = exports.QueryInput_Proposals_OrderDirection = exports.QueryInput_Proposals_IncludeOptimisticProposals = exports.QueryInput_ProposalsActivity_UserVoteFilter = exports.QueryInput_ProposalsActivity_OrderDirection = exports.QueryInput_ProposalsActivity_OrderBy = exports.QueryInput_ProposalNonVoters_OrderDirection = exports.QueryInput_OffchainProposals_OrderDirection = exports.QueryInput_LastUpdate_Chart = exports.QueryInput_HistoricalVotingPower_OrderDirection = exports.QueryInput_HistoricalVotingPower_OrderBy = exports.QueryInput_HistoricalVotingPowerByAccountId_OrderDirection = exports.QueryInput_HistoricalVotingPowerByAccountId_OrderBy = exports.QueryInput_HistoricalDelegations_OrderDirection = exports.QueryInput_HistoricalBalances_OrderDirection = exports.QueryInput_HistoricalBalances_OrderBy = exports.QueryInput_GetTotalTreasury_Order = exports.QueryInput_GetTotalTreasury_Days = exports.QueryInput_GetLiquidTreasury_Order = exports.QueryInput_GetLiquidTreasury_Days = exports.QueryInput_GetDaoTokenTreasury_Order = exports.QueryInput_GetDaoTokenTreasury_Days = exports.QueryInput_FeedEvents_Type = exports.QueryInput_FeedEvents_Relevance = exports.QueryInput_FeedEvents_OrderDirection = exports.QueryInput_FeedEvents_OrderBy = exports.QueryInput_Delegators_OrderDirection = exports.QueryInput_Delegators_OrderBy = exports.QueryInput_Delegations_OrderDirection = exports.QueryInput_Delegations_OrderBy = exports.QueryInput_DelegationPercentageByDay_OrderDirection = exports.QueryInput_CompareVotes_Days = exports.QueryInput_CompareTreasury_Days = exports.QueryInput_CompareTotalSupply_Days = exports.QueryInput_CompareProposals_Days = exports.QueryInput_CompareLendingSupply_Days = exports.QueryInput_CompareDexSupply_Days = exports.QueryInput_CompareDelegatedSupply_Days = exports.QueryInput_CompareCirculatingSupply_Days = exports.QueryInput_CompareCexSupply_Days = exports.QueryInput_CompareAverageTurnout_Days = exports.QueryInput_CompareActiveSupply_Days = exports.QueryInput_AccountInteractions_OrderDirection = exports.QueryInput_AccountInteractions_OrderBy = exports.QueryInput_AccountBalances_OrderDirection = exports.QueryInput_AccountBalances_OrderBy = exports.QueryInput_AccountBalanceVariations_OrderDirection = exports.HttpMethod = void 0;
+exports.ListHistoricalVotingPowerDocument = exports.ListVotesDocument = exports.ListProposalsDocument = exports.GetProposalByIdDocument = exports.ProposalNonVotersDocument = exports.ListOffchainProposalsDocument = exports.GetDaOsDocument = exports.Timestamp_Const = exports.Query_FeedEvents_Items_Items_Type = exports.Query_FeedEvents_Items_Items_Relevance = exports.QueryInput_VotingPowers_OrderDirection = exports.QueryInput_VotingPowers_OrderBy = exports.QueryInput_VotingPowerVariations_OrderDirection = exports.QueryInput_Votes_OrderDirection = exports.QueryInput_Votes_OrderBy = exports.QueryInput_VotesOffchain_OrderDirection = exports.QueryInput_VotesOffchain_OrderBy = exports.QueryInput_VotesOffchainByProposalId_OrderDirection = exports.QueryInput_VotesOffchainByProposalId_OrderBy = exports.QueryInput_VotesByProposalId_OrderDirection = exports.QueryInput_VotesByProposalId_OrderBy = exports.QueryInput_Transfers_SortOrder = exports.QueryInput_Transfers_SortBy = exports.QueryInput_Transactions_SortOrder = void 0;
 var HttpMethod;
 (function (HttpMethod) {
     HttpMethod["Connect"] = "CONNECT";
@@ -19,6 +19,11 @@ var QueryInput_AccountBalanceVariations_OrderDirection;
     QueryInput_AccountBalanceVariations_OrderDirection["Asc"] = "asc";
     QueryInput_AccountBalanceVariations_OrderDirection["Desc"] = "desc";
 })(QueryInput_AccountBalanceVariations_OrderDirection || (exports.QueryInput_AccountBalanceVariations_OrderDirection = QueryInput_AccountBalanceVariations_OrderDirection = {}));
+var QueryInput_AccountBalances_OrderBy;
+(function (QueryInput_AccountBalances_OrderBy) {
+    QueryInput_AccountBalances_OrderBy["Balance"] = "balance";
+    QueryInput_AccountBalances_OrderBy["Variation"] = "variation";
+})(QueryInput_AccountBalances_OrderBy || (exports.QueryInput_AccountBalances_OrderBy = QueryInput_AccountBalances_OrderBy = {}));
 var QueryInput_AccountBalances_OrderDirection;
 (function (QueryInput_AccountBalances_OrderDirection) {
     QueryInput_AccountBalances_OrderDirection["Asc"] = "asc";
@@ -127,6 +132,51 @@ var QueryInput_DelegationPercentageByDay_OrderDirection;
     QueryInput_DelegationPercentageByDay_OrderDirection["Asc"] = "asc";
     QueryInput_DelegationPercentageByDay_OrderDirection["Desc"] = "desc";
 })(QueryInput_DelegationPercentageByDay_OrderDirection || (exports.QueryInput_DelegationPercentageByDay_OrderDirection = QueryInput_DelegationPercentageByDay_OrderDirection = {}));
+var QueryInput_Delegations_OrderBy;
+(function (QueryInput_Delegations_OrderBy) {
+    QueryInput_Delegations_OrderBy["Amount"] = "amount";
+    QueryInput_Delegations_OrderBy["Timestamp"] = "timestamp";
+})(QueryInput_Delegations_OrderBy || (exports.QueryInput_Delegations_OrderBy = QueryInput_Delegations_OrderBy = {}));
+var QueryInput_Delegations_OrderDirection;
+(function (QueryInput_Delegations_OrderDirection) {
+    QueryInput_Delegations_OrderDirection["Asc"] = "asc";
+    QueryInput_Delegations_OrderDirection["Desc"] = "desc";
+})(QueryInput_Delegations_OrderDirection || (exports.QueryInput_Delegations_OrderDirection = QueryInput_Delegations_OrderDirection = {}));
+var QueryInput_Delegators_OrderBy;
+(function (QueryInput_Delegators_OrderBy) {
+    QueryInput_Delegators_OrderBy["Amount"] = "amount";
+    QueryInput_Delegators_OrderBy["Timestamp"] = "timestamp";
+})(QueryInput_Delegators_OrderBy || (exports.QueryInput_Delegators_OrderBy = QueryInput_Delegators_OrderBy = {}));
+var QueryInput_Delegators_OrderDirection;
+(function (QueryInput_Delegators_OrderDirection) {
+    QueryInput_Delegators_OrderDirection["Asc"] = "asc";
+    QueryInput_Delegators_OrderDirection["Desc"] = "desc";
+})(QueryInput_Delegators_OrderDirection || (exports.QueryInput_Delegators_OrderDirection = QueryInput_Delegators_OrderDirection = {}));
+var QueryInput_FeedEvents_OrderBy;
+(function (QueryInput_FeedEvents_OrderBy) {
+    QueryInput_FeedEvents_OrderBy["Timestamp"] = "timestamp";
+    QueryInput_FeedEvents_OrderBy["Value"] = "value";
+})(QueryInput_FeedEvents_OrderBy || (exports.QueryInput_FeedEvents_OrderBy = QueryInput_FeedEvents_OrderBy = {}));
+var QueryInput_FeedEvents_OrderDirection;
+(function (QueryInput_FeedEvents_OrderDirection) {
+    QueryInput_FeedEvents_OrderDirection["Asc"] = "asc";
+    QueryInput_FeedEvents_OrderDirection["Desc"] = "desc";
+})(QueryInput_FeedEvents_OrderDirection || (exports.QueryInput_FeedEvents_OrderDirection = QueryInput_FeedEvents_OrderDirection = {}));
+var QueryInput_FeedEvents_Relevance;
+(function (QueryInput_FeedEvents_Relevance) {
+    QueryInput_FeedEvents_Relevance["High"] = "HIGH";
+    QueryInput_FeedEvents_Relevance["Low"] = "LOW";
+    QueryInput_FeedEvents_Relevance["Medium"] = "MEDIUM";
+})(QueryInput_FeedEvents_Relevance || (exports.QueryInput_FeedEvents_Relevance = QueryInput_FeedEvents_Relevance = {}));
+var QueryInput_FeedEvents_Type;
+(function (QueryInput_FeedEvents_Type) {
+    QueryInput_FeedEvents_Type["Delegation"] = "DELEGATION";
+    QueryInput_FeedEvents_Type["DelegationVotesChanged"] = "DELEGATION_VOTES_CHANGED";
+    QueryInput_FeedEvents_Type["Proposal"] = "PROPOSAL";
+    QueryInput_FeedEvents_Type["ProposalExtended"] = "PROPOSAL_EXTENDED";
+    QueryInput_FeedEvents_Type["Transfer"] = "TRANSFER";
+    QueryInput_FeedEvents_Type["Vote"] = "VOTE";
+})(QueryInput_FeedEvents_Type || (exports.QueryInput_FeedEvents_Type = QueryInput_FeedEvents_Type = {}));
 var QueryInput_GetDaoTokenTreasury_Days;
 (function (QueryInput_GetDaoTokenTreasury_Days) {
     QueryInput_GetDaoTokenTreasury_Days["7d"] = "_7d";
@@ -207,6 +257,11 @@ var QueryInput_LastUpdate_Chart;
     QueryInput_LastUpdate_Chart["CostComparison"] = "cost_comparison";
     QueryInput_LastUpdate_Chart["TokenDistribution"] = "token_distribution";
 })(QueryInput_LastUpdate_Chart || (exports.QueryInput_LastUpdate_Chart = QueryInput_LastUpdate_Chart = {}));
+var QueryInput_OffchainProposals_OrderDirection;
+(function (QueryInput_OffchainProposals_OrderDirection) {
+    QueryInput_OffchainProposals_OrderDirection["Asc"] = "asc";
+    QueryInput_OffchainProposals_OrderDirection["Desc"] = "desc";
+})(QueryInput_OffchainProposals_OrderDirection || (exports.QueryInput_OffchainProposals_OrderDirection = QueryInput_OffchainProposals_OrderDirection = {}));
 var QueryInput_ProposalNonVoters_OrderDirection;
 (function (QueryInput_ProposalNonVoters_OrderDirection) {
     QueryInput_ProposalNonVoters_OrderDirection["Asc"] = "asc";
@@ -286,6 +341,26 @@ var QueryInput_VotesByProposalId_OrderDirection;
     QueryInput_VotesByProposalId_OrderDirection["Asc"] = "asc";
     QueryInput_VotesByProposalId_OrderDirection["Desc"] = "desc";
 })(QueryInput_VotesByProposalId_OrderDirection || (exports.QueryInput_VotesByProposalId_OrderDirection = QueryInput_VotesByProposalId_OrderDirection = {}));
+var QueryInput_VotesOffchainByProposalId_OrderBy;
+(function (QueryInput_VotesOffchainByProposalId_OrderBy) {
+    QueryInput_VotesOffchainByProposalId_OrderBy["Created"] = "created";
+    QueryInput_VotesOffchainByProposalId_OrderBy["Vp"] = "vp";
+})(QueryInput_VotesOffchainByProposalId_OrderBy || (exports.QueryInput_VotesOffchainByProposalId_OrderBy = QueryInput_VotesOffchainByProposalId_OrderBy = {}));
+var QueryInput_VotesOffchainByProposalId_OrderDirection;
+(function (QueryInput_VotesOffchainByProposalId_OrderDirection) {
+    QueryInput_VotesOffchainByProposalId_OrderDirection["Asc"] = "asc";
+    QueryInput_VotesOffchainByProposalId_OrderDirection["Desc"] = "desc";
+})(QueryInput_VotesOffchainByProposalId_OrderDirection || (exports.QueryInput_VotesOffchainByProposalId_OrderDirection = QueryInput_VotesOffchainByProposalId_OrderDirection = {}));
+var QueryInput_VotesOffchain_OrderBy;
+(function (QueryInput_VotesOffchain_OrderBy) {
+    QueryInput_VotesOffchain_OrderBy["Created"] = "created";
+    QueryInput_VotesOffchain_OrderBy["Vp"] = "vp";
+})(QueryInput_VotesOffchain_OrderBy || (exports.QueryInput_VotesOffchain_OrderBy = QueryInput_VotesOffchain_OrderBy = {}));
+var QueryInput_VotesOffchain_OrderDirection;
+(function (QueryInput_VotesOffchain_OrderDirection) {
+    QueryInput_VotesOffchain_OrderDirection["Asc"] = "asc";
+    QueryInput_VotesOffchain_OrderDirection["Desc"] = "desc";
+})(QueryInput_VotesOffchain_OrderDirection || (exports.QueryInput_VotesOffchain_OrderDirection = QueryInput_VotesOffchain_OrderDirection = {}));
 var QueryInput_Votes_OrderBy;
 (function (QueryInput_Votes_OrderBy) {
     QueryInput_Votes_OrderBy["Timestamp"] = "timestamp";
@@ -304,6 +379,7 @@ var QueryInput_VotingPowerVariations_OrderDirection;
 var QueryInput_VotingPowers_OrderBy;
 (function (QueryInput_VotingPowers_OrderBy) {
     QueryInput_VotingPowers_OrderBy["DelegationsCount"] = "delegationsCount";
+    QueryInput_VotingPowers_OrderBy["Variation"] = "variation";
     QueryInput_VotingPowers_OrderBy["VotingPower"] = "votingPower";
 })(QueryInput_VotingPowers_OrderBy || (exports.QueryInput_VotingPowers_OrderBy = QueryInput_VotingPowers_OrderBy = {}));
 var QueryInput_VotingPowers_OrderDirection;
@@ -311,11 +387,27 @@ var QueryInput_VotingPowers_OrderDirection;
     QueryInput_VotingPowers_OrderDirection["Asc"] = "asc";
     QueryInput_VotingPowers_OrderDirection["Desc"] = "desc";
 })(QueryInput_VotingPowers_OrderDirection || (exports.QueryInput_VotingPowers_OrderDirection = QueryInput_VotingPowers_OrderDirection = {}));
+var Query_FeedEvents_Items_Items_Relevance;
+(function (Query_FeedEvents_Items_Items_Relevance) {
+    Query_FeedEvents_Items_Items_Relevance["High"] = "HIGH";
+    Query_FeedEvents_Items_Items_Relevance["Low"] = "LOW";
+    Query_FeedEvents_Items_Items_Relevance["Medium"] = "MEDIUM";
+})(Query_FeedEvents_Items_Items_Relevance || (exports.Query_FeedEvents_Items_Items_Relevance = Query_FeedEvents_Items_Items_Relevance = {}));
+var Query_FeedEvents_Items_Items_Type;
+(function (Query_FeedEvents_Items_Items_Type) {
+    Query_FeedEvents_Items_Items_Type["Delegation"] = "DELEGATION";
+    Query_FeedEvents_Items_Items_Type["DelegationVotesChanged"] = "DELEGATION_VOTES_CHANGED";
+    Query_FeedEvents_Items_Items_Type["Proposal"] = "PROPOSAL";
+    Query_FeedEvents_Items_Items_Type["ProposalExtended"] = "PROPOSAL_EXTENDED";
+    Query_FeedEvents_Items_Items_Type["Transfer"] = "TRANSFER";
+    Query_FeedEvents_Items_Items_Type["Vote"] = "VOTE";
+})(Query_FeedEvents_Items_Items_Type || (exports.Query_FeedEvents_Items_Items_Type = Query_FeedEvents_Items_Items_Type = {}));
 var Timestamp_Const;
 (function (Timestamp_Const) {
     Timestamp_Const["Timestamp"] = "timestamp";
 })(Timestamp_Const || (exports.Timestamp_Const = Timestamp_Const = {}));
 exports.GetDaOsDocument = { "kind": "Document", "definitions": [{ "kind": "OperationDefinition", "operation": "query", "name": { "kind": "Name", "value": "GetDAOs" }, "selectionSet": { "kind": "SelectionSet", "selections": [{ "kind": "Field", "name": { "kind": "Name", "value": "daos" }, "selectionSet": { "kind": "SelectionSet", "selections": [{ "kind": "Field", "name": { "kind": "Name", "value": "items" }, "selectionSet": { "kind": "SelectionSet", "selections": [{ "kind": "Field", "name": { "kind": "Name", "value": "id" } }, { "kind": "Field", "name": { "kind": "Name", "value": "votingDelay" } }, { "kind": "Field", "name": { "kind": "Name", "value": "chainId" } }] } }] } }] } }] };
+exports.ListOffchainProposalsDocument = { "kind": "Document", "definitions": [{ "kind": "OperationDefinition", "operation": "query", "name": { "kind": "Name", "value": "ListOffchainProposals" }, "variableDefinitions": [{ "kind": "VariableDefinition", "variable": { "kind": "Variable", "name": { "kind": "Name", "value": "skip" } }, "type": { "kind": "NamedType", "name": { "kind": "Name", "value": "NonNegativeInt" } } }, { "kind": "VariableDefinition", "variable": { "kind": "Variable", "name": { "kind": "Name", "value": "limit" } }, "type": { "kind": "NamedType", "name": { "kind": "Name", "value": "PositiveInt" } } }, { "kind": "VariableDefinition", "variable": { "kind": "Variable", "name": { "kind": "Name", "value": "orderDirection" } }, "type": { "kind": "NamedType", "name": { "kind": "Name", "value": "queryInput_offchainProposals_orderDirection" } } }, { "kind": "VariableDefinition", "variable": { "kind": "Variable", "name": { "kind": "Name", "value": "status" } }, "type": { "kind": "NamedType", "name": { "kind": "Name", "value": "JSON" } } }, { "kind": "VariableDefinition", "variable": { "kind": "Variable", "name": { "kind": "Name", "value": "fromDate" } }, "type": { "kind": "NamedType", "name": { "kind": "Name", "value": "Float" } } }], "selectionSet": { "kind": "SelectionSet", "selections": [{ "kind": "Field", "name": { "kind": "Name", "value": "offchainProposals" }, "arguments": [{ "kind": "Argument", "name": { "kind": "Name", "value": "skip" }, "value": { "kind": "Variable", "name": { "kind": "Name", "value": "skip" } } }, { "kind": "Argument", "name": { "kind": "Name", "value": "limit" }, "value": { "kind": "Variable", "name": { "kind": "Name", "value": "limit" } } }, { "kind": "Argument", "name": { "kind": "Name", "value": "orderDirection" }, "value": { "kind": "Variable", "name": { "kind": "Name", "value": "orderDirection" } } }, { "kind": "Argument", "name": { "kind": "Name", "value": "status" }, "value": { "kind": "Variable", "name": { "kind": "Name", "value": "status" } } }, { "kind": "Argument", "name": { "kind": "Name", "value": "fromDate" }, "value": { "kind": "Variable", "name": { "kind": "Name", "value": "fromDate" } } }], "selectionSet": { "kind": "SelectionSet", "selections": [{ "kind": "Field", "name": { "kind": "Name", "value": "items" }, "selectionSet": { "kind": "SelectionSet", "selections": [{ "kind": "Field", "name": { "kind": "Name", "value": "id" } }, { "kind": "Field", "name": { "kind": "Name", "value": "title" } }, { "kind": "Field", "name": { "kind": "Name", "value": "discussion" } }, { "kind": "Field", "name": { "kind": "Name", "value": "link" } }, { "kind": "Field", "name": { "kind": "Name", "value": "state" } }, { "kind": "Field", "name": { "kind": "Name", "value": "created" } }] } }, { "kind": "Field", "name": { "kind": "Name", "value": "totalCount" } }] } }] } }] };
 exports.ProposalNonVotersDocument = { "kind": "Document", "definitions": [{ "kind": "OperationDefinition", "operation": "query", "name": { "kind": "Name", "value": "ProposalNonVoters" }, "variableDefinitions": [{ "kind": "VariableDefinition", "variable": { "kind": "Variable", "name": { "kind": "Name", "value": "id" } }, "type": { "kind": "NonNullType", "type": { "kind": "NamedType", "name": { "kind": "Name", "value": "String" } } } }, { "kind": "VariableDefinition", "variable": { "kind": "Variable", "name": { "kind": "Name", "value": "addresses" } }, "type": { "kind": "NamedType", "name": { "kind": "Name", "value": "JSON" } } }], "selectionSet": { "kind": "SelectionSet", "selections": [{ "kind": "Field", "name": { "kind": "Name", "value": "proposalNonVoters" }, "arguments": [{ "kind": "Argument", "name": { "kind": "Name", "value": "id" }, "value": { "kind": "Variable", "name": { "kind": "Name", "value": "id" } } }, { "kind": "Argument", "name": { "kind": "Name", "value": "addresses" }, "value": { "kind": "Variable", "name": { "kind": "Name", "value": "addresses" } } }], "selectionSet": { "kind": "SelectionSet", "selections": [{ "kind": "Field", "name": { "kind": "Name", "value": "items" }, "selectionSet": { "kind": "SelectionSet", "selections": [{ "kind": "Field", "name": { "kind": "Name", "value": "voter" } }] } }] } }] } }] };
 exports.GetProposalByIdDocument = { "kind": "Document", "definitions": [{ "kind": "OperationDefinition", "operation": "query", "name": { "kind": "Name", "value": "GetProposalById" }, "variableDefinitions": [{ "kind": "VariableDefinition", "variable": { "kind": "Variable", "name": { "kind": "Name", "value": "id" } }, "type": { "kind": "NonNullType", "type": { "kind": "NamedType", "name": { "kind": "Name", "value": "String" } } } }], "selectionSet": { "kind": "SelectionSet", "selections": [{ "kind": "Field", "name": { "kind": "Name", "value": "proposal" }, "arguments": [{ "kind": "Argument", "name": { "kind": "Name", "value": "id" }, "value": { "kind": "Variable", "name": { "kind": "Name", "value": "id" } } }], "selectionSet": { "kind": "SelectionSet", "selections": [{ "kind": "Field", "name": { "kind": "Name", "value": "id" } }, { "kind": "Field", "name": { "kind": "Name", "value": "daoId" } }, { "kind": "Field", "name": { "kind": "Name", "value": "proposerAccountId" } }, { "kind": "Field", "name": { "kind": "Name", "value": "title" } }, { "kind": "Field", "name": { "kind": "Name", "value": "description" } }, { "kind": "Field", "name": { "kind": "Name", "value": "startBlock" } }, { "kind": "Field", "name": { "kind": "Name", "value": "endBlock" } }, { "kind": "Field", "name": { "kind": "Name", "value": "endTimestamp" } }, { "kind": "Field", "name": { "kind": "Name", "value": "timestamp" } }, { "kind": "Field", "name": { "kind": "Name", "value": "status" } }, { "kind": "Field", "name": { "kind": "Name", "value": "forVotes" } }, { "kind": "Field", "name": { "kind": "Name", "value": "againstVotes" } }, { "kind": "Field", "name": { "kind": "Name", "value": "abstainVotes" } }, { "kind": "Field", "name": { "kind": "Name", "value": "txHash" } }] } }] } }] };
 exports.ListProposalsDocument = { "kind": "Document", "definitions": [{ "kind": "OperationDefinition", "operation": "query", "name": { "kind": "Name", "value": "ListProposals" }, "variableDefinitions": [{ "kind": "VariableDefinition", "variable": { "kind": "Variable", "name": { "kind": "Name", "value": "skip" } }, "type": { "kind": "NamedType", "name": { "kind": "Name", "value": "NonNegativeInt" } } }, { "kind": "VariableDefinition", "variable": { "kind": "Variable", "name": { "kind": "Name", "value": "limit" } }, "type": { "kind": "NamedType", "name": { "kind": "Name", "value": "PositiveInt" } } }, { "kind": "VariableDefinition", "variable": { "kind": "Variable", "name": { "kind": "Name", "value": "orderDirection" } }, "type": { "kind": "NamedType", "name": { "kind": "Name", "value": "queryInput_proposals_orderDirection" } } }, { "kind": "VariableDefinition", "variable": { "kind": "Variable", "name": { "kind": "Name", "value": "status" } }, "type": { "kind": "NamedType", "name": { "kind": "Name", "value": "JSON" } } }, { "kind": "VariableDefinition", "variable": { "kind": "Variable", "name": { "kind": "Name", "value": "fromDate" } }, "type": { "kind": "NamedType", "name": { "kind": "Name", "value": "Float" } } }, { "kind": "VariableDefinition", "variable": { "kind": "Variable", "name": { "kind": "Name", "value": "fromEndDate" } }, "type": { "kind": "NamedType", "name": { "kind": "Name", "value": "Float" } } }, { "kind": "VariableDefinition", "variable": { "kind": "Variable", "name": { "kind": "Name", "value": "includeOptimisticProposals" } }, "type": { "kind": "NamedType", "name": { "kind": "Name", "value": "queryInput_proposals_includeOptimisticProposals" } } }], "selectionSet": { "kind": "SelectionSet", "selections": [{ "kind": "Field", "name": { "kind": "Name", "value": "proposals" }, "arguments": [{ "kind": "Argument", "name": { "kind": "Name", "value": "skip" }, "value": { "kind": "Variable", "name": { "kind": "Name", "value": "skip" } } }, { "kind": "Argument", "name": { "kind": "Name", "value": "limit" }, "value": { "kind": "Variable", "name": { "kind": "Name", "value": "limit" } } }, { "kind": "Argument", "name": { "kind": "Name", "value": "orderDirection" }, "value": { "kind": "Variable", "name": { "kind": "Name", "value": "orderDirection" } } }, { "kind": "Argument", "name": { "kind": "Name", "value": "status" }, "value": { "kind": "Variable", "name": { "kind": "Name", "value": "status" } } }, { "kind": "Argument", "name": { "kind": "Name", "value": "fromDate" }, "value": { "kind": "Variable", "name": { "kind": "Name", "value": "fromDate" } } }, { "kind": "Argument", "name": { "kind": "Name", "value": "fromEndDate" }, "value": { "kind": "Variable", "name": { "kind": "Name", "value": "fromEndDate" } } }, { "kind": "Argument", "name": { "kind": "Name", "value": "includeOptimisticProposals" }, "value": { "kind": "Variable", "name": { "kind": "Name", "value": "includeOptimisticProposals" } } }], "selectionSet": { "kind": "SelectionSet", "selections": [{ "kind": "Field", "name": { "kind": "Name", "value": "items" }, "selectionSet": { "kind": "SelectionSet", "selections": [{ "kind": "Field", "name": { "kind": "Name", "value": "id" } }, { "kind": "Field", "name": { "kind": "Name", "value": "daoId" } }, { "kind": "Field", "name": { "kind": "Name", "value": "proposerAccountId" } }, { "kind": "Field", "name": { "kind": "Name", "value": "title" } }, { "kind": "Field", "name": { "kind": "Name", "value": "description" } }, { "kind": "Field", "name": { "kind": "Name", "value": "startBlock" } }, { "kind": "Field", "name": { "kind": "Name", "value": "endBlock" } }, { "kind": "Field", "name": { "kind": "Name", "value": "endTimestamp" } }, { "kind": "Field", "name": { "kind": "Name", "value": "timestamp" } }, { "kind": "Field", "name": { "kind": "Name", "value": "status" } }, { "kind": "Field", "name": { "kind": "Name", "value": "forVotes" } }, { "kind": "Field", "name": { "kind": "Name", "value": "againstVotes" } }, { "kind": "Field", "name": { "kind": "Name", "value": "abstainVotes" } }, { "kind": "Field", "name": { "kind": "Name", "value": "txHash" } }] } }, { "kind": "Field", "name": { "kind": "Name", "value": "totalCount" } }] } }] } }] };
