@@ -204,13 +204,14 @@ describe('NonVotingHandler', () => {
       message: ExpectedMessages.createNonVotingAlert('ENS'),
       bot_token: undefined,
       metadata: {
+        triggerType: 'nonVoting',
         addresses: {
           'nonVoterAddress': TestAddresses.ADDRESS_LONG
         },
         buttons: [
           {
-            text: 'Check delegates and proposals',
-            url: 'https://anticapture.com/'
+            text: 'Check previous votes',
+            url: `https://anticapture.com/ENS/holders-and-delegates?tab=delegates&drawerAddress=${TestAddresses.ADDRESS_LONG}`
           }
         ]
       }

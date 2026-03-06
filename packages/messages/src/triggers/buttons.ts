@@ -1,6 +1,6 @@
 /**
  * Button definitions for trigger notifications
- * Contains call-to-action buttons for each trigger type
+ * Contains call-to-action buttons with dynamic URL builders for each trigger type
  */
 
 import { ExplorerService } from '../formatters/explorer.service';
@@ -10,40 +10,61 @@ export interface Button {
   url: string;
 }
 
+const BASE_URL = 'https://anticapture.com';
+
+interface CtaButtonConfig {
+  text: string;
+  buildUrl: (params: Record<string, string | undefined>) => string;
+}
+
 /**
- * Call-to-action buttons for each trigger type
- * All CTAs link to AntiCapture main page
+ * CTA button configurations with dynamic URL builders per trigger type
+ * Falls back to BASE_URL when required params are missing
  */
-export const callToActionButtons = {
+const ctaButtonConfigs: Record<string, CtaButtonConfig> = {
   delegationChange: {
-    text: "Explore delegates activity",
-    url: 'https://anticapture.com/'
+    text: 'Check delegation details',
+    buildUrl: ({ daoId, address }) =>
+      daoId && address
+        ? `${BASE_URL}/${daoId}/holders-and-delegates?tab=delegates&drawerAddress=${address}&drawerTab=voteComposition`
+        : BASE_URL
   },
   newProposal: {
-    text: 'Review DAO data before voting',
-    url: 'https://anticapture.com/'
+    text: 'Check proposal details',
+    buildUrl: ({ daoId, proposalId }) =>
+      daoId && proposalId
+        ? `${BASE_URL}/${daoId}/governance/proposal/${proposalId}`
+        : BASE_URL
   },
   nonVoting: {
-    text: 'Check delegates and proposals',
-    url: 'https://anticapture.com/'
+    text: 'Check previous votes',
+    buildUrl: ({ daoId, address }) =>
+      daoId && address
+        ? `${BASE_URL}/${daoId}/holders-and-delegates?tab=delegates&drawerAddress=${address}`
+        : BASE_URL
   },
   voteConfirmation: {
-    text: "See delegates activity",
-    url: 'https://anticapture.com/'
+    text: 'Check vote details',
+    buildUrl: ({ daoId, address }) =>
+      daoId && address
+        ? `${BASE_URL}/${daoId}/holders-and-delegates?tab=delegates&drawerAddress=${address}`
+        : BASE_URL
   },
   votingPowerChange: {
-    text: 'Check voting power shifts',
-    url: 'https://anticapture.com/'
+    text: 'Check voting power changes',
+    buildUrl: ({ daoId, address }) =>
+      daoId && address
+        ? `${BASE_URL}/${daoId}/holders-and-delegates?tab=delegates&drawerAddress=${address}&drawerTab=votingPowerHistory`
+        : BASE_URL
   },
   votingReminder: {
-    text: 'Check about the delegates and proposal information',
-    url: 'https://anticapture.com/'
-  },
-  newOffchainProposal: {
-    text: 'Review DAO data before voting',
-    url: 'https://anticapture.com/'
+    text: 'Cast your vote',
+    buildUrl: ({ daoId, proposalId }) =>
+      daoId && proposalId
+        ? `${BASE_URL}/${daoId}/governance/proposal/${proposalId}`
+        : BASE_URL
   }
-} as const;
+};
 
 /**
  * Text for blockchain explorer (scan) button
@@ -59,23 +80,32 @@ export const discussionButtonText = 'View Discussion';
  * Parameters for building notification buttons
  */
 export interface BuildButtonsParams {
-  triggerType: keyof typeof callToActionButtons;
+  triggerType: keyof typeof ctaButtonConfigs;
   txHash?: string;
   chainId?: number;
   discussionUrl?: string;
+  daoId?: string;
+  address?: string;
+  proposalId?: string;
 }
 
 const explorerService = new ExplorerService();
 
 /**
  * Build buttons for a notification
- * Always includes CTA button, optionally includes scan button if transaction info is available
+ * Always includes CTA button with dynamic URL, optionally includes scan button
  */
 export function buildButtons(params: BuildButtonsParams): Button[] {
   const buttons: Button[] = [];
+  const config = ctaButtonConfigs[params.triggerType];
 
-  // Always add CTA button
-  buttons.push(callToActionButtons[params.triggerType]);
+  const url = config.buildUrl({
+    daoId: params.daoId,
+    address: params.address,
+    proposalId: params.proposalId
+  });
+
+  buttons.push({ text: config.text, url });
 
   // Add discussion button if forum URL is available
   if (params.discussionUrl) {
