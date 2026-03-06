@@ -72,7 +72,7 @@ describe('NewOffchainProposalTriggerHandler', () => {
         triggerId: 'new-offchain-proposal',
         events: [{
           daoId: 'test-dao', id: 'snap-1', title: 'Grant Program',
-          created: 1700000000, discussion: '', state: 'active',
+          created: 1700000000, discussion: '', link: 'https://snapshot.org/#/test-dao/proposal/snap-1', state: 'active',
         }],
       };
 
@@ -89,7 +89,7 @@ describe('NewOffchainProposalTriggerHandler', () => {
         triggerId: 'new-offchain-proposal',
         events: [{
           daoId: 'test-dao', id: 'snap-1', title: '',
-          created: 1700000000, discussion: '', state: 'active',
+          created: 1700000000, discussion: '', link: 'https://snapshot.org/#/test-dao/proposal/snap-1', state: 'active',
         }],
       };
 
@@ -105,7 +105,7 @@ describe('NewOffchainProposalTriggerHandler', () => {
         triggerId: 'new-offchain-proposal',
         events: [{
           daoId: 'test-dao', id: 'snap-123', title: 'Test',
-          created: 1700000000, discussion: '', state: 'active',
+          created: 1700000000, discussion: '', link: 'https://snapshot.org/#/test-dao/proposal/snap-123', state: 'active',
         }],
       };
 
@@ -114,14 +114,14 @@ describe('NewOffchainProposalTriggerHandler', () => {
       expect(subscriptionClient.sentNotifications[0].event_id).toBe('offchain-snap-123');
     });
 
-    it('should always include CTA button "Review DAO data before voting"', async () => {
+    it('should always include CTA button "Cast your vote"', async () => {
       subscriptionClient.subscribers.set('test-dao', [testUser]);
 
       const message: DispatcherMessage = {
         triggerId: 'new-offchain-proposal',
         events: [{
           daoId: 'test-dao', id: 'snap-1', title: 'Test',
-          created: 1700000000, discussion: '', state: 'active',
+          created: 1700000000, discussion: '', link: 'https://snapshot.org/#/test-dao/proposal/snap-1', state: 'active',
         }],
       };
 
@@ -129,7 +129,8 @@ describe('NewOffchainProposalTriggerHandler', () => {
 
       const buttons = notificationClient.sentPayloads[0].metadata?.buttons;
       expect(buttons).toBeDefined();
-      expect(buttons[0].text).toBe('Review DAO data before voting');
+      expect(buttons[0].text).toBe('Cast your vote');
+      expect(buttons[0].url).toBe('https://snapshot.org/#/test-dao/proposal/snap-1');
     });
 
     it('should include "View Discussion" button when discussion URL is provided', async () => {
@@ -139,7 +140,7 @@ describe('NewOffchainProposalTriggerHandler', () => {
         triggerId: 'new-offchain-proposal',
         events: [{
           daoId: 'test-dao', id: 'snap-1', title: 'Test',
-          created: 1700000000, discussion: 'https://forum.example.com/123', state: 'active',
+          created: 1700000000, discussion: 'https://forum.example.com/123', link: 'https://snapshot.org/#/test-dao/proposal/snap-1', state: 'active',
         }],
       };
 
@@ -158,7 +159,7 @@ describe('NewOffchainProposalTriggerHandler', () => {
         triggerId: 'new-offchain-proposal',
         events: [{
           daoId: 'test-dao', id: 'snap-1', title: 'Test',
-          created: 1700000000, discussion: '', state: 'active',
+          created: 1700000000, discussion: '', link: 'https://snapshot.org/#/test-dao/proposal/snap-1', state: 'active',
         }],
       };
 
@@ -176,8 +177,8 @@ describe('NewOffchainProposalTriggerHandler', () => {
       const message: DispatcherMessage = {
         triggerId: 'new-offchain-proposal',
         events: [
-          { daoId: 'dao-a', id: 'snap-1', title: 'Proposal A', created: 1700000000, discussion: '', state: 'active' },
-          { daoId: 'dao-b', id: 'snap-2', title: 'Proposal B', created: 1700000100, discussion: '', state: 'active' },
+          { daoId: 'dao-a', id: 'snap-1', title: 'Proposal A', created: 1700000000, discussion: '', link: 'https://snapshot.org/#/dao-a/proposal/snap-1', state: 'active' },
+          { daoId: 'dao-b', id: 'snap-2', title: 'Proposal B', created: 1700000100, discussion: '', link: 'https://snapshot.org/#/dao-b/proposal/snap-2', state: 'active' },
         ],
       };
 
@@ -207,7 +208,7 @@ describe('NewOffchainProposalTriggerHandler', () => {
         triggerId: 'new-offchain-proposal',
         events: [{
           daoId: 'test-dao', id: 'snap-1', title: 'Test',
-          created: 1700000000, discussion: '', state: 'active',
+          created: 1700000000, discussion: '', link: 'https://snapshot.org/#/test-dao/proposal/snap-1', state: 'active',
         }],
       };
 

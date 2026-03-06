@@ -63,6 +63,11 @@ const ctaButtonConfigs: Record<string, CtaButtonConfig> = {
       daoId && proposalId
         ? `${BASE_URL}/${daoId}/governance/proposal/${proposalId}`
         : BASE_URL
+  },
+  newOffchainProposal: {
+    text: 'Cast your vote',
+    buildUrl: ({ proposalUrl }) =>
+      proposalUrl || BASE_URL
   }
 };
 
@@ -87,6 +92,7 @@ export interface BuildButtonsParams {
   daoId?: string;
   address?: string;
   proposalId?: string;
+  proposalUrl?: string;
 }
 
 const explorerService = new ExplorerService();
@@ -102,7 +108,8 @@ export function buildButtons(params: BuildButtonsParams): Button[] {
   const url = config.buildUrl({
     daoId: params.daoId,
     address: params.address,
-    proposalId: params.proposalId
+    proposalId: params.proposalId,
+    proposalUrl: params.proposalUrl
   });
 
   buttons.push({ text: config.text, url });

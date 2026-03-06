@@ -125,6 +125,7 @@ export const OffchainProposalItemSchema = z.object({
   id: z.string(),
   title: z.string(),
   discussion: z.string(),
+  link: z.string(),
   state: z.string(),
   created: z.number(),
 });

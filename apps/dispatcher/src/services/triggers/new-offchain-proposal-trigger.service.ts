@@ -22,7 +22,7 @@ export class NewOffchainProposalTriggerHandler extends BaseTriggerHandler {
    */
   async handleMessage(message: DispatcherMessage): Promise<MessageProcessingResult> {
     for (const proposal of message.events) {
-      const { daoId, id: proposalId, title, created, discussion } = proposal;
+      const { daoId, id: proposalId, title, created, discussion, link } = proposal;
       const eventId = `offchain-${proposalId}`;
       const proposalTimestamp = String(created);
 
@@ -35,6 +35,7 @@ export class NewOffchainProposalTriggerHandler extends BaseTriggerHandler {
       // Build buttons — include discussion link if available, no txHash for offchain
       const buttons = buildButtons({
         triggerType: 'newOffchainProposal',
+        proposalUrl: link || undefined,
         discussionUrl: discussion || undefined,
       });
 

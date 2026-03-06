@@ -4,6 +4,7 @@ query ListOffchainProposals($skip: NonNegativeInt, $limit: PositiveInt, $orderDi
       id
       title
       discussion
+      link
       state
       created
     }

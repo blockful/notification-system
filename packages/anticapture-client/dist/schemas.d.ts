@@ -563,15 +563,18 @@ export declare const OffchainProposalItemSchema: z.ZodObject<{
     id: z.ZodString;
     title: z.ZodString;
     discussion: z.ZodString;
+    link: z.ZodString;
     state: z.ZodString;
     created: z.ZodNumber;
 }, "strip", z.ZodTypeAny, {
+    link: string;
     created: number;
     id: string;
     title: string;
     discussion: string;
     state: string;
 }, {
+    link: string;
     created: number;
     id: string;
     title: string;
@@ -585,15 +588,18 @@ export declare const SafeOffchainProposalsResponseSchema: z.ZodEffects<z.ZodObje
             id: z.ZodString;
             title: z.ZodString;
             discussion: z.ZodString;
+            link: z.ZodString;
             state: z.ZodString;
             created: z.ZodNumber;
         }, "strip", z.ZodTypeAny, {
+            link: string;
             created: number;
             id: string;
             title: string;
             discussion: string;
             state: string;
         }, {
+            link: string;
             created: number;
             id: string;
             title: string;
@@ -603,6 +609,7 @@ export declare const SafeOffchainProposalsResponseSchema: z.ZodEffects<z.ZodObje
         totalCount: z.ZodNumber;
     }, "strip", z.ZodTypeAny, {
         items: ({
+            link: string;
             created: number;
             id: string;
             title: string;
@@ -612,6 +619,7 @@ export declare const SafeOffchainProposalsResponseSchema: z.ZodEffects<z.ZodObje
         totalCount: number;
     }, {
         items: ({
+            link: string;
             created: number;
             id: string;
             title: string;
@@ -623,6 +631,7 @@ export declare const SafeOffchainProposalsResponseSchema: z.ZodEffects<z.ZodObje
 }, "strip", z.ZodTypeAny, {
     offchainProposals: {
         items: ({
+            link: string;
             created: number;
             id: string;
             title: string;
@@ -634,6 +643,7 @@ export declare const SafeOffchainProposalsResponseSchema: z.ZodEffects<z.ZodObje
 }, {
     offchainProposals: {
         items: ({
+            link: string;
             created: number;
             id: string;
             title: string;
@@ -645,6 +655,7 @@ export declare const SafeOffchainProposalsResponseSchema: z.ZodEffects<z.ZodObje
 }>, {
     offchainProposals: {
         items: {
+            link: string;
             created: number;
             id: string;
             title: string;
@@ -656,6 +667,7 @@ export declare const SafeOffchainProposalsResponseSchema: z.ZodEffects<z.ZodObje
 }, {
     offchainProposals: {
         items: ({
+            link: string;
             created: number;
             id: string;
             title: string;

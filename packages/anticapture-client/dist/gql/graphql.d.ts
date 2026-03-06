@@ -1682,6 +1682,7 @@ export type ListOffchainProposalsQuery = {
             id: string;
             title: string;
             discussion: string;
+            link: string;
             state: string;
             created: number;
         } | null>;

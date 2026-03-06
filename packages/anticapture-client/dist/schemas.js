@@ -120,6 +120,7 @@ exports.OffchainProposalItemSchema = zod_1.z.object({
     id: zod_1.z.string(),
     title: zod_1.z.string(),
     discussion: zod_1.z.string(),
+    link: zod_1.z.string(),
     state: zod_1.z.string(),
     created: zod_1.z.number(),
 });
