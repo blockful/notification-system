@@ -10,12 +10,12 @@ import { normalize } from 'viem/ens';
 export class EnsResolverService {
   private client;
 
-  constructor() {
+  constructor(rpcUrl?: string) {
     this.client = createPublicClient({
       chain: mainnet,
-      transport: http(undefined, {
+      transport: http(rpcUrl, {
         timeout: 5_000,  // 5 seconds timeout
-        retryCount: 10,   // Try 10 times  
+        retryCount: 3,   // Try 3 times  
         retryDelay: 500   // Wait 500ms between retries
       })
     });

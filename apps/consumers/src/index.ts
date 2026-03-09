@@ -19,7 +19,7 @@ import { SlackClient } from './clients/slack.client';
 const config = loadConfig();
 
 // Create ENS resolver
-const ensResolver = new EnsResolverService();
+const ensResolver = new EnsResolverService(config.rpcUrl);
 
 // Create Telegram client for production
 const telegramClient = new TelegramClient(config.telegramBotToken);
