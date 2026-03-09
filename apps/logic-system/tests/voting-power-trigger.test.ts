@@ -4,20 +4,24 @@
 
 import { describe, it, expect, jest, beforeEach } from '@jest/globals';
 import { VotingPowerChangedTrigger } from '../src/triggers/voting-power-changed-trigger';
-import { createMockDispatcherService, createMockVotingPowerRepository, mockVotingPowerData } from './mocks';
+import { createMockDispatcherService, createMockVotingPowerRepository, createMockThresholdRepository, createVotingPowerHistory, mockVotingPowerData } from './mocks';
 
 describe('VotingPowerChangedTrigger', () => {
   let trigger: VotingPowerChangedTrigger;
   let mockDispatcherService: ReturnType<typeof createMockDispatcherService>;
   let mockVotingPowerRepository: ReturnType<typeof createMockVotingPowerRepository>;
+  let mockThresholdRepository: ReturnType<typeof createMockThresholdRepository>;
 
   beforeEach(() => {
     jest.clearAllMocks();
     mockDispatcherService = createMockDispatcherService();
     mockVotingPowerRepository = createMockVotingPowerRepository();
+    mockThresholdRepository = createMockThresholdRepository();
+    mockThresholdRepository.getThreshold.mockResolvedValue(null);
     trigger = new VotingPowerChangedTrigger(
       mockDispatcherService,
       mockVotingPowerRepository as any,
+      mockThresholdRepository as any,
       5000 // 5 second interval for testing
     );
   });
@@ -27,6 +31,7 @@ describe('VotingPowerChangedTrigger', () => {
       const trigger2 = new VotingPowerChangedTrigger(
         createMockDispatcherService(),
         createMockVotingPowerRepository() as any,
+        createMockThresholdRepository() as any,
         5000
       );
       
@@ -139,9 +144,97 @@ describe('VotingPowerChangedTrigger', () => {
     });
 
     it('should handle dispatcher errors gracefully', async () => {
+      mockThresholdRepository.getThreshold.mockResolvedValue(null);
       mockDispatcherService.sendMessage.mockRejectedValue(new Error('Dispatcher Error'));
       
       await expect(trigger.process(mockVotingPowerData)).rejects.toThrow('Dispatcher Error');
+    });
+  });
+
+  describe('Threshold Filtering', () => {
+    it('should drop delegation events below threshold', async () => {
+      mockThresholdRepository.getThreshold.mockResolvedValue('500');
+
+      const events = [
+        createVotingPowerHistory({ delta: '100', changeType: 'delegation', timestamp: '1000' }),
+        createVotingPowerHistory({ delta: '600', changeType: 'delegation', timestamp: '1001' }),
+      ];
+
+      await trigger.process(events);
+
+      expect(mockDispatcherService.sendMessage).toHaveBeenCalledWith({
+        triggerId: 'voting-power-changed',
+        events: [events[1]]
+      });
+    });
+
+    it('should drop transfer events below threshold', async () => {
+      mockThresholdRepository.getThreshold.mockResolvedValue('200');
+
+      const events = [
+        createVotingPowerHistory({
+          delta: '50', changeType: 'transfer', timestamp: '1000',
+          delegation: null,
+          transfer: { from: '0x1', to: '0x2', value: '50' }
+        }),
+        createVotingPowerHistory({
+          delta: '300', changeType: 'transfer', timestamp: '1001',
+          delegation: null,
+          transfer: { from: '0x1', to: '0x2', value: '300' }
+        }),
+      ];
+
+      await trigger.process(events);
+
+      expect(mockDispatcherService.sendMessage).toHaveBeenCalledWith({
+        triggerId: 'voting-power-changed',
+        events: [events[1]]
+      });
+    });
+
+    it('should use abs(delta) for negative deltas', async () => {
+      mockThresholdRepository.getThreshold.mockResolvedValue('200');
+
+      const events = [
+        createVotingPowerHistory({ delta: '-300', changeType: 'delegation', timestamp: '1000' }),
+        createVotingPowerHistory({ delta: '-50', changeType: 'delegation', timestamp: '1001' }),
+      ];
+
+      await trigger.process(events);
+
+      expect(mockDispatcherService.sendMessage).toHaveBeenCalledWith({
+        triggerId: 'voting-power-changed',
+        events: [events[0]]
+      });
+    });
+
+    it('should pass all events through when threshold is null (fail-open)', async () => {
+      mockThresholdRepository.getThreshold.mockResolvedValue(null);
+
+      const events = [
+        createVotingPowerHistory({ delta: '1', changeType: 'delegation', timestamp: '1000' }),
+      ];
+
+      await trigger.process(events);
+
+      expect(mockDispatcherService.sendMessage).toHaveBeenCalledWith({
+        triggerId: 'voting-power-changed',
+        events
+      });
+    });
+
+    it('should always advance timestamp even when all events are filtered', async () => {
+      mockThresholdRepository.getThreshold.mockResolvedValue('99999999');
+
+      const events = [
+        createVotingPowerHistory({ delta: '1', changeType: 'delegation', timestamp: '5000' }),
+        createVotingPowerHistory({ delta: '2', changeType: 'delegation', timestamp: '6000' }),
+      ];
+
+      await trigger.process(events);
+
+      expect(mockDispatcherService.sendMessage).not.toHaveBeenCalled();
+      expect((trigger as any).lastProcessedTimestamp).toBe('6001');
     });
   });
 });

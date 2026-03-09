@@ -12,11 +12,25 @@ import type {
   ListHistoricalVotingPowerQueryVariables,
   ListVotesQuery,
   ListVotesQueryVariables,
-  ProposalNonVotersQueryVariables
+  ProposalNonVotersQueryVariables,
+  ListOffchainProposalsQueryVariables,
 } from './gql/graphql';
-import { GetDaOsDocument, GetProposalByIdDocument, ListProposalsDocument, ListHistoricalVotingPowerDocument, ListVotesDocument, ProposalNonVotersDocument, QueryInput_Votes_OrderBy, QueryInput_Votes_OrderDirection } from './gql/graphql';
-import { SafeDaosResponseSchema, SafeProposalByIdResponseSchema, SafeProposalsResponseSchema, SafeHistoricalVotingPowerResponseSchema, SafeVotesResponseSchema, SafeProposalNonVotersResponseSchema, processProposals, processVotingPowerHistory, ProcessedVotingPowerHistory } from './schemas';
-
+import { GetDaOsDocument, GetProposalByIdDocument, ListProposalsDocument, ListHistoricalVotingPowerDocument, ListVotesDocument, ProposalNonVotersDocument, GetEventRelevanceThresholdDocument, QueryInput_Votes_OrderBy, QueryInput_Votes_OrderDirection, ListOffchainProposalsDocument } from './gql/graphql';
+import { 
+  SafeDaosResponseSchema, 
+  SafeProposalByIdResponseSchema, 
+  SafeProposalsResponseSchema, 
+  SafeHistoricalVotingPowerResponseSchema, 
+  SafeVotesResponseSchema, 
+  SafeProposalNonVotersResponseSchema, 
+  SafeOffchainProposalsResponseSchema, 
+  processProposals, 
+  processVotingPowerHistory, 
+  ProcessedVotingPowerHistory, 
+  EventThresholdResponseSchema, 
+  FeedEventType, 
+  FeedRelevance, 
+  OffchainProposalItem } from './schemas';
 type ProposalItems = NonNullable<ListProposalsQuery['proposals']>['items'];
 type VotingPowerHistoryItems = ProcessedVotingPowerHistory[];
 type ProposalNonVoter = z.infer<typeof SafeProposalNonVotersResponseSchema>['proposalNonVoters']['items'][0];
@@ -249,7 +263,7 @@ export class AnticaptureClient {
         variables,
         daoId
       );
-      return validated.votes.items.filter((item): item is VoteItem => item !== null);
+      return validated.votes.items.filter(item => item !== null) as VoteItem[];
     } catch (error) {
       console.warn(`Error fetching votes for DAO ${daoId}:`, error);
       return [];
@@ -328,5 +342,72 @@ export class AnticaptureClient {
     });
 
     return allVotes;
+  }
+
+  /**
+   * Fetches the event relevance threshold for a given DAO, event type, and relevance level.
+   * Used to filter out low-impact events (e.g., small delegation changes).
+   * @returns Threshold as a numeric string, or null if unavailable (fail-open)
+   */
+  async getEventThreshold(
+    daoId: string,
+    type: FeedEventType,
+    relevance: FeedRelevance
+  ): Promise<string | null> {
+    try {
+      const validated = await this.query(
+        GetEventRelevanceThresholdDocument,
+        EventThresholdResponseSchema,
+        { type, relevance },
+        daoId
+      );
+      return validated.getEventRelevanceThreshold.threshold;
+    } catch (error) {
+      console.warn(
+        `[AnticaptureClient] Error fetching threshold for ${daoId}/${type}:`,
+        error instanceof Error ? error.message : error
+      );
+      return null;
+
+    }
+  };
+  /*
+   * Lists offchain (Snapshot) proposals from all DAOs or a specific DAO
+   * @param variables Query variables (skip, limit, orderDirection, status, fromDate)
+   * @param daoId Optional specific DAO ID. If not provided, queries all DAOs
+   * @returns Array of offchain proposal items with daoId attached
+   */
+  async listOffchainProposals(
+    variables?: ListOffchainProposalsQueryVariables,
+    daoId?: string
+  ): Promise<(OffchainProposalItem & { daoId: string })[]> {
+    if (!daoId) {
+      const allDAOs = await this.getDAOs();
+      const allProposals: (OffchainProposalItem & { daoId: string })[] = [];
+
+      for (const dao of allDAOs) {
+        try {
+          const validated = await this.query(ListOffchainProposalsDocument, SafeOffchainProposalsResponseSchema, variables, dao.id);
+          const items = validated.offchainProposals.items.map(item => ({ ...item, daoId: dao.id }));
+          if (items.length > 0) {
+            allProposals.push(...items);
+          }
+        } catch (error) {
+          console.warn(`Skipping offchain proposals for ${dao.id} due to API error: ${error instanceof Error ? error.message : error}`);
+        }
+      }
+
+      // Sort by created timestamp desc (most recent first)
+      allProposals.sort((a, b) => b.created - a.created);
+      return allProposals;
+    }
+
+    try {
+      const validated = await this.query(ListOffchainProposalsDocument, SafeOffchainProposalsResponseSchema, variables, daoId);
+      return validated.offchainProposals.items.map(item => ({ ...item, daoId }));
+    } catch (error) {
+      console.warn(`Error querying offchain proposals for DAO ${daoId}: ${error instanceof Error ? error.message : error}`);
+      return [];
+    }
   }
 }

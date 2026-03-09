@@ -1,5 +1,10 @@
 import { z } from 'zod';
 
+export {
+  QueryInput_GetEventRelevanceThreshold_Type as FeedEventType,
+  QueryInput_GetEventRelevanceThreshold_Relevance as FeedRelevance,
+} from './gql/graphql';
+
 // Schema with built-in transformation and fallbacks
 export const SafeDaosResponseSchema = z.object({
   daos: z.object({
@@ -120,6 +125,42 @@ export const SafeProposalNonVotersResponseSchema = z.object({
   };
 });
 
+export const EventThresholdResponseSchema = z.object({
+  getEventRelevanceThreshold: z.object({
+    threshold: z.string()
+  })
+});
+
+export const OffchainProposalItemSchema = z.object({
+  id: z.string(),
+  title: z.string(),
+  discussion: z.string(),
+  link: z.string(),
+  state: z.string(),
+  created: z.number(),
+});
+
+export type OffchainProposalItem = z.infer<typeof OffchainProposalItemSchema>;
+
+export const SafeOffchainProposalsResponseSchema = z.object({
+  offchainProposals: z.object({
+    items: z.array(OffchainProposalItemSchema.nullable()),
+    totalCount: z.number(),
+  }).nullable(),
+}).transform((data) => {
+  if (!data.offchainProposals) {
+    console.warn('OffchainProposalsResponse has null offchainProposals:', data);
+    return { offchainProposals: { items: [], totalCount: 0 } };
+  }
+  return {
+    offchainProposals: {
+      ...data.offchainProposals,
+      items: data.offchainProposals.items.filter(
+        (item): item is OffchainProposalItem => item !== null
+      ),
+    },
+  };
+});
 
 // Internal types for schema validation
 type SafeProposalsResponse = z.infer<typeof SafeProposalsResponseSchema>;

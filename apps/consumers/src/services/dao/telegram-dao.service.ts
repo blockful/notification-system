@@ -89,13 +89,8 @@ export class TelegramDAOService extends BaseDAOService {
    * Toggle DAO selection when user clicks a button
    */
   async toggle(ctx: ContextWithSession, daoName: string): Promise<void> {
-    const chatId = ctx.chat?.id;
-    const messageId = ctx.callbackQuery?.message?.message_id;
-    if (!chatId || !messageId) return;
-
     this.ensureSession(ctx);
 
-    // Toggle selection in session
     const normalizedDaoName = daoName.toUpperCase();
     if (ctx.session.daoSelections.has(normalizedDaoName)) {
       ctx.session.daoSelections.delete(normalizedDaoName);
@@ -103,15 +98,7 @@ export class TelegramDAOService extends BaseDAOService {
       ctx.session.daoSelections.add(normalizedDaoName);
     }
 
-    try {
-      // Update inline keyboard to reflect new state
-      const daos = await this.fetchAvailableDAOs();
-      const keyboard = this.buildInlineKeyboard(daos, ctx.session.daoSelections);
-      await ctx.editMessageReplyMarkup(keyboard);
-    } catch (error) {
-      console.error('Error updating keyboard:', error);
-      await ctx.answerCbQuery(uiMessages.errors.updateFailed);
-    }
+    await this.refreshKeyboard(ctx);
   }
 
   /**
@@ -143,6 +130,32 @@ export class TelegramDAOService extends BaseDAOService {
       await ctx.reply(uiMessages.errors.updateSubscriptionsFailed);
     }
   }
+  
+  async selectAll(ctx: ContextWithSession): Promise<void> {
+    this.ensureSession(ctx);
+    const daos = await this.fetchAvailableDAOs();
+    daos.forEach(dao => ctx.session.daoSelections.add(dao.id.toUpperCase()));
+    await this.refreshKeyboard(ctx);
+  }
+
+  async unselectAll(ctx: ContextWithSession): Promise<void> {
+    this.ensureSession(ctx);
+    ctx.session.daoSelections.clear();
+    await this.refreshKeyboard(ctx);
+  }
+
+  /**
+   * Refresh the inline keyboard to reflect current session selections
+   */
+  private async refreshKeyboard(ctx: ContextWithSession): Promise<void> {
+    try {
+      const daos = await this.fetchAvailableDAOs();
+      const keyboard = this.buildInlineKeyboard(daos, ctx.session.daoSelections);
+      await ctx.editMessageReplyMarkup(keyboard);
+    } catch (error) {
+      console.error('Error updating keyboard:', error);
+    }
+  }
 
   /**
    * Build Telegram inline keyboard for DAO selection
@@ -160,7 +173,6 @@ export class TelegramDAOService extends BaseDAOService {
       };
     });
 
-    // Group buttons into rows of 4
     const BUTTONS_PER_ROW = 3;
     const daoButtonRows: any[][] = [];
     
@@ -171,9 +183,12 @@ export class TelegramDAOService extends BaseDAOService {
     return {
       inline_keyboard: [
         ...daoButtonRows,
-        // Confirm button row
         [
-          { text: uiMessages.confirmSelection, callback_data: 'dao_confirm' }
+          { text: uiMessages.buttons.selectAll, callback_data: 'dao_select_all' },
+          { text: uiMessages.buttons.unselectAll, callback_data: 'dao_unselect_all' },
+        ],
+        [
+          { text: uiMessages.confirmSelection, callback_data: 'dao_confirm' },
         ]
       ]
     };
@@ -182,7 +197,7 @@ export class TelegramDAOService extends BaseDAOService {
   /**
    * Show confirmation message after updating subscriptions
    */
-  private async showConfirmationMessage(ctx: any, selectedDAOs: Set<string>): Promise<void> {
+  private async showConfirmationMessage(ctx: ContextWithSession, selectedDAOs: Set<string>): Promise<void> {
     if (selectedDAOs.size > 0) {
       const daoList = this.formatDAOListWithBullets(selectedDAOs);
 

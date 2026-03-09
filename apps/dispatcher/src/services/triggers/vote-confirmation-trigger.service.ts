@@ -130,7 +130,9 @@ export class VoteConfirmationTriggerHandler extends BaseTriggerHandler<VoteWithD
     const buttons = buildButtons({
       triggerType: 'voteConfirmation',
       txHash: vote.transactionHash,
-      chainId
+      chainId,
+      daoId: vote.daoId,
+      address: vote.voterAddress
     });
 
     await this.sendNotificationsToSubscribers(
@@ -139,6 +141,7 @@ export class VoteConfirmationTriggerHandler extends BaseTriggerHandler<VoteWithD
       eventId,
       vote.daoId,
       {
+        triggerType: 'voteConfirmation',
         transaction: {
           hash: vote.transactionHash,
           chainId
@@ -166,7 +169,7 @@ export class VoteConfirmationTriggerHandler extends BaseTriggerHandler<VoteWithD
 
     return replacePlaceholders(messageTemplate, {
       daoId: vote.daoId,
-      proposalTitle: vote.proposalTitle,
+      proposalTitle: vote.proposalTitle ?? undefined,
       votingPower,
       ...(hasReason && { reason: vote.reason! })
     });

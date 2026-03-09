@@ -1,7 +1,7 @@
 import { AxiosInstance } from 'axios';
 import { z } from 'zod';
-import type { GetProposalByIdQuery, ListProposalsQuery, ListProposalsQueryVariables, ListHistoricalVotingPowerQueryVariables, ListVotesQuery, ListVotesQueryVariables } from './gql/graphql';
-import { SafeProposalNonVotersResponseSchema, ProcessedVotingPowerHistory } from './schemas';
+import type { GetProposalByIdQuery, ListProposalsQuery, ListProposalsQueryVariables, ListHistoricalVotingPowerQueryVariables, ListVotesQuery, ListVotesQueryVariables, ListOffchainProposalsQueryVariables } from './gql/graphql';
+import { SafeProposalNonVotersResponseSchema, ProcessedVotingPowerHistory, FeedEventType, FeedRelevance, OffchainProposalItem } from './schemas';
 type ProposalItems = NonNullable<ListProposalsQuery['proposals']>['items'];
 type VotingPowerHistoryItems = ProcessedVotingPowerHistory[];
 type ProposalNonVoter = z.infer<typeof SafeProposalNonVotersResponseSchema>['proposalNonVoters']['items'][0];
@@ -74,5 +74,14 @@ export declare class AnticaptureClient {
      * @returns Array of votes from all DAOs with daoId included
      */
     listRecentVotesFromAllDaos(timestampGt: string, limit?: number): Promise<VoteWithDaoId[]>;
+    /**
+     * Fetches the event relevance threshold for a given DAO, event type, and relevance level.
+     * Used to filter out low-impact events (e.g., small delegation changes).
+     * @returns Threshold as a numeric string, or null if unavailable (fail-open)
+     */
+    getEventThreshold(daoId: string, type: FeedEventType, relevance: FeedRelevance): Promise<string | null>;
+    listOffchainProposals(variables?: ListOffchainProposalsQueryVariables, daoId?: string): Promise<(OffchainProposalItem & {
+        daoId: string;
+    })[]>;
 }
 export {};

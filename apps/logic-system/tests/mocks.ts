@@ -105,6 +105,13 @@ export const createMockVotingPowerRepository = () => ({
   listVotingPowerHistory: jest.fn()
 });
 
+/**
+ * Creates a mocked ThresholdRepository
+ */
+export const createMockThresholdRepository = () => ({
+  getThreshold: jest.fn<() => Promise<string | null>>()
+});
+
 // Sample voting power data for tests
 export const mockVotingPowerData = [
   createVotingPowerHistory(),

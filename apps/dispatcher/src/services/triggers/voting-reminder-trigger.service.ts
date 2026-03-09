@@ -99,9 +99,11 @@ export class VotingReminderTriggerHandler extends BaseTriggerHandler<VotingRemin
       return { sent: 0, skipped: 1, failed: 0 };
     }
 
-    // Build buttons for voting reminder (no tx hash)
+    // Build buttons for voting reminder
     const buttons = buildButtons({
-      triggerType: 'votingReminder'
+      triggerType: 'votingReminder',
+      daoId: event.daoId,
+      proposalId: event.id
     });
 
     // Send reminders using batch notification service
@@ -111,6 +113,7 @@ export class VotingReminderTriggerHandler extends BaseTriggerHandler<VotingRemin
       () => `${event.id}-${event.thresholdPercentage}-reminder`,
       (address) => this.createReminderMessage(event, address),
       (address) => ({
+        triggerType: 'votingReminder',
         proposalId: event.id,
         thresholdPercentage: event.thresholdPercentage,
         timeElapsedPercentage: event.timeElapsedPercentage,

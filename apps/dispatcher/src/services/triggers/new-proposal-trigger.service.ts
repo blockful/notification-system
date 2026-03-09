@@ -44,7 +44,9 @@ export class NewProposalTriggerHandler extends BaseTriggerHandler {
       const buttons = buildButtons({
         triggerType: 'newProposal',
         txHash: txHash,
-        chainId
+        chainId,
+        daoId,
+        proposalId
       });
 
       await this.sendNotificationsToSubscribers(
@@ -52,7 +54,7 @@ export class NewProposalTriggerHandler extends BaseTriggerHandler {
         notificationMessage,
         proposalId,
         daoId,
-        undefined,
+        { triggerType: 'newProposal' },
         buttons
       );
     }

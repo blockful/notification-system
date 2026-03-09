@@ -181,37 +181,66 @@ ALTER TABLE votes_onchain ENABLE TRIGGER ALL;
 ```
 
 ### Voting Power Change Insert (Delegation Received)
+
+**Important:** The underlying tables are in a UUID schema (e.g. `ecbe454c-b8fe-4659-8864-4cc68148cfde`), not in `anticapture` (which has views). Find the correct schema via: `SELECT pg_get_viewdef('anticapture.voting_power_history', true);`
+
+**Critical:** Use a **fixed transaction hash** (not `extract(epoch from now())`) so both tables share the exact same value. The API joins `voting_power_history` with `delegations` on `transaction_hash`, and requires `delegation.log_index < voting_power_history.log_index`. If the join fails, `changeType` becomes `'other'`, which bypasses threshold filtering entirely.
+
 ```sql
-SET search_path TO "<schema_uuid>";
+SET search_path TO "<underlying_uuid_schema>";
 ALTER TABLE voting_power_history DISABLE TRIGGER ALL;
 ALTER TABLE delegations DISABLE TRIGGER ALL;
 
-INSERT INTO voting_power_history (transaction_hash, dao_id, account_id, voting_power, delta, delta_mod, timestamp, log_index)
-VALUES (
-  '0xmock_vp_' || extract(epoch from now())::bigint,
-  'ENS',
-  '<user_wallet_address>',
-  5000000000000000000,
-  1000000000000000000,
-  1000000000000000000,
-  extract(epoch from now())::bigint,
-  1
-);
-
+-- Insert delegations FIRST with log_index = 0
 INSERT INTO delegations (transaction_hash, dao_id, delegate_account_id, delegator_account_id, delegated_value, previous_delegate, timestamp, log_index)
 VALUES (
-  '0xmock_vp_' || extract(epoch from now())::bigint,
+  '0xmock_vp_test',
   'ENS',
   '<user_wallet_address>',
   '0x1111111111111111111111111111111111111111',
   1000000000000000000,
   '0x0000000000000000000000000000000000000000',
   extract(epoch from now())::bigint,
-  1
+  0  -- must be < voting_power_history.log_index
+);
+
+-- Then insert voting_power_history with log_index = 1
+INSERT INTO voting_power_history (transaction_hash, dao_id, account_id, voting_power, delta, delta_mod, timestamp, log_index)
+VALUES (
+  '0xmock_vp_test',
+  'ENS',
+  '<user_wallet_address>',
+  5000000000000000000,
+  1000000000000000000,
+  1000000000000000000,
+  extract(epoch from now())::bigint,
+  1  -- must be > delegation.log_index
 );
 
 ALTER TABLE voting_power_history ENABLE TRIGGER ALL;
 ALTER TABLE delegations ENABLE TRIGGER ALL;
+```
+
+### New Offchain Proposal Insert (Snapshot)
+```sql
+-- No triggers on snapshot.proposals, safe to insert directly
+INSERT INTO snapshot.proposals (id, space_id, author, title, body, discussion, type, start, "end", state, created, updated, link, flagged)
+VALUES (
+  '0xmock_offchain_' || extract(epoch from now())::bigint,
+  'ens.eth',
+  '0x1111111111111111111111111111111111111111',
+  '[MOCK] Test Offchain Proposal for Notification System',
+  'This is a mock offchain proposal inserted for testing the notification pipeline.',
+  '<discussion_url_from_existing_proposal>',  -- e.g. https://discuss.ens.domains/t/...
+  'single-choice',
+  extract(epoch from now())::integer,
+  (extract(epoch from now()) + 604800)::integer,  -- ends in 7 days
+  'active',
+  extract(epoch from now())::integer,
+  extract(epoch from now())::integer,
+  '<link_from_existing_proposal>',  -- copy from: SELECT link FROM snapshot.proposals ORDER BY created DESC LIMIT 5
+  false
+);
 ```
 
 ### Cleanup Mock Data
@@ -224,6 +253,7 @@ ALTER TABLE delegations DISABLE TRIGGER ALL;
 DELETE FROM votes_onchain WHERE tx_hash LIKE '0xmock%';
 DELETE FROM voting_power_history WHERE transaction_hash LIKE '0xmock%';
 DELETE FROM delegations WHERE transaction_hash LIKE '0xmock%';
+DELETE FROM snapshot.proposals WHERE id LIKE '0xmock%';
 
 ALTER TABLE votes_onchain ENABLE TRIGGER ALL;
 ALTER TABLE voting_power_history ENABLE TRIGGER ALL;
@@ -241,5 +271,6 @@ SELECT v.* FROM votes_onchain v LEFT JOIN proposals_onchain p ON v.proposal_id =
 -- List mock records
 SELECT 'VOTE' as type, tx_hash, timestamp FROM votes_onchain WHERE tx_hash LIKE '0xmock%'
 UNION ALL SELECT 'VP', transaction_hash, timestamp FROM voting_power_history WHERE transaction_hash LIKE '0xmock%'
-UNION ALL SELECT 'DELEG', transaction_hash, timestamp FROM delegations WHERE transaction_hash LIKE '0xmock%';
+UNION ALL SELECT 'DELEG', transaction_hash, timestamp FROM delegations WHERE transaction_hash LIKE '0xmock%'
+UNION ALL SELECT 'OFFCHAIN', id, created FROM snapshot.proposals WHERE id LIKE '0xmock%';
 ```

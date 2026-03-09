@@ -19,7 +19,7 @@ import { SlackClient } from './clients/slack.client';
 const config = loadConfig();
 
 // Create ENS resolver
-const ensResolver = new EnsResolverService();
+const ensResolver = new EnsResolverService(config.rpcUrl);
 
 // Create Telegram client for production
 const telegramClient = new TelegramClient(config.telegramBotToken);
@@ -35,7 +35,14 @@ const slackClient = new SlackClient(
 // Create and start the application
 const app = new App(
   config.subscriptionServerUrl,
-  axios.create({ baseURL: config.anticaptureGraphqlEndpoint }),
+  axios.create({
+    baseURL: config.anticaptureGraphqlEndpoint,
+    headers: {
+      ...(config.blockfulApiToken && {
+        Authorization: `Bearer ${config.blockfulApiToken}`,
+      }),
+    },
+  }),
   config.rabbitmqUrl,
   ensResolver,
   telegramClient,

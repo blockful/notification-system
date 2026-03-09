@@ -149,10 +149,20 @@ export type Query = {
     daos: DaoList;
     /** Get delegation percentage day buckets with forward-fill */
     delegationPercentageByDay?: Maybe<DelegationPercentageByDay_200_Response>;
-    /** Get current delegators of an account */
+    /** Get current delegations for an account */
     delegations?: Maybe<Delegations_200_Response>;
+    /** Get current delegators of an account with voting power */
+    delegators?: Maybe<Delegators_200_Response>;
+    /** Get feed events */
+    feedEvents?: Maybe<FeedEvents_200_Response>;
+    /** Returns label information from Arkham, ENS data, and whether the address is an EOA or contract. Arkham data is stored permanently. ENS data is cached with a configurable TTL. */
+    getAddress?: Maybe<GetAddress_200_Response>;
+    /** Returns label information from Arkham, ENS data, and address type for multiple addresses. Maximum 100 addresses per request. Arkham data is stored permanently. ENS data is cached with a configurable TTL. */
+    getAddresses?: Maybe<GetAddresses_200_Response>;
     /** Get historical DAO Token Treasury value (governance token quantity × token price) */
     getDaoTokenTreasury?: Maybe<GetDaoTokenTreasury_200_Response>;
+    /** Get event relevance threshold */
+    getEventRelevanceThreshold?: Maybe<GetEventRelevanceThreshold_200_Response>;
     /** Get historical Liquid Treasury (treasury without DAO tokens) from external providers (DefiLlama/Dune) */
     getLiquidTreasury?: Maybe<GetLiquidTreasury_200_Response>;
     /** Get historical Total Treasury (liquid treasury + DAO token treasury) */
@@ -169,6 +179,10 @@ export type Query = {
     historicalVotingPowerByAccountId?: Maybe<HistoricalVotingPowerByAccountId_200_Response>;
     /** Get the last update time */
     lastUpdate?: Maybe<LastUpdate_200_Response>;
+    /** Returns a single offchain (Snapshot) proposal by its ID */
+    offchainProposalById?: Maybe<OffchainProposalById_200_Response>;
+    /** Returns a list of offchain (Snapshot) proposals */
+    offchainProposals?: Maybe<OffchainProposals_200_Response>;
     /** Returns a single proposal by its ID */
     proposal?: Maybe<Proposal_200_Response>;
     /** Returns the active delegates that did not vote on a given proposal */
@@ -189,6 +203,10 @@ export type Query = {
     votes?: Maybe<Votes_200_Response>;
     /** Returns a paginated list of votes cast on a specific proposal */
     votesByProposalId?: Maybe<VotesByProposalId_200_Response>;
+    /** Returns a list of offchain (Snapshot) votes */
+    votesOffchain?: Maybe<VotesOffchain_200_Response>;
+    /** Returns a paginated list of offchain (Snapshot) votes for a specific proposal */
+    votesOffchainByProposalId?: Maybe<VotesOffchainByProposalId_200_Response>;
     /** Returns voting power information for a specific address (account) */
     votingPowerByAccountId?: Maybe<VotingPowerByAccountId_200_Response>;
     /** Returns a mapping of the voting power changes within a time frame for the given addresses */
@@ -200,6 +218,8 @@ export type Query = {
 };
 export type QueryAccountBalanceByAccountIdArgs = {
     address: Scalars['String']['input'];
+    fromDate?: InputMaybe<Scalars['String']['input']>;
+    toDate?: InputMaybe<Scalars['String']['input']>;
 };
 export type QueryAccountBalanceVariationsArgs = {
     addresses?: InputMaybe<Scalars['JSON']['input']>;
@@ -217,10 +237,13 @@ export type QueryAccountBalanceVariationsByAccountIdArgs = {
 export type QueryAccountBalancesArgs = {
     addresses?: InputMaybe<Scalars['JSON']['input']>;
     delegates?: InputMaybe<Scalars['JSON']['input']>;
+    fromDate?: InputMaybe<Scalars['String']['input']>;
     fromValue?: InputMaybe<Scalars['String']['input']>;
     limit?: InputMaybe<Scalars['PositiveInt']['input']>;
+    orderBy?: InputMaybe<QueryInput_AccountBalances_OrderBy>;
     orderDirection?: InputMaybe<QueryInput_AccountBalances_OrderDirection>;
     skip?: InputMaybe<Scalars['NonNegativeInt']['input']>;
+    toDate?: InputMaybe<Scalars['String']['input']>;
     toValue?: InputMaybe<Scalars['String']['input']>;
 };
 export type QueryAccountInteractionsArgs = {
@@ -287,9 +310,36 @@ export type QueryDelegationPercentageByDayArgs = {
 export type QueryDelegationsArgs = {
     address: Scalars['String']['input'];
 };
+export type QueryDelegatorsArgs = {
+    address: Scalars['String']['input'];
+    limit?: InputMaybe<Scalars['PositiveInt']['input']>;
+    orderBy?: InputMaybe<QueryInput_Delegators_OrderBy>;
+    orderDirection?: InputMaybe<QueryInput_Delegators_OrderDirection>;
+    skip?: InputMaybe<Scalars['NonNegativeInt']['input']>;
+};
+export type QueryFeedEventsArgs = {
+    fromDate?: InputMaybe<Scalars['Float']['input']>;
+    limit?: InputMaybe<Scalars['Float']['input']>;
+    orderBy?: InputMaybe<QueryInput_FeedEvents_OrderBy>;
+    orderDirection?: InputMaybe<QueryInput_FeedEvents_OrderDirection>;
+    relevance?: InputMaybe<QueryInput_FeedEvents_Relevance>;
+    skip?: InputMaybe<Scalars['Float']['input']>;
+    toDate?: InputMaybe<Scalars['Float']['input']>;
+    type?: InputMaybe<QueryInput_FeedEvents_Type>;
+};
+export type QueryGetAddressArgs = {
+    address: Scalars['String']['input'];
+};
+export type QueryGetAddressesArgs = {
+    addresses: Scalars['JSON']['input'];
+};
 export type QueryGetDaoTokenTreasuryArgs = {
     days?: InputMaybe<QueryInput_GetDaoTokenTreasury_Days>;
     order?: InputMaybe<QueryInput_GetDaoTokenTreasury_Order>;
+};
+export type QueryGetEventRelevanceThresholdArgs = {
+    relevance: QueryInput_GetEventRelevanceThreshold_Relevance;
+    type: QueryInput_GetEventRelevanceThreshold_Type;
 };
 export type QueryGetLiquidTreasuryArgs = {
     days?: InputMaybe<QueryInput_GetLiquidTreasury_Days>;
@@ -347,6 +397,16 @@ export type QueryHistoricalVotingPowerByAccountIdArgs = {
 };
 export type QueryLastUpdateArgs = {
     chart: QueryInput_LastUpdate_Chart;
+};
+export type QueryOffchainProposalByIdArgs = {
+    id: Scalars['String']['input'];
+};
+export type QueryOffchainProposalsArgs = {
+    fromDate?: InputMaybe<Scalars['Float']['input']>;
+    limit?: InputMaybe<Scalars['PositiveInt']['input']>;
+    orderDirection?: InputMaybe<QueryInput_OffchainProposals_OrderDirection>;
+    skip?: InputMaybe<Scalars['NonNegativeInt']['input']>;
+    status?: InputMaybe<Scalars['JSON']['input']>;
 };
 export type QueryProposalArgs = {
     id: Scalars['String']['input'];
@@ -435,8 +495,29 @@ export type QueryVotesByProposalIdArgs = {
     toDate?: InputMaybe<Scalars['Float']['input']>;
     voterAddressIn?: InputMaybe<Scalars['JSON']['input']>;
 };
+export type QueryVotesOffchainArgs = {
+    fromDate?: InputMaybe<Scalars['Float']['input']>;
+    limit?: InputMaybe<Scalars['Float']['input']>;
+    orderBy?: InputMaybe<QueryInput_VotesOffchain_OrderBy>;
+    orderDirection?: InputMaybe<QueryInput_VotesOffchain_OrderDirection>;
+    skip?: InputMaybe<Scalars['NonNegativeInt']['input']>;
+    toDate?: InputMaybe<Scalars['Float']['input']>;
+    voterAddresses?: InputMaybe<Scalars['JSON']['input']>;
+};
+export type QueryVotesOffchainByProposalIdArgs = {
+    fromDate?: InputMaybe<Scalars['Float']['input']>;
+    id: Scalars['String']['input'];
+    limit?: InputMaybe<Scalars['Float']['input']>;
+    orderBy?: InputMaybe<QueryInput_VotesOffchainByProposalId_OrderBy>;
+    orderDirection?: InputMaybe<QueryInput_VotesOffchainByProposalId_OrderDirection>;
+    skip?: InputMaybe<Scalars['NonNegativeInt']['input']>;
+    toDate?: InputMaybe<Scalars['Float']['input']>;
+    voterAddresses?: InputMaybe<Scalars['JSON']['input']>;
+};
 export type QueryVotingPowerByAccountIdArgs = {
     accountId: Scalars['String']['input'];
+    fromDate?: InputMaybe<Scalars['Float']['input']>;
+    toDate?: InputMaybe<Scalars['Float']['input']>;
 };
 export type QueryVotingPowerVariationsArgs = {
     addresses?: InputMaybe<Scalars['JSON']['input']>;
@@ -453,19 +534,19 @@ export type QueryVotingPowerVariationsByAccountIdArgs = {
 };
 export type QueryVotingPowersArgs = {
     addresses?: InputMaybe<Scalars['JSON']['input']>;
+    fromDate?: InputMaybe<Scalars['String']['input']>;
     fromValue?: InputMaybe<Scalars['String']['input']>;
     limit?: InputMaybe<Scalars['PositiveInt']['input']>;
     orderBy?: InputMaybe<QueryInput_VotingPowers_OrderBy>;
     orderDirection?: InputMaybe<QueryInput_VotingPowers_OrderDirection>;
     skip?: InputMaybe<Scalars['NonNegativeInt']['input']>;
+    toDate?: InputMaybe<Scalars['String']['input']>;
     toValue?: InputMaybe<Scalars['String']['input']>;
 };
 export type AccountBalanceByAccountId_200_Response = {
     __typename?: 'accountBalanceByAccountId_200_response';
-    address: Scalars['String']['output'];
-    balance: Scalars['String']['output'];
-    delegate: Scalars['String']['output'];
-    tokenId: Scalars['String']['output'];
+    data: Query_AccountBalanceByAccountId_Data;
+    period: Query_AccountBalanceByAccountId_Period;
 };
 export type AccountBalanceVariationsByAccountId_200_Response = {
     __typename?: 'accountBalanceVariationsByAccountId_200_response';
@@ -480,6 +561,7 @@ export type AccountBalanceVariations_200_Response = {
 export type AccountBalances_200_Response = {
     __typename?: 'accountBalances_200_response';
     items: Array<Maybe<Query_AccountBalances_Items_Items>>;
+    period: Query_AccountBalances_Period;
     totalCount: Scalars['Float']['output'];
 };
 export type AccountInteractions_200_Response = {
@@ -573,11 +655,36 @@ export type Delegations_200_Response = {
     items: Array<Maybe<Query_Delegations_Items_Items>>;
     totalCount: Scalars['Float']['output'];
 };
+export type Delegators_200_Response = {
+    __typename?: 'delegators_200_response';
+    items: Array<Maybe<Query_Delegators_Items_Items>>;
+    totalCount: Scalars['Float']['output'];
+};
+export type FeedEvents_200_Response = {
+    __typename?: 'feedEvents_200_response';
+    items: Array<Maybe<Query_FeedEvents_Items_Items>>;
+    totalCount: Scalars['Float']['output'];
+};
+export type GetAddress_200_Response = {
+    __typename?: 'getAddress_200_response';
+    address: Scalars['String']['output'];
+    arkham?: Maybe<Query_GetAddress_Arkham>;
+    ens?: Maybe<Query_GetAddress_Ens>;
+    isContract: Scalars['Boolean']['output'];
+};
+export type GetAddresses_200_Response = {
+    __typename?: 'getAddresses_200_response';
+    results: Array<Maybe<Query_GetAddresses_Results_Items>>;
+};
 export type GetDaoTokenTreasury_200_Response = {
     __typename?: 'getDaoTokenTreasury_200_response';
     items: Array<Maybe<Query_GetDaoTokenTreasury_Items_Items>>;
     /** Total number of items */
     totalCount: Scalars['Float']['output'];
+};
+export type GetEventRelevanceThreshold_200_Response = {
+    __typename?: 'getEventRelevanceThreshold_200_response';
+    threshold: Scalars['String']['output'];
 };
 export type GetLiquidTreasury_200_Response = {
     __typename?: 'getLiquidTreasury_200_response';
@@ -615,6 +722,28 @@ export type LastUpdate_200_Response = {
     __typename?: 'lastUpdate_200_response';
     lastUpdate: Scalars['String']['output'];
 };
+export type OffchainProposalById_200_Response = {
+    __typename?: 'offchainProposalById_200_response';
+    author: Scalars['String']['output'];
+    body: Scalars['String']['output'];
+    created: Scalars['Float']['output'];
+    discussion: Scalars['String']['output'];
+    end: Scalars['Float']['output'];
+    flagged: Scalars['Boolean']['output'];
+    id: Scalars['String']['output'];
+    link: Scalars['String']['output'];
+    spaceId: Scalars['String']['output'];
+    start: Scalars['Float']['output'];
+    state: Scalars['String']['output'];
+    title: Scalars['String']['output'];
+    type: Scalars['String']['output'];
+    updated: Scalars['Float']['output'];
+};
+export type OffchainProposals_200_Response = {
+    __typename?: 'offchainProposals_200_response';
+    items: Array<Maybe<Query_OffchainProposals_Items_Items>>;
+    totalCount: Scalars['Float']['output'];
+};
 export type ProposalNonVoters_200_Response = {
     __typename?: 'proposalNonVoters_200_response';
     items: Array<Maybe<Query_ProposalNonVoters_Items_Items>>;
@@ -639,7 +768,7 @@ export type Proposal_200_Response = {
     status: Scalars['String']['output'];
     targets: Array<Maybe<Scalars['String']['output']>>;
     timestamp: Scalars['String']['output'];
-    title: Scalars['String']['output'];
+    title?: Maybe<Scalars['String']['output']>;
     txHash: Scalars['String']['output'];
     values: Array<Maybe<Scalars['String']['output']>>;
 };
@@ -662,6 +791,11 @@ export type Proposals_200_Response = {
 export declare enum QueryInput_AccountBalanceVariations_OrderDirection {
     Asc = "asc",
     Desc = "desc"
+}
+export declare enum QueryInput_AccountBalances_OrderBy {
+    Balance = "balance",
+    SignedVariation = "signedVariation",
+    Variation = "variation"
 }
 export declare enum QueryInput_AccountBalances_OrderDirection {
     Asc = "asc",
@@ -756,6 +890,34 @@ export declare enum QueryInput_DelegationPercentageByDay_OrderDirection {
     Asc = "asc",
     Desc = "desc"
 }
+export declare enum QueryInput_Delegators_OrderBy {
+    Amount = "amount",
+    Timestamp = "timestamp"
+}
+export declare enum QueryInput_Delegators_OrderDirection {
+    Asc = "asc",
+    Desc = "desc"
+}
+export declare enum QueryInput_FeedEvents_OrderBy {
+    Timestamp = "timestamp",
+    Value = "value"
+}
+export declare enum QueryInput_FeedEvents_OrderDirection {
+    Asc = "asc",
+    Desc = "desc"
+}
+export declare enum QueryInput_FeedEvents_Relevance {
+    High = "HIGH",
+    Low = "LOW",
+    Medium = "MEDIUM"
+}
+export declare enum QueryInput_FeedEvents_Type {
+    Delegation = "DELEGATION",
+    Proposal = "PROPOSAL",
+    ProposalExtended = "PROPOSAL_EXTENDED",
+    Transfer = "TRANSFER",
+    Vote = "VOTE"
+}
 export declare enum QueryInput_GetDaoTokenTreasury_Days {
     '7d' = "_7d",
     '30d' = "_30d",
@@ -766,6 +928,18 @@ export declare enum QueryInput_GetDaoTokenTreasury_Days {
 export declare enum QueryInput_GetDaoTokenTreasury_Order {
     Asc = "asc",
     Desc = "desc"
+}
+export declare enum QueryInput_GetEventRelevanceThreshold_Relevance {
+    High = "HIGH",
+    Low = "LOW",
+    Medium = "MEDIUM"
+}
+export declare enum QueryInput_GetEventRelevanceThreshold_Type {
+    Delegation = "DELEGATION",
+    Proposal = "PROPOSAL",
+    ProposalExtended = "PROPOSAL_EXTENDED",
+    Transfer = "TRANSFER",
+    Vote = "VOTE"
 }
 export declare enum QueryInput_GetLiquidTreasury_Days {
     '7d' = "_7d",
@@ -821,6 +995,10 @@ export declare enum QueryInput_LastUpdate_Chart {
     AttackProfitability = "attack_profitability",
     CostComparison = "cost_comparison",
     TokenDistribution = "token_distribution"
+}
+export declare enum QueryInput_OffchainProposals_OrderDirection {
+    Asc = "asc",
+    Desc = "desc"
 }
 export declare enum QueryInput_ProposalNonVoters_OrderDirection {
     Asc = "asc",
@@ -887,6 +1065,22 @@ export declare enum QueryInput_VotesByProposalId_OrderDirection {
     Asc = "asc",
     Desc = "desc"
 }
+export declare enum QueryInput_VotesOffchainByProposalId_OrderBy {
+    Timestamp = "timestamp",
+    VotingPower = "votingPower"
+}
+export declare enum QueryInput_VotesOffchainByProposalId_OrderDirection {
+    Asc = "asc",
+    Desc = "desc"
+}
+export declare enum QueryInput_VotesOffchain_OrderBy {
+    Timestamp = "timestamp",
+    VotingPower = "votingPower"
+}
+export declare enum QueryInput_VotesOffchain_OrderDirection {
+    Asc = "asc",
+    Desc = "desc"
+}
 export declare enum QueryInput_Votes_OrderBy {
     Timestamp = "timestamp",
     VotingPower = "votingPower"
@@ -901,12 +1095,33 @@ export declare enum QueryInput_VotingPowerVariations_OrderDirection {
 }
 export declare enum QueryInput_VotingPowers_OrderBy {
     DelegationsCount = "delegationsCount",
+    SignedVariation = "signedVariation",
+    Variation = "variation",
     VotingPower = "votingPower"
 }
 export declare enum QueryInput_VotingPowers_OrderDirection {
     Asc = "asc",
     Desc = "desc"
 }
+export type Query_AccountBalanceByAccountId_Data = {
+    __typename?: 'query_accountBalanceByAccountId_data';
+    address: Scalars['String']['output'];
+    balance: Scalars['String']['output'];
+    delegate: Scalars['String']['output'];
+    tokenId: Scalars['String']['output'];
+    variation: Query_AccountBalanceByAccountId_Data_Variation;
+};
+export type Query_AccountBalanceByAccountId_Data_Variation = {
+    __typename?: 'query_accountBalanceByAccountId_data_variation';
+    absoluteChange: Scalars['String']['output'];
+    percentageChange: Scalars['String']['output'];
+    previousBalance: Scalars['String']['output'];
+};
+export type Query_AccountBalanceByAccountId_Period = {
+    __typename?: 'query_accountBalanceByAccountId_period';
+    endTimestamp: Scalars['String']['output'];
+    startTimestamp: Scalars['String']['output'];
+};
 export type Query_AccountBalanceVariationsByAccountId_Data = {
     __typename?: 'query_accountBalanceVariationsByAccountId_data';
     absoluteChange: Scalars['String']['output'];
@@ -939,6 +1154,18 @@ export type Query_AccountBalances_Items_Items = {
     balance: Scalars['String']['output'];
     delegate: Scalars['String']['output'];
     tokenId: Scalars['String']['output'];
+    variation: Query_AccountBalances_Items_Items_Variation;
+};
+export type Query_AccountBalances_Items_Items_Variation = {
+    __typename?: 'query_accountBalances_items_items_variation';
+    absoluteChange: Scalars['String']['output'];
+    percentageChange: Scalars['String']['output'];
+    previousBalance: Scalars['String']['output'];
+};
+export type Query_AccountBalances_Period = {
+    __typename?: 'query_accountBalances_period';
+    endTimestamp: Scalars['String']['output'];
+    startTimestamp: Scalars['String']['output'];
 };
 export type Query_AccountInteractions_Items_Items = {
     __typename?: 'query_accountInteractions_items_items';
@@ -970,6 +1197,67 @@ export type Query_Delegations_Items_Items = {
     delegatorAddress: Scalars['String']['output'];
     timestamp: Scalars['String']['output'];
     transactionHash: Scalars['String']['output'];
+};
+export type Query_Delegators_Items_Items = {
+    __typename?: 'query_delegators_items_items';
+    amount: Scalars['String']['output'];
+    delegatorAddress: Scalars['String']['output'];
+    timestamp: Scalars['String']['output'];
+};
+export type Query_FeedEvents_Items_Items = {
+    __typename?: 'query_feedEvents_items_items';
+    logIndex: Scalars['Float']['output'];
+    metadata?: Maybe<Scalars['JSON']['output']>;
+    relevance: Query_FeedEvents_Items_Items_Relevance;
+    timestamp: Scalars['Float']['output'];
+    txHash: Scalars['String']['output'];
+    type: Query_FeedEvents_Items_Items_Type;
+    value?: Maybe<Scalars['String']['output']>;
+};
+export declare enum Query_FeedEvents_Items_Items_Relevance {
+    High = "HIGH",
+    Low = "LOW",
+    Medium = "MEDIUM"
+}
+export declare enum Query_FeedEvents_Items_Items_Type {
+    Delegation = "DELEGATION",
+    Proposal = "PROPOSAL",
+    ProposalExtended = "PROPOSAL_EXTENDED",
+    Transfer = "TRANSFER",
+    Vote = "VOTE"
+}
+export type Query_GetAddress_Arkham = {
+    __typename?: 'query_getAddress_arkham';
+    entity?: Maybe<Scalars['String']['output']>;
+    entityType?: Maybe<Scalars['String']['output']>;
+    label?: Maybe<Scalars['String']['output']>;
+    twitter?: Maybe<Scalars['String']['output']>;
+};
+export type Query_GetAddress_Ens = {
+    __typename?: 'query_getAddress_ens';
+    avatar?: Maybe<Scalars['String']['output']>;
+    banner?: Maybe<Scalars['String']['output']>;
+    name?: Maybe<Scalars['String']['output']>;
+};
+export type Query_GetAddresses_Results_Items = {
+    __typename?: 'query_getAddresses_results_items';
+    address: Scalars['String']['output'];
+    arkham?: Maybe<Query_GetAddresses_Results_Items_Arkham>;
+    ens?: Maybe<Query_GetAddresses_Results_Items_Ens>;
+    isContract: Scalars['Boolean']['output'];
+};
+export type Query_GetAddresses_Results_Items_Arkham = {
+    __typename?: 'query_getAddresses_results_items_arkham';
+    entity?: Maybe<Scalars['String']['output']>;
+    entityType?: Maybe<Scalars['String']['output']>;
+    label?: Maybe<Scalars['String']['output']>;
+    twitter?: Maybe<Scalars['String']['output']>;
+};
+export type Query_GetAddresses_Results_Items_Ens = {
+    __typename?: 'query_getAddresses_results_items_ens';
+    avatar?: Maybe<Scalars['String']['output']>;
+    banner?: Maybe<Scalars['String']['output']>;
+    name?: Maybe<Scalars['String']['output']>;
 };
 export type Query_GetDaoTokenTreasury_Items_Items = {
     __typename?: 'query_getDaoTokenTreasury_items_items';
@@ -1072,6 +1360,23 @@ export type Query_HistoricalVotingPower_Items_Items_Transfer = {
     to: Scalars['String']['output'];
     value: Scalars['String']['output'];
 };
+export type Query_OffchainProposals_Items_Items = {
+    __typename?: 'query_offchainProposals_items_items';
+    author: Scalars['String']['output'];
+    body: Scalars['String']['output'];
+    created: Scalars['Float']['output'];
+    discussion: Scalars['String']['output'];
+    end: Scalars['Float']['output'];
+    flagged: Scalars['Boolean']['output'];
+    id: Scalars['String']['output'];
+    link: Scalars['String']['output'];
+    spaceId: Scalars['String']['output'];
+    start: Scalars['Float']['output'];
+    state: Scalars['String']['output'];
+    title: Scalars['String']['output'];
+    type: Scalars['String']['output'];
+    updated: Scalars['Float']['output'];
+};
 export type Query_ProposalNonVoters_Items_Items = {
     __typename?: 'query_proposalNonVoters_items_items';
     lastVoteTimestamp: Scalars['Float']['output'];
@@ -1127,7 +1432,7 @@ export type Query_Proposals_Items_Items = {
     status: Scalars['String']['output'];
     targets: Array<Maybe<Scalars['String']['output']>>;
     timestamp: Scalars['String']['output'];
-    title: Scalars['String']['output'];
+    title?: Maybe<Scalars['String']['output']>;
     txHash: Scalars['String']['output'];
     values: Array<Maybe<Scalars['String']['output']>>;
 };
@@ -1204,24 +1509,49 @@ export type Query_Transfers_Items_Items = {
 export type Query_VotesByProposalId_Items_Items = {
     __typename?: 'query_votesByProposalId_items_items';
     proposalId: Scalars['String']['output'];
-    proposalTitle: Scalars['String']['output'];
+    proposalTitle?: Maybe<Scalars['String']['output']>;
     reason?: Maybe<Scalars['String']['output']>;
-    support: Scalars['Float']['output'];
-    timestamp: Scalars['Float']['output'];
+    support?: Maybe<Scalars['Float']['output']>;
+    timestamp: Scalars['Int']['output'];
     transactionHash: Scalars['String']['output'];
     voterAddress: Scalars['String']['output'];
     votingPower: Scalars['String']['output'];
 };
+export type Query_VotesOffchainByProposalId_Items_Items = {
+    __typename?: 'query_votesOffchainByProposalId_items_items';
+    choice?: Maybe<Scalars['JSON']['output']>;
+    created: Scalars['Float']['output'];
+    proposalId: Scalars['String']['output'];
+    proposalTitle: Scalars['String']['output'];
+    reason: Scalars['String']['output'];
+    voter: Scalars['String']['output'];
+    vp?: Maybe<Scalars['Float']['output']>;
+};
+export type Query_VotesOffchain_Items_Items = {
+    __typename?: 'query_votesOffchain_items_items';
+    choice?: Maybe<Scalars['JSON']['output']>;
+    created: Scalars['Float']['output'];
+    proposalId: Scalars['String']['output'];
+    proposalTitle: Scalars['String']['output'];
+    reason: Scalars['String']['output'];
+    voter: Scalars['String']['output'];
+    vp?: Maybe<Scalars['Float']['output']>;
+};
 export type Query_Votes_Items_Items = {
     __typename?: 'query_votes_items_items';
     proposalId: Scalars['String']['output'];
-    proposalTitle: Scalars['String']['output'];
+    proposalTitle?: Maybe<Scalars['String']['output']>;
     reason?: Maybe<Scalars['String']['output']>;
-    support: Scalars['Float']['output'];
-    timestamp: Scalars['Float']['output'];
+    support?: Maybe<Scalars['Float']['output']>;
+    timestamp: Scalars['Int']['output'];
     transactionHash: Scalars['String']['output'];
     voterAddress: Scalars['String']['output'];
     votingPower: Scalars['String']['output'];
+};
+export type Query_VotingPowerByAccountId_Variation = {
+    __typename?: 'query_votingPowerByAccountId_variation';
+    absoluteChange: Scalars['String']['output'];
+    percentageChange: Scalars['String']['output'];
 };
 export type Query_VotingPowerVariationsByAccountId_Data = {
     __typename?: 'query_votingPowerVariationsByAccountId_data';
@@ -1254,8 +1584,14 @@ export type Query_VotingPowers_Items_Items = {
     accountId: Scalars['String']['output'];
     delegationsCount: Scalars['Float']['output'];
     proposalsCount: Scalars['Float']['output'];
+    variation: Query_VotingPowers_Items_Items_Variation;
     votesCount: Scalars['Float']['output'];
     votingPower: Scalars['String']['output'];
+};
+export type Query_VotingPowers_Items_Items_Variation = {
+    __typename?: 'query_votingPowers_items_items_variation';
+    absoluteChange: Scalars['String']['output'];
+    percentageChange: Scalars['String']['output'];
 };
 export declare enum Timestamp_Const {
     Timestamp = "timestamp"
@@ -1294,6 +1630,16 @@ export type VotesByProposalId_200_Response = {
     items: Array<Maybe<Query_VotesByProposalId_Items_Items>>;
     totalCount: Scalars['Float']['output'];
 };
+export type VotesOffchainByProposalId_200_Response = {
+    __typename?: 'votesOffchainByProposalId_200_response';
+    items: Array<Maybe<Query_VotesOffchainByProposalId_Items_Items>>;
+    totalCount: Scalars['Float']['output'];
+};
+export type VotesOffchain_200_Response = {
+    __typename?: 'votesOffchain_200_response';
+    items: Array<Maybe<Query_VotesOffchain_Items_Items>>;
+    totalCount: Scalars['Float']['output'];
+};
 export type Votes_200_Response = {
     __typename?: 'votes_200_response';
     items: Array<Maybe<Query_Votes_Items_Items>>;
@@ -1304,6 +1650,7 @@ export type VotingPowerByAccountId_200_Response = {
     accountId: Scalars['String']['output'];
     delegationsCount: Scalars['Float']['output'];
     proposalsCount: Scalars['Float']['output'];
+    variation: Query_VotingPowerByAccountId_Variation;
     votesCount: Scalars['Float']['output'];
     votingPower: Scalars['String']['output'];
 };
@@ -1337,6 +1684,29 @@ export type GetDaOsQuery = {
         }>;
     };
 };
+export type ListOffchainProposalsQueryVariables = Exact<{
+    skip?: InputMaybe<Scalars['NonNegativeInt']['input']>;
+    limit?: InputMaybe<Scalars['PositiveInt']['input']>;
+    orderDirection?: InputMaybe<QueryInput_OffchainProposals_OrderDirection>;
+    status?: InputMaybe<Scalars['JSON']['input']>;
+    fromDate?: InputMaybe<Scalars['Float']['input']>;
+}>;
+export type ListOffchainProposalsQuery = {
+    __typename?: 'Query';
+    offchainProposals?: {
+        __typename?: 'offchainProposals_200_response';
+        totalCount: number;
+        items: Array<{
+            __typename?: 'query_offchainProposals_items_items';
+            id: string;
+            title: string;
+            discussion: string;
+            link: string;
+            state: string;
+            created: number;
+        } | null>;
+    } | null;
+};
 export type ProposalNonVotersQueryVariables = Exact<{
     id: Scalars['String']['input'];
     addresses?: InputMaybe<Scalars['JSON']['input']>;
@@ -1361,7 +1731,7 @@ export type GetProposalByIdQuery = {
         id: string;
         daoId: string;
         proposerAccountId: string;
-        title: string;
+        title?: string | null;
         description: string;
         startBlock: number;
         endBlock: number;
@@ -1393,7 +1763,7 @@ export type ListProposalsQuery = {
             id: string;
             daoId: string;
             proposerAccountId: string;
-            title: string;
+            title?: string | null;
             description: string;
             startBlock: number;
             endBlock: number;
@@ -1405,6 +1775,17 @@ export type ListProposalsQuery = {
             abstainVotes: string;
             txHash: string;
         } | null>;
+    } | null;
+};
+export type GetEventRelevanceThresholdQueryVariables = Exact<{
+    relevance: QueryInput_GetEventRelevanceThreshold_Relevance;
+    type: QueryInput_GetEventRelevanceThreshold_Type;
+}>;
+export type GetEventRelevanceThresholdQuery = {
+    __typename?: 'Query';
+    getEventRelevanceThreshold?: {
+        __typename?: 'getEventRelevanceThreshold_200_response';
+        threshold: string;
     } | null;
 };
 export type ListVotesQueryVariables = Exact<{
@@ -1427,11 +1808,11 @@ export type ListVotesQuery = {
             transactionHash: string;
             proposalId: string;
             voterAddress: string;
-            support: number;
+            support?: number | null;
             votingPower: string;
             timestamp: number;
             reason?: string | null;
-            proposalTitle: string;
+            proposalTitle?: string | null;
         } | null>;
     } | null;
 };
@@ -1474,8 +1855,10 @@ export type ListHistoricalVotingPowerQuery = {
     } | null;
 };
 export declare const GetDaOsDocument: DocumentNode<GetDaOsQuery, GetDaOsQueryVariables>;
+export declare const ListOffchainProposalsDocument: DocumentNode<ListOffchainProposalsQuery, ListOffchainProposalsQueryVariables>;
 export declare const ProposalNonVotersDocument: DocumentNode<ProposalNonVotersQuery, ProposalNonVotersQueryVariables>;
 export declare const GetProposalByIdDocument: DocumentNode<GetProposalByIdQuery, GetProposalByIdQueryVariables>;
 export declare const ListProposalsDocument: DocumentNode<ListProposalsQuery, ListProposalsQueryVariables>;
+export declare const GetEventRelevanceThresholdDocument: DocumentNode<GetEventRelevanceThresholdQuery, GetEventRelevanceThresholdQueryVariables>;
 export declare const ListVotesDocument: DocumentNode<ListVotesQuery, ListVotesQueryVariables>;
 export declare const ListHistoricalVotingPowerDocument: DocumentNode<ListHistoricalVotingPowerQuery, ListHistoricalVotingPowerQueryVariables>;

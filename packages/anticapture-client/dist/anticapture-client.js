@@ -225,7 +225,7 @@ class AnticaptureClient {
     async listVotes(daoId, variables) {
         try {
             const validated = await this.query(graphql_2.ListVotesDocument, schemas_1.SafeVotesResponseSchema, variables, daoId);
-            return validated.votes.items.filter((item) => item !== null);
+            return validated.votes.items.filter(item => item !== null);
         }
         catch (error) {
             console.warn(`Error fetching votes for DAO ${daoId}:`, error);
@@ -290,6 +290,57 @@ class AnticaptureClient {
             return a.timestamp - b.timestamp;
         });
         return allVotes;
+    }
+    /**
+     * Fetches the event relevance threshold for a given DAO, event type, and relevance level.
+     * Used to filter out low-impact events (e.g., small delegation changes).
+     * @returns Threshold as a numeric string, or null if unavailable (fail-open)
+     */
+    async getEventThreshold(daoId, type, relevance) {
+        try {
+            const validated = await this.query(graphql_2.GetEventRelevanceThresholdDocument, schemas_1.EventThresholdResponseSchema, { type, relevance }, daoId);
+            return validated.getEventRelevanceThreshold.threshold;
+        }
+        catch (error) {
+            console.warn(`[AnticaptureClient] Error fetching threshold for ${daoId}/${type}:`, error instanceof Error ? error.message : error);
+            return null;
+        }
+    }
+    ;
+    /*
+     * Lists offchain (Snapshot) proposals from all DAOs or a specific DAO
+     * @param variables Query variables (skip, limit, orderDirection, status, fromDate)
+     * @param daoId Optional specific DAO ID. If not provided, queries all DAOs
+     * @returns Array of offchain proposal items with daoId attached
+     */
+    async listOffchainProposals(variables, daoId) {
+        if (!daoId) {
+            const allDAOs = await this.getDAOs();
+            const allProposals = [];
+            for (const dao of allDAOs) {
+                try {
+                    const validated = await this.query(graphql_2.ListOffchainProposalsDocument, schemas_1.SafeOffchainProposalsResponseSchema, variables, dao.id);
+                    const items = validated.offchainProposals.items.map(item => ({ ...item, daoId: dao.id }));
+                    if (items.length > 0) {
+                        allProposals.push(...items);
+                    }
+                }
+                catch (error) {
+                    console.warn(`Skipping offchain proposals for ${dao.id} due to API error: ${error instanceof Error ? error.message : error}`);
+                }
+            }
+            // Sort by created timestamp desc (most recent first)
+            allProposals.sort((a, b) => b.created - a.created);
+            return allProposals;
+        }
+        try {
+            const validated = await this.query(graphql_2.ListOffchainProposalsDocument, schemas_1.SafeOffchainProposalsResponseSchema, variables, daoId);
+            return validated.offchainProposals.items.map(item => ({ ...item, daoId }));
+        }
+        catch (error) {
+            console.warn(`Error querying offchain proposals for DAO ${daoId}: ${error instanceof Error ? error.message : error}`);
+            return [];
+        }
     }
 }
 exports.AnticaptureClient = AnticaptureClient;
