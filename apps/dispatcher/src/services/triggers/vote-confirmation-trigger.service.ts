@@ -169,7 +169,7 @@ export class VoteConfirmationTriggerHandler extends BaseTriggerHandler<VoteWithD
 
     return replacePlaceholders(messageTemplate, {
       daoId: vote.daoId,
-      proposalTitle: vote.proposalTitle,
+      proposalTitle: vote.proposalTitle ?? undefined,
       votingPower,
       ...(hasReason && { reason: vote.reason! })
     });

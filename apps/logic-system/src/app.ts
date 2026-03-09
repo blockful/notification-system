@@ -7,6 +7,7 @@ import { VotingReminderTrigger } from './triggers/voting-reminder-trigger';
 import { ProposalRepository } from './repositories/proposal.repository';
 import { OffchainProposalRepository } from './repositories/offchain-proposal.repository';
 import { VotingPowerRepository } from './repositories/voting-power.repository';
+import { ThresholdRepository } from './repositories/threshold.repository';
 import { VotesRepository } from './repositories/votes.repository';
 import { RabbitMQDispatcherService } from './api-clients/rabbitmq-dispatcher.service';
 import { AnticaptureClient } from '@notification-system/anticapture-client';
@@ -41,9 +42,10 @@ export class App {
     const proposalRepository = new ProposalRepository(anticaptureClient);
     const offchainProposalRepository = new OffchainProposalRepository(anticaptureClient);
     const votingPowerRepository = new VotingPowerRepository(anticaptureClient);
+    const thresholdRepository = new ThresholdRepository(anticaptureClient);
     const votesRepository = new VotesRepository(anticaptureClient);
 
-    this.initPromise = this.initializeRabbitMQ(rabbitmqUrl, proposalRepository, offchainProposalRepository, votingPowerRepository, votesRepository, triggerInterval, initialTimestamp);
+    this.initPromise = this.initializeRabbitMQ(rabbitmqUrl, proposalRepository, offchainProposalRepository, votingPowerRepository, thresholdRepository, votesRepository, triggerInterval, initialTimestamp);
   }
 
   private async initializeRabbitMQ(
@@ -51,6 +53,7 @@ export class App {
     proposalRepository: ProposalRepository,
     offchainProposalRepository: OffchainProposalRepository,
     votingPowerRepository: VotingPowerRepository,
+    thresholdRepository: ThresholdRepository,
     votesRepository: VotesRepository,
     triggerInterval: number,
     initialTimestamp?: string
@@ -78,6 +81,7 @@ export class App {
     this.votingPowerTrigger = new VotingPowerChangedTrigger(
       dispatcherService,
       votingPowerRepository,
+      thresholdRepository,
       triggerInterval
     );
 

@@ -1,4 +1,5 @@
 import { z } from 'zod';
+export { QueryInput_GetEventRelevanceThreshold_Type as FeedEventType, QueryInput_GetEventRelevanceThreshold_Relevance as FeedRelevance, } from './gql/graphql';
 export declare const SafeDaosResponseSchema: z.ZodEffects<z.ZodObject<{
     daos: z.ZodNullable<z.ZodObject<{
         items: z.ZodArray<z.ZodObject<{
@@ -559,6 +560,23 @@ export declare const SafeProposalNonVotersResponseSchema: z.ZodEffects<z.ZodObje
         totalCount?: number | undefined;
     } | null;
 }>;
+export declare const EventThresholdResponseSchema: z.ZodObject<{
+    getEventRelevanceThreshold: z.ZodObject<{
+        threshold: z.ZodString;
+    }, "strip", z.ZodTypeAny, {
+        threshold: string;
+    }, {
+        threshold: string;
+    }>;
+}, "strip", z.ZodTypeAny, {
+    getEventRelevanceThreshold: {
+        threshold: string;
+    };
+}, {
+    getEventRelevanceThreshold: {
+        threshold: string;
+    };
+}>;
 export declare const OffchainProposalItemSchema: z.ZodObject<{
     id: z.ZodString;
     title: z.ZodString;
@@ -568,18 +586,18 @@ export declare const OffchainProposalItemSchema: z.ZodObject<{
     created: z.ZodNumber;
 }, "strip", z.ZodTypeAny, {
     link: string;
-    created: number;
     id: string;
     title: string;
     discussion: string;
     state: string;
+    created: number;
 }, {
     link: string;
-    created: number;
     id: string;
     title: string;
     discussion: string;
     state: string;
+    created: number;
 }>;
 export type OffchainProposalItem = z.infer<typeof OffchainProposalItemSchema>;
 export declare const SafeOffchainProposalsResponseSchema: z.ZodEffects<z.ZodObject<{
@@ -593,38 +611,38 @@ export declare const SafeOffchainProposalsResponseSchema: z.ZodEffects<z.ZodObje
             created: z.ZodNumber;
         }, "strip", z.ZodTypeAny, {
             link: string;
-            created: number;
             id: string;
             title: string;
             discussion: string;
             state: string;
+            created: number;
         }, {
             link: string;
-            created: number;
             id: string;
             title: string;
             discussion: string;
             state: string;
+            created: number;
         }>>, "many">;
         totalCount: z.ZodNumber;
     }, "strip", z.ZodTypeAny, {
         items: ({
             link: string;
-            created: number;
             id: string;
             title: string;
             discussion: string;
             state: string;
+            created: number;
         } | null)[];
         totalCount: number;
     }, {
         items: ({
             link: string;
-            created: number;
             id: string;
             title: string;
             discussion: string;
             state: string;
+            created: number;
         } | null)[];
         totalCount: number;
     }>>;
@@ -632,11 +650,11 @@ export declare const SafeOffchainProposalsResponseSchema: z.ZodEffects<z.ZodObje
     offchainProposals: {
         items: ({
             link: string;
-            created: number;
             id: string;
             title: string;
             discussion: string;
             state: string;
+            created: number;
         } | null)[];
         totalCount: number;
     } | null;
@@ -644,11 +662,11 @@ export declare const SafeOffchainProposalsResponseSchema: z.ZodEffects<z.ZodObje
     offchainProposals: {
         items: ({
             link: string;
-            created: number;
             id: string;
             title: string;
             discussion: string;
             state: string;
+            created: number;
         } | null)[];
         totalCount: number;
     } | null;
@@ -656,11 +674,11 @@ export declare const SafeOffchainProposalsResponseSchema: z.ZodEffects<z.ZodObje
     offchainProposals: {
         items: {
             link: string;
-            created: number;
             id: string;
             title: string;
             discussion: string;
             state: string;
+            created: number;
         }[];
         totalCount: number;
     };
@@ -668,11 +686,11 @@ export declare const SafeOffchainProposalsResponseSchema: z.ZodEffects<z.ZodObje
     offchainProposals: {
         items: ({
             link: string;
-            created: number;
             id: string;
             title: string;
             discussion: string;
             state: string;
+            created: number;
         } | null)[];
         totalCount: number;
     } | null;
@@ -689,4 +707,3 @@ export type ProcessedVotingPowerHistory = z.infer<typeof HistoricalVotingPowerIt
 };
 export declare function processProposals(validated: SafeProposalsResponse, daoId: string): any;
 export declare function processVotingPowerHistory(validated: SafeHistoricalVotingPowerResponse, daoId: string, chainId?: number): ProcessedVotingPowerHistory[];
-export {};

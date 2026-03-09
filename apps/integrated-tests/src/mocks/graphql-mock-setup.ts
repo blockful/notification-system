@@ -79,7 +79,7 @@ export class GraphQLMockSetup {
           filtered = filtered.filter(p => p.daoId === config.headers['anticapture-dao-id']);
         }
         return Promise.resolve({
-          data: { data: { offchainProposals: { items: filtered.map(p => ({ id: p.id, title: p.title, discussion: p.discussion, state: p.state, created: p.created })), totalCount: filtered.length } } }
+          data: { data: { offchainProposals: { items: filtered.map(p => ({ id: p.id, title: p.title, discussion: p.discussion, link: p.link, state: p.state, created: p.created })), totalCount: filtered.length } } }
         });
       }
 

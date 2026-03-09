@@ -1,5 +1,6 @@
 import { describe, it, expect, jest, beforeEach, afterEach } from '@jest/globals';
 import { AnticaptureClient } from '../src/anticapture-client';
+import { FeedEventType, FeedRelevance } from '../src/schemas';
 import { createMockClient, createProposalResponse, createVotingPowerResponse } from './test-helpers';
 import { TEST_FIXTURES } from './constants';
 
@@ -145,6 +146,34 @@ describe('AnticaptureClient', () => {
       
       const result = await client.getProposalById('proposal-123');
       
+      expect(result).toBeNull();
+    });
+  });
+
+  describe('getEventThreshold', () => {
+    it('returns threshold string for a valid response', async () => {
+      mockQuery.mockResolvedValue({
+        getEventRelevanceThreshold: { threshold: '40000000000000000000000' }
+      });
+
+      const result = await client.getEventThreshold('ENS', FeedEventType.Delegation, FeedRelevance.High);
+
+      expect(result).toBe('40000000000000000000000');
+    });
+
+    it('returns null when query throws', async () => {
+      mockQuery.mockRejectedValue(new Error('Something went wrong'));
+
+      const result = await client.getEventThreshold('ENS', FeedEventType.Vote, FeedRelevance.High);
+
+      expect(result).toBeNull();
+    });
+
+    it('returns null when response has unexpected shape', async () => {
+      mockQuery.mockResolvedValue({ unexpected: 'data' });
+
+      const result = await client.getEventThreshold('ENS', FeedEventType.Transfer, FeedRelevance.High);
+
       expect(result).toBeNull();
     });
   });

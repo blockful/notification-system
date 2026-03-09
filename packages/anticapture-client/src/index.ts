@@ -25,4 +25,5 @@ export {
   QueryInput_Votes_OrderDirection
 } from './gql/graphql';
 
+export { FeedEventType, FeedRelevance } from './schemas';
 export type { ProcessedVotingPowerHistory, OffchainProposalItem } from './schemas';

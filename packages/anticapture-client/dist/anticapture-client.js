@@ -225,7 +225,7 @@ class AnticaptureClient {
     async listVotes(daoId, variables) {
         try {
             const validated = await this.query(graphql_2.ListVotesDocument, schemas_1.SafeVotesResponseSchema, variables, daoId);
-            return validated.votes.items.filter((item) => item !== null);
+            return validated.votes.items.filter(item => item !== null);
         }
         catch (error) {
             console.warn(`Error fetching votes for DAO ${daoId}:`, error);
@@ -292,6 +292,22 @@ class AnticaptureClient {
         return allVotes;
     }
     /**
+     * Fetches the event relevance threshold for a given DAO, event type, and relevance level.
+     * Used to filter out low-impact events (e.g., small delegation changes).
+     * @returns Threshold as a numeric string, or null if unavailable (fail-open)
+     */
+    async getEventThreshold(daoId, type, relevance) {
+        try {
+            const validated = await this.query(graphql_2.GetEventRelevanceThresholdDocument, schemas_1.EventThresholdResponseSchema, { type, relevance }, daoId);
+            return validated.getEventRelevanceThreshold.threshold;
+        }
+        catch (error) {
+            console.warn(`[AnticaptureClient] Error fetching threshold for ${daoId}/${type}:`, error instanceof Error ? error.message : error);
+            return null;
+        }
+    }
+    ;
+    /*
      * Lists offchain (Snapshot) proposals from all DAOs or a specific DAO
      * @param variables Query variables (skip, limit, orderDirection, status, fromDate)
      * @param daoId Optional specific DAO ID. If not provided, queries all DAOs
