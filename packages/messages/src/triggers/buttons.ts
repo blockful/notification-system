@@ -121,7 +121,7 @@ export function buildButtons(params: BuildButtonsParams): Button[] {
   }
 
   // Add calldata review button for new proposals when DAO doesn't natively support it
-  if (!params.alreadySupportCalldataReview) {
+  if (params.alreadySupportCalldataReview === false) {
     const message = encodeURIComponent(
       `Hi, I'd like to request a call-data review for proposal ${params.proposalId ?? 'unknown'} in ${params.daoId ?? 'unknown'}.`
     );
