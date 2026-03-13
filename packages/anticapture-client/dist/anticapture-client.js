@@ -127,7 +127,8 @@ class AnticaptureClient {
                 // blockTime: dao.blockTime, // TODO: Uncomment when API supports this field
                 blockTime: 12, // Temporary hardcoded value - Ethereum block time
                 votingDelay: dao.votingDelay || '0',
-                chainId: dao.chainId
+                chainId: dao.chainId,
+                alreadySupportCalldataReview: dao.alreadySupportCalldataReview ?? false
             }));
         }
         catch (error) {

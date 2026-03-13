@@ -11,7 +11,8 @@ export const SafeDaosResponseSchema = z.object({
     items: z.array(z.object({
       id: z.string(),
       votingDelay: z.string().optional(),
-      chainId: z.number()
+      chainId: z.number(),
+      alreadySupportCalldataReview: z.boolean().optional()
     }))
   }).nullable()
 }).transform((data) => {
