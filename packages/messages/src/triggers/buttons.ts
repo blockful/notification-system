@@ -93,6 +93,7 @@ export interface BuildButtonsParams {
   address?: string;
   proposalId?: string;
   proposalUrl?: string;
+  alreadySupportCalldataReview?: boolean;
 }
 
 const explorerService = new ExplorerService();
@@ -117,6 +118,14 @@ export function buildButtons(params: BuildButtonsParams): Button[] {
   // Add discussion button if forum URL is available
   if (params.discussionUrl) {
     buttons.push({ text: discussionButtonText, url: params.discussionUrl });
+  }
+
+  // Add calldata review button for new proposals when DAO doesn't natively support it
+  if (!params.alreadySupportCalldataReview) {
+    const message = encodeURIComponent(
+      `Hi, I'd like to request a call-data review for proposal ${params.proposalId ?? 'unknown'} in ${params.daoId ?? 'unknown'}.`
+    );
+    buttons.push({ text: '🔎 Request a call-data review', url: `https://t.me/Zeugh?text=${message}` });
   }
 
   // Add scan button if transaction info is available
