@@ -39,14 +39,15 @@ export class NewProposalTriggerHandler extends BaseTriggerHandler {
         title: proposalTitle
       });
 
-      // Build buttons with transaction hash
-      const chainId = await this.getChainIdForDao(daoId);
+      // Build buttons with transaction hash and calldata review CTA
+      const daoInfo = await this.getDaoInfo(daoId);
       const buttons = buildButtons({
         triggerType: 'newProposal',
         txHash: txHash,
-        chainId,
+        chainId: daoInfo.chainId,
         daoId,
-        proposalId
+        proposalId,
+        alreadySupportCalldataReview: daoInfo.alreadySupportCalldataReview
       });
 
       await this.sendNotificationsToSubscribers(
