@@ -129,7 +129,8 @@ export class AnticaptureClient {
   private buildHeaders(daoId?: string): Record<string, string> {
     const headers: Record<string, string> = {
       'Content-Type': 'application/json',
-      'Accept': 'application/json'
+      'Accept': 'application/json',
+      'x-client-source': 'notification-system'
     };
 
     if (daoId) {
