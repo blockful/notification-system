@@ -15,6 +15,9 @@ const envSchema = z.object({
   RABBITMQ_URL: z.string().url(),
   PORT: z.coerce.number().positive().optional().default(3002),
   RPC_URL: z.string().optional(),
+  // OpenClaw consumer (optional — omit to disable)
+  OPENCLAW_WEBHOOK_URL: z.string().url().optional(),
+  OPENCLAW_API_KEY: z.string().optional(),
 });
 
 export function loadConfig() {
@@ -30,6 +33,8 @@ export function loadConfig() {
     subscriptionServerUrl: env.SUBSCRIPTION_SERVER_URL,
     rabbitmqUrl: env.RABBITMQ_URL,
     port: env.PORT,
-    rpcUrl: env.RPC_URL
+    rpcUrl: env.RPC_URL,
+    openclawWebhookUrl: env.OPENCLAW_WEBHOOK_URL,
+    openclawApiKey: env.OPENCLAW_API_KEY,
   } as const;
 } 

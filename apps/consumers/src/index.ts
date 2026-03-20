@@ -15,6 +15,7 @@ import { loadConfig } from './config/env';
 import { EnsResolverService } from './services/ens-resolver.service';
 import { TelegramClient } from './clients/telegram.client';
 import { SlackClient } from './clients/slack.client';
+import { OpenClawClient } from './clients/openclaw.client';
 
 const config = loadConfig();
 
@@ -32,6 +33,17 @@ const slackClient = new SlackClient(
   config.port
 );
 
+// Create OpenClaw client (optional — only if webhook URL is configured)
+const openclawClient = config.openclawWebhookUrl
+  ? new OpenClawClient(config.openclawWebhookUrl, config.openclawApiKey)
+  : undefined;
+
+if (openclawClient) {
+  console.log('🦞 OpenClaw client configured');
+} else {
+  console.log('⚠️  OpenClaw webhook not configured — consumer will run in noop mode');
+}
+
 // Create and start the application
 const app = new App(
   config.subscriptionServerUrl,
@@ -46,7 +58,8 @@ const app = new App(
   config.rabbitmqUrl,
   ensResolver,
   telegramClient,
-  slackClient
+  slackClient,
+  openclawClient
 );
 
 (async () => {

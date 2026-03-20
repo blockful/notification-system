@@ -1,6 +1,7 @@
 import { AxiosInstance } from 'axios';
 import { TelegramBotService } from './services/bot/telegram-bot.service';
 import { SlackBotService } from './services/bot/slack-bot.service';
+import { OpenClawBotService } from './services/bot/openclaw-bot.service';
 import { SlackDAOService } from './services/dao/slack-dao.service';
 import { SlackWalletService } from './services/wallet/slack-wallet.service';
 import { TelegramDAOService } from './services/dao/telegram-dao.service';
@@ -12,12 +13,15 @@ import { SubscriptionAPIService } from './services/subscription-api.service';
 import { RabbitMQNotificationConsumerService } from './services/rabbitmq-notification-consumer.service';
 import { TelegramClientInterface } from './interfaces/telegram-client.interface';
 import { SlackClientInterface } from './interfaces/slack-client.interface';
+import { OpenClawClientInterface } from './interfaces/openclaw-client.interface';
 
 export class App {
   private telegramBotService: TelegramBotService;
   private slackBotService: SlackBotService;
+  private openclawBotService?: OpenClawBotService;
   private rabbitmqTelegramConsumerService?: RabbitMQNotificationConsumerService<TelegramBotService>;
   private rabbitmqSlackConsumerService?: RabbitMQNotificationConsumerService<SlackBotService>;
+  private rabbitmqOpenClawConsumerService?: RabbitMQNotificationConsumerService<OpenClawBotService>;
   private rabbitmqUrl: string;
 
   constructor(
@@ -26,7 +30,8 @@ export class App {
     rabbitmqUrl: string,
     ensResolver: EnsResolverService,
     telegramClient: TelegramClientInterface,
-    slackClient: SlackClientInterface
+    slackClient: SlackClientInterface,
+    openclawClient?: OpenClawClientInterface
   ) {
     const subscriptionApi = new SubscriptionAPIService(subscriptionServerUrl);
     const anticaptureClient = new AnticaptureClient(httpClient);
@@ -53,6 +58,12 @@ export class App {
       slackDaoService,
       slackWalletService
     );
+
+    // OpenClaw consumer — only initialized when webhook URL is configured
+    if (openclawClient) {
+      this.openclawBotService = new OpenClawBotService(openclawClient);
+    }
+
     this.rabbitmqUrl = rabbitmqUrl;
   }
 
@@ -70,6 +81,16 @@ export class App {
       'slack'
     );
     console.log('✅ Slack consumer connected to RabbitMQ');
+
+    // OpenClaw consumer — only connect to RabbitMQ when configured
+    if (this.openclawBotService) {
+      this.rabbitmqOpenClawConsumerService = await RabbitMQNotificationConsumerService.create(
+        this.rabbitmqUrl,
+        this.openclawBotService,
+        'openclaw'
+      );
+      console.log('✅ OpenClaw consumer connected to RabbitMQ');
+    }
   
     this.telegramBotService.launch();
     this.slackBotService.launch();
@@ -83,6 +104,9 @@ export class App {
     }
     if (this.rabbitmqSlackConsumerService) {
       await this.rabbitmqSlackConsumerService.stop();
+    }
+    if (this.rabbitmqOpenClawConsumerService) {
+      await this.rabbitmqOpenClawConsumerService.stop();
     }
     this.telegramBotService.stop('SIGINT');
     this.slackBotService.stop('SIGINT');
