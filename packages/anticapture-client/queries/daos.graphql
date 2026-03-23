@@ -5,6 +5,7 @@ query GetDAOs {
       votingDelay
       chainId
       alreadySupportCalldataReview
+      supportOffchainData
     }
   }
 }
