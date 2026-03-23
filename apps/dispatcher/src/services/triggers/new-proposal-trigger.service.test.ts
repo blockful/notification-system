@@ -74,8 +74,8 @@ describe('NewProposalTriggerHandler', () => {
 
     mockAnticaptureClient = {
       getDAOs: jest.fn(async () => [
-        { id: 'dao123', chainId: 1, alreadySupportCalldataReview: false },
-        { id: 'dao456', chainId: 10, alreadySupportCalldataReview: true }
+        { id: 'dao123', chainId: 1, alreadySupportCalldataReview: false, supportOffchainData: false },
+        { id: 'dao456', chainId: 10, alreadySupportCalldataReview: true, supportOffchainData: true }
       ]),
       getProposalById: jest.fn(),
       listProposals: jest.fn(),
@@ -249,8 +249,8 @@ describe('NewProposalTriggerHandler - cross-DAO eventId deduplication', () => {
       } as unknown as NotificationClientFactory,
       {
         getDAOs: async () => [
-          { id: 'ens.eth', chainId: 1, alreadySupportCalldataReview: true },
-          { id: 'uniswap.eth', chainId: 1, alreadySupportCalldataReview: false }
+          { id: 'ens.eth', chainId: 1, alreadySupportCalldataReview: true, supportOffchainData: true },
+          { id: 'uniswap.eth', chainId: 1, alreadySupportCalldataReview: false, supportOffchainData: true }
         ],
       } as unknown as AnticaptureClient
     );
