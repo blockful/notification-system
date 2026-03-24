@@ -18,7 +18,7 @@ export class WebhookService implements BotServiceInterface {
   }
 
   async sendNotification(payload: NotificationPayload): Promise<string> {
-    const url = payload.channelUserId as string;
+    const url = payload.channelUserId.toString();
 
     const metadata: Record<string, any> = {
       channel: payload.channel,
