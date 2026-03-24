@@ -108,7 +108,8 @@ class AnticaptureClient {
     buildHeaders(daoId) {
         const headers = {
             'Content-Type': 'application/json',
-            'Accept': 'application/json'
+            'Accept': 'application/json',
+            'x-client-source': 'notification-system'
         };
         if (daoId) {
             headers["anticapture-dao-id"] = daoId;
@@ -128,7 +129,8 @@ class AnticaptureClient {
                 blockTime: 12, // Temporary hardcoded value - Ethereum block time
                 votingDelay: dao.votingDelay || '0',
                 chainId: dao.chainId,
-                alreadySupportCalldataReview: dao.alreadySupportCalldataReview ?? false
+                alreadySupportCalldataReview: dao.alreadySupportCalldataReview ?? false,
+                supportOffchainData: dao.supportOffchainData ?? false
             }));
         }
         catch (error) {
@@ -319,6 +321,9 @@ class AnticaptureClient {
             const allDAOs = await this.getDAOs();
             const allProposals = [];
             for (const dao of allDAOs) {
+                if (!dao.supportOffchainData) {
+                    continue;
+                }
                 try {
                     const validated = await this.query(graphql_2.ListOffchainProposalsDocument, schemas_1.SafeOffchainProposalsResponseSchema, variables, dao.id);
                     const items = validated.offchainProposals.items.map(item => ({ ...item, daoId: dao.id }));

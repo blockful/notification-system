@@ -12,7 +12,7 @@ import type { TypedDocumentNode as DocumentNode } from '@graphql-typed-document-
  * Learn more about it here: https://the-guild.dev/graphql/codegen/plugins/presets/preset-client#reducing-bundle-size
  */
 type Documents = {
-    "query GetDAOs {\n  daos {\n    items {\n      id\n      votingDelay\n      chainId\n      alreadySupportCalldataReview\n    }\n  }\n}": typeof types.GetDaOsDocument;
+    "query GetDAOs {\n  daos {\n    items {\n      id\n      votingDelay\n      chainId\n      alreadySupportCalldataReview\n      supportOffchainData\n    }\n  }\n}": typeof types.GetDaOsDocument;
     "query ListOffchainProposals($skip: NonNegativeInt, $limit: PositiveInt, $orderDirection: queryInput_offchainProposals_orderDirection, $status: JSON, $fromDate: Float) {\n  offchainProposals(\n    skip: $skip\n    limit: $limit\n    orderDirection: $orderDirection\n    status: $status\n    fromDate: $fromDate\n  ) {\n    items {\n      id\n      title\n      discussion\n      link\n      state\n      created\n    }\n    totalCount\n  }\n}": typeof types.ListOffchainProposalsDocument;
     "query ProposalNonVoters($id: String!, $addresses: JSON) {\n  proposalNonVoters(id: $id, addresses: $addresses) {\n    items {\n      voter\n    }\n  }\n}": typeof types.ProposalNonVotersDocument;
     "query GetProposalById($id: String!) {\n  proposal(id: $id) {\n    id\n    daoId\n    proposerAccountId\n    title\n    description\n    startBlock\n    endBlock\n    endTimestamp\n    timestamp\n    status\n    forVotes\n    againstVotes\n    abstainVotes\n    txHash\n  }\n}\n\nquery ListProposals($skip: NonNegativeInt, $limit: PositiveInt, $orderDirection: queryInput_proposals_orderDirection, $status: JSON, $fromDate: Float, $fromEndDate: Float, $includeOptimisticProposals: queryInput_proposals_includeOptimisticProposals) {\n  proposals(\n    skip: $skip\n    limit: $limit\n    orderDirection: $orderDirection\n    status: $status\n    fromDate: $fromDate\n    fromEndDate: $fromEndDate\n    includeOptimisticProposals: $includeOptimisticProposals\n  ) {\n    items {\n      id\n      daoId\n      proposerAccountId\n      title\n      description\n      startBlock\n      endBlock\n      endTimestamp\n      timestamp\n      status\n      forVotes\n      againstVotes\n      abstainVotes\n      txHash\n    }\n    totalCount\n  }\n}": typeof types.GetProposalByIdDocument;
@@ -37,7 +37,7 @@ export declare function graphql(source: string): unknown;
 /**
  * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
  */
-export declare function graphql(source: "query GetDAOs {\n  daos {\n    items {\n      id\n      votingDelay\n      chainId\n      alreadySupportCalldataReview\n    }\n  }\n}"): (typeof documents)["query GetDAOs {\n  daos {\n    items {\n      id\n      votingDelay\n      chainId\n      alreadySupportCalldataReview\n    }\n  }\n}"];
+export declare function graphql(source: "query GetDAOs {\n  daos {\n    items {\n      id\n      votingDelay\n      chainId\n      alreadySupportCalldataReview\n      supportOffchainData\n    }\n  }\n}"): (typeof documents)["query GetDAOs {\n  daos {\n    items {\n      id\n      votingDelay\n      chainId\n      alreadySupportCalldataReview\n      supportOffchainData\n    }\n  }\n}"];
 /**
  * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
  */
