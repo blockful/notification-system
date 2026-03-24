@@ -38,6 +38,8 @@ export declare class AnticaptureClient {
         blockTime: number;
         votingDelay: string;
         chainId: number;
+        alreadySupportCalldataReview: boolean;
+        supportOffchainData: boolean;
     }>>;
     /**
      * Fetches a single proposal by ID with full type safety

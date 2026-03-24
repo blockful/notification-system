@@ -10,7 +10,7 @@ import { AnticaptureClient } from '@notification-system/anticapture-client';
  * @template T - Type of event data being processed
  */
 export abstract class BaseTriggerHandler<T = any> implements TriggerHandler<T> {
-  private daoChainCache: Map<string, number> = new Map();
+  private daoCache: Map<string, { chainId: number; alreadySupportCalldataReview: boolean; supportOffchainData: boolean }> = new Map();
 
   /**
    * Creates a new instance of the BaseTriggerHandler
@@ -102,26 +102,35 @@ export abstract class BaseTriggerHandler<T = any> implements TriggerHandler<T> {
    * @returns Chain ID for the DAO, or 1 (Ethereum mainnet) as default
    * @throws Error if anticaptureClient is not provided
    */
-  protected async getChainIdForDao(daoId: string): Promise<number> {
+  /**
+   * Gets full DAO info (chainId, alreadySupportCalldataReview) with caching
+   */
+  protected async getDaoInfo(daoId: string): Promise<{ chainId: number; alreadySupportCalldataReview: boolean; supportOffchainData: boolean }> {
     if (!this.anticaptureClient) {
-      throw new Error('AnticaptureClient is required for getChainIdForDao');
+      throw new Error('AnticaptureClient is required for getDaoInfo');
     }
 
-    // Check cache first
-    if (this.daoChainCache.has(daoId)) {
-      return this.daoChainCache.get(daoId)!;
+    if (this.daoCache.has(daoId)) {
+      return this.daoCache.get(daoId)!;
     }
 
-    // Fetch DAOs and cache chain IDs
     const daos = await this.anticaptureClient.getDAOs();
-    const daoMap = new Map(daos.map(dao => [dao.id, dao.chainId]));
+    for (const dao of daos) {
+      this.daoCache.set(dao.id, {
+        chainId: dao.chainId,
+        alreadySupportCalldataReview: dao.alreadySupportCalldataReview,
+        supportOffchainData: dao.supportOffchainData
+      });
+    }
 
-    // Cache all DAOs
-    daoMap.forEach((chainId, id) => {
-      this.daoChainCache.set(id, chainId);
-    });
+    return this.daoCache.get(daoId) || { chainId: 1, alreadySupportCalldataReview: false, supportOffchainData: false };
+  }
 
-    // Return chain ID for requested DAO or default to Ethereum mainnet
-    return daoMap.get(daoId) || 1;
+  /**
+   * Gets the chain ID for a specific DAO, with caching
+   */
+  protected async getChainIdForDao(daoId: string): Promise<number> {
+    const info = await this.getDaoInfo(daoId);
+    return info.chainId;
   }
 } 

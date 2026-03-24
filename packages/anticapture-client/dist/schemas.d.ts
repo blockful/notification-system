@@ -6,26 +6,36 @@ export declare const SafeDaosResponseSchema: z.ZodEffects<z.ZodObject<{
             id: z.ZodString;
             votingDelay: z.ZodOptional<z.ZodString>;
             chainId: z.ZodNumber;
+            alreadySupportCalldataReview: z.ZodOptional<z.ZodBoolean>;
+            supportOffchainData: z.ZodOptional<z.ZodBoolean>;
         }, "strip", z.ZodTypeAny, {
             id: string;
             chainId: number;
             votingDelay?: string | undefined;
+            alreadySupportCalldataReview?: boolean | undefined;
+            supportOffchainData?: boolean | undefined;
         }, {
             id: string;
             chainId: number;
             votingDelay?: string | undefined;
+            alreadySupportCalldataReview?: boolean | undefined;
+            supportOffchainData?: boolean | undefined;
         }>, "many">;
     }, "strip", z.ZodTypeAny, {
         items: {
             id: string;
             chainId: number;
             votingDelay?: string | undefined;
+            alreadySupportCalldataReview?: boolean | undefined;
+            supportOffchainData?: boolean | undefined;
         }[];
     }, {
         items: {
             id: string;
             chainId: number;
             votingDelay?: string | undefined;
+            alreadySupportCalldataReview?: boolean | undefined;
+            supportOffchainData?: boolean | undefined;
         }[];
     }>>;
 }, "strip", z.ZodTypeAny, {
@@ -34,6 +44,8 @@ export declare const SafeDaosResponseSchema: z.ZodEffects<z.ZodObject<{
             id: string;
             chainId: number;
             votingDelay?: string | undefined;
+            alreadySupportCalldataReview?: boolean | undefined;
+            supportOffchainData?: boolean | undefined;
         }[];
     } | null;
 }, {
@@ -42,6 +54,8 @@ export declare const SafeDaosResponseSchema: z.ZodEffects<z.ZodObject<{
             id: string;
             chainId: number;
             votingDelay?: string | undefined;
+            alreadySupportCalldataReview?: boolean | undefined;
+            supportOffchainData?: boolean | undefined;
         }[];
     } | null;
 }>, {
@@ -50,6 +64,8 @@ export declare const SafeDaosResponseSchema: z.ZodEffects<z.ZodObject<{
             id: string;
             chainId: number;
             votingDelay?: string | undefined;
+            alreadySupportCalldataReview?: boolean | undefined;
+            supportOffchainData?: boolean | undefined;
         }[];
     };
 }, {
@@ -58,6 +74,8 @@ export declare const SafeDaosResponseSchema: z.ZodEffects<z.ZodObject<{
             id: string;
             chainId: number;
             votingDelay?: string | undefined;
+            alreadySupportCalldataReview?: boolean | undefined;
+            supportOffchainData?: boolean | undefined;
         }[];
     } | null;
 }>;

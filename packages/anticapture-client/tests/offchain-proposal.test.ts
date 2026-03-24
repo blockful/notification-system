@@ -16,7 +16,7 @@ interface OffchainProposalStub {
 }
 
 interface GraphQLScenario {
-  daos: Array<{ id: string; votingDelay?: string; chainId?: number }>;
+  daos: Array<{ id: string; votingDelay?: string; chainId?: number; supportOffchainData?: boolean }>;
   proposals?: Record<string, OffchainProposalStub[]>;
   errors?: Record<string, string>;
 }
@@ -33,6 +33,7 @@ function handleGraphQL(scenario: GraphQLScenario) {
               id: d.id,
               votingDelay: d.votingDelay ?? '0',
               chainId: d.chainId ?? 1,
+              supportOffchainData: d.supportOffchainData ?? true,
             })),
           },
         },
@@ -107,6 +108,26 @@ describe('listOffchainProposals', () => {
 
     expect(result).toHaveLength(2);
     expect(result.map(p => p.id)).toEqual(['snap-b', 'snap-a']);
+  });
+
+  it('skips DAOs with supportOffchainData false', async () => {
+    server.use(handleGraphQL({
+      daos: [
+        { id: 'ONCHAIN_ONLY', supportOffchainData: false },
+        { id: 'OFFCHAIN_DAO', supportOffchainData: true },
+      ],
+      proposals: {
+        ONCHAIN_ONLY: [{ id: 'snap-should-not-appear', title: 'Should not appear', discussion: '', link: '', state: 'active', created: 1700000000 }],
+        OFFCHAIN_DAO: [{ id: 'snap-ok', title: 'OK', discussion: '', link: '', state: 'active', created: 1700000100 }],
+      },
+    }));
+
+    const client = createRealClient();
+    const result = await client.listOffchainProposals();
+
+    expect(result).toHaveLength(1);
+    expect(result[0].id).toBe('snap-ok');
+    expect(result[0].daoId).toBe('OFFCHAIN_DAO');
   });
 
   it('skips DAO on API error and continues with others', async () => {

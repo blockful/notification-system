@@ -188,10 +188,11 @@ export class GraphQLMockSetup {
           ...offchainProposalsData.map(p => p.daoId).filter(Boolean)
         ])];
         return Promise.resolve({
-          data: { data: { daos: { items: uniqueDaoIds.map(id => ({ 
+          data: { data: { daos: { items: uniqueDaoIds.map(id => ({
             id,
             votingDelay: '0',
-            chainId: (id && daoChainMapping[id]) || 1 // Default to Ethereum mainnet
+            chainId: (id && daoChainMapping[id]) || 1, // Default to Ethereum mainnet
+            supportOffchainData: true
           })) } } }
         });
       }

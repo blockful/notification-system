@@ -74,8 +74,8 @@ describe('NewProposalTriggerHandler', () => {
 
     mockAnticaptureClient = {
       getDAOs: jest.fn(async () => [
-        { id: 'dao123', chainId: 1 },
-        { id: 'dao456', chainId: 10 }
+        { id: 'dao123', chainId: 1, alreadySupportCalldataReview: false, supportOffchainData: false },
+        { id: 'dao456', chainId: 10, alreadySupportCalldataReview: true, supportOffchainData: true }
       ]),
       getProposalById: jest.fn(),
       listProposals: jest.fn(),
@@ -150,6 +150,38 @@ describe('NewProposalTriggerHandler', () => {
       expect(mockNotificationClient.sendNotification).not.toHaveBeenCalled();
     });
 
+    it('should include calldata review button when DAO does not support it natively', async () => {
+      const mockMessage: DispatcherMessage = {
+        triggerId: 'new-proposal',
+        events: [{ ...mockProposal, daoId: 'dao123' }]
+      };
+
+      await handler.handleMessage(mockMessage);
+
+      const call = mockNotificationClient.sendNotification.mock.calls[0][0];
+      const buttons = call.metadata?.buttons;
+      expect(buttons).toBeDefined();
+      expect(buttons.some((b: any) => b.text.includes('Request a call-data review'))).toBe(true);
+    });
+
+    it('should NOT include calldata review button when DAO already supports it', async () => {
+      const mockMessage: DispatcherMessage = {
+        triggerId: 'new-proposal',
+        events: [{ ...mockProposal, id: 'prop789', daoId: 'dao456' }]
+      };
+
+      mockSubscriptionClient.shouldSend.mockResolvedValue([
+        { user_id: '1', event_id: 'prop789', dao_id: 'dao456' }
+      ]);
+
+      await handler.handleMessage(mockMessage);
+
+      const call = mockNotificationClient.sendNotification.mock.calls[0][0];
+      const buttons = call.metadata?.buttons;
+      expect(buttons).toBeDefined();
+      expect(buttons.some((b: any) => b.text.includes('Request a call-data review'))).toBe(false);
+    });
+
     it('should extract title from multiline descriptions', async () => {
       const mockUsersForMultiline: User[] = [
         { id: '1', channel: 'telegram', channel_user_id: '123', created_at: new Date() }
@@ -217,8 +249,8 @@ describe('NewProposalTriggerHandler - cross-DAO eventId deduplication', () => {
       } as unknown as NotificationClientFactory,
       {
         getDAOs: async () => [
-          { id: 'ens.eth', chainId: 1 },
-          { id: 'uniswap.eth', chainId: 1 }
+          { id: 'ens.eth', chainId: 1, alreadySupportCalldataReview: true, supportOffchainData: true },
+          { id: 'uniswap.eth', chainId: 1, alreadySupportCalldataReview: false, supportOffchainData: true }
         ],
       } as unknown as AnticaptureClient
     );

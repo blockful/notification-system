@@ -129,7 +129,8 @@ export class AnticaptureClient {
   private buildHeaders(daoId?: string): Record<string, string> {
     const headers: Record<string, string> = {
       'Content-Type': 'application/json',
-      'Accept': 'application/json'
+      'Accept': 'application/json',
+      'x-client-source': 'notification-system'
     };
 
     if (daoId) {
@@ -144,7 +145,7 @@ export class AnticaptureClient {
    * Fetches all DAOs from the anticapture GraphQL API with full type safety
    * @returns Array of DAO objects with blockTime added
    */
-  async getDAOs(): Promise<Array<{ id: string; blockTime: number; votingDelay: string; chainId: number }>> {
+  async getDAOs(): Promise<Array<{ id: string; blockTime: number; votingDelay: string; chainId: number; alreadySupportCalldataReview: boolean; supportOffchainData: boolean }>> {
     try {
       const validated = await this.query(GetDaOsDocument, SafeDaosResponseSchema, undefined, undefined);
       return validated.daos.items.map((dao) => ({
@@ -152,7 +153,9 @@ export class AnticaptureClient {
         // blockTime: dao.blockTime, // TODO: Uncomment when API supports this field
         blockTime: 12, // Temporary hardcoded value - Ethereum block time
         votingDelay: dao.votingDelay || '0',
-        chainId: dao.chainId
+        chainId: dao.chainId,
+        alreadySupportCalldataReview: dao.alreadySupportCalldataReview ?? false,
+        supportOffchainData: dao.supportOffchainData ?? false
       }));
     } catch (error) {
       console.warn('Returning empty DAO list due to API error: ', error instanceof Error ? error.message : error);
@@ -386,6 +389,10 @@ export class AnticaptureClient {
       const allProposals: (OffchainProposalItem & { daoId: string })[] = [];
 
       for (const dao of allDAOs) {
+        if (!dao.supportOffchainData) {
+          continue;
+        }
+
         try {
           const validated = await this.query(ListOffchainProposalsDocument, SafeOffchainProposalsResponseSchema, variables, dao.id);
           const items = validated.offchainProposals.items.map(item => ({ ...item, daoId: dao.id }));

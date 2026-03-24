@@ -29,7 +29,7 @@ function createHandler() {
       supportsChannel: () => true
     } as unknown as NotificationClientFactory,
     {
-      getDAOs: async () => [{ id: 'test-dao', chainId: 1, blockTime: 12, votingDelay: '0' }]
+      getDAOs: async () => [{ id: 'test-dao', chainId: 1, blockTime: 12, votingDelay: '0', supportOffchainData: false }]
     } as AnticaptureClient
   );
 
