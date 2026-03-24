@@ -64,6 +64,8 @@ services:
       context: .
       dockerfile: apps/consumers/Dockerfile
     container_name: consumers
+    ports:
+      - "3003:3003"
     environment:
       TELEGRAM_BOT_TOKEN: ${TELEGRAM_BOT_TOKEN}
       ANTICAPTURE_GRAPHQL_ENDPOINT: ${ANTICAPTURE_GRAPHQL_ENDPOINT}
@@ -74,9 +76,6 @@ services:
       RABBITMQ_URL: amqp://admin:admin@rabbitmq:5672
       TOKEN_ENCRYPTION_KEY: ${TOKEN_ENCRYPTION_KEY}
       API_PORT_SLACK: 3002
-      # OpenClaw consumer (optional)
-      OPENCLAW_WEBHOOK_URL: ${OPENCLAW_WEBHOOK_URL:-}
-      OPENCLAW_API_KEY: ${OPENCLAW_API_KEY:-}
     depends_on:
       subscription-server:
         condition: service_started

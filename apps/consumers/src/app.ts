@@ -1,7 +1,9 @@
 import { AxiosInstance } from 'axios';
 import { TelegramBotService } from './services/bot/telegram-bot.service';
 import { SlackBotService } from './services/bot/slack-bot.service';
-import { OpenClawBotService } from './services/bot/openclaw-bot.service';
+import { WebhookService } from './services/webhook/webhook.service';
+import { WebhookController } from './services/webhook/webhook.controller';
+import { WebhookServer } from './services/webhook/webhook-server';
 import { SlackDAOService } from './services/dao/slack-dao.service';
 import { SlackWalletService } from './services/wallet/slack-wallet.service';
 import { TelegramDAOService } from './services/dao/telegram-dao.service';
@@ -13,25 +15,25 @@ import { SubscriptionAPIService } from './services/subscription-api.service';
 import { RabbitMQNotificationConsumerService } from './services/rabbitmq-notification-consumer.service';
 import { TelegramClientInterface } from './interfaces/telegram-client.interface';
 import { SlackClientInterface } from './interfaces/slack-client.interface';
-import { OpenClawClientInterface } from './interfaces/openclaw-client.interface';
-
 export class App {
   private telegramBotService: TelegramBotService;
   private slackBotService: SlackBotService;
-  private openclawBotService?: OpenClawBotService;
+  private webhookService: WebhookService;
+  private webhookServer: WebhookServer;
   private rabbitmqTelegramConsumerService?: RabbitMQNotificationConsumerService<TelegramBotService>;
   private rabbitmqSlackConsumerService?: RabbitMQNotificationConsumerService<SlackBotService>;
-  private rabbitmqOpenClawConsumerService?: RabbitMQNotificationConsumerService<OpenClawBotService>;
+  private rabbitmqWebhookConsumerService?: RabbitMQNotificationConsumerService<WebhookService>;
   private rabbitmqUrl: string;
+  private webhookPort: number;
 
   constructor(
-    subscriptionServerUrl: string, 
+    subscriptionServerUrl: string,
     httpClient: AxiosInstance,
     rabbitmqUrl: string,
     ensResolver: EnsResolverService,
     telegramClient: TelegramClientInterface,
     slackClient: SlackClientInterface,
-    openclawClient?: OpenClawClientInterface
+    webhookPort: number
   ) {
     const subscriptionApi = new SubscriptionAPIService(subscriptionServerUrl);
     const anticaptureClient = new AnticaptureClient(httpClient);
@@ -59,12 +61,13 @@ export class App {
       slackWalletService
     );
 
-    // OpenClaw consumer — only initialized when webhook URL is configured
-    if (openclawClient) {
-      this.openclawBotService = new OpenClawBotService(openclawClient);
-    }
+    this.webhookService = new WebhookService(anticaptureClient, subscriptionApi);
+
+    const webhookController = new WebhookController(this.webhookService);
+    this.webhookServer = new WebhookServer(webhookController);
 
     this.rabbitmqUrl = rabbitmqUrl;
+    this.webhookPort = webhookPort;
   }
 
   async start(): Promise<void> {
@@ -73,29 +76,28 @@ export class App {
       this.telegramBotService,
       'telegram'
     );
-    console.log('✅ Telegram consumer connected to RabbitMQ');
+    console.log('Telegram consumer connected to RabbitMQ');
 
     this.rabbitmqSlackConsumerService = await RabbitMQNotificationConsumerService.create(
       this.rabbitmqUrl,
       this.slackBotService,
       'slack'
     );
-    console.log('✅ Slack consumer connected to RabbitMQ');
+    console.log('Slack consumer connected to RabbitMQ');
 
-    // OpenClaw consumer — only connect to RabbitMQ when configured
-    if (this.openclawBotService) {
-      this.rabbitmqOpenClawConsumerService = await RabbitMQNotificationConsumerService.create(
-        this.rabbitmqUrl,
-        this.openclawBotService,
-        'openclaw'
-      );
-      console.log('✅ OpenClaw consumer connected to RabbitMQ');
-    }
-  
+    this.rabbitmqWebhookConsumerService = await RabbitMQNotificationConsumerService.create(
+      this.rabbitmqUrl,
+      this.webhookService,
+      'webhook'
+    );
+    console.log('Webhook consumer connected to RabbitMQ');
+
+    await this.webhookServer.start(this.webhookPort);
+
     this.telegramBotService.launch();
     this.slackBotService.launch();
 
-    console.log('🚀 All bot services have been initialized');
+    console.log('All bot services have been initialized');
   }
 
   async stop(): Promise<void> {
@@ -105,9 +107,10 @@ export class App {
     if (this.rabbitmqSlackConsumerService) {
       await this.rabbitmqSlackConsumerService.stop();
     }
-    if (this.rabbitmqOpenClawConsumerService) {
-      await this.rabbitmqOpenClawConsumerService.stop();
+    if (this.rabbitmqWebhookConsumerService) {
+      await this.rabbitmqWebhookConsumerService.stop();
     }
+    await this.webhookServer.stop();
     this.telegramBotService.stop('SIGINT');
     this.slackBotService.stop('SIGINT');
   }
