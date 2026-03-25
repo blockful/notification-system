@@ -140,6 +140,7 @@ export const OffchainProposalItemSchema = z.object({
   link: z.string(),
   state: z.string(),
   created: z.number(),
+  end: z.number(),
 });
 
 export type OffchainProposalItem = z.infer<typeof OffchainProposalItemSchema>;

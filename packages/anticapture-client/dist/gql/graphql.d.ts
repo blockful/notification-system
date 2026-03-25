@@ -403,6 +403,7 @@ export type QueryOffchainProposalByIdArgs = {
     id: Scalars['String']['input'];
 };
 export type QueryOffchainProposalsArgs = {
+    endDate?: InputMaybe<Scalars['Float']['input']>;
     fromDate?: InputMaybe<Scalars['Float']['input']>;
     limit?: InputMaybe<Scalars['PositiveInt']['input']>;
     orderDirection?: InputMaybe<QueryInput_OffchainProposals_OrderDirection>;
@@ -1701,6 +1702,7 @@ export type ListOffchainProposalsQueryVariables = Exact<{
     orderDirection?: InputMaybe<QueryInput_OffchainProposals_OrderDirection>;
     status?: InputMaybe<Scalars['JSON']['input']>;
     fromDate?: InputMaybe<Scalars['Float']['input']>;
+    endDate?: InputMaybe<Scalars['Float']['input']>;
 }>;
 export type ListOffchainProposalsQuery = {
     __typename?: 'Query';
@@ -1715,6 +1717,7 @@ export type ListOffchainProposalsQuery = {
             link: string;
             state: string;
             created: number;
+            end: number;
         } | null>;
     } | null;
 };

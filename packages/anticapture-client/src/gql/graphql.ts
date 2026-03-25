@@ -439,6 +439,7 @@ export type QueryOffchainProposalByIdArgs = {
 
 
 export type QueryOffchainProposalsArgs = {
+  endDate?: InputMaybe<Scalars['Float']['input']>;
   fromDate?: InputMaybe<Scalars['Float']['input']>;
   limit?: InputMaybe<Scalars['PositiveInt']['input']>;
   orderDirection?: InputMaybe<QueryInput_OffchainProposals_OrderDirection>;
@@ -1932,10 +1933,11 @@ export type ListOffchainProposalsQueryVariables = Exact<{
   orderDirection?: InputMaybe<QueryInput_OffchainProposals_OrderDirection>;
   status?: InputMaybe<Scalars['JSON']['input']>;
   fromDate?: InputMaybe<Scalars['Float']['input']>;
+  endDate?: InputMaybe<Scalars['Float']['input']>;
 }>;
 
 
-export type ListOffchainProposalsQuery = { __typename?: 'Query', offchainProposals?: { __typename?: 'offchainProposals_200_response', totalCount: number, items: Array<{ __typename?: 'query_offchainProposals_items_items', id: string, title: string, discussion: string, link: string, state: string, created: number } | null> } | null };
+export type ListOffchainProposalsQuery = { __typename?: 'Query', offchainProposals?: { __typename?: 'offchainProposals_200_response', totalCount: number, items: Array<{ __typename?: 'query_offchainProposals_items_items', id: string, title: string, discussion: string, link: string, state: string, created: number, end: number } | null> } | null };
 
 export type ProposalNonVotersQueryVariables = Exact<{
   id: Scalars['String']['input'];

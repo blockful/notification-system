@@ -133,6 +133,7 @@ exports.OffchainProposalItemSchema = zod_1.z.object({
     link: zod_1.z.string(),
     state: zod_1.z.string(),
     created: zod_1.z.number(),
+    end: zod_1.z.number(),
 });
 exports.SafeOffchainProposalsResponseSchema = zod_1.z.object({
     offchainProposals: zod_1.z.object({
