@@ -221,6 +221,37 @@ ALTER TABLE voting_power_history ENABLE TRIGGER ALL;
 ALTER TABLE delegations ENABLE TRIGGER ALL;
 ```
 
+### Offchain Proposal Finished Insert (Snapshot)
+
+Tests the `offchain-proposal-finished` trigger. The proposal must have `state = 'closed'` and `end` within the last 24 hours (the trigger cursor starts at `now() - 24h`).
+
+```sql
+-- No triggers on snapshot.proposals, safe to insert directly
+INSERT INTO snapshot.proposals (id, space_id, author, title, body, discussion, type, start, "end", state, created, updated, link, flagged)
+VALUES (
+  '0xmock_offchain_finished_' || extract(epoch from now())::bigint,
+  'ens.eth',
+  '0x1111111111111111111111111111111111111111',
+  '[MOCK] Test Finished Offchain Proposal',
+  'Mock proposal for testing offchain-proposal-finished notification.',
+  '',
+  'single-choice',
+  (extract(epoch from now()) - 86400)::integer,   -- started 24h ago
+  (extract(epoch from now()) - 60)::integer,       -- ended 1 minute ago (within cursor window)
+  'closed',
+  (extract(epoch from now()) - 86400)::integer,
+  extract(epoch from now())::integer,
+  'https://snapshot.org/#/ens.eth',
+  false
+);
+```
+
+**Key differences from new-proposal insert:**
+- `state = 'closed'` (not `'active'`)
+- `end` = recent past (within last 24h so trigger cursor picks it up)
+
+**Gateway note:** If the production gateway returns a GraphQL error for DAOs with `null` in non-nullable fields (e.g. `supportOffchainData`), `getDAOs()` may return an empty list and skip all offchain queries. To avoid this during local testing, run the API gateway locally pointing only to the ENS API and set `ANTICAPTURE_GRAPHQL_ENDPOINT=http://host.docker.internal:4000/graphql` in `.env`.
+
 ### New Offchain Proposal Insert (Snapshot)
 ```sql
 -- No triggers on snapshot.proposals, safe to insert directly
