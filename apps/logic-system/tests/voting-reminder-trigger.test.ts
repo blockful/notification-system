@@ -40,16 +40,16 @@ describe('VotingReminderTrigger', () => {
   });
 
   describe('constructor', () => {
-    it('should create trigger with unified ID regardless of threshold', () => {
+    it('should create trigger with unique IDs including threshold', () => {
       const trigger30 = new VotingReminderTrigger(mockDispatcherService, mockProposalRepository, 30000, 30);
       const trigger60 = new VotingReminderTrigger(mockDispatcherService, mockProposalRepository, 30000, 60);
       const trigger90 = new VotingReminderTrigger(mockDispatcherService, mockProposalRepository, 30000, 90);
       const trigger75 = new VotingReminderTrigger(mockDispatcherService, mockProposalRepository, 30000, 75);
-      
-      expect(trigger30.id).toBe('voting-reminder');
-      expect(trigger60.id).toBe('voting-reminder');
-      expect(trigger90.id).toBe('voting-reminder');
-      expect(trigger75.id).toBe('voting-reminder');
+
+      expect(trigger30.id).toBe('voting-reminder-30');
+      expect(trigger60.id).toBe('voting-reminder-60');
+      expect(trigger90.id).toBe('voting-reminder-90');
+      expect(trigger75.id).toBe('voting-reminder-75');
     });
   });
 
@@ -78,7 +78,7 @@ describe('VotingReminderTrigger', () => {
       await trigger.process([proposal]);
 
       expect(mockDispatcherService.sendMessage).toHaveBeenCalledWith({
-        triggerId: 'voting-reminder',
+        triggerId: 'voting-reminder-90',
         events: [{
           id: 'proposal-123',
           daoId: 'test-dao',
