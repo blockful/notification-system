@@ -3,12 +3,14 @@ import { NewOffchainProposalTrigger } from './triggers/new-offchain-proposal-tri
 import { VotingPowerChangedTrigger } from './triggers/voting-power-changed-trigger';
 import { ProposalFinishedTrigger } from './triggers/proposal-finished-trigger';
 import { VoteConfirmationTrigger } from './triggers/vote-confirmation-trigger';
+import { OffchainVoteCastTrigger } from './triggers/offchain-vote-cast-trigger';
 import { VotingReminderTrigger } from './triggers/voting-reminder-trigger';
 import { ProposalRepository } from './repositories/proposal.repository';
 import { OffchainProposalRepository } from './repositories/offchain-proposal.repository';
 import { VotingPowerRepository } from './repositories/voting-power.repository';
 import { ThresholdRepository } from './repositories/threshold.repository';
 import { VotesRepository } from './repositories/votes.repository';
+import { OffchainVotesRepository } from './repositories/offchain-votes.repository';
 import { RabbitMQDispatcherService } from './api-clients/rabbitmq-dispatcher.service';
 import { AnticaptureClient } from '@notification-system/anticapture-client';
 import { RabbitMQConnection, RabbitMQPublisher } from '@notification-system/rabbitmq-client';
@@ -21,6 +23,7 @@ export class App {
   private votingPowerTrigger!: VotingPowerChangedTrigger;
   private proposalFinishedTrigger!: ProposalFinishedTrigger;
   private voteConfirmationTrigger!: VoteConfirmationTrigger;
+  private offchainVoteCastTrigger!: OffchainVoteCastTrigger;
   private votingReminderTrigger30!: VotingReminderTrigger;
   private votingReminderTrigger60!: VotingReminderTrigger;
   private votingReminderTrigger90!: VotingReminderTrigger;
@@ -44,8 +47,9 @@ export class App {
     const votingPowerRepository = new VotingPowerRepository(anticaptureClient);
     const thresholdRepository = new ThresholdRepository(anticaptureClient);
     const votesRepository = new VotesRepository(anticaptureClient);
+    const offchainVotesRepository = new OffchainVotesRepository(anticaptureClient);
 
-    this.initPromise = this.initializeRabbitMQ(rabbitmqUrl, proposalRepository, offchainProposalRepository, votingPowerRepository, thresholdRepository, votesRepository, triggerInterval, initialTimestamp);
+    this.initPromise = this.initializeRabbitMQ(rabbitmqUrl, proposalRepository, offchainProposalRepository, votingPowerRepository, thresholdRepository, votesRepository, offchainVotesRepository, triggerInterval, initialTimestamp);
   }
 
   private async initializeRabbitMQ(
@@ -55,6 +59,7 @@ export class App {
     votingPowerRepository: VotingPowerRepository,
     thresholdRepository: ThresholdRepository,
     votesRepository: VotesRepository,
+    offchainVotesRepository: OffchainVotesRepository,
     triggerInterval: number,
     initialTimestamp?: string
   ): Promise<void> {
@@ -98,6 +103,12 @@ export class App {
       triggerInterval
     );
 
+    this.offchainVoteCastTrigger = new OffchainVoteCastTrigger(
+      dispatcherService,
+      offchainVotesRepository,
+      triggerInterval
+    );
+
     // Initialize voting reminder triggers with different thresholds
     this.votingReminderTrigger30 = new VotingReminderTrigger(
       dispatcherService,
@@ -128,7 +139,8 @@ export class App {
     this.votingPowerTrigger.start();
     this.proposalFinishedTrigger.start();
     this.voteConfirmationTrigger.start();
-    
+    this.offchainVoteCastTrigger.start();
+
     // Start voting reminder triggers with their respective configurations
     this.votingReminderTrigger30.start();
     this.votingReminderTrigger60.start();
@@ -156,6 +168,9 @@ export class App {
     if (this.voteConfirmationTrigger) {
       this.voteConfirmationTrigger.reset(initialTimestamp);
     }
+    if (this.offchainVoteCastTrigger) {
+      this.offchainVoteCastTrigger.reset(initialTimestamp);
+    }
     if (this.offchainProposalTrigger) {
       this.offchainProposalTrigger.reset(initialTimestamp);
     }
@@ -167,6 +182,7 @@ export class App {
     await this.votingPowerTrigger.stop();
     await this.proposalFinishedTrigger.stop();
     await this.voteConfirmationTrigger.stop();
+    await this.offchainVoteCastTrigger.stop();
     await this.votingReminderTrigger30.stop();
     await this.votingReminderTrigger60.stop();
     await this.votingReminderTrigger90.stop();
