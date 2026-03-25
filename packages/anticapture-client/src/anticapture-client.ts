@@ -14,28 +14,32 @@ import type {
   ListVotesQueryVariables,
   ProposalNonVotersQueryVariables,
   ListOffchainProposalsQueryVariables,
+  ListOffchainVotesQueryVariables,
 } from './gql/graphql';
-import { GetDaOsDocument, GetProposalByIdDocument, ListProposalsDocument, ListHistoricalVotingPowerDocument, ListVotesDocument, ProposalNonVotersDocument, GetEventRelevanceThresholdDocument, QueryInput_Votes_OrderBy, QueryInput_Votes_OrderDirection, ListOffchainProposalsDocument } from './gql/graphql';
-import { 
-  SafeDaosResponseSchema, 
-  SafeProposalByIdResponseSchema, 
-  SafeProposalsResponseSchema, 
-  SafeHistoricalVotingPowerResponseSchema, 
-  SafeVotesResponseSchema, 
-  SafeProposalNonVotersResponseSchema, 
-  SafeOffchainProposalsResponseSchema, 
-  processProposals, 
-  processVotingPowerHistory, 
-  ProcessedVotingPowerHistory, 
-  EventThresholdResponseSchema, 
-  FeedEventType, 
-  FeedRelevance, 
-  OffchainProposalItem } from './schemas';
+import { GetDaOsDocument, GetProposalByIdDocument, ListProposalsDocument, ListHistoricalVotingPowerDocument, ListVotesDocument, ProposalNonVotersDocument, GetEventRelevanceThresholdDocument, QueryInput_Votes_OrderBy, QueryInput_Votes_OrderDirection, QueryInput_VotesOffchain_OrderBy, QueryInput_VotesOffchain_OrderDirection, ListOffchainProposalsDocument, ListOffchainVotesDocument } from './gql/graphql';
+import {
+  SafeDaosResponseSchema,
+  SafeProposalByIdResponseSchema,
+  SafeProposalsResponseSchema,
+  SafeHistoricalVotingPowerResponseSchema,
+  SafeVotesResponseSchema,
+  SafeProposalNonVotersResponseSchema,
+  SafeOffchainProposalsResponseSchema,
+  SafeOffchainVotesResponseSchema,
+  processProposals,
+  processVotingPowerHistory,
+  ProcessedVotingPowerHistory,
+  EventThresholdResponseSchema,
+  FeedEventType,
+  FeedRelevance,
+  OffchainProposalItem,
+  OffchainVoteItem } from './schemas';
 type ProposalItems = NonNullable<ListProposalsQuery['proposals']>['items'];
 type VotingPowerHistoryItems = ProcessedVotingPowerHistory[];
 type ProposalNonVoter = z.infer<typeof SafeProposalNonVotersResponseSchema>['proposalNonVoters']['items'][0];
 type VoteItem = NonNullable<NonNullable<ListVotesQuery['votes']>['items'][0]>;
 export type VoteWithDaoId = VoteItem & { daoId: string };
+export type OffchainVoteWithDaoId = OffchainVoteItem & { daoId: string };
 
 export class AnticaptureClient {
   private readonly httpClient: AxiosInstance;
@@ -409,5 +413,61 @@ export class AnticaptureClient {
       console.warn(`Error querying offchain proposals for DAO ${daoId}: ${error instanceof Error ? error.message : error}`);
       return [];
     }
+  }
+
+  /**
+   * Fetches offchain (Snapshot) votes for a specific DAO
+   * @param daoId The DAO ID to query
+   * @param variables Query variables for filtering and pagination
+   * @returns Array of offchain vote items
+   */
+  async listOffchainVotes(daoId: string, variables?: ListOffchainVotesQueryVariables): Promise<OffchainVoteItem[]> {
+    try {
+      const validated = await this.query(
+        ListOffchainVotesDocument,
+        SafeOffchainVotesResponseSchema,
+        variables,
+        daoId
+      );
+      return validated.votesOffchain.items;
+    } catch (error) {
+      console.warn(`Error fetching offchain votes for DAO ${daoId}:`, error);
+      return [];
+    }
+  }
+
+  /**
+   * Fetches recent offchain votes from all DAOs since a given timestamp
+   * @param fromDate Fetch votes with created timestamp greater than this value (unix timestamp)
+   * @param limit Maximum number of votes to fetch per DAO (default: 100)
+   * @returns Array of offchain votes from all DAOs with daoId included
+   */
+  async listRecentOffchainVotesFromAllDaos(fromDate: number, limit: number = 100): Promise<OffchainVoteWithDaoId[]> {
+    const daos = await this.getDAOs();
+
+    const votePromises = daos.map(async (dao) => {
+      try {
+        const votes = await this.listOffchainVotes(dao.id, {
+          fromDate,
+          limit,
+          orderBy: QueryInput_VotesOffchain_OrderBy.Timestamp,
+          orderDirection: QueryInput_VotesOffchain_OrderDirection.Asc
+        });
+        return votes.map(vote => ({
+          ...vote,
+          daoId: dao.id
+        }));
+      } catch (error) {
+        console.warn(`Failed to fetch offchain votes for DAO ${dao.id}:`, error);
+        return [];
+      }
+    });
+
+    const voteArrays = await Promise.all(votePromises);
+
+    const allVotes = voteArrays.flat();
+    allVotes.sort((a, b) => a.created - b.created);
+
+    return allVotes;
   }
 }

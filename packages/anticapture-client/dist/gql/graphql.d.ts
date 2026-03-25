@@ -1861,4 +1861,30 @@ export declare const GetProposalByIdDocument: DocumentNode<GetProposalByIdQuery,
 export declare const ListProposalsDocument: DocumentNode<ListProposalsQuery, ListProposalsQueryVariables>;
 export declare const GetEventRelevanceThresholdDocument: DocumentNode<GetEventRelevanceThresholdQuery, GetEventRelevanceThresholdQueryVariables>;
 export declare const ListVotesDocument: DocumentNode<ListVotesQuery, ListVotesQueryVariables>;
+export type ListOffchainVotesQueryVariables = Exact<{
+    fromDate?: InputMaybe<Scalars['Float']['input']>;
+    toDate?: InputMaybe<Scalars['Float']['input']>;
+    limit?: InputMaybe<Scalars['Float']['input']>;
+    skip?: InputMaybe<Scalars['NonNegativeInt']['input']>;
+    orderBy?: InputMaybe<QueryInput_VotesOffchain_OrderBy>;
+    orderDirection?: InputMaybe<QueryInput_VotesOffchain_OrderDirection>;
+    voterAddresses?: InputMaybe<Scalars['JSON']['input']>;
+}>;
+export type ListOffchainVotesQuery = {
+    __typename?: 'Query';
+    votesOffchain?: {
+        __typename?: 'votesOffchain_200_response';
+        totalCount: number;
+        items: Array<{
+            __typename?: 'query_votesOffchain_items_items';
+            voter: string;
+            created: number;
+            proposalId: string;
+            proposalTitle: string;
+            reason: string;
+            vp?: number | null;
+        } | null>;
+    } | null;
+};
+export declare const ListOffchainVotesDocument: DocumentNode<ListOffchainVotesQuery, ListOffchainVotesQueryVariables>;
 export declare const ListHistoricalVotingPowerDocument: DocumentNode<ListHistoricalVotingPowerQuery, ListHistoricalVotingPowerQueryVariables>;
