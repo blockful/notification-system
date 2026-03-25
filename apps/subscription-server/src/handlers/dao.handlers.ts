@@ -38,9 +38,9 @@ export class DaoHandler {
    * @param daoId - The ID of the DAO
    * @param eventTimestamp - Optional timestamp to filter subscribers by subscription date
    */
-  async getDaoSubscribers(daoId: string, eventTimestamp?: string) {
-    const { subscribers } = await this.subscriptionService.getDaoSubscribers(daoId, eventTimestamp);
-    
+  async getDaoSubscribers(daoId: string, eventTimestamp?: string, triggerType?: string) {
+    const { subscribers } = await this.subscriptionService.getDaoSubscribers(daoId, eventTimestamp, triggerType);
+
     return subscribers.map(toUserResponse);
   }
 

@@ -50,8 +50,8 @@ export class DaoController {
       }
     }, (request) => {
       const { dao } = request.params;
-      const { proposal_timestamp } = request.query;
-      return this.daoHandler.getDaoSubscribers(dao, proposal_timestamp);
+      const { proposal_timestamp, trigger_type } = request.query;
+      return this.daoHandler.getDaoSubscribers(dao, proposal_timestamp, trigger_type);
     });
 
     app.get('/dao/:dao/followed-addresses', {

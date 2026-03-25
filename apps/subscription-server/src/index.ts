@@ -29,7 +29,7 @@ const notificationPrefsRepository = new UserNotificationPreferencesRepository(db
 
 // Service instances
 const workspaceService = new WorkspaceService(db, config.tokenEncryptionKey);
-const subscriptionService = new SubscriptionService(userRepository, preferenceRepository, userAddressRepository);
+const subscriptionService = new SubscriptionService(userRepository, preferenceRepository, userAddressRepository, notificationPrefsRepository);
 const notificationService = new NotificationService(notificationRepository);
 const settingsService = new SettingsService(notificationPrefsRepository);
 

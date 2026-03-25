@@ -3,7 +3,7 @@
  * Handles the business logic for managing user subscriptions to DAOs
  */
 
-import { IUserRepository, IPreferenceRepository, User } from '../interfaces';
+import { IUserRepository, IPreferenceRepository, User, IUserNotificationPreferencesRepository } from '../interfaces';
 import { IUserAddressRepository, UserAddress } from '../interfaces/user-address.interface';
 
 /**
@@ -13,7 +13,8 @@ export class SubscriptionService {
   constructor(
     private userRepository: IUserRepository,
     private preferenceRepository: IPreferenceRepository,
-    private userAddressRepository: IUserAddressRepository
+    private userAddressRepository: IUserAddressRepository,
+    private notificationPrefsRepo: IUserNotificationPreferencesRepository
   ) {}
 
   /**
@@ -88,11 +89,15 @@ export class SubscriptionService {
    * @param {string} eventTimestamp - Optional timestamp to filter subscribers by subscription date
    * @returns {Promise<{subscribers: Array<User>}>} The list of subscribers
    */
-  async getDaoSubscribers(dao: string, eventTimestamp?: string) {
+  async getDaoSubscribers(dao: string, eventTimestamp?: string, triggerType?: string) {
     const preferences = await this.preferenceRepository.findByDao(dao, eventTimestamp);
-    const userIds = preferences.map(p => p.user_id);
-    const subscribers = await this.userRepository.findByIdsWithWorkspaceTokens(userIds);
+    let userIds = preferences.map(p => p.user_id);
 
+    if (triggerType) {
+      userIds = await this.notificationPrefsRepo.filterActiveUsers(userIds, triggerType);
+    }
+
+    const subscribers = await this.userRepository.findByIdsWithWorkspaceTokens(userIds);
     return { subscribers };
   }
 
