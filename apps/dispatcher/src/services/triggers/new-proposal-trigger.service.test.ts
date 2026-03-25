@@ -100,7 +100,7 @@ describe('NewProposalTriggerHandler', () => {
       
       await handler.handleMessage(mockMessage);
       
-      expect(mockSubscriptionClient.getDaoSubscribers).toHaveBeenCalledWith('dao123', '2023-01-01T00:00:00Z');
+      expect(mockSubscriptionClient.getDaoSubscribers).toHaveBeenCalledWith('dao123', '2023-01-01T00:00:00Z', 'new-proposal');
       expect(mockSubscriptionClient.shouldSend).toHaveBeenCalledWith(mockUsers, 'prop456', 'dao123');
       expect(mockNotificationClient.sendNotification).toHaveBeenCalledTimes(2);
       expect(mockNotificationClient.sendNotification).toHaveBeenCalledWith(expect.objectContaining({
@@ -133,8 +133,8 @@ describe('NewProposalTriggerHandler', () => {
       await handler.handleMessage(mockMessage);
       
       expect(mockSubscriptionClient.getDaoSubscribers).toHaveBeenCalledTimes(2);
-      expect(mockSubscriptionClient.getDaoSubscribers).toHaveBeenCalledWith('dao123', '2023-01-01T00:00:00Z');
-      expect(mockSubscriptionClient.getDaoSubscribers).toHaveBeenCalledWith('dao456', '2023-01-01T00:00:00Z');
+      expect(mockSubscriptionClient.getDaoSubscribers).toHaveBeenCalledWith('dao123', '2023-01-01T00:00:00Z', 'new-proposal');
+      expect(mockSubscriptionClient.getDaoSubscribers).toHaveBeenCalledWith('dao456', '2023-01-01T00:00:00Z', 'new-proposal');
       expect(mockNotificationClient.sendNotification).toHaveBeenCalledTimes(2);
     });
 

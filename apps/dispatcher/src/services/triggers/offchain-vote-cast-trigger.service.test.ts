@@ -75,6 +75,7 @@ function buildExpectedMessage(vote: OffchainVoteWithDaoId): string {
     : offchainVoteCastMessages.withoutReason;
 
   return replacePlaceholders(template, {
+    address: vote.voter,
     daoId: vote.daoId,
     proposalTitle: vote.proposalTitle,
     ...(hasReason && { reason: vote.reason! }),

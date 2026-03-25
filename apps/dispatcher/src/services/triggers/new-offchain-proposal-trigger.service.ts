@@ -26,7 +26,7 @@ export class NewOffchainProposalTriggerHandler extends BaseTriggerHandler {
       const eventId = `offchain-${proposalId}`;
       const proposalTimestamp = String(created);
 
-      const subscribers = await this.getSubscribers(daoId, eventId, proposalTimestamp);
+      const subscribers = await this.getSubscribers(daoId, eventId, proposalTimestamp, 'new-offchain-proposal');
       const notificationMessage = replacePlaceholders(newOffchainProposalMessages.notification, {
         daoId,
         title: title || 'Untitled Proposal'

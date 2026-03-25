@@ -79,7 +79,7 @@ describe('ProposalFinishedTriggerHandler', () => {
       
       await handler.handleMessage(mockMessage);
       
-      expect(mockSubscriptionClient.getDaoSubscribers).toHaveBeenCalledWith('dao123', '1625086400');
+      expect(mockSubscriptionClient.getDaoSubscribers).toHaveBeenCalledWith('dao123', '1625086400', 'proposal-finished');
       expect(mockSubscriptionClient.shouldSend).toHaveBeenCalledWith(mockUsers, 'prop456-finished', 'dao123');
       expect(mockNotificationClient.sendNotification).toHaveBeenCalledTimes(2);
       expect(mockNotificationClient.sendNotification).toHaveBeenCalledWith(expect.objectContaining({
@@ -112,8 +112,8 @@ describe('ProposalFinishedTriggerHandler', () => {
       await handler.handleMessage(mockMessage);
       
       expect(mockSubscriptionClient.getDaoSubscribers).toHaveBeenCalledTimes(2);
-      expect(mockSubscriptionClient.getDaoSubscribers).toHaveBeenCalledWith('dao123', '1625086401');
-      expect(mockSubscriptionClient.getDaoSubscribers).toHaveBeenCalledWith('dao456', '1625086402');
+      expect(mockSubscriptionClient.getDaoSubscribers).toHaveBeenCalledWith('dao123', '1625086401', 'proposal-finished');
+      expect(mockSubscriptionClient.getDaoSubscribers).toHaveBeenCalledWith('dao456', '1625086402', 'proposal-finished');
       expect(mockNotificationClient.sendNotification).toHaveBeenCalledTimes(2);
     });
 
@@ -140,7 +140,7 @@ describe('ProposalFinishedTriggerHandler', () => {
       
       await handler.handleMessage(mockMessage);
       
-      expect(mockSubscriptionClient.getDaoSubscribers).toHaveBeenCalledWith('dao123', '1625086400');
+      expect(mockSubscriptionClient.getDaoSubscribers).toHaveBeenCalledWith('dao123', '1625086400', 'proposal-finished');
       expect(mockNotificationClient.sendNotification).not.toHaveBeenCalled();
     });
 
