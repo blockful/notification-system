@@ -118,8 +118,8 @@ describe('listOffchainProposals', () => {
         { id: 'OFFCHAIN_DAO', supportOffchainData: true },
       ],
       proposals: {
-        ONCHAIN_ONLY: [{ id: 'snap-should-not-appear', title: 'Should not appear', discussion: '', link: '', state: 'active', created: 1700000000 }],
-        OFFCHAIN_DAO: [{ id: 'snap-ok', title: 'OK', discussion: '', link: '', state: 'active', created: 1700000100 }],
+        ONCHAIN_ONLY: [{ id: 'snap-should-not-appear', title: 'Should not appear', discussion: '', link: '', state: 'active', created: 1700000000, end: 1700086400 }],
+        OFFCHAIN_DAO: [{ id: 'snap-ok', title: 'OK', discussion: '', link: '', state: 'active', created: 1700000100, end: 1700086500 }],
       },
     }));
 
