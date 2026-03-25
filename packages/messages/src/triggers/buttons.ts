@@ -68,6 +68,11 @@ const ctaButtonConfigs: Record<string, CtaButtonConfig> = {
     text: 'Cast your vote',
     buildUrl: ({ proposalUrl }) =>
       proposalUrl || BASE_URL
+  },
+  offchainProposalFinished: {
+    text: 'View proposal results',
+    buildUrl: ({ proposalUrl }) =>
+      proposalUrl || BASE_URL
   }
 };
 

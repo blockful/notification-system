@@ -1,5 +1,6 @@
 import { NewProposalTrigger } from './triggers/new-proposal-trigger';
 import { NewOffchainProposalTrigger } from './triggers/new-offchain-proposal-trigger';
+import { OffchainProposalFinishedTrigger } from './triggers/offchain-proposal-finished-trigger';
 import { VotingPowerChangedTrigger } from './triggers/voting-power-changed-trigger';
 import { ProposalFinishedTrigger } from './triggers/proposal-finished-trigger';
 import { VoteConfirmationTrigger } from './triggers/vote-confirmation-trigger';
@@ -18,6 +19,7 @@ import { AxiosInstance } from 'axios';
 export class App {
   private trigger!: NewProposalTrigger;
   private offchainProposalTrigger!: NewOffchainProposalTrigger;
+  private offchainProposalFinishedTrigger!: OffchainProposalFinishedTrigger;
   private votingPowerTrigger!: VotingPowerChangedTrigger;
   private proposalFinishedTrigger!: ProposalFinishedTrigger;
   private voteConfirmationTrigger!: VoteConfirmationTrigger;
@@ -85,6 +87,13 @@ export class App {
       triggerInterval
     );
 
+    this.offchainProposalFinishedTrigger = new OffchainProposalFinishedTrigger(
+      dispatcherService,
+      offchainProposalRepository,
+      triggerInterval,
+      initialTimestamp
+    );
+
     this.proposalFinishedTrigger = new ProposalFinishedTrigger(
       proposalRepository,
       dispatcherService,
@@ -125,6 +134,7 @@ export class App {
     await this.initPromise;
     this.trigger.start({ status: this.proposalStatus });
     this.offchainProposalTrigger.start({ status: ['active', 'pending'] });
+    this.offchainProposalFinishedTrigger.start();
     this.votingPowerTrigger.start();
     this.proposalFinishedTrigger.start();
     this.voteConfirmationTrigger.start();
@@ -159,11 +169,15 @@ export class App {
     if (this.offchainProposalTrigger) {
       this.offchainProposalTrigger.reset(initialTimestamp);
     }
+    if (this.offchainProposalFinishedTrigger) {
+      this.offchainProposalFinishedTrigger.reset(initialTimestamp);
+    }
   }
 
   async stop(): Promise<void> {
     await this.trigger.stop();
     await this.offchainProposalTrigger.stop();
+    await this.offchainProposalFinishedTrigger.stop();
     await this.votingPowerTrigger.stop();
     await this.proposalFinishedTrigger.stop();
     await this.voteConfirmationTrigger.stop();
