@@ -27,9 +27,10 @@ export interface ISubscriptionClient {
    * Fetches all subscribers for a specific DAO
    * @param daoId The ID of the DAO
    * @param eventTimestamp Optional timestamp to filter subscribers by subscription date
+   * @param triggerType Optional trigger type to filter subscribers by notification preference
    * @returns List of subscribers
    */
-  getDaoSubscribers(daoId: string, eventTimestamp?: string): Promise<User[]>;
+  getDaoSubscribers(daoId: string, eventTimestamp?: string, triggerType?: string): Promise<User[]>;
 
   /**
    * Filters subscribers to return only those who should receive notifications
@@ -60,16 +61,18 @@ export interface ISubscriptionClient {
   /**
    * Get users who own a specific wallet address
    * @param address The wallet address
+   * @param triggerType Optional trigger type to filter users by notification preference
    * @returns List of users who own the address
    */
-  getWalletOwners(address: string): Promise<User[]>;
+  getWalletOwners(address: string, triggerType?: string): Promise<User[]>;
 
   /**
    * Get users who own specific wallet addresses (batch operation)
    * @param addresses Array of wallet addresses
+   * @param triggerType Optional trigger type to filter users by notification preference
    * @returns Record mapping addresses to arrays of users who own each address
    */
-  getWalletOwnersBatch(addresses: string[]): Promise<Record<string, User[]>>;
+  getWalletOwnersBatch(addresses: string[], triggerType?: string): Promise<Record<string, User[]>>;
 
   /**
    * Get all unique addresses being followed by users in a specific DAO

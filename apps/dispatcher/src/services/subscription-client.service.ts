@@ -20,13 +20,16 @@ export class SubscriptionClient implements ISubscriptionClient {
    * Fetches all subscribers for a specific DAO
    * @param daoId The ID of the DAO
    * @param eventTimestamp Optional timestamp to filter subscribers by subscription date
+   * @param triggerType Optional trigger type to filter subscribers by notification preference
    * @returns List of subscribers
    */
-  async getDaoSubscribers(daoId: string, eventTimestamp?: string): Promise<User[]> {
-    const url = eventTimestamp 
-      ? `/subscriptions/${daoId}?proposal_timestamp=${encodeURIComponent(eventTimestamp)}`
-      : `/subscriptions/${daoId}`;
-    
+  async getDaoSubscribers(daoId: string, eventTimestamp?: string, triggerType?: string): Promise<User[]> {
+    const params = new URLSearchParams();
+    if (eventTimestamp) params.set('proposal_timestamp', eventTimestamp);
+    if (triggerType) params.set('trigger_type', triggerType);
+    const queryString = params.toString();
+    const url = queryString ? `/subscriptions/${daoId}?${queryString}` : `/subscriptions/${daoId}`;
+
     const response = await this.client.get(url);
     return response.data;
   }
@@ -112,22 +115,30 @@ export class SubscriptionClient implements ISubscriptionClient {
   /**
    * Get users who own a specific wallet address
    * @param address The wallet address
+   * @param triggerType Optional trigger type to filter users by notification preference
    * @returns List of users who own the address
    */
-  async getWalletOwners(address: string): Promise<User[]> {
-    const response = await this.client.get(`/users/by-address/${encodeURIComponent(address)}`);
+  async getWalletOwners(address: string, triggerType?: string): Promise<User[]> {
+    const params = new URLSearchParams();
+    if (triggerType) params.set('trigger_type', triggerType);
+    const queryString = params.toString();
+    const url = queryString
+      ? `/users/by-address/${encodeURIComponent(address)}?${queryString}`
+      : `/users/by-address/${encodeURIComponent(address)}`;
+    const response = await this.client.get(url);
     return response.data;
   }
 
   /**
    * Get users who own specific wallet addresses (batch operation)
    * @param addresses Array of wallet addresses
+   * @param triggerType Optional trigger type to filter users by notification preference
    * @returns Record mapping addresses to arrays of users who own each address
    */
-  async getWalletOwnersBatch(addresses: string[]): Promise<Record<string, User[]>> {
-    const response = await this.client.post('/users/by-addresses/batch', {
-      addresses
-    });
+  async getWalletOwnersBatch(addresses: string[], triggerType?: string): Promise<Record<string, User[]>> {
+    const body: { addresses: string[]; trigger_type?: string } = { addresses };
+    if (triggerType) body.trigger_type = triggerType;
+    const response = await this.client.post('/users/by-addresses/batch', body);
     return response.data;
   }
 
