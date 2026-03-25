@@ -96,9 +96,16 @@ export class App {
       new OffchainVoteCastTriggerHandler(subscriptionClient, notificationFactory)
     );
 
-    // Register a single voting reminder handler for all thresholds
     triggerProcessorService.addHandler(
-      'voting-reminder',
+      'voting-reminder-30',
+      new VotingReminderTriggerHandler(subscriptionClient, notificationFactory, anticaptureClient)
+    );
+    triggerProcessorService.addHandler(
+      'voting-reminder-60',
+      new VotingReminderTriggerHandler(subscriptionClient, notificationFactory, anticaptureClient)
+    );
+    triggerProcessorService.addHandler(
+      'voting-reminder-90',
       new VotingReminderTriggerHandler(subscriptionClient, notificationFactory, anticaptureClient)
     );
 
