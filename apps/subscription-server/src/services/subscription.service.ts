@@ -209,38 +209,48 @@ export class SubscriptionService {
   /**
    * Get full user information for users who own a specific wallet address
    * @param address - The wallet address
+   * @param triggerType - Optional trigger type to filter by notification preference
    * @returns Array of Users who own the address
    */
-  async getUsersByWalletAddress(address: string): Promise<User[]> {
+  async getUsersByWalletAddress(address: string, triggerType?: string): Promise<User[]> {
     const userAddresses = await this.userAddressRepository.findByAddress(address);
     const users: User[] = [];
-    
+
     for (const userAddress of userAddresses) {
       const user = await this.userRepository.findById(userAddress.user_id);
       if (user) {
         users.push(user);
       }
     }
-    
+
+    if (triggerType && users.length > 0) {
+      const activeIds = await this.notificationPrefsRepo.filterActiveUsers(
+        users.map(u => u.id), triggerType
+      );
+      const activeSet = new Set(activeIds);
+      return users.filter(u => activeSet.has(u.id));
+    }
+
     return users;
   }
 
   /**
    * Get users by multiple wallet addresses (batch operation)
    * @param addresses Array of wallet addresses
+   * @param triggerType - Optional trigger type to filter by notification preference
    * @returns Record mapping addresses to arrays of Users who own each address
    */
-  async getUsersByWalletAddressesBatch(addresses: string[]): Promise<Record<string, User[]>> {
+  async getUsersByWalletAddressesBatch(addresses: string[], triggerType?: string): Promise<Record<string, User[]>> {
     if (addresses.length === 0) return {};
-    
+
     const userAddresses = await this.userAddressRepository.findByAddresses(addresses);
     const result: Record<string, User[]> = {};
-    
+
     // Initialize all addresses with empty arrays
     addresses.forEach(address => {
       result[address] = [];
     });
-    
+
     // Group user addresses by address
     const addressGroups: Record<string, string[]> = {};
     userAddresses.forEach(userAddress => {
@@ -249,7 +259,7 @@ export class SubscriptionService {
       }
       addressGroups[userAddress.address].push(userAddress.user_id);
     });
-    
+
     // Get unique user IDs
     const userIds = [...new Set(userAddresses.map(ua => ua.user_id))];
     if (userIds.length === 0) return result;
@@ -264,6 +274,16 @@ export class SubscriptionService {
         .map(userId => userMap.get(userId))
         .filter((user): user is User => user !== undefined);
     });
+
+    // Filter by triggerType if provided
+    if (triggerType) {
+      const allUserIds = [...new Set(Object.values(result).flatMap(users => users.map(u => u.id)))];
+      const activeIds = await this.notificationPrefsRepo.filterActiveUsers(allUserIds, triggerType);
+      const activeSet = new Set(activeIds);
+      for (const address of Object.keys(result)) {
+        result[address] = result[address].filter(u => activeSet.has(u.id));
+      }
+    }
 
     return result;
   }
