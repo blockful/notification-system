@@ -58,6 +58,7 @@ export interface SlackSession {
     action: 'add' | 'remove';
   };
   fromStart?: boolean;
+  notificationSelections?: Record<string, boolean>;
 }
 
 /**
