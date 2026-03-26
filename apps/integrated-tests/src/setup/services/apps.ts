@@ -5,10 +5,14 @@ import { App as SubscriptionServerApp } from '@notification-system/subscription-
 import { DaoController, NotificationController } from '@notification-system/subscription-server/dist/controllers';
 import { UserAddressController } from '@notification-system/subscription-server/dist/controllers/user-address.controller';
 import { SlackOAuthController } from '@notification-system/subscription-server/dist/controllers/slack-oauth.controller';
+import { SettingsController } from '@notification-system/subscription-server/dist/controllers/settings.controller';
 import { KnexUserRepository, KnexPreferenceRepository, KnexNotificationRepository, KnexUserAddressRepository } from '@notification-system/subscription-server/dist/repositories/knex.repository';
 import { SubscriptionService, NotificationService } from '@notification-system/subscription-server/dist/services';
 import { DaoHandler } from '@notification-system/subscription-server/dist/handlers/dao.handlers';
+import { SettingsHandler } from '@notification-system/subscription-server/dist/handlers/settings.handler';
 import { WorkspaceService } from '@notification-system/subscription-server/dist/services/workspace.service';
+import { SettingsService } from '@notification-system/subscription-server/dist/services/settings.service';
+import { UserNotificationPreferencesRepository } from '@notification-system/subscription-server/dist/repositories/user-notification-preferences.repository';
 import { Knex } from 'knex';
 import { RabbitMQTestSetup } from '../rabbitmq-setup';
 import { serviceConfig, timeouts } from '../../config';
@@ -122,17 +126,21 @@ const startSubscriptionServer = async (db: Knex): Promise<SubscriptionServerApp>
   const preferenceRepository = new KnexPreferenceRepository(db);
   const notificationRepository = new KnexNotificationRepository(db);
   const userAddressRepository = new KnexUserAddressRepository(db);
+  const notificationPrefsRepository = new UserNotificationPreferencesRepository(db);
 
   // Service instances
   const workspaceService = new WorkspaceService(db, serviceConfig.oauth.tokenEncryptionKey);
-  const subscriptionService = new SubscriptionService(userRepository, preferenceRepository, userAddressRepository);
+  const subscriptionService = new SubscriptionService(userRepository, preferenceRepository, userAddressRepository, notificationPrefsRepository);
   const notificationService = new NotificationService(notificationRepository);
+  const settingsService = new SettingsService(notificationPrefsRepository);
 
   // Handler instances
   const daoHandler = new DaoHandler(subscriptionService);
+  const settingsHandler = new SettingsHandler(settingsService, userRepository);
 
   // Controller instances
   const daoController = new DaoController(daoHandler);
+  const settingsController = new SettingsController(settingsHandler);
   const notificationController = new NotificationController(notificationService);
   const userAddressController = new UserAddressController(subscriptionService);
   const slackOAuthController = new SlackOAuthController(
@@ -148,7 +156,8 @@ const startSubscriptionServer = async (db: Knex): Promise<SubscriptionServerApp>
     daoController,
     notificationController,
     userAddressController,
-    slackOAuthController
+    slackOAuthController,
+    settingsController
   );
   await subscriptionServerApp.start();
   return subscriptionServerApp;
