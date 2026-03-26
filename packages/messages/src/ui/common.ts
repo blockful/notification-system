@@ -33,9 +33,8 @@ Get notified about risks, changes and proposals that you care about in the DAOs 
   noDaoSelected: 'Please select at least one DAO before confirming.',
   confirmSelection: '✅ Confirm selection',
   selectedDaos: `Success! Your DAOs are now under surveillance (the good kind).
-You'll be notified when things get spicy:
+You'll be notified when things get spicy:`,
 
-Tip: tap ⚙️ Settings to fine-tune your notification types.`,
   editDaos: 'You can edit this list by clicking on 🌐 DAOs',
 
   // Button text
