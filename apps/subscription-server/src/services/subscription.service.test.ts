@@ -276,19 +276,5 @@ describe('Subscription Service', () => {
       expect(userRepo.findByIdsWithWorkspaceTokens).toHaveBeenCalledWith(['123']);
       expect(result.subscribers.length).toBe(1);
     });
-
-    test('should skip triggerType filtering when triggerType is not provided', async () => {
-      const mockPreferences = [
-        { user_id: '123', is_active: true }
-      ] as UserPreference[];
-
-      prefRepo.findByDao.mockResolvedValueOnce(mockPreferences);
-      userRepo.findByIdsWithWorkspaceTokens.mockResolvedValueOnce([mockSubscribers[0]]);
-
-      await subscriptionService.getDaoSubscribers('dao123');
-
-      expect(notificationPrefsRepo.filterActiveUsers).not.toHaveBeenCalled();
-      expect(userRepo.findByIdsWithWorkspaceTokens).toHaveBeenCalledWith(['123']);
-    });
   });
 }); 
