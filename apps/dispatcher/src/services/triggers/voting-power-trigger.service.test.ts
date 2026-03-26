@@ -124,13 +124,40 @@ describe('VotingPowerTriggerHandler', () => {
           }
         ]
       };
-      
+
       await handler.handleMessage(mockMessage);
-      
+
       expect(mockSubscriptionClient.getWalletOwnersBatch).toHaveBeenCalledWith([
         '0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045',
         '0xEF8305E140ac520225DAf050e2f71d5fBcC543e7'
       ], 'voting-power-changed');
+    });
+
+    it('should pass triggerType "voting-power-changed" to getWalletOwnersBatch and getDaoSubscribers', async () => {
+      const message: DispatcherMessage = {
+        triggerId: 'voting-power-changed',
+        events: [{
+          daoId: 'test-dao',
+          accountId: '0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045',
+          transactionHash: '0x123',
+          logIndex: 0,
+          changeType: 'other',
+          delta: '1000',
+          timestamp: '1625086400'
+        }]
+      };
+
+      await handler.handleMessage(message);
+
+      expect(mockSubscriptionClient.getWalletOwnersBatch).toHaveBeenCalledWith(
+        expect.any(Array),
+        'voting-power-changed'
+      );
+      expect(mockSubscriptionClient.getDaoSubscribers).toHaveBeenCalledWith(
+        'test-dao',
+        '1625086400',
+        'voting-power-changed'
+      );
     });
   });
 

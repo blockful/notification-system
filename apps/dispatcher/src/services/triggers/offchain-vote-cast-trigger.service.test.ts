@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach } from '@jest/globals';
+import { describe, it, expect, beforeEach, jest } from '@jest/globals';
 import { OffchainVoteCastTriggerHandler } from './offchain-vote-cast-trigger.service';
 import { NotificationClientFactory } from '../notification/notification-factory.service';
 import { INotificationClient, NotificationPayload } from '../../interfaces/notification-client.interface';
@@ -190,5 +190,31 @@ describe('OffchainVoteCastTriggerHandler', () => {
     expect(notificationClient.sentPayloads).toEqual([
       buildExpectedPayload(vote),
     ]);
+  });
+
+  it('should pass triggerType "offchain-vote-cast" to getWalletOwnersBatch', async () => {
+    const sub = new SimpleSubscriptionClient();
+    const spy = jest.spyOn(sub, 'getWalletOwnersBatch');
+    const { handler } = createHandler(sub);
+
+    await handler.handleMessage({
+      triggerId: 'offchain-vote-cast',
+      events: [createVote()],
+    });
+
+    expect(spy).toHaveBeenCalledWith(['0xvoter123'], 'offchain-vote-cast');
+  });
+
+  it('should pass triggerType "offchain-vote-cast" to getDaoSubscribers', async () => {
+    const sub = new SimpleSubscriptionClient();
+    const spy = jest.spyOn(sub, 'getDaoSubscribers');
+    const { handler } = createHandler(sub);
+
+    await handler.handleMessage({
+      triggerId: 'offchain-vote-cast',
+      events: [createVote()],
+    });
+
+    expect(spy).toHaveBeenCalledWith('test-dao', expect.any(String), 'offchain-vote-cast');
   });
 });

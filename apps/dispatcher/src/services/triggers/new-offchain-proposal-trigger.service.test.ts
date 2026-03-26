@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach } from '@jest/globals';
+import { describe, it, expect, beforeEach, jest } from '@jest/globals';
 import { NewOffchainProposalTriggerHandler } from './new-offchain-proposal-trigger.service';
 import { ISubscriptionClient, User, Notification } from '../../interfaces/subscription-client.interface';
 import { NotificationClientFactory } from '../notification/notification-factory.service';
@@ -220,6 +220,21 @@ describe('NewOffchainProposalTriggerHandler', () => {
         event_id: 'offchain-snap-1',
         dao_id: 'test-dao',
       });
+    });
+
+    it('should pass triggerType "new-offchain-proposal" to getDaoSubscribers', async () => {
+      subscriptionClient.subscribers.set('test-dao', [testUser]);
+      const spy = jest.spyOn(subscriptionClient, 'getDaoSubscribers');
+
+      await handler.handleMessage({
+        triggerId: 'new-offchain-proposal',
+        events: [{
+          daoId: 'test-dao', id: 'snap-1', title: 'Test',
+          created: 1700000000, discussion: '', link: 'https://snapshot.org/#/test-dao/proposal/snap-1', state: 'active',
+        }],
+      });
+
+      expect(spy).toHaveBeenCalledWith('test-dao', expect.any(String), 'new-offchain-proposal');
     });
   });
 });
