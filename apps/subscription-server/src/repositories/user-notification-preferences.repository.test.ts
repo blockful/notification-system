@@ -1,5 +1,6 @@
 import { describe, test, expect, beforeAll, afterAll, beforeEach } from '@jest/globals';
 import { knex, Knex } from 'knex';
+import ClientPgLite from 'knex-pglite';
 import path from 'path';
 import { UserNotificationPreferencesRepository } from './user-notification-preferences.repository';
 
@@ -9,8 +10,8 @@ const FIXED_DATE = '2025-06-01T00:00:00.000Z';
 
 function createTestDb(): Knex {
   return knex({
-    client: 'sqlite3',
-    connection: { filename: ':memory:' },
+    client: ClientPgLite,
+    connection: { connectionString: 'memory://' },
     useNullAsDefault: true,
     migrations: {
       directory: [path.resolve(__dirname, '../../db/migrations')],
@@ -109,7 +110,6 @@ describe('UserNotificationPreferencesRepository', () => {
       await seedUser('user3');
       await seedPreference('user1', 'vote_cast', true);
       await seedPreference('user2', 'vote_cast', false);
-      // user3: no row — default enabled
 
       const result = await repo.filterActiveUsers(['user1', 'user2', 'user3'], 'vote_cast');
 
@@ -148,8 +148,8 @@ describe('UserNotificationPreferencesRepository', () => {
       const result = await repo.findByUser('user1');
 
       expect(result).toEqual([
-        { user_id: 'user1', trigger_type: 'proposal_created', is_active: 0, updated_at: FIXED_DATE },
-        { user_id: 'user1', trigger_type: 'vote_cast', is_active: 1, updated_at: FIXED_DATE },
+        { user_id: 'user1', trigger_type: 'proposal_created', is_active: false, updated_at: new Date(FIXED_DATE) },
+        { user_id: 'user1', trigger_type: 'vote_cast', is_active: true, updated_at: new Date(FIXED_DATE) },
       ]);
     });
   });
@@ -179,8 +179,8 @@ describe('UserNotificationPreferencesRepository', () => {
         {
           user_id: 'user1',
           trigger_type: 'vote_cast',
-          is_active: 1,
-          updated_at: expect.any(String),
+          is_active: true,
+          updated_at: expect.any(Date),
         },
       ]);
     });
@@ -198,8 +198,8 @@ describe('UserNotificationPreferencesRepository', () => {
         {
           user_id: 'user1',
           trigger_type: 'vote_cast',
-          is_active: 0,
-          updated_at: expect.any(String),
+          is_active: false,
+          updated_at: expect.any(Date),
         },
       ]);
     });
@@ -212,19 +212,21 @@ describe('UserNotificationPreferencesRepository', () => {
         { trigger_type: 'proposal_created', is_active: false },
       ]);
 
-      const rows = await db('user_notification_preferences').select('*');
+      const rows = await db('user_notification_preferences')
+        .select('*')
+        .orderBy('trigger_type');
       expect(rows).toEqual([
         {
           user_id: 'user1',
-          trigger_type: 'vote_cast',
-          is_active: 1,
-          updated_at: expect.any(String),
+          trigger_type: 'proposal_created',
+          is_active: false,
+          updated_at: expect.any(Date),
         },
         {
           user_id: 'user1',
-          trigger_type: 'proposal_created',
-          is_active: 0,
-          updated_at: expect.any(String),
+          trigger_type: 'vote_cast',
+          is_active: true,
+          updated_at: expect.any(Date),
         },
       ]);
     });
