@@ -9,5 +9,6 @@
 export const knownCommands = [
     { command: '/start', description: 'Start the bot' },
     { command: '/daos', description: 'Manage your DAO notifications' },
-    { command: '/learn_more', description: 'Learn more about Anticapture' }
+    { command: '/learn_more', description: 'Learn more about Anticapture' },
+    { command: '/settings', description: 'Manage your notification preferences' }
   ];

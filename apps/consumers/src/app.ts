@@ -5,6 +5,7 @@ import { SlackDAOService } from './services/dao/slack-dao.service';
 import { SlackWalletService } from './services/wallet/slack-wallet.service';
 import { TelegramDAOService } from './services/dao/telegram-dao.service';
 import { TelegramWalletService } from './services/wallet/telegram-wallet.service';
+import { TelegramSettingsService } from './services/settings/telegram-settings.service';
 import { ExplorerService } from '@notification-system/messages';
 import { EnsResolverService } from './services/ens-resolver.service';
 import { AnticaptureClient } from '@notification-system/anticapture-client';
@@ -35,11 +36,13 @@ export class App {
     // Telegram services
     const telegramDaoService = new TelegramDAOService(anticaptureClient, subscriptionApi);
     const telegramWalletService = new TelegramWalletService(subscriptionApi, ensResolver);
+    const telegramSettingsService = new TelegramSettingsService(subscriptionApi);
 
     this.telegramBotService = new TelegramBotService(
       telegramClient,
       telegramDaoService,
       telegramWalletService,
+      telegramSettingsService,
       explorerService,
       ensResolver
     );
