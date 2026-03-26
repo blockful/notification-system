@@ -60,7 +60,7 @@ export class VotingReminderTriggerHandler extends BaseTriggerHandler<VotingRemin
     
     for (const event of events) {
       try {
-        const result = await this.processReminderEvent(event);
+        const result = await this.processReminderEvent(event, message.triggerId);
         processedCount.sent += result.sent;
         processedCount.skipped += result.skipped;
         processedCount.failed += result.failed;
@@ -80,7 +80,7 @@ export class VotingReminderTriggerHandler extends BaseTriggerHandler<VotingRemin
   /**
    * Processes a single voting reminder event
    */
-  private async processReminderEvent(event: VotingReminderEvent): Promise<ProcessingResult> {
+  private async processReminderEvent(event: VotingReminderEvent, triggerType: string): Promise<ProcessingResult> {
     // Get all subscribed addresses for this DAO
     const subscribedAddresses = await this.subscriptionClient.getFollowedAddresses(event.daoId);
     
@@ -110,6 +110,7 @@ export class VotingReminderTriggerHandler extends BaseTriggerHandler<VotingRemin
     const sentCount = await this.batchNotificationService.sendBatchNotifications(
       nonVotingAddresses,
       event.daoId,
+      triggerType,
       () => `${event.id}-${event.thresholdPercentage}-reminder`,
       (address) => this.createReminderMessage(event, address),
       (address) => ({

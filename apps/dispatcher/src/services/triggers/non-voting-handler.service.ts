@@ -126,6 +126,7 @@ export class NonVotingHandler extends BaseTriggerHandler<ProposalFinishedNotific
     await this.batchNotificationService.sendBatchNotifications(
       nonVoters,
       daoId,
+      'non-voting',
       (address) => `${address}-non-voting-${lastProposals[0].id}`,
       (address) => {
         return replacePlaceholders(nonVotingMessages.alert, {

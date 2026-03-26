@@ -82,8 +82,8 @@ describe('NonVotingHandler', () => {
 
     await handler.handleMessage(message);
 
-    expect(mockSubscriptionClient.getWalletOwnersBatch).toHaveBeenCalledWith([TestAddresses.ADDRESS_1]);
-    expect(mockSubscriptionClient.getDaoSubscribers).toHaveBeenCalledWith('ENS');
+    expect(mockSubscriptionClient.getWalletOwnersBatch).toHaveBeenCalledWith([TestAddresses.ADDRESS_1], 'non-voting');
+    expect(mockSubscriptionClient.getDaoSubscribers).toHaveBeenCalledWith('ENS', undefined, 'non-voting');
     expect(mockNotificationClient.sendNotification).toHaveBeenCalled();
 
     const sentAddress = mockNotificationClient.sendNotification.mock.calls[0][0].metadata?.addresses?.nonVoterAddress;

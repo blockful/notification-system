@@ -109,7 +109,7 @@ describe('VotingReminderTriggerHandler', () => {
         'test-dao',
         ['0x123', '0x456']
       );
-      expect(mockSubscriptionClient.getWalletOwnersBatch).toHaveBeenCalledWith(['0x456']);
+      expect(mockSubscriptionClient.getWalletOwnersBatch).toHaveBeenCalledWith(['0x456'], 'voting-reminder-90');
     });
 
     it('should skip when no subscribed addresses found', async () => {

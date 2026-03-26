@@ -16,18 +16,20 @@ export class BatchNotificationService {
    * @param addresses - Addresses to process (e.g., non-voting addresses)
    * @param daoId - DAO identifier
    * @param eventIdGenerator - Function to generate unique event IDs for each address
+   * @param triggerType - Optional trigger type to filter users by notification preference
    * @returns Prepared batch data with followers and notifications to send
    */
   async prepareBatchData(
-    addresses: string[], 
-    daoId: string, 
-    eventIdGenerator: (address: string) => string
+    addresses: string[],
+    daoId: string,
+    eventIdGenerator: (address: string) => string,
+    triggerType?: string
   ): Promise<BatchNotificationData[]> {
     // Batch fetch all followers for all addresses in a single request
-    const addressFollowersMap = await this.subscriptionClient.getWalletOwnersBatch(addresses);
+    const addressFollowersMap = await this.subscriptionClient.getWalletOwnersBatch(addresses, triggerType);
 
     // Fetch DAO subscribers to filter by active subscription
-    const daoSubscribers = await this.subscriptionClient.getDaoSubscribers(daoId);
+    const daoSubscribers = await this.subscriptionClient.getDaoSubscribers(daoId, undefined, triggerType);
     const daoSubscriberIds = new Set(daoSubscribers.map(s => s.id));
 
     const addressFollowers = addresses
@@ -153,6 +155,7 @@ export class BatchNotificationService {
    * Combines prepare, filter, and execute steps
    * @param addresses - Addresses to process
    * @param daoId - DAO identifier
+   * @param triggerType - Optional trigger type to filter users by notification preference
    * @param eventIdGenerator - Function to generate unique event IDs
    * @param messageGenerator - Function to generate messages
    * @param metadataGenerator - Optional function to generate metadata
@@ -161,12 +164,13 @@ export class BatchNotificationService {
   async sendBatchNotifications(
     addresses: string[],
     daoId: string,
+    triggerType: string | undefined,
     eventIdGenerator: (address: string) => string,
     messageGenerator: (address: string) => string,
     metadataGenerator?: (address: string) => Record<string, any>,
     buttonsGenerator?: (address: string) => Array<{ text: string; url: string }>
   ): Promise<number> {
-    const batchData = await this.prepareBatchData(addresses, daoId, eventIdGenerator);
+    const batchData = await this.prepareBatchData(addresses, daoId, eventIdGenerator, triggerType);
     const validNotifications = this.filterValidNotifications(batchData);
 
     if (validNotifications.length === 0) {
