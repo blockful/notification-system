@@ -127,6 +127,11 @@ Stay aware of how changes in governance affect you.`,
             text: { type: 'plain_text', text: '💬 Contact us', emoji: true },
             url: 'https://tally.so/r/nrvGbv',
             action_id: 'mission_contact'
+          },
+          {
+            type: 'button',
+            text: { type: 'plain_text', text: '⚙️ Settings', emoji: true },
+            action_id: 'settings_open'
           }
         ]
       }
@@ -180,6 +185,19 @@ Stay aware of how changes in governance affect you.`,
           type: 'button',
           text: { type: 'plain_text', text: '👛 Manage Wallets', emoji: true },
           action_id: 'welcome_setup_wallets',
+          style: 'primary'
+        }
+      },
+      {
+        type: 'section',
+        text: {
+          type: 'mrkdwn',
+          text: '*Notification Settings*\nChoose which notification types you want to receive.'
+        },
+        accessory: {
+          type: 'button',
+          text: { type: 'plain_text', text: '⚙️ Settings', emoji: true },
+          action_id: 'settings_open',
           style: 'primary'
         }
       }
