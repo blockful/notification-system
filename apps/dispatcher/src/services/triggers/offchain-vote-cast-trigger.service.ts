@@ -39,7 +39,7 @@ export class OffchainVoteCastTriggerHandler extends BaseTriggerHandler<OffchainV
 
     // Extract unique voter addresses and batch fetch wallet owners
     const voterAddresses = [...new Set(events.map(event => event.voter))];
-    const walletOwners = await this.subscriptionClient.getWalletOwnersBatch(voterAddresses);
+    const walletOwners = await this.subscriptionClient.getWalletOwnersBatch(voterAddresses, 'offchain-vote-cast');
 
     // Create all user-vote combinations
     const userVoteCombinations = this.createUserVoteCombinations(events, walletOwners);
@@ -85,7 +85,7 @@ export class OffchainVoteCastTriggerHandler extends BaseTriggerHandler<OffchainV
     const eventId = `offchain-${vote.daoId}-${vote.proposalId}-${vote.voter}-vote`;
 
     // Check if user is subscribed to the DAO
-    const subscribers = await this.getSubscribers(vote.daoId, eventId, String(vote.created));
+    const subscribers = await this.getSubscribers(vote.daoId, eventId, String(vote.created), 'offchain-vote-cast');
     const isSubscribed = subscribers.some(sub => sub.id === user.id);
 
     if (!isSubscribed) {

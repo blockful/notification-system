@@ -46,7 +46,7 @@ export class VotingPowerTriggerHandler extends BaseTriggerHandler {
       ...validEvents.map(event => event.sourceAccountId).filter(Boolean) // who delegates
     ];
     const uniqueAccountIds = [...new Set(allAccountIds)];
-    const walletOwnersMap = await this.subscriptionClient.getWalletOwnersBatch(uniqueAccountIds);
+    const walletOwnersMap = await this.subscriptionClient.getWalletOwnersBatch(uniqueAccountIds, 'voting-power-changed');
 
     // Group events by DAO to batch DAO subscribers lookup
     const eventsByDao: Record<string, typeof validEvents> = {};
@@ -61,7 +61,7 @@ export class VotingPowerTriggerHandler extends BaseTriggerHandler {
     const daoSubscribersPromises = Object.keys(eventsByDao).map(async daoId => {
       const daoEvents = eventsByDao[daoId];
       const timestamp = daoEvents[0]?.timestamp; // Use first event's timestamp
-      const subscribers = await this.subscriptionClient.getDaoSubscribers(daoId, timestamp);
+      const subscribers = await this.subscriptionClient.getDaoSubscribers(daoId, timestamp, 'voting-power-changed');
       return { daoId, subscribers };
     });
     const daoSubscriberResults = await Promise.all(daoSubscribersPromises);

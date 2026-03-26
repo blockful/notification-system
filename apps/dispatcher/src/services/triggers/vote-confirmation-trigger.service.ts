@@ -42,7 +42,7 @@ export class VoteConfirmationTriggerHandler extends BaseTriggerHandler<VoteWithD
 
     // Extract unique voter addresses and batch fetch wallet owners
     const voterAddresses = [...new Set(events.map(event => event.voterAddress))];
-    const walletOwners = await this.subscriptionClient.getWalletOwnersBatch(voterAddresses);
+    const walletOwners = await this.subscriptionClient.getWalletOwnersBatch(voterAddresses, 'vote-confirmation');
     
     // Create all user-vote combinations
     const userVoteCombinations = this.createUserVoteCombinations(events, walletOwners);
@@ -97,7 +97,7 @@ export class VoteConfirmationTriggerHandler extends BaseTriggerHandler<VoteWithD
     const eventId = `${vote.transactionHash}-${vote.proposalId}-${vote.voterAddress}-vote`;
 
     // Check if user is subscribed to the DAO
-    const subscribers = await this.getSubscribers(vote.daoId, eventId, String(vote.timestamp));
+    const subscribers = await this.getSubscribers(vote.daoId, eventId, String(vote.timestamp), 'vote-confirmation');
     const isSubscribed = subscribers.some(sub => sub.id === user.id);
     
     if (!isSubscribed) {
