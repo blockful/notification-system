@@ -139,4 +139,37 @@ export class SubscriptionAPIService {
       }
     });
   }
+
+  /**
+   * Get notification preferences for a user by channel
+   * @param channel The notification channel
+   * @param channelUserId The user/chat ID
+   * @returns List of notification preferences with trigger type and active status
+   */
+  async getNotificationPreferences(
+    channel: string,
+    channelUserId: string
+  ): Promise<{ trigger_type: string; is_active: boolean }[]> {
+    const response = await this.client.get(
+      `/users/by-channel/${encodeURIComponent(channel)}/${encodeURIComponent(channelUserId.toString())}/notification-preferences`
+    );
+    return response.data.preferences;
+  }
+
+  /**
+   * Save notification preferences for a user by channel
+   * @param channel The notification channel
+   * @param channelUserId The user/chat ID
+   * @param preferences List of notification preferences to save
+   */
+  async saveNotificationPreferences(
+    channel: string,
+    channelUserId: string,
+    preferences: { trigger_type: string; is_active: boolean }[]
+  ): Promise<void> {
+    await this.client.post(
+      `/users/by-channel/${encodeURIComponent(channel)}/${encodeURIComponent(channelUserId.toString())}/notification-preferences`,
+      { preferences }
+    );
+  }
 } 
