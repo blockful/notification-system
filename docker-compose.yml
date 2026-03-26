@@ -64,6 +64,8 @@ services:
       context: .
       dockerfile: apps/consumers/Dockerfile
     container_name: consumers
+    ports:
+      - "3003:3003"
     environment:
       TELEGRAM_BOT_TOKEN: ${TELEGRAM_BOT_TOKEN}
       ANTICAPTURE_GRAPHQL_ENDPOINT: ${ANTICAPTURE_GRAPHQL_ENDPOINT}
