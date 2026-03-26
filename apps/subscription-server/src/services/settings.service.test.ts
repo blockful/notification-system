@@ -1,54 +1,72 @@
-import { describe, test, expect, jest, beforeEach } from '@jest/globals';
+import { describe, test, expect, beforeEach } from '@jest/globals';
 import { SettingsService } from './settings.service';
-import { IUserNotificationPreferencesRepository, UserNotificationPreference } from '../interfaces/user_subscription.interface';
+import {
+  IUserNotificationPreferencesRepository,
+  UserNotificationPreference,
+} from '../interfaces/user_subscription.interface';
 
-// ---- REPOSITORY MOCK ----
-const createMockPrefsRepo = (): jest.Mocked<IUserNotificationPreferencesRepository> => ({
-  findByUser: jest.fn(),
-  upsertMany: jest.fn(),
-  filterActiveUsers: jest.fn(),
-});
+// ---- STUB ----
+
+const FIXED_DATE = '2025-06-01T00:00:00.000Z';
+
+class StubPrefsRepo implements IUserNotificationPreferencesRepository {
+  findByUserResult: UserNotificationPreference[] = [];
+  upsertManyCalls: Array<{
+    userId: string;
+    preferences: { trigger_type: string; is_active: boolean }[];
+  }> = [];
+
+  async findByUser(): Promise<UserNotificationPreference[]> {
+    return this.findByUserResult;
+  }
+
+  async upsertMany(
+    userId: string,
+    preferences: { trigger_type: string; is_active: boolean }[],
+  ): Promise<void> {
+    this.upsertManyCalls.push({ userId, preferences });
+  }
+
+  async filterActiveUsers(): Promise<string[]> {
+    return [];
+  }
+}
 
 // ---- TESTS ----
+
 describe('SettingsService', () => {
-  let prefsRepo: jest.Mocked<IUserNotificationPreferencesRepository>;
+  let stub: StubPrefsRepo;
   let settingsService: SettingsService;
 
   beforeEach(() => {
-    jest.clearAllMocks();
-    prefsRepo = createMockPrefsRepo();
-    settingsService = new SettingsService(prefsRepo);
+    stub = new StubPrefsRepo();
+    settingsService = new SettingsService(stub);
   });
 
   describe('getUserPreferences', () => {
     test('returns stored preferences for a user', async () => {
-      const mockPrefs: UserNotificationPreference[] = [
-        { user_id: 'user-1', trigger_type: 'new-proposal', is_active: true, updated_at: new Date().toISOString() },
-        { user_id: 'user-1', trigger_type: 'vote-confirmation', is_active: false, updated_at: new Date().toISOString() },
+      stub.findByUserResult = [
+        { user_id: 'user-1', trigger_type: 'new-proposal', is_active: true, updated_at: FIXED_DATE },
+        { user_id: 'user-1', trigger_type: 'vote-confirmation', is_active: false, updated_at: FIXED_DATE },
       ];
-
-      prefsRepo.findByUser.mockResolvedValueOnce(mockPrefs);
 
       const result = await settingsService.getUserPreferences('user-1');
 
-      expect(result).toEqual(mockPrefs);
-      expect(prefsRepo.findByUser).toHaveBeenCalledWith('user-1');
+      expect(result).toEqual([
+        { user_id: 'user-1', trigger_type: 'new-proposal', is_active: true, updated_at: FIXED_DATE },
+        { user_id: 'user-1', trigger_type: 'vote-confirmation', is_active: false, updated_at: FIXED_DATE },
+      ]);
     });
 
     test('returns empty array for user with no preferences', async () => {
-      prefsRepo.findByUser.mockResolvedValueOnce([]);
-
       const result = await settingsService.getUserPreferences('unknown-user');
 
       expect(result).toEqual([]);
-      expect(prefsRepo.findByUser).toHaveBeenCalledWith('unknown-user');
     });
   });
 
   describe('saveUserPreferences', () => {
-    test('calls upsertMany with correct data for valid preferences', async () => {
-      prefsRepo.upsertMany.mockResolvedValueOnce(undefined);
-
+    test('delegates to repository for valid preferences', async () => {
       const preferences = [
         { trigger_type: 'new-proposal', is_active: true },
         { trigger_type: 'vote-confirmation', is_active: false },
@@ -56,38 +74,40 @@ describe('SettingsService', () => {
 
       await settingsService.saveUserPreferences('user-1', preferences);
 
-      expect(prefsRepo.upsertMany).toHaveBeenCalledWith('user-1', preferences);
+      expect(stub.upsertManyCalls).toEqual([
+        {
+          userId: 'user-1',
+          preferences: [
+            { trigger_type: 'new-proposal', is_active: true },
+            { trigger_type: 'vote-confirmation', is_active: false },
+          ],
+        },
+      ]);
     });
 
     test('throws on invalid trigger_type not in NOTIFICATION_TYPES', async () => {
-      const preferences = [
-        { trigger_type: 'invalid-trigger', is_active: true },
-      ];
+      await expect(
+        settingsService.saveUserPreferences('user-1', [
+          { trigger_type: 'invalid-trigger', is_active: true },
+        ]),
+      ).rejects.toThrow('Unknown trigger types: invalid-trigger');
 
-      await expect(settingsService.saveUserPreferences('user-1', preferences)).rejects.toThrow(
-        'Unknown trigger types: invalid-trigger'
-      );
-
-      expect(prefsRepo.upsertMany).not.toHaveBeenCalled();
+      expect(stub.upsertManyCalls).toEqual([]);
     });
 
     test('throws when multiple invalid trigger_types are provided', async () => {
-      const preferences = [
-        { trigger_type: 'new-proposal', is_active: true },
-        { trigger_type: 'bad-trigger-1', is_active: false },
-        { trigger_type: 'bad-trigger-2', is_active: true },
-      ];
+      await expect(
+        settingsService.saveUserPreferences('user-1', [
+          { trigger_type: 'new-proposal', is_active: true },
+          { trigger_type: 'bad-trigger-1', is_active: false },
+          { trigger_type: 'bad-trigger-2', is_active: true },
+        ]),
+      ).rejects.toThrow('Unknown trigger types: bad-trigger-1, bad-trigger-2');
 
-      await expect(settingsService.saveUserPreferences('user-1', preferences)).rejects.toThrow(
-        'Unknown trigger types: bad-trigger-1, bad-trigger-2'
-      );
-
-      expect(prefsRepo.upsertMany).not.toHaveBeenCalled();
+      expect(stub.upsertManyCalls).toEqual([]);
     });
 
     test('accepts all valid trigger_types from NOTIFICATION_TYPES', async () => {
-      prefsRepo.upsertMany.mockResolvedValueOnce(undefined);
-
       const validPreferences = [
         { trigger_type: 'new-proposal', is_active: true },
         { trigger_type: 'new-offchain-proposal', is_active: true },
@@ -101,21 +121,21 @@ describe('SettingsService', () => {
         { trigger_type: 'offchain-vote-cast', is_active: false },
       ];
 
-      await expect(settingsService.saveUserPreferences('user-1', validPreferences)).resolves.toBeUndefined();
+      await settingsService.saveUserPreferences('user-1', validPreferences);
 
-      expect(prefsRepo.upsertMany).toHaveBeenCalledWith('user-1', validPreferences);
+      expect(stub.upsertManyCalls).toEqual([
+        { userId: 'user-1', preferences: validPreferences },
+      ]);
     });
 
     test('throws on empty string trigger_type', async () => {
-      const preferences = [
-        { trigger_type: '', is_active: true },
-      ];
+      await expect(
+        settingsService.saveUserPreferences('user-1', [
+          { trigger_type: '', is_active: true },
+        ]),
+      ).rejects.toThrow('Unknown trigger types: ');
 
-      await expect(settingsService.saveUserPreferences('user-1', preferences)).rejects.toThrow(
-        'Unknown trigger types: '
-      );
-
-      expect(prefsRepo.upsertMany).not.toHaveBeenCalled();
+      expect(stub.upsertManyCalls).toEqual([]);
     });
   });
 });

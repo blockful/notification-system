@@ -1,43 +1,64 @@
-import { describe, test, expect, jest, beforeEach } from '@jest/globals';
+import { describe, test, expect, beforeAll, afterAll, beforeEach } from '@jest/globals';
+import { knex, Knex } from 'knex';
+import path from 'path';
 import { UserNotificationPreferencesRepository } from './user-notification-preferences.repository';
-import { UserNotificationPreference } from '../interfaces/user_subscription.interface';
 
-// ---- KNEX MOCK HELPERS ----
+// ---- TEST DB SETUP ----
 
-/**
- * Builds a chainable Knex query builder mock.
- * Each method returns `this` so chains like .where().whereIn().select() work.
- * `resolveWith` is the value that the chain eventually resolves to.
- */
-function buildQueryMock(resolveWith: unknown) {
-  const mock: Record<string, jest.Mock> = {};
+const FIXED_DATE = '2025-06-01T00:00:00.000Z';
 
-  const chainMethods = ['where', 'whereIn', 'select', 'insert', 'onConflict', 'merge'] as const;
-
-  for (const method of chainMethods) {
-    mock[method] = jest.fn().mockReturnThis();
-  }
-
-  // The query builder itself is thenable (acts like a Promise)
-  mock['then'] = jest.fn((onFulfilled: (value: unknown) => unknown) =>
-    Promise.resolve(resolveWith).then(onFulfilled)
-  );
-  mock['catch'] = jest.fn((onRejected: (reason: unknown) => unknown) =>
-    Promise.resolve(resolveWith).catch(onRejected)
-  );
-
-  return mock;
+function createTestDb(): Knex {
+  return knex({
+    client: 'sqlite3',
+    connection: { filename: ':memory:' },
+    useNullAsDefault: true,
+    migrations: {
+      directory: [path.resolve(__dirname, '../../db/migrations')],
+    },
+  });
 }
 
-/** Creates a minimal Knex mock whose table accessor returns a query mock. */
-function buildKnexMock(queryMock: ReturnType<typeof buildQueryMock>) {
-  const knexFn = jest.fn().mockReturnValue(queryMock);
+let db: Knex;
+let repo: UserNotificationPreferencesRepository;
 
-  // Attach fn.now() used by upsertMany
-  (knexFn as unknown as Record<string, unknown>)['fn'] = { now: jest.fn().mockReturnValue('NOW()') };
-
-  return knexFn;
+async function seedUser(id: string): Promise<void> {
+  await db('users').insert({
+    id,
+    channel: 'telegram',
+    channel_user_id: `chan-${id}`,
+    created_at: FIXED_DATE,
+  });
 }
+
+async function seedPreference(
+  userId: string,
+  triggerType: string,
+  isActive: boolean,
+): Promise<void> {
+  await db('user_notification_preferences').insert({
+    user_id: userId,
+    trigger_type: triggerType,
+    is_active: isActive,
+    updated_at: FIXED_DATE,
+  });
+}
+
+beforeAll(async () => {
+  db = createTestDb();
+  await db.migrate.latest();
+  repo = new UserNotificationPreferencesRepository(db);
+});
+
+afterAll(async () => {
+  await db.destroy();
+});
+
+beforeEach(async () => {
+  await db('user_notification_preferences').del();
+  await db('notifications').del();
+  await db('user_preferences').del();
+  await db('users').del();
+});
 
 // ---- TESTS ----
 
@@ -47,77 +68,61 @@ describe('UserNotificationPreferencesRepository', () => {
   // ----------------------------------------------------------------
   describe('filterActiveUsers', () => {
     test('returns all user IDs when none have disabled the trigger type', async () => {
-      const userIds = ['user1', 'user2', 'user3'];
-      // No disabled rows returned from DB
-      const queryMock = buildQueryMock([]);
-      const knex = buildKnexMock(queryMock);
+      await seedUser('user1');
+      await seedUser('user2');
+      await seedUser('user3');
 
-      const repo = new UserNotificationPreferencesRepository(knex as never);
-      const result = await repo.filterActiveUsers(userIds, 'vote_cast');
+      const result = await repo.filterActiveUsers(['user1', 'user2', 'user3'], 'vote_cast');
 
       expect(result).toEqual(['user1', 'user2', 'user3']);
     });
 
     test('excludes users who have is_active: false for the trigger type', async () => {
-      const userIds = ['user1', 'user2', 'user3'];
-      // user2 has disabled the trigger
-      const queryMock = buildQueryMock([{ user_id: 'user2' }]);
-      const knex = buildKnexMock(queryMock);
+      await seedUser('user1');
+      await seedUser('user2');
+      await seedUser('user3');
+      await seedPreference('user2', 'vote_cast', false);
 
-      const repo = new UserNotificationPreferencesRepository(knex as never);
-      const result = await repo.filterActiveUsers(userIds, 'vote_cast');
+      const result = await repo.filterActiveUsers(['user1', 'user2', 'user3'], 'vote_cast');
 
       expect(result).toEqual(['user1', 'user3']);
-      expect(result).not.toContain('user2');
     });
 
     test('returns user IDs that have no row (missing row = enabled)', async () => {
-      const userIds = ['user1', 'user4'];
-      // No rows at all — both users have no preference record
-      const queryMock = buildQueryMock([]);
-      const knex = buildKnexMock(queryMock);
+      await seedUser('user1');
+      await seedUser('user4');
 
-      const repo = new UserNotificationPreferencesRepository(knex as never);
-      const result = await repo.filterActiveUsers(userIds, 'proposal_created');
+      const result = await repo.filterActiveUsers(['user1', 'user4'], 'proposal_created');
 
       expect(result).toEqual(['user1', 'user4']);
     });
 
     test('returns empty array when given empty input', async () => {
-      const queryMock = buildQueryMock([]);
-      const knex = buildKnexMock(queryMock);
-
-      const repo = new UserNotificationPreferencesRepository(knex as never);
       const result = await repo.filterActiveUsers([], 'vote_cast');
 
       expect(result).toEqual([]);
-      // Knex should never be called for empty input
-      expect(knex).not.toHaveBeenCalled();
     });
 
     test('handles mix of enabled, disabled, and no-row users', async () => {
-      // user1: has is_active=true row  (should be kept — not in disabled list)
-      // user2: has is_active=false row (should be excluded — in disabled list)
-      // user3: no row at all           (should be kept — missing = enabled)
-      const userIds = ['user1', 'user2', 'user3'];
-      const queryMock = buildQueryMock([{ user_id: 'user2' }]);
-      const knex = buildKnexMock(queryMock);
+      await seedUser('user1');
+      await seedUser('user2');
+      await seedUser('user3');
+      await seedPreference('user1', 'vote_cast', true);
+      await seedPreference('user2', 'vote_cast', false);
+      // user3: no row — default enabled
 
-      const repo = new UserNotificationPreferencesRepository(knex as never);
-      const result = await repo.filterActiveUsers(userIds, 'vote_cast');
+      const result = await repo.filterActiveUsers(['user1', 'user2', 'user3'], 'vote_cast');
 
-      expect(result).toContain('user1');
-      expect(result).not.toContain('user2');
-      expect(result).toContain('user3');
+      expect(result).toEqual(['user1', 'user3']);
     });
 
     test('excludes all users when all have disabled the trigger type', async () => {
-      const userIds = ['user1', 'user2'];
-      const queryMock = buildQueryMock([{ user_id: 'user1' }, { user_id: 'user2' }]);
-      const knex = buildKnexMock(queryMock);
+      await seedUser('user1');
+      await seedUser('user2');
+      await seedPreference('user1', 'vote_cast', false);
+      await seedPreference('user2', 'vote_cast', false);
 
-      const repo = new UserNotificationPreferencesRepository(knex as never);
-      const result = await repo.filterActiveUsers(userIds, 'vote_cast');
+      const result = await repo.filterActiveUsers(['user1', 'user2'], 'vote_cast');
 
       expect(result).toEqual([]);
     });
@@ -128,41 +133,24 @@ describe('UserNotificationPreferencesRepository', () => {
   // ----------------------------------------------------------------
   describe('findByUser', () => {
     test('returns empty array for user with no preferences', async () => {
-      const queryMock = buildQueryMock([]);
-      const knex = buildKnexMock(queryMock);
+      await seedUser('user1');
 
-      const repo = new UserNotificationPreferencesRepository(knex as never);
       const result = await repo.findByUser('user1');
 
       expect(result).toEqual([]);
     });
 
     test('returns all stored preferences for a user', async () => {
-      const prefs: UserNotificationPreference[] = [
-        { user_id: 'user1', trigger_type: 'vote_cast', is_active: true, updated_at: '2024-01-01' },
-        { user_id: 'user1', trigger_type: 'proposal_created', is_active: false, updated_at: '2024-01-01' },
-      ];
+      await seedUser('user1');
+      await seedPreference('user1', 'vote_cast', true);
+      await seedPreference('user1', 'proposal_created', false);
 
-      const queryMock = buildQueryMock(prefs);
-      const knex = buildKnexMock(queryMock);
-
-      const repo = new UserNotificationPreferencesRepository(knex as never);
       const result = await repo.findByUser('user1');
 
-      expect(result).toEqual(prefs);
-      expect(result).toHaveLength(2);
-    });
-
-    test('queries the correct table and user_id', async () => {
-      const queryMock = buildQueryMock([]);
-      const knex = buildKnexMock(queryMock);
-
-      const repo = new UserNotificationPreferencesRepository(knex as never);
-      await repo.findByUser('user42');
-
-      expect(knex).toHaveBeenCalledWith('user_notification_preferences');
-      expect(queryMock.where).toHaveBeenCalledWith({ user_id: 'user42' });
-      expect(queryMock.select).toHaveBeenCalledWith('*');
+      expect(result).toEqual([
+        { user_id: 'user1', trigger_type: 'proposal_created', is_active: 0, updated_at: FIXED_DATE },
+        { user_id: 'user1', trigger_type: 'vote_cast', is_active: 1, updated_at: FIXED_DATE },
+      ]);
     });
   });
 
@@ -171,61 +159,73 @@ describe('UserNotificationPreferencesRepository', () => {
   // ----------------------------------------------------------------
   describe('upsertMany', () => {
     test('does nothing when preferences array is empty', async () => {
-      const queryMock = buildQueryMock([]);
-      const knex = buildKnexMock(queryMock);
+      await seedUser('user1');
 
-      const repo = new UserNotificationPreferencesRepository(knex as never);
       await repo.upsertMany('user1', []);
 
-      // Knex table accessor should never be called
-      expect(knex).not.toHaveBeenCalled();
+      const rows = await db('user_notification_preferences').select('*');
+      expect(rows).toEqual([]);
     });
 
     test('inserts new rows for a user', async () => {
-      const queryMock = buildQueryMock([]);
-      const knex = buildKnexMock(queryMock);
+      await seedUser('user1');
 
-      const repo = new UserNotificationPreferencesRepository(knex as never);
       await repo.upsertMany('user1', [
         { trigger_type: 'vote_cast', is_active: true },
       ]);
 
-      expect(knex).toHaveBeenCalledWith('user_notification_preferences');
-      expect(queryMock.insert).toHaveBeenCalledWith([
-        expect.objectContaining({
+      const rows = await db('user_notification_preferences').select('*');
+      expect(rows).toEqual([
+        {
           user_id: 'user1',
           trigger_type: 'vote_cast',
-          is_active: true,
-        }),
+          is_active: 1,
+          updated_at: expect.any(String),
+        },
       ]);
     });
 
-    test('uses onConflict merge to update existing rows', async () => {
-      const queryMock = buildQueryMock([]);
-      const knex = buildKnexMock(queryMock);
+    test('updates existing rows on conflict (upsert)', async () => {
+      await seedUser('user1');
+      await seedPreference('user1', 'vote_cast', true);
 
-      const repo = new UserNotificationPreferencesRepository(knex as never);
       await repo.upsertMany('user1', [
         { trigger_type: 'vote_cast', is_active: false },
       ]);
 
-      expect(queryMock.onConflict).toHaveBeenCalledWith(['user_id', 'trigger_type']);
-      expect(queryMock.merge).toHaveBeenCalledWith(['is_active', 'updated_at']);
+      const rows = await db('user_notification_preferences').select('*');
+      expect(rows).toEqual([
+        {
+          user_id: 'user1',
+          trigger_type: 'vote_cast',
+          is_active: 0,
+          updated_at: expect.any(String),
+        },
+      ]);
     });
 
     test('inserts multiple preferences in a single call', async () => {
-      const queryMock = buildQueryMock([]);
-      const knex = buildKnexMock(queryMock);
+      await seedUser('user1');
 
-      const repo = new UserNotificationPreferencesRepository(knex as never);
       await repo.upsertMany('user1', [
         { trigger_type: 'vote_cast', is_active: true },
         { trigger_type: 'proposal_created', is_active: false },
       ]);
 
-      expect(queryMock.insert).toHaveBeenCalledWith([
-        expect.objectContaining({ trigger_type: 'vote_cast', is_active: true }),
-        expect.objectContaining({ trigger_type: 'proposal_created', is_active: false }),
+      const rows = await db('user_notification_preferences').select('*');
+      expect(rows).toEqual([
+        {
+          user_id: 'user1',
+          trigger_type: 'vote_cast',
+          is_active: 1,
+          updated_at: expect.any(String),
+        },
+        {
+          user_id: 'user1',
+          trigger_type: 'proposal_created',
+          is_active: 0,
+          updated_at: expect.any(String),
+        },
       ]);
     });
   });
