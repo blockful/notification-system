@@ -39,7 +39,7 @@ export class GraphQLMockSetup {
   /**
    * @notice Generic mock implementation that handles all query types
    */
-  private static createMockImplementation(proposals: ProposalData[] = [], votingPowerData: ProcessedVotingPowerHistory[] = [], daoChainMapping: Record<string, number> = {}, votesData: any[] = [], offchainProposalsData: OffchainProposalData[] = []) {
+  private static createMockImplementation(proposals: ProposalData[] = [], votingPowerData: ProcessedVotingPowerHistory[] = [], daoChainMapping: Record<string, number> = {}, votesData: any[] = [], offchainProposalsData: OffchainProposalData[] = [], offchainVotesData: any[] = []) {
     return (url: string, data: any, config: any) => {
       // Handle proposals
       if (data.query?.includes('ListProposals')) {
@@ -111,6 +111,40 @@ export class GraphQLMockSetup {
         const items = this.transformToRawGraphQLFormat(filtered);
         return Promise.resolve({
           data: { data: { historicalVotingPower: { items, totalCount: items.length } } }
+        });
+      }
+
+      // Handle offchain votes (MUST come before ListVotes since 'ListOffchainVotes'.includes('ListVotes') is true)
+      if (data.query?.includes('ListOffchainVotes')) {
+        let filtered = offchainVotesData;
+
+        const daoId = config?.headers?.['anticapture-dao-id'];
+        const fromDate = data.variables?.fromDate;
+        const toDate = data.variables?.toDate;
+
+        if (daoId) {
+          filtered = filtered.filter((v: any) => v.daoId === daoId);
+        }
+
+        if (fromDate !== undefined) {
+          filtered = filtered.filter((v: any) => v.created > fromDate);
+        }
+
+        if (toDate !== undefined) {
+          filtered = filtered.filter((v: any) => v.created < toDate);
+        }
+
+        const items = filtered.map((v: any) => ({
+          voter: v.voter,
+          created: v.created,
+          proposalId: v.proposalId,
+          proposalTitle: v.proposalTitle,
+          reason: v.reason || '',
+          vp: v.vp
+        }));
+
+        return Promise.resolve({
+          data: { data: { votesOffchain: { items, totalCount: items.length } } }
         });
       }
 
@@ -194,7 +228,8 @@ export class GraphQLMockSetup {
           ...proposals.map(p => p.daoId).filter(Boolean),
           ...votingPowerData.map(vp => vp.daoId).filter(Boolean),
           ...votesData.map((v: any) => v.daoId).filter(Boolean),
-          ...offchainProposalsData.map(p => p.daoId).filter(Boolean)
+          ...offchainProposalsData.map(p => p.daoId).filter(Boolean),
+          ...offchainVotesData.map((v: any) => v.daoId).filter(Boolean)
         ])];
         return Promise.resolve({
           data: { data: { daos: { items: uniqueDaoIds.map(id => ({
@@ -234,9 +269,10 @@ export class GraphQLMockSetup {
     votingPowerData: ProcessedVotingPowerHistory[] = [],
     daoChainMapping: Record<string, number> = {},
     votesData: any[] = [],
-    offchainProposalsData: OffchainProposalData[] = []
+    offchainProposalsData: OffchainProposalData[] = [],
+    offchainVotesData: any[] = []
   ): void {
-    mockHttpClient.post.mockImplementation(this.createMockImplementation(proposals, votingPowerData, daoChainMapping, votesData, offchainProposalsData));
+    mockHttpClient.post.mockImplementation(this.createMockImplementation(proposals, votingPowerData, daoChainMapping, votesData, offchainProposalsData, offchainVotesData));
   }
 
   /**

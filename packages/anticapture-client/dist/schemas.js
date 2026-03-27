@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.SafeOffchainProposalsResponseSchema = exports.OffchainProposalItemSchema = exports.EventThresholdResponseSchema = exports.SafeProposalNonVotersResponseSchema = exports.SafeVotesResponseSchema = exports.SafeHistoricalVotingPowerResponseSchema = exports.SafeProposalByIdResponseSchema = exports.SafeProposalsResponseSchema = exports.SafeDaosResponseSchema = exports.FeedRelevance = exports.FeedEventType = void 0;
+exports.SafeOffchainVotesResponseSchema = exports.OffchainVoteItemSchema = exports.SafeOffchainProposalsResponseSchema = exports.OffchainProposalItemSchema = exports.EventThresholdResponseSchema = exports.SafeProposalNonVotersResponseSchema = exports.SafeVotesResponseSchema = exports.SafeHistoricalVotingPowerResponseSchema = exports.SafeProposalByIdResponseSchema = exports.SafeProposalsResponseSchema = exports.SafeDaosResponseSchema = exports.FeedRelevance = exports.FeedEventType = void 0;
 exports.processProposals = processProposals;
 exports.processVotingPowerHistory = processVotingPowerHistory;
 const zod_1 = require("zod");
@@ -149,6 +149,31 @@ exports.SafeOffchainProposalsResponseSchema = zod_1.z.object({
         offchainProposals: {
             ...data.offchainProposals,
             items: data.offchainProposals.items.filter((item) => item !== null),
+        },
+    };
+});
+exports.OffchainVoteItemSchema = zod_1.z.object({
+    voter: zod_1.z.string(),
+    created: zod_1.z.number(),
+    proposalId: zod_1.z.string(),
+    proposalTitle: zod_1.z.string(),
+    reason: zod_1.z.string().nullable().optional(),
+    vp: zod_1.z.number().nullable().optional(),
+});
+exports.SafeOffchainVotesResponseSchema = zod_1.z.object({
+    votesOffchain: zod_1.z.object({
+        items: zod_1.z.array(exports.OffchainVoteItemSchema.nullable()),
+        totalCount: zod_1.z.number(),
+    }).nullable(),
+}).transform((data) => {
+    if (!data.votesOffchain) {
+        console.warn('OffchainVotesResponse has null votesOffchain:', data);
+        return { votesOffchain: { items: [], totalCount: 0 } };
+    }
+    return {
+        votesOffchain: {
+            ...data.votesOffchain,
+            items: data.votesOffchain.items.filter((item) => item !== null),
         },
     };
 });

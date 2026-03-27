@@ -725,6 +725,124 @@ export declare const SafeOffchainProposalsResponseSchema: z.ZodEffects<z.ZodObje
         totalCount: number;
     } | null;
 }>;
+export declare const OffchainVoteItemSchema: z.ZodObject<{
+    voter: z.ZodString;
+    created: z.ZodNumber;
+    proposalId: z.ZodString;
+    proposalTitle: z.ZodString;
+    reason: z.ZodOptional<z.ZodNullable<z.ZodString>>;
+    vp: z.ZodOptional<z.ZodNullable<z.ZodNumber>>;
+}, "strip", z.ZodTypeAny, {
+    created: number;
+    voter: string;
+    proposalId: string;
+    proposalTitle: string;
+    reason?: string | null | undefined;
+    vp?: number | null | undefined;
+}, {
+    created: number;
+    voter: string;
+    proposalId: string;
+    proposalTitle: string;
+    reason?: string | null | undefined;
+    vp?: number | null | undefined;
+}>;
+export type OffchainVoteItem = z.infer<typeof OffchainVoteItemSchema>;
+export declare const SafeOffchainVotesResponseSchema: z.ZodEffects<z.ZodObject<{
+    votesOffchain: z.ZodNullable<z.ZodObject<{
+        items: z.ZodArray<z.ZodNullable<z.ZodObject<{
+            voter: z.ZodString;
+            created: z.ZodNumber;
+            proposalId: z.ZodString;
+            proposalTitle: z.ZodString;
+            reason: z.ZodOptional<z.ZodNullable<z.ZodString>>;
+            vp: z.ZodOptional<z.ZodNullable<z.ZodNumber>>;
+        }, "strip", z.ZodTypeAny, {
+            created: number;
+            voter: string;
+            proposalId: string;
+            proposalTitle: string;
+            reason?: string | null | undefined;
+            vp?: number | null | undefined;
+        }, {
+            created: number;
+            voter: string;
+            proposalId: string;
+            proposalTitle: string;
+            reason?: string | null | undefined;
+            vp?: number | null | undefined;
+        }>>, "many">;
+        totalCount: z.ZodNumber;
+    }, "strip", z.ZodTypeAny, {
+        items: ({
+            created: number;
+            voter: string;
+            proposalId: string;
+            proposalTitle: string;
+            reason?: string | null | undefined;
+            vp?: number | null | undefined;
+        } | null)[];
+        totalCount: number;
+    }, {
+        items: ({
+            created: number;
+            voter: string;
+            proposalId: string;
+            proposalTitle: string;
+            reason?: string | null | undefined;
+            vp?: number | null | undefined;
+        } | null)[];
+        totalCount: number;
+    }>>;
+}, "strip", z.ZodTypeAny, {
+    votesOffchain: {
+        items: ({
+            created: number;
+            voter: string;
+            proposalId: string;
+            proposalTitle: string;
+            reason?: string | null | undefined;
+            vp?: number | null | undefined;
+        } | null)[];
+        totalCount: number;
+    } | null;
+}, {
+    votesOffchain: {
+        items: ({
+            created: number;
+            voter: string;
+            proposalId: string;
+            proposalTitle: string;
+            reason?: string | null | undefined;
+            vp?: number | null | undefined;
+        } | null)[];
+        totalCount: number;
+    } | null;
+}>, {
+    votesOffchain: {
+        items: {
+            created: number;
+            voter: string;
+            proposalId: string;
+            proposalTitle: string;
+            reason?: string | null | undefined;
+            vp?: number | null | undefined;
+        }[];
+        totalCount: number;
+    };
+}, {
+    votesOffchain: {
+        items: ({
+            created: number;
+            voter: string;
+            proposalId: string;
+            proposalTitle: string;
+            reason?: string | null | undefined;
+            vp?: number | null | undefined;
+        } | null)[];
+        totalCount: number;
+    } | null;
+}>;
 type SafeProposalsResponse = z.infer<typeof SafeProposalsResponseSchema>;
 type SafeHistoricalVotingPowerResponse = z.infer<typeof SafeHistoricalVotingPowerResponseSchema>;
 export type ProcessedVotingPowerHistory = z.infer<typeof HistoricalVotingPowerItemSchema> & {

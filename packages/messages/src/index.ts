@@ -10,6 +10,7 @@ export * from './triggers/voting-reminder';
 export * from './triggers/proposal-finished';
 export * from './triggers/offchain-proposal-finished';
 export * from './triggers/voting-power';
+export * from './triggers/offchain-vote-cast';
 export * from './triggers/non-voting';
 export * from './triggers/delegation-change';
 export * from './triggers/buttons';
