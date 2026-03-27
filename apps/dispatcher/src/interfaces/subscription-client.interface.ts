@@ -1,3 +1,5 @@
+import type { NotificationTypeId } from '@notification-system/messages';
+
 /**
  * Interface defining a subscriber user from the subscription system
  */
@@ -30,7 +32,7 @@ export interface ISubscriptionClient {
    * @param triggerType Optional trigger type to filter subscribers by notification preference
    * @returns List of subscribers
    */
-  getDaoSubscribers(daoId: string, eventTimestamp?: string, triggerType?: string): Promise<User[]>;
+  getDaoSubscribers(daoId: string, eventTimestamp?: string, triggerType?: NotificationTypeId): Promise<User[]>;
 
   /**
    * Filters subscribers to return only those who should receive notifications
@@ -64,7 +66,7 @@ export interface ISubscriptionClient {
    * @param triggerType Optional trigger type to filter users by notification preference
    * @returns List of users who own the address
    */
-  getWalletOwners(address: string, triggerType?: string): Promise<User[]>;
+  getWalletOwners(address: string, triggerType?: NotificationTypeId): Promise<User[]>;
 
   /**
    * Get users who own specific wallet addresses (batch operation)
@@ -72,7 +74,7 @@ export interface ISubscriptionClient {
    * @param triggerType Optional trigger type to filter users by notification preference
    * @returns Record mapping addresses to arrays of users who own each address
    */
-  getWalletOwnersBatch(addresses: string[], triggerType?: string): Promise<Record<string, User[]>>;
+  getWalletOwnersBatch(addresses: string[], triggerType?: NotificationTypeId): Promise<Record<string, User[]>>;
 
   /**
    * Get all unique addresses being followed by users in a specific DAO

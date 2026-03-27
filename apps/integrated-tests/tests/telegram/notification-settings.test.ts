@@ -4,6 +4,7 @@ import { HttpClientMockSetup, GraphQLMockSetup } from '../../src/mocks';
 import { UserFactory, OffchainProposalFactory } from '../../src/fixtures';
 import { TelegramTestHelper, DatabaseTestHelper, TestCleanup } from '../../src/helpers';
 import { testConstants, timeouts } from '../../src/config';
+import { NotificationTypeId } from '@notification-system/messages';
 
 describe('Notification Settings Filtering - Integration Test', () => {
   let apps: TestApps;
@@ -40,7 +41,7 @@ describe('Notification Settings Filtering - Integration Test', () => {
     // Opt out of 'new-offchain-proposal' by inserting into user_notification_preferences
     await db('user_notification_preferences').insert({
       user_id: user.id,
-      trigger_type: 'new-offchain-proposal',
+      trigger_type: NotificationTypeId.NewOffchainProposal,
       is_active: false,
       updated_at: new Date().toISOString(),
     });

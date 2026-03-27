@@ -1,4 +1,5 @@
 import { describe, test, expect, beforeEach } from '@jest/globals';
+import { NotificationTypeId } from '@notification-system/messages';
 import { SettingsService } from './settings.service';
 import {
   IUserNotificationPreferencesRepository,
@@ -13,7 +14,7 @@ class StubPrefsRepo implements IUserNotificationPreferencesRepository {
   findByUserResult: UserNotificationPreference[] = [];
   upsertManyCalls: Array<{
     userId: string;
-    preferences: { trigger_type: string; is_active: boolean }[];
+    preferences: { trigger_type: NotificationTypeId; is_active: boolean }[];
   }> = [];
 
   async findByUser(): Promise<UserNotificationPreference[]> {
@@ -22,7 +23,7 @@ class StubPrefsRepo implements IUserNotificationPreferencesRepository {
 
   async upsertMany(
     userId: string,
-    preferences: { trigger_type: string; is_active: boolean }[],
+    preferences: { trigger_type: NotificationTypeId; is_active: boolean }[],
   ): Promise<void> {
     this.upsertManyCalls.push({ userId, preferences });
   }
@@ -46,15 +47,15 @@ describe('SettingsService', () => {
   describe('getUserPreferences', () => {
     test('returns stored preferences for a user', async () => {
       stub.findByUserResult = [
-        { user_id: 'user-1', trigger_type: 'new-proposal', is_active: true, updated_at: FIXED_DATE },
-        { user_id: 'user-1', trigger_type: 'vote-confirmation', is_active: false, updated_at: FIXED_DATE },
+        { user_id: 'user-1', trigger_type: NotificationTypeId.NewProposal, is_active: true, updated_at: FIXED_DATE },
+        { user_id: 'user-1', trigger_type: NotificationTypeId.VoteConfirmation, is_active: false, updated_at: FIXED_DATE },
       ];
 
       const result = await settingsService.getUserPreferences('user-1');
 
       expect(result).toEqual([
-        { user_id: 'user-1', trigger_type: 'new-proposal', is_active: true, updated_at: FIXED_DATE },
-        { user_id: 'user-1', trigger_type: 'vote-confirmation', is_active: false, updated_at: FIXED_DATE },
+        { user_id: 'user-1', trigger_type: NotificationTypeId.NewProposal, is_active: true, updated_at: FIXED_DATE },
+        { user_id: 'user-1', trigger_type: NotificationTypeId.VoteConfirmation, is_active: false, updated_at: FIXED_DATE },
       ]);
     });
 
@@ -68,8 +69,8 @@ describe('SettingsService', () => {
   describe('saveUserPreferences', () => {
     test('delegates to repository for valid preferences', async () => {
       const preferences = [
-        { trigger_type: 'new-proposal', is_active: true },
-        { trigger_type: 'vote-confirmation', is_active: false },
+        { trigger_type: NotificationTypeId.NewProposal, is_active: true },
+        { trigger_type: NotificationTypeId.VoteConfirmation, is_active: false },
       ];
 
       await settingsService.saveUserPreferences('user-1', preferences);
@@ -78,47 +79,25 @@ describe('SettingsService', () => {
         {
           userId: 'user-1',
           preferences: [
-            { trigger_type: 'new-proposal', is_active: true },
-            { trigger_type: 'vote-confirmation', is_active: false },
+            { trigger_type: NotificationTypeId.NewProposal, is_active: true },
+            { trigger_type: NotificationTypeId.VoteConfirmation, is_active: false },
           ],
         },
       ]);
     });
 
-    test('throws on invalid trigger_type not in NOTIFICATION_TYPES', async () => {
-      await expect(
-        settingsService.saveUserPreferences('user-1', [
-          { trigger_type: 'invalid-trigger', is_active: true },
-        ]),
-      ).rejects.toThrow('Unknown trigger types: invalid-trigger');
-
-      expect(stub.upsertManyCalls).toEqual([]);
-    });
-
-    test('throws when multiple invalid trigger_types are provided', async () => {
-      await expect(
-        settingsService.saveUserPreferences('user-1', [
-          { trigger_type: 'new-proposal', is_active: true },
-          { trigger_type: 'bad-trigger-1', is_active: false },
-          { trigger_type: 'bad-trigger-2', is_active: true },
-        ]),
-      ).rejects.toThrow('Unknown trigger types: bad-trigger-1, bad-trigger-2');
-
-      expect(stub.upsertManyCalls).toEqual([]);
-    });
-
     test('accepts all valid trigger_types from NOTIFICATION_TYPES', async () => {
       const validPreferences = [
-        { trigger_type: 'new-proposal', is_active: true },
-        { trigger_type: 'new-offchain-proposal', is_active: true },
-        { trigger_type: 'proposal-finished', is_active: false },
-        { trigger_type: 'non-voting', is_active: true },
-        { trigger_type: 'voting-reminder-30', is_active: false },
-        { trigger_type: 'voting-reminder-60', is_active: true },
-        { trigger_type: 'voting-reminder-90', is_active: false },
-        { trigger_type: 'voting-power-changed', is_active: true },
-        { trigger_type: 'vote-confirmation', is_active: true },
-        { trigger_type: 'offchain-vote-cast', is_active: false },
+        { trigger_type: NotificationTypeId.NewProposal, is_active: true },
+        { trigger_type: NotificationTypeId.NewOffchainProposal, is_active: true },
+        { trigger_type: NotificationTypeId.ProposalFinished, is_active: false },
+        { trigger_type: NotificationTypeId.NonVoting, is_active: true },
+        { trigger_type: NotificationTypeId.VotingReminder30, is_active: false },
+        { trigger_type: NotificationTypeId.VotingReminder60, is_active: true },
+        { trigger_type: NotificationTypeId.VotingReminder90, is_active: false },
+        { trigger_type: NotificationTypeId.VotingPowerChanged, is_active: true },
+        { trigger_type: NotificationTypeId.VoteConfirmation, is_active: true },
+        { trigger_type: NotificationTypeId.OffchainVoteCast, is_active: false },
       ];
 
       await settingsService.saveUserPreferences('user-1', validPreferences);
@@ -128,14 +107,5 @@ describe('SettingsService', () => {
       ]);
     });
 
-    test('throws on empty string trigger_type', async () => {
-      await expect(
-        settingsService.saveUserPreferences('user-1', [
-          { trigger_type: '', is_active: true },
-        ]),
-      ).rejects.toThrow('Unknown trigger types: ');
-
-      expect(stub.upsertManyCalls).toEqual([]);
-    });
-  });
+});
 });

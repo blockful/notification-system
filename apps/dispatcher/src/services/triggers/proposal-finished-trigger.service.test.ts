@@ -4,6 +4,7 @@ import { ISubscriptionClient, User, Notification } from '../../interfaces/subscr
 import { NotificationClientFactory } from '../notification/notification-factory.service';
 import { INotificationClient } from '../../interfaces/notification-client.interface';
 import { DispatcherMessage } from '../../interfaces/dispatcher-message.interface';
+import { NotificationTypeId } from '@notification-system/messages';
 
 describe('ProposalFinishedTriggerHandler', () => {
   let mockSubscriptionClient: jest.Mocked<ISubscriptionClient>;
@@ -73,13 +74,13 @@ describe('ProposalFinishedTriggerHandler', () => {
   describe('handleMessage', () => {
     it('should process single proposal finished message correctly', async () => {
       const mockMessage: DispatcherMessage<any> = {
-        triggerId: 'proposal-finished',
+        triggerId: NotificationTypeId.ProposalFinished,
         events: [mockProposal]
       };
       
       await handler.handleMessage(mockMessage);
       
-      expect(mockSubscriptionClient.getDaoSubscribers).toHaveBeenCalledWith('dao123', '1625086400', 'proposal-finished');
+      expect(mockSubscriptionClient.getDaoSubscribers).toHaveBeenCalledWith('dao123', '1625086400', NotificationTypeId.ProposalFinished);
       expect(mockSubscriptionClient.shouldSend).toHaveBeenCalledWith(mockUsers, 'prop456-finished', 'dao123');
       expect(mockNotificationClient.sendNotification).toHaveBeenCalledTimes(2);
       expect(mockNotificationClient.sendNotification).toHaveBeenCalledWith(expect.objectContaining({
@@ -99,7 +100,7 @@ describe('ProposalFinishedTriggerHandler', () => {
         { user_id: '1', event_id: 'prop2-finished', dao_id: 'dao456' }
       ];
       const mockMessage: DispatcherMessage<any> = {
-        triggerId: 'proposal-finished',
+        triggerId: NotificationTypeId.ProposalFinished,
         events: [
           { id: 'prop1', daoId: 'dao123', description: 'First Proposal', endTimestamp: 1625086401, status: 'executed', forVotes: '1000000000000000000000', againstVotes: '500000000000000000000', abstainVotes: '100000000000000000000' },
           { id: 'prop2', daoId: 'dao456', description: 'Second Proposal', endTimestamp: 1625086402, status: 'defeated', forVotes: '400000000000000000000', againstVotes: '600000000000000000000', abstainVotes: '50000000000000000000' }
@@ -112,14 +113,14 @@ describe('ProposalFinishedTriggerHandler', () => {
       await handler.handleMessage(mockMessage);
       
       expect(mockSubscriptionClient.getDaoSubscribers).toHaveBeenCalledTimes(2);
-      expect(mockSubscriptionClient.getDaoSubscribers).toHaveBeenCalledWith('dao123', '1625086401', 'proposal-finished');
-      expect(mockSubscriptionClient.getDaoSubscribers).toHaveBeenCalledWith('dao456', '1625086402', 'proposal-finished');
+      expect(mockSubscriptionClient.getDaoSubscribers).toHaveBeenCalledWith('dao123', '1625086401', NotificationTypeId.ProposalFinished);
+      expect(mockSubscriptionClient.getDaoSubscribers).toHaveBeenCalledWith('dao456', '1625086402', NotificationTypeId.ProposalFinished);
       expect(mockNotificationClient.sendNotification).toHaveBeenCalledTimes(2);
     });
 
     it('should handle empty proposals array', async () => {
       const mockMessage: DispatcherMessage<any> = {
-        triggerId: 'proposal-finished',
+        triggerId: NotificationTypeId.ProposalFinished,
         events: []
       };
       
@@ -131,7 +132,7 @@ describe('ProposalFinishedTriggerHandler', () => {
 
     it('should skip proposals with no subscribers', async () => {
       const mockMessage: DispatcherMessage<any> = {
-        triggerId: 'proposal-finished',
+        triggerId: NotificationTypeId.ProposalFinished,
         events: [mockProposal]
       };
       
@@ -140,7 +141,7 @@ describe('ProposalFinishedTriggerHandler', () => {
       
       await handler.handleMessage(mockMessage);
       
-      expect(mockSubscriptionClient.getDaoSubscribers).toHaveBeenCalledWith('dao123', '1625086400', 'proposal-finished');
+      expect(mockSubscriptionClient.getDaoSubscribers).toHaveBeenCalledWith('dao123', '1625086400', NotificationTypeId.ProposalFinished);
       expect(mockNotificationClient.sendNotification).not.toHaveBeenCalled();
     });
 
@@ -162,7 +163,7 @@ describe('ProposalFinishedTriggerHandler', () => {
         abstainVotes: '100000000000000000000'
       };
       const mockMessage: DispatcherMessage<any> = {
-        triggerId: 'proposal-finished',
+        triggerId: NotificationTypeId.ProposalFinished,
         events: [proposalWithMultilineDesc]
       };
       
@@ -194,7 +195,7 @@ describe('ProposalFinishedTriggerHandler', () => {
         abstainVotes: '50000000000000000000'
       };
       const mockMessage: DispatcherMessage<any> = {
-        triggerId: 'proposal-finished',
+        triggerId: NotificationTypeId.ProposalFinished,
         events: [proposalWithMarkdownDesc]
       };
       
@@ -226,7 +227,7 @@ describe('ProposalFinishedTriggerHandler', () => {
         abstainVotes: '0'
       };
       const mockMessage: DispatcherMessage<any> = {
-        triggerId: 'proposal-finished',
+        triggerId: NotificationTypeId.ProposalFinished,
         events: [proposalWithEmptyDesc]
       };
       
@@ -242,14 +243,14 @@ describe('ProposalFinishedTriggerHandler', () => {
 
     it('should return correct MessageProcessingResult', async () => {
       const mockMessage: DispatcherMessage<any> = {
-        triggerId: 'proposal-finished',
+        triggerId: NotificationTypeId.ProposalFinished,
         events: [mockProposal]
       };
       
       const result = await handler.handleMessage(mockMessage);
       
       expect(result).toEqual({
-        messageId: 'proposal-finished',
+        messageId: NotificationTypeId.ProposalFinished,
         timestamp: expect.any(String)
       });
       expect(new Date(result.timestamp)).toBeInstanceOf(Date);

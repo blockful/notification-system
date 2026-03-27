@@ -14,6 +14,7 @@ import { OffchainVoteCastTriggerHandler } from './services/triggers/offchain-vot
 import { VotingReminderTriggerHandler } from './services/triggers/voting-reminder-trigger.service';
 import { RabbitMQConnection, RabbitMQPublisher } from '@notification-system/rabbitmq-client';
 import { AnticaptureClient } from '@notification-system/anticapture-client';
+import { NotificationTypeId } from '@notification-system/messages';
 
 export class App {
   private rabbitMQConsumerService!: RabbitMQConsumerService;
@@ -61,51 +62,51 @@ export class App {
     const triggerProcessorService = new TriggerProcessorService();
 
     triggerProcessorService.addHandler(
-      'new-proposal',
+      NotificationTypeId.NewProposal,
       new NewProposalTriggerHandler(subscriptionClient, notificationFactory, anticaptureClient)
     );
 
     triggerProcessorService.addHandler(
-      'new-offchain-proposal',
+      NotificationTypeId.NewOffchainProposal,
       new NewOffchainProposalTriggerHandler(subscriptionClient, notificationFactory)
     );
 
     triggerProcessorService.addHandler(
-      'voting-power-changed',
+      NotificationTypeId.VotingPowerChanged,
       new VotingPowerTriggerHandler(subscriptionClient, notificationFactory)
     );
 
     triggerProcessorService.addHandler(
-      'proposal-finished',
+      NotificationTypeId.ProposalFinished,
       new ProposalFinishedTriggerHandler(subscriptionClient, notificationFactory)
     );
 
     // Add second handler for proposal-finished to process non-voting addresses
     triggerProcessorService.addHandler(
-      'proposal-finished',
+      NotificationTypeId.ProposalFinished,
       new NonVotingHandler(subscriptionClient, notificationFactory, anticaptureClient)
     );
 
     triggerProcessorService.addHandler(
-      'vote-confirmation',
+      NotificationTypeId.VoteConfirmation,
       new VoteConfirmationTriggerHandler(subscriptionClient, notificationFactory, anticaptureClient)
     );
 
     triggerProcessorService.addHandler(
-      'offchain-vote-cast',
+      NotificationTypeId.OffchainVoteCast,
       new OffchainVoteCastTriggerHandler(subscriptionClient, notificationFactory)
     );
 
     triggerProcessorService.addHandler(
-      'voting-reminder-30',
+      NotificationTypeId.VotingReminder30,
       new VotingReminderTriggerHandler(subscriptionClient, notificationFactory, anticaptureClient)
     );
     triggerProcessorService.addHandler(
-      'voting-reminder-60',
+      NotificationTypeId.VotingReminder60,
       new VotingReminderTriggerHandler(subscriptionClient, notificationFactory, anticaptureClient)
     );
     triggerProcessorService.addHandler(
-      'voting-reminder-90',
+      NotificationTypeId.VotingReminder90,
       new VotingReminderTriggerHandler(subscriptionClient, notificationFactory, anticaptureClient)
     );
 

@@ -4,6 +4,7 @@ import { OffchainVoteCastTrigger } from '../src/triggers/offchain-vote-cast-trig
 import { OffchainVotesRepository } from '../src/repositories/offchain-votes.repository';
 import { DispatcherService, DispatcherMessage } from '../src/interfaces/dispatcher.interface';
 import { AnticaptureClient, OffchainVoteWithDaoId } from '@notification-system/anticapture-client';
+import { NotificationTypeId } from '@notification-system/messages';
 
 class SimpleDispatcherService implements DispatcherService {
   sentMessages: DispatcherMessage[] = [];
@@ -57,7 +58,7 @@ describe('OffchainVoteCastTrigger', () => {
       await trigger.process(votes);
 
       expect(dispatcher.sentMessages).toEqual([
-        { triggerId: 'offchain-vote-cast', events: votes },
+        { triggerId: NotificationTypeId.OffchainVoteCast, events: votes },
       ]);
     });
 

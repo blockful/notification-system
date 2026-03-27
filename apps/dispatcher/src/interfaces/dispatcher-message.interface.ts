@@ -1,10 +1,12 @@
+import type { NotificationTypeId } from '@notification-system/messages';
+
 /**
  * Message payload to be sent to the Dispatcher service
  * @template T - Type of event data being processed
  */
 export interface DispatcherMessage<T = any> {
   /** Identifier of the trigger that generated this message */
-  triggerId: string;
+  triggerId: NotificationTypeId;
   /** Event data to be processed */
   events: T[];
 }

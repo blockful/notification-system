@@ -3,7 +3,7 @@ import { DispatcherMessage, MessageProcessingResult } from '../../interfaces/dis
 import { NotificationClientFactory } from '../notification/notification-factory.service';
 import { ISubscriptionClient } from '../../interfaces/subscription-client.interface';
 import { OffchainVoteWithDaoId } from '@notification-system/anticapture-client';
-import { offchainVoteCastMessages, replacePlaceholders } from '@notification-system/messages';
+import { offchainVoteCastMessages, replacePlaceholders, NotificationTypeId } from '@notification-system/messages';
 
 interface UserVoteCombination {
   user: any;
@@ -39,7 +39,7 @@ export class OffchainVoteCastTriggerHandler extends BaseTriggerHandler<OffchainV
 
     // Extract unique voter addresses and batch fetch wallet owners
     const voterAddresses = [...new Set(events.map(event => event.voter))];
-    const walletOwners = await this.subscriptionClient.getWalletOwnersBatch(voterAddresses, 'offchain-vote-cast');
+    const walletOwners = await this.subscriptionClient.getWalletOwnersBatch(voterAddresses, NotificationTypeId.OffchainVoteCast);
 
     // Create all user-vote combinations
     const userVoteCombinations = this.createUserVoteCombinations(events, walletOwners);
@@ -85,7 +85,7 @@ export class OffchainVoteCastTriggerHandler extends BaseTriggerHandler<OffchainV
     const eventId = `offchain-${vote.daoId}-${vote.proposalId}-${vote.voter}-vote`;
 
     // Check if user is subscribed to the DAO
-    const subscribers = await this.getSubscribers(vote.daoId, eventId, String(vote.created), 'offchain-vote-cast');
+    const subscribers = await this.getSubscribers(vote.daoId, eventId, String(vote.created), NotificationTypeId.OffchainVoteCast);
     const isSubscribed = subscribers.some(sub => sub.id === user.id);
 
     if (!isSubscribed) {

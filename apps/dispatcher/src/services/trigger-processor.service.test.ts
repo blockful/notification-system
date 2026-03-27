@@ -4,6 +4,7 @@ import { NewProposalTriggerHandler } from './triggers/new-proposal-trigger.servi
 import { DispatcherMessage, MessageProcessingResult } from '../interfaces/dispatcher-message.interface';
 import { SubscriptionClient } from './subscription-client.service';
 import { NotificationClientFactory } from './notification/notification-factory.service';
+import { NotificationTypeId } from '@notification-system/messages';
 
 jest.mock('./triggers/new-proposal-trigger.service');
 jest.mock('./subscription-client.service');
@@ -43,13 +44,13 @@ describe('TriggerProcessorService', () => {
     (NewProposalTriggerHandler as jest.Mock).mockImplementation(() => mockNewProposalHandler);
     
     service = new TriggerProcessorService();
-    service.addHandler('new-proposal', mockNewProposalHandler);
+    service.addHandler(NotificationTypeId.NewProposal, mockNewProposalHandler);
   });
   
   describe('processTrigger', () => {
     it('should process a message with the correct handler', async () => {
       const mockMessage: DispatcherMessage = {
-        triggerId: 'new-proposal',
+        triggerId: NotificationTypeId.NewProposal,
         ...MOCK_MESSAGE_BASE
       };
       const mockResult: MessageProcessingResult = {
@@ -66,7 +67,7 @@ describe('TriggerProcessorService', () => {
       const consoleSpy = jest.spyOn(console, 'log').mockImplementation(() => {});
       
       const mockMessage: DispatcherMessage = {
-        triggerId: 'unknown-trigger',
+        triggerId: 'unknown-trigger' as any,
         ...MOCK_MESSAGE_BASE
       };
       
@@ -92,7 +93,7 @@ describe('TriggerProcessorService', () => {
       service.addHandler('test-trigger', newHandler);
       
       const mockMessage: DispatcherMessage = {
-        triggerId: 'test-trigger',
+        triggerId: 'test-trigger' as any,
         ...MOCK_MESSAGE_BASE
       };
       
@@ -112,7 +113,7 @@ describe('TriggerProcessorService', () => {
       service.addHandler('multi-trigger', handler2);
       
       const mockMessage: DispatcherMessage = {
-        triggerId: 'multi-trigger',
+        triggerId: 'multi-trigger' as any,
         ...MOCK_MESSAGE_BASE
       };
       
@@ -139,7 +140,7 @@ describe('TriggerProcessorService', () => {
       service.addHandler('failing-trigger', handler2);
       
       const mockMessage: DispatcherMessage = {
-        triggerId: 'failing-trigger',
+        triggerId: 'failing-trigger' as any,
         ...MOCK_MESSAGE_BASE
       };
       
@@ -172,7 +173,7 @@ describe('TriggerProcessorService', () => {
       service.addHandler('all-failing-trigger', handler2);
       
       const mockMessage: DispatcherMessage = {
-        triggerId: 'all-failing-trigger',
+        triggerId: 'all-failing-trigger' as any,
         ...MOCK_MESSAGE_BASE
       };
       

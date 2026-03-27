@@ -6,6 +6,7 @@ import {
   ListOffchainProposalsOptions
 } from '../src/interfaces/offchain-proposal.interface';
 import { DispatcherService, DispatcherMessage } from '../src/interfaces/dispatcher.interface';
+import { NotificationTypeId } from '@notification-system/messages';
 
 function createOffchainProposal(overrides?: Partial<OffchainProposal>): OffchainProposal {
   return {
@@ -64,7 +65,7 @@ describe('NewOffchainProposalTrigger', () => {
 
       expect(dispatcher.sentMessages).toHaveLength(1);
       expect(dispatcher.sentMessages[0]).toEqual({
-        triggerId: 'new-offchain-proposal',
+        triggerId: NotificationTypeId.NewOffchainProposal,
         events: [proposal],
       });
     });

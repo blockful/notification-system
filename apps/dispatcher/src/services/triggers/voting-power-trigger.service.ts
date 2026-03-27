@@ -3,7 +3,7 @@ import { ISubscriptionClient, User } from "../../interfaces/subscription-client.
 import { NotificationClientFactory } from "../notification/notification-factory.service";
 import { BaseTriggerHandler } from "./base-trigger.service";
 import { formatTokenAmount } from "../../lib/number-formatter";
-import { votingPowerMessages, replacePlaceholders, buildButtons } from '@notification-system/messages';
+import { votingPowerMessages, replacePlaceholders, buildButtons, NotificationTypeId } from '@notification-system/messages';
 import crypto from 'crypto';
 import { zeroAddress } from 'viem';
 
@@ -46,7 +46,7 @@ export class VotingPowerTriggerHandler extends BaseTriggerHandler {
       ...validEvents.map(event => event.sourceAccountId).filter(Boolean) // who delegates
     ];
     const uniqueAccountIds = [...new Set(allAccountIds)];
-    const walletOwnersMap = await this.subscriptionClient.getWalletOwnersBatch(uniqueAccountIds, 'voting-power-changed');
+    const walletOwnersMap = await this.subscriptionClient.getWalletOwnersBatch(uniqueAccountIds, NotificationTypeId.VotingPowerChanged);
 
     // Group events by DAO to batch DAO subscribers lookup
     const eventsByDao: Record<string, typeof validEvents> = {};
@@ -61,7 +61,7 @@ export class VotingPowerTriggerHandler extends BaseTriggerHandler {
     const daoSubscribersPromises = Object.keys(eventsByDao).map(async daoId => {
       const daoEvents = eventsByDao[daoId];
       const timestamp = daoEvents[0]?.timestamp; // Use first event's timestamp
-      const subscribers = await this.subscriptionClient.getDaoSubscribers(daoId, timestamp, 'voting-power-changed');
+      const subscribers = await this.subscriptionClient.getDaoSubscribers(daoId, timestamp, NotificationTypeId.VotingPowerChanged);
       return { daoId, subscribers };
     });
     const daoSubscriberResults = await Promise.all(daoSubscribersPromises);

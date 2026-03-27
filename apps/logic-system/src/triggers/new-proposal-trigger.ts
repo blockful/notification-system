@@ -6,8 +6,9 @@
 import { Trigger } from './base-trigger';
 import { ProposalOnChain, ListProposalsOptions, ProposalDataSource } from '../interfaces/proposal.interface';
 import { DispatcherService, DispatcherMessage } from '../interfaces/dispatcher.interface';
+import { NotificationTypeId } from '@notification-system/messages';
 
-const triggerId = 'new-proposal';
+const triggerId = NotificationTypeId.NewProposal;
 
 export class NewProposalTrigger extends Trigger<ProposalOnChain, ListProposalsOptions> {
   private timestampCursor: number;

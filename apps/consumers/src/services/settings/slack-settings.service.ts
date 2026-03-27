@@ -1,4 +1,4 @@
-import { NOTIFICATION_TYPES } from '@notification-system/messages';
+import { NOTIFICATION_TYPES, NotificationTypeId } from '@notification-system/messages';
 import { BaseSettingsService } from './base-settings.service';
 import { SubscriptionAPIService } from '../subscription-api.service';
 import { SlackActionContext } from '../../interfaces/slack-context.interface';
@@ -19,16 +19,17 @@ export class SlackSettingsService extends BaseSettingsService {
       const preferences = await this.loadPreferences(fullUserId);
       ctx.session.notificationSelections = preferences;
 
-      const options = NOTIFICATION_TYPES.map(t => ({
-        text: { type: 'plain_text' as const, text: t.label },
-        value: t.id,
+      const notificationTypeIds = Object.values(NotificationTypeId);
+      const options = notificationTypeIds.map(id => ({
+        text: { type: 'plain_text' as const, text: NOTIFICATION_TYPES[id] },
+        value: id,
       }));
 
-      const initialOptions = NOTIFICATION_TYPES
-        .filter(t => preferences[t.id])
-        .map(t => ({
-          text: { type: 'plain_text' as const, text: t.label },
-          value: t.id,
+      const initialOptions = notificationTypeIds
+        .filter(id => preferences[id])
+        .map(id => ({
+          text: { type: 'plain_text' as const, text: NOTIFICATION_TYPES[id] },
+          value: id,
         }));
 
       const blocks = [
@@ -105,9 +106,9 @@ export class SlackSettingsService extends BaseSettingsService {
       }
 
       // Build selections record: selected = true, unselected = false
-      const selections: Record<string, boolean> = {};
-      for (const t of NOTIFICATION_TYPES) {
-        selections[t.id] = selectedValues.has(t.id);
+      const selections = {} as Record<NotificationTypeId, boolean>;
+      for (const id of Object.values(NotificationTypeId)) {
+        selections[id] = selectedValues.has(id);
       }
 
       await this.savePreferences(fullUserId, selections);

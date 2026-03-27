@@ -4,6 +4,7 @@
  */
 
 import axios, { AxiosInstance } from 'axios';
+import type { NotificationTypeId } from '@notification-system/messages';
 import { UserSubscriptionResponse, UserResponse } from '../interfaces/subscription.interface';
 
 export class SubscriptionAPIService {
@@ -149,7 +150,7 @@ export class SubscriptionAPIService {
   async getNotificationPreferences(
     channel: string,
     channelUserId: string
-  ): Promise<{ trigger_type: string; is_active: boolean }[]> {
+  ): Promise<{ trigger_type: NotificationTypeId; is_active: boolean }[]> {
     const response = await this.client.get(
       `/users/by-channel/${encodeURIComponent(channel)}/${encodeURIComponent(channelUserId.toString())}/notification-preferences`
     );
@@ -165,7 +166,7 @@ export class SubscriptionAPIService {
   async saveNotificationPreferences(
     channel: string,
     channelUserId: string,
-    preferences: { trigger_type: string; is_active: boolean }[]
+    preferences: { trigger_type: NotificationTypeId; is_active: boolean }[]
   ): Promise<void> {
     await this.client.post(
       `/users/by-channel/${encodeURIComponent(channel)}/${encodeURIComponent(channelUserId.toString())}/notification-preferences`,

@@ -315,6 +315,9 @@ importers:
       '@notification-system/anticapture-client':
         specifier: workspace:*
         version: link:../../packages/anticapture-client
+      '@notification-system/messages':
+        specifier: workspace:*
+        version: link:../../packages/messages
       '@notification-system/rabbitmq-client':
         specifier: workspace:*
         version: link:../../packages/rabbitmq-client

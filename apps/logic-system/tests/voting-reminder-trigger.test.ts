@@ -7,6 +7,7 @@ import { VotingReminderTrigger } from '../src/triggers/voting-reminder-trigger';
 import { ProposalOnChain } from '../src/interfaces/proposal.interface';
 import { DispatcherService } from '../src/interfaces/dispatcher.interface';
 import { MockedFunction } from 'jest-mock';
+import { NotificationTypeId } from '@notification-system/messages';
 
 describe('VotingReminderTrigger', () => {
   let trigger: VotingReminderTrigger;
@@ -46,9 +47,9 @@ describe('VotingReminderTrigger', () => {
       const trigger90 = new VotingReminderTrigger(mockDispatcherService, mockProposalRepository, 30000, 90);
       const trigger75 = new VotingReminderTrigger(mockDispatcherService, mockProposalRepository, 30000, 75);
 
-      expect(trigger30.id).toBe('voting-reminder-30');
-      expect(trigger60.id).toBe('voting-reminder-60');
-      expect(trigger90.id).toBe('voting-reminder-90');
+      expect(trigger30.id).toBe(NotificationTypeId.VotingReminder30);
+      expect(trigger60.id).toBe(NotificationTypeId.VotingReminder60);
+      expect(trigger90.id).toBe(NotificationTypeId.VotingReminder90);
       expect(trigger75.id).toBe('voting-reminder-75');
     });
   });
@@ -78,7 +79,7 @@ describe('VotingReminderTrigger', () => {
       await trigger.process([proposal]);
 
       expect(mockDispatcherService.sendMessage).toHaveBeenCalledWith({
-        triggerId: 'voting-reminder-90',
+        triggerId: NotificationTypeId.VotingReminder90,
         events: [{
           id: 'proposal-123',
           daoId: 'test-dao',

@@ -1,4 +1,5 @@
 import { Knex } from 'knex';
+import type { NotificationTypeId } from '@notification-system/messages';
 import {
   IUserNotificationPreferencesRepository,
   UserNotificationPreference,
@@ -33,7 +34,7 @@ export class UserNotificationPreferencesRepository
    */
   async upsertMany(
     userId: string,
-    preferences: { trigger_type: string; is_active: boolean }[]
+    preferences: { trigger_type: NotificationTypeId; is_active: boolean }[]
   ): Promise<void> {
     if (preferences.length === 0) return;
 
@@ -60,7 +61,7 @@ export class UserNotificationPreferencesRepository
    * @param triggerType - The trigger type to check
    * @returns Subset of `userIds` that have NOT disabled the trigger
    */
-  async filterActiveUsers(userIds: string[], triggerType: string): Promise<string[]> {
+  async filterActiveUsers(userIds: string[], triggerType: NotificationTypeId): Promise<string[]> {
     if (userIds.length === 0) return [];
 
     const disabled = await this.knex('user_notification_preferences')

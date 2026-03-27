@@ -1,4 +1,4 @@
-import { NOTIFICATION_TYPES } from '@notification-system/messages';
+import { NOTIFICATION_TYPES, NotificationTypeId } from '@notification-system/messages';
 import { BaseSettingsService } from './base-settings.service';
 import { SubscriptionAPIService } from '../subscription-api.service';
 import { ContextWithSession } from '../../interfaces/bot.interface';
@@ -55,18 +55,19 @@ export class TelegramSettingsService extends BaseSettingsService {
     }
   }
 
-  private buildKeyboard(selections: Record<string, boolean>) {
+  private buildKeyboard(selections: Record<NotificationTypeId, boolean>) {
     const rows: Array<Array<{ text: string; callback_data: string }>> = [];
 
     // 2 buttons per row
-    for (let i = 0; i < NOTIFICATION_TYPES.length; i += 2) {
+    const notificationTypeIds = Object.values(NotificationTypeId);
+    for (let i = 0; i < notificationTypeIds.length; i += 2) {
       const row: Array<{ text: string; callback_data: string }> = [];
-      for (let j = i; j < Math.min(i + 2, NOTIFICATION_TYPES.length); j++) {
-        const t = NOTIFICATION_TYPES[j];
-        const prefix = selections[t.id] ? '✅' : '❌';
+      for (let j = i; j < Math.min(i + 2, notificationTypeIds.length); j++) {
+        const id = notificationTypeIds[j];
+        const prefix = selections[id] ? '✅' : '❌';
         row.push({
-          text: `${prefix} ${t.label}`,
-          callback_data: `settings_toggle_${t.id}`
+          text: `${prefix} ${NOTIFICATION_TYPES[id]}`,
+          callback_data: `settings_toggle_${id}`
         });
       }
       rows.push(row);

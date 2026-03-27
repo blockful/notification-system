@@ -2,6 +2,7 @@
  * Repository interfaces for the notification system.
  * These interfaces define the contract for database operations.
  */
+import type { NotificationTypeId } from '@notification-system/messages';
 
 /**
  * User entity interface representing a user in the system
@@ -93,7 +94,7 @@ export interface UserResponse {
  */
 export interface UserNotificationPreference {
   user_id: string;
-  trigger_type: string;
+  trigger_type: NotificationTypeId;
   is_active: boolean;
   updated_at: string;
 }
@@ -103,6 +104,6 @@ export interface UserNotificationPreference {
  */
 export interface IUserNotificationPreferencesRepository {
   findByUser(userId: string): Promise<UserNotificationPreference[]>;
-  upsertMany(userId: string, preferences: { trigger_type: string; is_active: boolean }[]): Promise<void>;
-  filterActiveUsers(userIds: string[], triggerType: string): Promise<string[]>;
+  upsertMany(userId: string, preferences: { trigger_type: NotificationTypeId; is_active: boolean }[]): Promise<void>;
+  filterActiveUsers(userIds: string[], triggerType: NotificationTypeId): Promise<string[]>;
 } 

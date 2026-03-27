@@ -1,3 +1,4 @@
+import type { NotificationTypeId } from '@notification-system/messages';
 import { SettingsService } from '../services/settings.service';
 import { IUserRepository } from '../interfaces';
 
@@ -24,7 +25,7 @@ export class SettingsHandler {
   async savePreferences(
     channel: string,
     channelUserId: string,
-    preferences: { trigger_type: string; is_active: boolean }[]
+    preferences: { trigger_type: NotificationTypeId; is_active: boolean }[]
   ) {
     let user = await this.userRepository.findByChannelAndId(channel, channelUserId);
     if (!user) {

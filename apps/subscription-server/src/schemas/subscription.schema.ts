@@ -4,6 +4,7 @@
  */
 
 import { z } from "zod";
+import { NotificationTypeId } from '@notification-system/messages';
 
 /**
  * Schema for subscription URL parameters
@@ -42,7 +43,7 @@ export const subscriptionQuerystringSchema = z.object({
       return val;
     })
     .describe('Optional timestamp to filter subscribers by subscription date'),
-  trigger_type: z.string().optional().describe('Filter subscribers by notification type preference')
+  trigger_type: z.nativeEnum(NotificationTypeId).optional().describe('Filter subscribers by notification type preference')
 });
 
 /**

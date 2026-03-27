@@ -2,6 +2,7 @@ import { Trigger } from './base-trigger';
 import { VotesRepository } from '../repositories/votes.repository';
 import { DispatcherService, DispatcherMessage } from '../interfaces/dispatcher.interface';
 import { VoteWithDaoId } from '@notification-system/anticapture-client';
+import { NotificationTypeId } from '@notification-system/messages';
 
 export class VoteConfirmationTrigger extends Trigger<VoteWithDaoId, void> {
   private lastProcessedTimestamp: string;
@@ -43,7 +44,7 @@ export class VoteConfirmationTrigger extends Trigger<VoteWithDaoId, void> {
     // Send votes to dispatcher - flatten the grouped votes back into array
     const allVotes = Object.values(votesByDao).flat();
     const message: DispatcherMessage<VoteWithDaoId> = {
-      triggerId: 'vote-confirmation',
+      triggerId: NotificationTypeId.VoteConfirmation,
       events: allVotes
     };
 

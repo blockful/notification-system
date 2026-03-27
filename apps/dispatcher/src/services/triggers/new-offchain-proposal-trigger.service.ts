@@ -2,7 +2,7 @@ import { DispatcherMessage, MessageProcessingResult } from "../../interfaces/dis
 import { ISubscriptionClient } from "../../interfaces/subscription-client.interface";
 import { NotificationClientFactory } from "../notification/notification-factory.service";
 import { BaseTriggerHandler } from "./base-trigger.service";
-import { newOffchainProposalMessages, replacePlaceholders, buildButtons } from '@notification-system/messages';
+import { newOffchainProposalMessages, replacePlaceholders, buildButtons, NotificationTypeId } from '@notification-system/messages';
 import crypto from 'crypto';
 
 /**
@@ -26,7 +26,7 @@ export class NewOffchainProposalTriggerHandler extends BaseTriggerHandler {
       const eventId = `offchain-${proposalId}`;
       const proposalTimestamp = String(created);
 
-      const subscribers = await this.getSubscribers(daoId, eventId, proposalTimestamp, 'new-offchain-proposal');
+      const subscribers = await this.getSubscribers(daoId, eventId, proposalTimestamp, NotificationTypeId.NewOffchainProposal);
       const notificationMessage = replacePlaceholders(newOffchainProposalMessages.notification, {
         daoId,
         title: title || 'Untitled Proposal'

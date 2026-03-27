@@ -2,6 +2,7 @@ import { describe, test, expect, beforeAll, afterAll, beforeEach } from '@jest/g
 import { knex, Knex } from 'knex';
 import ClientPgLite from 'knex-pglite';
 import path from 'path';
+import { NotificationTypeId } from '@notification-system/messages';
 import { UserNotificationPreferencesRepository } from './user-notification-preferences.repository';
 
 // ---- TEST DB SETUP ----
@@ -33,7 +34,7 @@ async function seedUser(id: string): Promise<void> {
 
 async function seedPreference(
   userId: string,
-  triggerType: string,
+  triggerType: NotificationTypeId,
   isActive: boolean,
 ): Promise<void> {
   await db('user_notification_preferences').insert({
@@ -73,7 +74,7 @@ describe('UserNotificationPreferencesRepository', () => {
       await seedUser('user2');
       await seedUser('user3');
 
-      const result = await repo.filterActiveUsers(['user1', 'user2', 'user3'], 'vote_cast');
+      const result = await repo.filterActiveUsers(['user1', 'user2', 'user3'], NotificationTypeId.VoteConfirmation);
 
       expect(result).toEqual(['user1', 'user2', 'user3']);
     });
@@ -82,9 +83,9 @@ describe('UserNotificationPreferencesRepository', () => {
       await seedUser('user1');
       await seedUser('user2');
       await seedUser('user3');
-      await seedPreference('user2', 'vote_cast', false);
+      await seedPreference('user2', NotificationTypeId.VoteConfirmation, false);
 
-      const result = await repo.filterActiveUsers(['user1', 'user2', 'user3'], 'vote_cast');
+      const result = await repo.filterActiveUsers(['user1', 'user2', 'user3'], NotificationTypeId.VoteConfirmation);
 
       expect(result).toEqual(['user1', 'user3']);
     });
@@ -93,13 +94,13 @@ describe('UserNotificationPreferencesRepository', () => {
       await seedUser('user1');
       await seedUser('user4');
 
-      const result = await repo.filterActiveUsers(['user1', 'user4'], 'proposal_created');
+      const result = await repo.filterActiveUsers(['user1', 'user4'], NotificationTypeId.NewProposal);
 
       expect(result).toEqual(['user1', 'user4']);
     });
 
     test('returns empty array when given empty input', async () => {
-      const result = await repo.filterActiveUsers([], 'vote_cast');
+      const result = await repo.filterActiveUsers([], NotificationTypeId.VoteConfirmation);
 
       expect(result).toEqual([]);
     });
@@ -108,10 +109,10 @@ describe('UserNotificationPreferencesRepository', () => {
       await seedUser('user1');
       await seedUser('user2');
       await seedUser('user3');
-      await seedPreference('user1', 'vote_cast', true);
-      await seedPreference('user2', 'vote_cast', false);
+      await seedPreference('user1', NotificationTypeId.VoteConfirmation, true);
+      await seedPreference('user2', NotificationTypeId.VoteConfirmation, false);
 
-      const result = await repo.filterActiveUsers(['user1', 'user2', 'user3'], 'vote_cast');
+      const result = await repo.filterActiveUsers(['user1', 'user2', 'user3'], NotificationTypeId.VoteConfirmation);
 
       expect(result).toEqual(['user1', 'user3']);
     });
@@ -119,10 +120,10 @@ describe('UserNotificationPreferencesRepository', () => {
     test('excludes all users when all have disabled the trigger type', async () => {
       await seedUser('user1');
       await seedUser('user2');
-      await seedPreference('user1', 'vote_cast', false);
-      await seedPreference('user2', 'vote_cast', false);
+      await seedPreference('user1', NotificationTypeId.VoteConfirmation, false);
+      await seedPreference('user2', NotificationTypeId.VoteConfirmation, false);
 
-      const result = await repo.filterActiveUsers(['user1', 'user2'], 'vote_cast');
+      const result = await repo.filterActiveUsers(['user1', 'user2'], NotificationTypeId.VoteConfirmation);
 
       expect(result).toEqual([]);
     });
@@ -142,14 +143,14 @@ describe('UserNotificationPreferencesRepository', () => {
 
     test('returns all stored preferences for a user', async () => {
       await seedUser('user1');
-      await seedPreference('user1', 'vote_cast', true);
-      await seedPreference('user1', 'proposal_created', false);
+      await seedPreference('user1', NotificationTypeId.VoteConfirmation, true);
+      await seedPreference('user1', NotificationTypeId.NewProposal, false);
 
       const result = await repo.findByUser('user1');
 
       expect(result).toEqual([
-        { user_id: 'user1', trigger_type: 'proposal_created', is_active: false, updated_at: new Date(FIXED_DATE) },
-        { user_id: 'user1', trigger_type: 'vote_cast', is_active: true, updated_at: new Date(FIXED_DATE) },
+        { user_id: 'user1', trigger_type: NotificationTypeId.NewProposal, is_active: false, updated_at: new Date(FIXED_DATE) },
+        { user_id: 'user1', trigger_type: NotificationTypeId.VoteConfirmation, is_active: true, updated_at: new Date(FIXED_DATE) },
       ]);
     });
   });
@@ -171,14 +172,14 @@ describe('UserNotificationPreferencesRepository', () => {
       await seedUser('user1');
 
       await repo.upsertMany('user1', [
-        { trigger_type: 'vote_cast', is_active: true },
+        { trigger_type: NotificationTypeId.VoteConfirmation, is_active: true },
       ]);
 
       const rows = await db('user_notification_preferences').select('*');
       expect(rows).toEqual([
         {
           user_id: 'user1',
-          trigger_type: 'vote_cast',
+          trigger_type: NotificationTypeId.VoteConfirmation,
           is_active: true,
           updated_at: expect.any(Date),
         },
@@ -187,17 +188,17 @@ describe('UserNotificationPreferencesRepository', () => {
 
     test('updates existing rows on conflict (upsert)', async () => {
       await seedUser('user1');
-      await seedPreference('user1', 'vote_cast', true);
+      await seedPreference('user1', NotificationTypeId.VoteConfirmation, true);
 
       await repo.upsertMany('user1', [
-        { trigger_type: 'vote_cast', is_active: false },
+        { trigger_type: NotificationTypeId.VoteConfirmation, is_active: false },
       ]);
 
       const rows = await db('user_notification_preferences').select('*');
       expect(rows).toEqual([
         {
           user_id: 'user1',
-          trigger_type: 'vote_cast',
+          trigger_type: NotificationTypeId.VoteConfirmation,
           is_active: false,
           updated_at: expect.any(Date),
         },
@@ -208,8 +209,8 @@ describe('UserNotificationPreferencesRepository', () => {
       await seedUser('user1');
 
       await repo.upsertMany('user1', [
-        { trigger_type: 'vote_cast', is_active: true },
-        { trigger_type: 'proposal_created', is_active: false },
+        { trigger_type: NotificationTypeId.VoteConfirmation, is_active: true },
+        { trigger_type: NotificationTypeId.NewProposal, is_active: false },
       ]);
 
       const rows = await db('user_notification_preferences')
@@ -218,13 +219,13 @@ describe('UserNotificationPreferencesRepository', () => {
       expect(rows).toEqual([
         {
           user_id: 'user1',
-          trigger_type: 'proposal_created',
+          trigger_type: NotificationTypeId.NewProposal,
           is_active: false,
           updated_at: expect.any(Date),
         },
         {
           user_id: 'user1',
-          trigger_type: 'vote_cast',
+          trigger_type: NotificationTypeId.VoteConfirmation,
           is_active: true,
           updated_at: expect.any(Date),
         },

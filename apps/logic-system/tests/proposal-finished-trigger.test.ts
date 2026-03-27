@@ -1,13 +1,14 @@
 import { describe, it, expect, jest, beforeEach } from '@jest/globals';
 import { ProposalFinishedTrigger } from '../src/triggers/proposal-finished-trigger';
 import { ProposalRepository } from '../src/repositories/proposal.repository';
-import { 
+import {
   createMockDispatcherService,
   createProposal,
   createFinishedProposal,
   createProposalWithMissingFields,
   DEFAULT_INTERVAL
 } from './mocks';
+import { NotificationTypeId } from '@notification-system/messages';
 
 describe('ProposalFinishedTrigger', () => {
   let trigger: ProposalFinishedTrigger;
@@ -93,7 +94,7 @@ describe('ProposalFinishedTrigger', () => {
         await trigger.process(proposals);
         
         expect(mockDispatcherService.sendMessage).toHaveBeenCalledWith({
-          triggerId: 'proposal-finished',
+          triggerId: NotificationTypeId.ProposalFinished,
           events: [
             {
               id: 'prop1',
@@ -130,7 +131,7 @@ describe('ProposalFinishedTrigger', () => {
         await trigger.process([proposal]);
         
         expect(mockDispatcherService.sendMessage).toHaveBeenCalledWith({
-          triggerId: 'proposal-finished',
+          triggerId: NotificationTypeId.ProposalFinished,
           events: [
             {
               id: 'prop1',
@@ -156,7 +157,7 @@ describe('ProposalFinishedTrigger', () => {
         expect(mockDispatcherService.sendMessage).toHaveBeenCalledTimes(1);
         expect(mockDispatcherService.sendMessage).toHaveBeenCalledWith(
           expect.objectContaining({
-            triggerId: 'proposal-finished',
+            triggerId: NotificationTypeId.ProposalFinished,
             events: expect.arrayContaining([
               expect.objectContaining({ id: 'prop0' }),
               expect.objectContaining({ id: 'prop1' }),
@@ -215,7 +216,7 @@ describe('ProposalFinishedTrigger', () => {
         await trigger.process([proposalB]);
         expect(mockDispatcherService.sendMessage).toHaveBeenCalledWith(
           expect.objectContaining({
-            triggerId: 'proposal-finished',
+            triggerId: NotificationTypeId.ProposalFinished,
             events: expect.arrayContaining([
               expect.objectContaining({
                 id: 'proposal-b',

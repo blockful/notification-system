@@ -1,3 +1,4 @@
+import type { NotificationTypeId } from '@notification-system/messages';
 import { ISubscriptionClient, User, Notification } from '../interfaces/subscription-client.interface';
 import { NotificationClientFactory } from './notification/notification-factory.service';
 
@@ -23,7 +24,7 @@ export class BatchNotificationService {
     addresses: string[],
     daoId: string,
     eventIdGenerator: (address: string) => string,
-    triggerType?: string
+    triggerType?: NotificationTypeId
   ): Promise<BatchNotificationData[]> {
     // Batch fetch all followers for all addresses in a single request
     const addressFollowersMap = await this.subscriptionClient.getWalletOwnersBatch(addresses, triggerType);
@@ -164,7 +165,7 @@ export class BatchNotificationService {
   async sendBatchNotifications(
     addresses: string[],
     daoId: string,
-    triggerType: string | undefined,
+    triggerType: NotificationTypeId | undefined,
     eventIdGenerator: (address: string) => string,
     messageGenerator: (address: string) => string,
     metadataGenerator?: (address: string) => Record<string, any>,

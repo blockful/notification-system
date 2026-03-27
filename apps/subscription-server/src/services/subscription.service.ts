@@ -3,6 +3,7 @@
  * Handles the business logic for managing user subscriptions to DAOs
  */
 
+import type { NotificationTypeId } from '@notification-system/messages';
 import { IUserRepository, IPreferenceRepository, User, IUserNotificationPreferencesRepository } from '../interfaces';
 import { IUserAddressRepository, UserAddress } from '../interfaces/user-address.interface';
 
@@ -89,7 +90,7 @@ export class SubscriptionService {
    * @param {string} eventTimestamp - Optional timestamp to filter subscribers by subscription date
    * @returns {Promise<{subscribers: Array<User>}>} The list of subscribers
    */
-  async getDaoSubscribers(dao: string, eventTimestamp?: string, triggerType?: string) {
+  async getDaoSubscribers(dao: string, eventTimestamp?: string, triggerType?: NotificationTypeId) {
     const preferences = await this.preferenceRepository.findByDao(dao, eventTimestamp);
     let userIds = preferences.map(p => p.user_id);
 
@@ -212,7 +213,7 @@ export class SubscriptionService {
    * @param triggerType - Optional trigger type to filter by notification preference
    * @returns Array of Users who own the address
    */
-  async getUsersByWalletAddress(address: string, triggerType?: string): Promise<User[]> {
+  async getUsersByWalletAddress(address: string, triggerType?: NotificationTypeId): Promise<User[]> {
     const userAddresses = await this.userAddressRepository.findByAddress(address);
     const users: User[] = [];
 
@@ -240,7 +241,7 @@ export class SubscriptionService {
    * @param triggerType - Optional trigger type to filter by notification preference
    * @returns Record mapping addresses to arrays of Users who own each address
    */
-  async getUsersByWalletAddressesBatch(addresses: string[], triggerType?: string): Promise<Record<string, User[]>> {
+  async getUsersByWalletAddressesBatch(addresses: string[], triggerType?: NotificationTypeId): Promise<Record<string, User[]>> {
     if (addresses.length === 0) return {};
 
     const userAddresses = await this.userAddressRepository.findByAddresses(addresses);

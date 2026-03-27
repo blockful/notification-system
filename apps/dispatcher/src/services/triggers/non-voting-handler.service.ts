@@ -7,7 +7,7 @@ import { AnticaptureClient, QueryInput_Proposals_OrderDirection } from '@notific
 import { BatchNotificationService } from '../batch-notification.service';
 import { FormattingService } from '../formatting.service';
 import { ValidationService } from '../validation.service';
-import { nonVotingMessages, replacePlaceholders, buildButtons } from '@notification-system/messages';
+import { nonVotingMessages, replacePlaceholders, buildButtons, NotificationTypeId } from '@notification-system/messages';
 
 /**
  * Handler for detecting non-voting addresses on proposal finished events
@@ -126,7 +126,7 @@ export class NonVotingHandler extends BaseTriggerHandler<ProposalFinishedNotific
     await this.batchNotificationService.sendBatchNotifications(
       nonVoters,
       daoId,
-      'non-voting',
+      NotificationTypeId.NonVoting,
       (address) => `${address}-non-voting-${lastProposals[0].id}`,
       (address) => {
         return replacePlaceholders(nonVotingMessages.alert, {

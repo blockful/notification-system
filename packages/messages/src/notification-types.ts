@@ -1,14 +1,25 @@
-export const NOTIFICATION_TYPES = [
-  { id: 'new-proposal',           label: 'New Proposals' },
-  { id: 'new-offchain-proposal',  label: 'Offchain Proposals' },
-  { id: 'proposal-finished',      label: 'Proposal Finished' },
-  { id: 'non-voting',             label: 'Non-Voting Alerts' },
-  { id: 'voting-reminder-30',     label: 'Voting Reminder (30%)' },
-  { id: 'voting-reminder-60',     label: 'Voting Reminder (60%)' },
-  { id: 'voting-reminder-90',     label: 'Voting Reminder (90%)' },
-  { id: 'voting-power-changed',   label: 'Voting Power Changed' },
-  { id: 'vote-confirmation',      label: 'Vote Confirmation' },
-  { id: 'offchain-vote-cast',     label: 'Offchain Vote Cast' },
-] as const;
+export enum NotificationTypeId {
+  NewProposal = 'new-proposal',
+  NewOffchainProposal = 'new-offchain-proposal',
+  ProposalFinished = 'proposal-finished',
+  NonVoting = 'non-voting',
+  VotingReminder30 = 'voting-reminder-30',
+  VotingReminder60 = 'voting-reminder-60',
+  VotingReminder90 = 'voting-reminder-90',
+  VotingPowerChanged = 'voting-power-changed',
+  VoteConfirmation = 'vote-confirmation',
+  OffchainVoteCast = 'offchain-vote-cast',
+}
 
-export type NotificationTypeId = typeof NOTIFICATION_TYPES[number]['id'];
+export const NOTIFICATION_TYPES: Record<NotificationTypeId, string> = {
+  [NotificationTypeId.NewProposal]: 'New Proposals',
+  [NotificationTypeId.NewOffchainProposal]: 'Offchain Proposals',
+  [NotificationTypeId.ProposalFinished]: 'Proposal Finished',
+  [NotificationTypeId.NonVoting]: 'Non-Voting Alerts',
+  [NotificationTypeId.VotingReminder30]: 'Voting Reminder (30%)',
+  [NotificationTypeId.VotingReminder60]: 'Voting Reminder (60%)',
+  [NotificationTypeId.VotingReminder90]: 'Voting Reminder (90%)',
+  [NotificationTypeId.VotingPowerChanged]: 'Voting Power Changed',
+  [NotificationTypeId.VoteConfirmation]: 'Vote Confirmation',
+  [NotificationTypeId.OffchainVoteCast]: 'Offchain Vote Cast',
+};

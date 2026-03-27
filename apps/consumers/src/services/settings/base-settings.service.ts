@@ -1,4 +1,4 @@
-import { NOTIFICATION_TYPES } from '@notification-system/messages';
+import { NotificationTypeId } from '@notification-system/messages';
 import { SubscriptionAPIService } from '../subscription-api.service';
 
 export abstract class BaseSettingsService {
@@ -7,14 +7,14 @@ export abstract class BaseSettingsService {
     protected platform: string
   ) {}
 
-  protected async loadPreferences(channelUserId: string): Promise<Record<string, boolean>> {
+  protected async loadPreferences(channelUserId: string): Promise<Record<NotificationTypeId, boolean>> {
     const stored = await this.subscriptionApi.getNotificationPreferences(
       this.platform,
       channelUserId
     );
-    const result: Record<string, boolean> = {};
-    for (const t of NOTIFICATION_TYPES) {
-      result[t.id] = true; // default: enabled
+    const result = {} as Record<NotificationTypeId, boolean>;
+    for (const id of Object.values(NotificationTypeId)) {
+      result[id] = true; // default: enabled
     }
     for (const pref of stored) {
       if (pref.trigger_type in result) {
@@ -26,11 +26,11 @@ export abstract class BaseSettingsService {
 
   protected async savePreferences(
     channelUserId: string,
-    selections: Record<string, boolean>
+    selections: Record<NotificationTypeId, boolean>
   ): Promise<void> {
-    const preferences = NOTIFICATION_TYPES.map(t => ({
-      trigger_type: t.id,
-      is_active: selections[t.id] ?? true,
+    const preferences = Object.values(NotificationTypeId).map(id => ({
+      trigger_type: id,
+      is_active: selections[id] ?? true,
     }));
     await this.subscriptionApi.saveNotificationPreferences(
       this.platform,

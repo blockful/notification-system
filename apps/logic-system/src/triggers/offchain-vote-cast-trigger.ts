@@ -2,6 +2,7 @@ import { Trigger } from './base-trigger';
 import { OffchainVotesRepository } from '../repositories/offchain-votes.repository';
 import { DispatcherService, DispatcherMessage } from '../interfaces/dispatcher.interface';
 import { OffchainVoteWithDaoId } from '@notification-system/anticapture-client';
+import { NotificationTypeId } from '@notification-system/messages';
 
 export class OffchainVoteCastTrigger extends Trigger<OffchainVoteWithDaoId, void> {
   private lastProcessedTimestamp: number;
@@ -32,7 +33,7 @@ export class OffchainVoteCastTrigger extends Trigger<OffchainVoteWithDaoId, void
     }
 
     const message: DispatcherMessage<OffchainVoteWithDaoId> = {
-      triggerId: 'offchain-vote-cast',
+      triggerId: NotificationTypeId.OffchainVoteCast,
       events: data
     };
 
