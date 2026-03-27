@@ -13,6 +13,7 @@ interface OffchainProposalStub {
   link: string;
   state: string;
   created: number;
+  end: number;
 }
 
 interface GraphQLScenario {
@@ -83,7 +84,7 @@ describe('listOffchainProposals', () => {
     server.use(handleGraphQL({
       daos: [{ id: 'ENS' }],
       proposals: {
-        ENS: [{ id: 'snap-1', title: 'Test Proposal', discussion: 'https://forum.example.com', link: 'https://snapshot.org/snap-1', state: 'active', created: 1700000000 }],
+        ENS: [{ id: 'snap-1', title: 'Test Proposal', discussion: 'https://forum.example.com', link: 'https://snapshot.org/snap-1', state: 'active', created: 1700000000, end: 1700086400 }],
       },
     }));
 
@@ -98,8 +99,8 @@ describe('listOffchainProposals', () => {
     server.use(handleGraphQL({
       daos: [{ id: 'DAO_A' }, { id: 'DAO_B' }],
       proposals: {
-        DAO_A: [{ id: 'snap-a', title: 'From A', discussion: '', link: '', state: 'active', created: 1700000100 }],
-        DAO_B: [{ id: 'snap-b', title: 'From B', discussion: '', link: '', state: 'pending', created: 1700000200 }],
+        DAO_A: [{ id: 'snap-a', title: 'From A', discussion: '', link: '', state: 'active', created: 1700000100, end: 1700086500 }],
+        DAO_B: [{ id: 'snap-b', title: 'From B', discussion: '', link: '', state: 'pending', created: 1700000200, end: 1700086600 }],
       },
     }));
 
@@ -117,8 +118,8 @@ describe('listOffchainProposals', () => {
         { id: 'OFFCHAIN_DAO', supportOffchainData: true },
       ],
       proposals: {
-        ONCHAIN_ONLY: [{ id: 'snap-should-not-appear', title: 'Should not appear', discussion: '', link: '', state: 'active', created: 1700000000 }],
-        OFFCHAIN_DAO: [{ id: 'snap-ok', title: 'OK', discussion: '', link: '', state: 'active', created: 1700000100 }],
+        ONCHAIN_ONLY: [{ id: 'snap-should-not-appear', title: 'Should not appear', discussion: '', link: '', state: 'active', created: 1700000000, end: 1700086400 }],
+        OFFCHAIN_DAO: [{ id: 'snap-ok', title: 'OK', discussion: '', link: '', state: 'active', created: 1700000100, end: 1700086500 }],
       },
     }));
 
@@ -134,7 +135,7 @@ describe('listOffchainProposals', () => {
     server.use(handleGraphQL({
       daos: [{ id: 'OK_DAO' }, { id: 'BAD_DAO' }],
       proposals: {
-        OK_DAO: [{ id: 'snap-ok', title: 'OK', discussion: '', link: '', state: 'active', created: 1700000000 }],
+        OK_DAO: [{ id: 'snap-ok', title: 'OK', discussion: '', link: '', state: 'active', created: 1700000000, end: 1700086400 }],
       },
       errors: {
         BAD_DAO: 'API exploded',

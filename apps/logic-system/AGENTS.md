@@ -29,6 +29,8 @@ abstract class Trigger<T> {
 | `voting-power-changed` | `voting-power-changed-trigger.ts` | Detects delegation/balance changes |
 | `proposal-finished` | `proposal-finished-trigger.ts` | Detects proposal outcome changes |
 | `voting-reminder` | `voting-reminder-trigger.ts` | Time-based reminders for active proposals |
+| `new-offchain-proposal` | `new-offchain-proposal-trigger.ts` | Detects new Snapshot (offchain) proposals |
+| `offchain-proposal-finished` | `offchain-proposal-finished-trigger.ts` | Detects when Snapshot proposals end (`state: closed`) |
 
 ## Adding a New Trigger
 

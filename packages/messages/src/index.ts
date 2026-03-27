@@ -8,6 +8,7 @@ export * from './triggers/new-offchain-proposal';
 export * from './triggers/vote-confirmation';
 export * from './triggers/voting-reminder';
 export * from './triggers/proposal-finished';
+export * from './triggers/offchain-proposal-finished';
 export * from './triggers/voting-power';
 export * from './triggers/non-voting';
 export * from './triggers/delegation-change';

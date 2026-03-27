@@ -7,6 +7,8 @@ export interface ListOffchainProposalsOptions {
   status?: string | string[];
   /** Filter proposals created after this date (timestamp in seconds) */
   fromDate?: number;
+  /** Filter proposals with end >= this timestamp (seconds) */
+  endDate?: number;
   /** Maximum number of proposals to return */
   limit?: number;
   /** Order direction - asc or desc */

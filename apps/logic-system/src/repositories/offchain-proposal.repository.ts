@@ -19,6 +19,10 @@ export class OffchainProposalRepository implements OffchainProposalDataSource {
       variables.fromDate = options.fromDate;
     }
 
+    if (options?.endDate) {
+      variables.endDate = options.endDate;
+    }
+
     if (options?.limit) {
       variables.limit = options.limit;
     }

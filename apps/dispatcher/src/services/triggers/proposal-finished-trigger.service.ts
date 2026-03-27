@@ -5,7 +5,7 @@ import { NotificationClientFactory } from '../notification/notification-factory.
 import { ProposalFinishedNotification } from '../../interfaces/notification-client.interface';
 import { formatTokenAmount } from '../../lib/number-formatter';
 import { FormattingService } from '../formatting.service';
-import { proposalFinishedMessages, replacePlaceholders, buildButtons } from '@notification-system/messages';
+import { proposalFinishedMessages, replacePlaceholders } from '@notification-system/messages';
 
 /**
  * Handler for proposal finished trigger events

@@ -72,14 +72,23 @@ export class GraphQLMockSetup {
       // Handle offchain proposals
       if (data.query?.includes('ListOffchainProposals')) {
         let filtered = offchainProposalsData;
+        if (data.variables?.status) {
+          const statusFilter = Array.isArray(data.variables.status)
+            ? data.variables.status
+            : [data.variables.status];
+          filtered = filtered.filter(p => statusFilter.includes(p.state));
+        }
         if (data.variables?.fromDate) {
           filtered = filtered.filter(p => p.created >= data.variables.fromDate);
+        }
+        if (data.variables?.endDate) {
+          filtered = filtered.filter(p => p.end >= data.variables.endDate);
         }
         if (config?.headers?.['anticapture-dao-id']) {
           filtered = filtered.filter(p => p.daoId === config.headers['anticapture-dao-id']);
         }
         return Promise.resolve({
-          data: { data: { offchainProposals: { items: filtered.map(p => ({ id: p.id, title: p.title, discussion: p.discussion, link: p.link, state: p.state, created: p.created })), totalCount: filtered.length } } }
+          data: { data: { offchainProposals: { items: filtered.map(p => ({ id: p.id, title: p.title, discussion: p.discussion, link: p.link, state: p.state, created: p.created, end: p.end })), totalCount: filtered.length } } }
         });
       }
 
