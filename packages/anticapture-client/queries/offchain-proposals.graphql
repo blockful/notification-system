@@ -1,4 +1,11 @@
-query ListOffchainProposals($skip: NonNegativeInt, $limit: PositiveInt, $orderDirection: queryInput_offchainProposals_orderDirection, $status: JSON, $fromDate: Float, $endDate: Float) {
+query ListOffchainProposals(
+  $skip: Int
+  $limit: Int
+  $orderDirection: OrderDirection
+  $status: [String]
+  $fromDate: Int
+  $endDate: Int
+) {
   offchainProposals(skip: $skip, limit: $limit, orderDirection: $orderDirection, status: $status, fromDate: $fromDate, endDate: $endDate) {
     items {
       id

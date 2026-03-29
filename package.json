@@ -2,21 +2,27 @@
   "name": "notification-system",
   "private": true,
   "workspaces": [
-    "apps/*"
+    "apps/*",
+    "packages/*"
   ],
   "scripts": {
     "build": "turbo run build",
-    "build:dev": "pnpm client codegen && turbo run build",
+    "codegen": "turbo run codegen --filter=@notification-system/anticapture-client",
     "format": "prettier --write \"**/*.{ts,tsx,md}\"",
     "dev": "docker-compose up --build",
+    "lint": "turbo run lint",
+    "lint:fix": "turbo run lint:fix",
     "test": "turbo run test",
-    "consumer": "pnpm --filter @notification-system/consumer",
-    "logic-system": "pnpm --filter @notification-system/logic-system",
-    "subscription-server": "pnpm --filter @notification-system/subscription-server",
-    "dispatcher": "pnpm --filter @notification-system/dispatcher",
-    "integrated-tests": "pnpm --filter @notification-system/integrated-tests",
-    "client": "pnpm --filter @notification-system/anticapture-client",
-    "flow-editor": "pnpm --filter @notification-system/flow-editor"
+    "client": "turbo run --filter=@notification-system/anticapture-client",
+    "consumer": "turbo run --filter=@notification-system/consumer",
+    "dashboard": "turbo run --filter=@notification-system/dashboard",
+    "dispatcher": "turbo run --filter=@notification-system/dispatcher",
+    "flow-editor": "turbo run --filter=@notification-system/flow-editor",
+    "integrated-tests": "turbo run --filter=@notification-system/integrated-tests",
+    "logic-system": "turbo run --filter=@notification-system/logic-system",
+    "messages": "turbo run --filter=@notification-system/messages",
+    "rabbitmq-client": "turbo run --filter=@notification-system/rabbitmq-client",
+    "subscription-server": "turbo run --filter=@notification-system/subscription-server"
   },
   "devDependencies": {
     "@types/pg": "^8.15.5",

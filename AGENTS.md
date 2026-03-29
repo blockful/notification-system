@@ -28,6 +28,12 @@ pnpm logic-system <cmd>         # e.g., pnpm logic-system test
 pnpm dispatcher <cmd>
 pnpm subscription-server <cmd>
 pnpm consumer <cmd>
+pnpm dashboard <cmd>
+pnpm flow-editor <cmd>
+pnpm integrated-tests <cmd>
+pnpm client <cmd>
+pnpm messages <cmd>
+pnpm rabbitmq-client <cmd>
 
 # Testing specific services/patterns
 pnpm --filter @notification-system/logic-system test
@@ -35,10 +41,13 @@ pnpm --filter @notification-system/integrated-tests test -- --testNamePattern="v
 NODE_ENV=test pnpm --filter @notification-system/integrated-tests test
 
 # Type checking and linting
+pnpm lint
+pnpm lint:fix
 pnpm consumer check-types
 pnpm logic-system lint
 
 # GraphQL code generation (requires ANTICAPTURE_GRAPHQL_ENDPOINT)
+pnpm codegen
 pnpm client codegen
 ```
 

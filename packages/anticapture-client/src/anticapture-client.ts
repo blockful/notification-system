@@ -12,11 +12,12 @@ import type {
   ListHistoricalVotingPowerQueryVariables,
   ListVotesQuery,
   ListVotesQueryVariables,
+  OnchainProposal,
   ProposalNonVotersQueryVariables,
   ListOffchainProposalsQueryVariables,
   ListOffchainVotesQueryVariables,
 } from './gql/graphql';
-import { GetDaOsDocument, GetProposalByIdDocument, ListProposalsDocument, ListHistoricalVotingPowerDocument, ListVotesDocument, ProposalNonVotersDocument, GetEventRelevanceThresholdDocument, QueryInput_Votes_OrderBy, QueryInput_Votes_OrderDirection, QueryInput_VotesOffchain_OrderBy, QueryInput_VotesOffchain_OrderDirection, ListOffchainProposalsDocument, ListOffchainVotesDocument } from './gql/graphql';
+import { GetDaOsDocument, GetProposalByIdDocument, ListProposalsDocument, ListHistoricalVotingPowerDocument, ListVotesDocument, ProposalNonVotersDocument, GetEventRelevanceThresholdDocument, QueryInput_Votes_OrderBy, QueryInput_VotesOffchain_OrderBy, ListOffchainProposalsDocument, ListOffchainVotesDocument, OrderDirection } from './gql/graphql';
 import {
   SafeDaosResponseSchema,
   SafeProposalByIdResponseSchema,
@@ -171,14 +172,14 @@ export class AnticaptureClient {
   /**
    * Fetches a single proposal by ID with full type safety
    */
-  async getProposalById(id: string): Promise<GetProposalByIdQuery['proposal'] | null> {
+  async getProposalById(id: string): Promise<OnchainProposal | null> {
     try {
       const variables: GetProposalByIdQueryVariables = {
         id: id
       };
 
       const validated = await this.query(GetProposalByIdDocument, SafeProposalByIdResponseSchema, variables, undefined);
-      return validated.proposal;
+      return validated.proposal?.__typename === 'OnchainProposal' ? validated.proposal : null;
     } catch (error) {
       console.warn(`Returning null for proposal ${id} due to API error`, error instanceof Error ? error.message : error);
       return null;
@@ -205,9 +206,9 @@ export class AnticaptureClient {
 
       // Sort globally by timestamp desc (most recent first)
       if (variables?.fromEndDate) {
-        allProposals.sort((a, b) => parseInt(b?.endTimestamp || '0') - parseInt(a?.endTimestamp || '0'));
+        allProposals.sort((a, b) => Number(b?.endTimestamp || 0) - Number(a?.endTimestamp || 0));
       } else {
-        allProposals.sort((a, b) => parseInt(b?.timestamp || '0') - parseInt(a?.timestamp || '0') || 0);
+        allProposals.sort((a, b) => Number(b?.timestamp || 0) - Number(a?.timestamp || 0) || 0);
       }
 
       return allProposals;
@@ -327,7 +328,7 @@ export class AnticaptureClient {
           fromDate: parseInt(timestampGt),
           limit,
           orderBy: QueryInput_Votes_OrderBy.Timestamp,
-          orderDirection: QueryInput_Votes_OrderDirection.Asc
+          orderDirection: OrderDirection.Asc
         });
         // Add daoId to each vote
         return votes.map(vote => ({
@@ -458,7 +459,7 @@ export class AnticaptureClient {
           fromDate,
           limit,
           orderBy: QueryInput_VotesOffchain_OrderBy.Timestamp,
-          orderDirection: QueryInput_VotesOffchain_OrderDirection.Asc
+          orderDirection: OrderDirection.Asc
         });
         return votes.map(vote => ({
           ...vote,

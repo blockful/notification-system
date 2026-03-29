@@ -1,12 +1,10 @@
-import type { GetProposalByIdQuery } from '@notification-system/anticapture-client';
-
-export type ProposalOnChain = GetProposalByIdQuery['proposal'];
-export type ProposalOrNull = ProposalOnChain | null;
+import { type OnchainProposal as ProposalOnChain } from "@notification-system/anticapture-client/dist/gql/graphql";
+export { type OnchainProposal as ProposalOnChain } from "@notification-system/anticapture-client/dist/gql/graphql";
 
 /**
  * Valid status values for a proposal
  */
-export type ProposalStatus = 
+export type ProposalStatus =
     | 'PENDING'
     | 'ACTIVE'
     | 'SUCCEEDED'
@@ -47,7 +45,7 @@ export interface ProposalDataSource {
      * @param id - The proposal ID
      * @returns The proposal if found, null/undefined otherwise
      */
-    getById(id: string): Promise<ProposalOrNull>;
+    getById(id: string): Promise<ProposalOnChain | null>;
 
     /**
      * Lists proposals with pagination and filtering

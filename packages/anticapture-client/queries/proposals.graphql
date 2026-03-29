@@ -1,23 +1,37 @@
 query GetProposalById($id: String!) {
   proposal(id: $id) {
-    id
-    daoId
-    proposerAccountId
-    title
-    description
-    startBlock
-    endBlock
-    endTimestamp
-    timestamp
-    status
-    forVotes
-    againstVotes
-    abstainVotes
-    txHash
+    ... on OnchainProposal {
+      id
+      daoId
+      proposerAccountId
+      title
+      description
+      startBlock
+      endBlock
+      endTimestamp
+      timestamp
+      status
+      forVotes
+      againstVotes
+      abstainVotes
+      txHash
+    }
+    ... on ErrorResponse {
+      error
+      message
+    }
   }
 }
 
-query ListProposals($skip: NonNegativeInt, $limit: PositiveInt, $orderDirection: queryInput_proposals_orderDirection, $status: JSON, $fromDate: Float, $fromEndDate: Float, $includeOptimisticProposals: queryInput_proposals_includeOptimisticProposals) {
+query ListProposals(
+  $skip: Int
+  $limit: Int
+  $orderDirection: OrderDirection
+  $status: [String]
+  $fromDate: Int
+  $fromEndDate: Int
+  $includeOptimisticProposals: Boolean
+) {
   proposals(skip: $skip, limit: $limit, orderDirection: $orderDirection, status: $status, fromDate: $fromDate, fromEndDate: $fromEndDate, includeOptimisticProposals: $includeOptimisticProposals) {
     items {
       id

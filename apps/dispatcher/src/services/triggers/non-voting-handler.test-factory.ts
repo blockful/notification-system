@@ -26,6 +26,7 @@ export function createDispatcherMessage(events: ProposalFinishedNotification[]):
 }
 
 export function createProposal(id: string, title: string, daoId: string = 'ENS') {
+  const now = Date.now();
   return {
     id,
     title,
@@ -34,8 +35,9 @@ export function createProposal(id: string, title: string, daoId: string = 'ENS')
     description: `${title} description`,
     startBlock: 100,
     endBlock: 200,
-    endTimestamp: Date.now(),
-    timestamp: new Date().toISOString(),
+    // Historical proposals should end before the current proposal-finished event.
+    endTimestamp: now - 1000,
+    timestamp: new Date(now - 2000).toISOString(),
     status: 'SUCCEEDED' as any,
     forVotes: '1000000',
     againstVotes: '500000',

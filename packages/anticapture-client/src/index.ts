@@ -13,18 +13,20 @@ export type {
   ListVotesQuery,
   ListVotesQueryVariables,
   ListHistoricalVotingPowerQuery,
-  ListHistoricalVotingPowerQueryVariables
+  ListHistoricalVotingPowerQueryVariables,
+  OnchainProposal
 } from './gql/graphql';
 
 // Export GraphQL enums
 export {
-  QueryInput_Proposals_OrderDirection,
+  OrderDirection,
+  OrderDirection as QueryInput_Proposals_OrderDirection,
   QueryInput_HistoricalVotingPower_OrderBy,
-  QueryInput_HistoricalVotingPower_OrderDirection,
+  OrderDirection as QueryInput_HistoricalVotingPower_OrderDirection,
   QueryInput_Votes_OrderBy,
-  QueryInput_Votes_OrderDirection,
+  OrderDirection as QueryInput_Votes_OrderDirection,
   QueryInput_VotesOffchain_OrderBy,
-  QueryInput_VotesOffchain_OrderDirection
+  OrderDirection as QueryInput_VotesOffchain_OrderDirection
 } from './gql/graphql';
 
 export { FeedEventType, FeedRelevance } from './schemas';
