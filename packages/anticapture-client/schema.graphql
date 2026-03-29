@@ -1,0 +1,245 @@
+type Query {
+  daos: DAOList!
+  proposal(id: String!): proposal_response
+  proposals(
+    skip: Int
+    limit: Int
+    orderDirection: OrderDirection = desc
+    status: [String]
+    fromDate: Int
+    fromEndDate: Int
+    includeOptimisticProposals: Boolean
+  ): OnchainProposalsResponse
+  getEventRelevanceThreshold(
+    type: FeedEventType!
+    relevance: FeedRelevance!
+  ): EventRelevanceThresholdResponse
+  votes(
+    skip: Int
+    limit: Int
+    voterAddressIn: [String]
+    orderBy: queryInput_votes_orderBy = timestamp
+    orderDirection: OrderDirection = desc
+    support: String
+    fromDate: Int
+    toDate: Int
+  ): OnchainVotesResponse
+  historicalVotingPower(
+    skip: Int
+    limit: Int
+    orderBy: queryInput_historicalVotingPower_orderBy = timestamp
+    orderDirection: OrderDirection = desc
+    fromDate: Int
+    toDate: Int
+    fromValue: String
+    toValue: String
+    address: String
+  ): HistoricalVotingPowersResponse
+  proposalNonVoters(
+    id: String!
+    skip: Int
+    limit: Int
+    orderDirection: OrderDirection = desc
+    addresses: [String]
+  ): VotersResponse
+  offchainProposals(
+    skip: Int
+    limit: Int
+    orderDirection: OrderDirection = desc
+    status: [String]
+    fromDate: Int
+    endDate: Int
+  ): OffchainProposalsResponse
+  votesOffchain(
+    skip: Int
+    limit: Int
+    orderBy: queryInput_votesOffchain_orderBy = timestamp
+    orderDirection: OrderDirection = desc
+    voterAddresses: [String]
+    fromDate: Int
+    toDate: Int
+  ): OffchainVotesResponse
+}
+
+enum OrderDirection {
+  asc
+  desc
+}
+
+enum FeedEventType {
+  VOTE
+  PROPOSAL
+  DELEGATION
+  TRANSFER
+  PROPOSAL_EXTENDED
+}
+
+enum FeedRelevance {
+  HIGH
+  MEDIUM
+  LOW
+}
+
+enum queryInput_votes_orderBy {
+  timestamp
+  votingPower
+}
+
+enum queryInput_votesOffchain_orderBy {
+  timestamp
+  votingPower
+}
+
+enum queryInput_historicalVotingPower_orderBy {
+  timestamp
+  delta
+}
+
+type EventRelevanceThresholdResponse {
+  threshold: String!
+}
+
+type DAOList {
+  items: [dao_200_response!]!
+  totalCount: Int!
+}
+
+type dao_200_response {
+  id: String!
+  votingDelay: String!
+  chainId: Int!
+  alreadySupportCalldataReview: Boolean!
+  supportOffchainData: Boolean!
+}
+
+type OnchainProposal {
+  id: String!
+  daoId: String!
+  txHash: String!
+  proposerAccountId: String!
+  title: String!
+  description: String!
+  startBlock: Int!
+  endBlock: Int!
+  timestamp: Int!
+  status: String!
+  forVotes: String!
+  againstVotes: String!
+  abstainVotes: String!
+  startTimestamp: Int!
+  endTimestamp: Int!
+  quorum: String!
+  calldatas: [String]!
+  values: [String]!
+  targets: [String]!
+  proposalType: Int
+}
+
+type ErrorResponse {
+  error: String!
+  message: String
+}
+
+union proposal_response = OnchainProposal | ErrorResponse
+
+type OnchainProposalsResponse {
+  items: [OnchainProposal]!
+  totalCount: Int!
+}
+
+type OnchainVotesResponse {
+  items: [OnchainVote]!
+  totalCount: Int!
+}
+
+type OnchainVote {
+  voterAddress: String!
+  transactionHash: String!
+  proposalId: String!
+  support: String
+  votingPower: String!
+  reason: String
+  timestamp: Int!
+  proposalTitle: String
+}
+
+type HistoricalVotingPowersResponse {
+  items: [HistoricalVotingPower]!
+  totalCount: Int!
+}
+
+type HistoricalVotingPower {
+  transactionHash: String!
+  daoId: String!
+  accountId: String!
+  votingPower: String!
+  delta: String!
+  timestamp: String!
+  logIndex: Int!
+  delegation: HistoricalVotingPowerDelegation
+  transfer: HistoricalVotingPowerTransfer
+}
+
+type HistoricalVotingPowerDelegation {
+  from: String!
+  value: String!
+  to: String!
+  previousDelegate: String
+}
+
+type HistoricalVotingPowerTransfer {
+  value: String!
+  from: String!
+  to: String!
+}
+
+type VotersResponse {
+  items: [Voter]!
+  totalCount: Int!
+}
+
+type Voter {
+  voter: String!
+  votingPower: String!
+  lastVoteTimestamp: Float!
+  votingPowerVariation: String!
+}
+
+type OffchainProposalsResponse {
+  items: [OffchainProposal]!
+  totalCount: Int!
+}
+
+type OffchainProposal {
+  id: String!
+  spaceId: String!
+  author: String!
+  title: String!
+  body: String!
+  discussion: String!
+  type: String!
+  start: Int!
+  end: Int!
+  state: String!
+  created: Int!
+  updated: Int!
+  link: String!
+  flagged: Boolean!
+}
+
+type OffchainVotesResponse {
+  items: [OffchainVote]!
+  totalCount: Int!
+}
+
+scalar JSON
+
+type OffchainVote {
+  voter: String!
+  proposalId: String!
+  choice: JSON!
+  vp: Float
+  reason: String!
+  created: Int!
+  proposalTitle: String
+}

@@ -43,9 +43,9 @@ describe('VoteConfirmationTriggerHandler', () => {
     await handler.handleMessage({
       triggerId: 'vote-confirmation',
       events: [
-        { daoId: 'test-dao', proposalId: 'proposal-1', voterAddress: '0xVoter123', support: 1, votingPower: '1000000000000000000', timestamp: 1767225600, transactionHash: '0xSameTxHash', proposalTitle: 'Proposal 1' },
-        { daoId: 'test-dao', proposalId: 'proposal-2', voterAddress: '0xVoter123', support: 0, votingPower: '1000000000000000000', timestamp: 1767225600, transactionHash: '0xSameTxHash', proposalTitle: 'Proposal 2' },
-        { daoId: 'test-dao', proposalId: 'proposal-3', voterAddress: '0xVoter123', support: 2, votingPower: '1000000000000000000', timestamp: 1767225600, transactionHash: '0xSameTxHash', proposalTitle: 'Proposal 3' },
+        { daoId: 'test-dao', proposalId: 'proposal-1', voterAddress: '0xVoter123', support: '1', votingPower: '1000000000000000000', timestamp: 1767225600, transactionHash: '0xSameTxHash', proposalTitle: 'Proposal 1' },
+        { daoId: 'test-dao', proposalId: 'proposal-2', voterAddress: '0xVoter123', support: '0', votingPower: '1000000000000000000', timestamp: 1767225600, transactionHash: '0xSameTxHash', proposalTitle: 'Proposal 2' },
+        { daoId: 'test-dao', proposalId: 'proposal-3', voterAddress: '0xVoter123', support: '2', votingPower: '1000000000000000000', timestamp: 1767225600, transactionHash: '0xSameTxHash', proposalTitle: 'Proposal 3' },
       ]
     });
 

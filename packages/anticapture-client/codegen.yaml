@@ -1,4 +1,4 @@
-schema: '${ANTICAPTURE_GRAPHQL_ENDPOINT}'
+schema: './schema.graphql'
 documents: 'queries/*.graphql'
 generates:
   src/gql/:

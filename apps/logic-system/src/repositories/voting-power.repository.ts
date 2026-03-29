@@ -13,13 +13,13 @@ export class VotingPowerRepository {
     this.anticaptureClient = anticaptureClient;
   }
 
-  async listVotingPowerHistory(timestampGt: string): Promise<ProcessedVotingPowerHistory []> {
+  async listVotingPowerHistory(timestampGt: string): Promise<ProcessedVotingPowerHistory[]> {
     const variables: ListHistoricalVotingPowerQueryVariables = {
       // Always order by timestamp ascending for chronological processing
       orderBy: QueryInput_HistoricalVotingPower_OrderBy.Timestamp,
       orderDirection: QueryInput_HistoricalVotingPower_OrderDirection.Asc,
       limit: 100,
-      fromDate: timestampGt
+      fromDate: Number(timestampGt)
     };
 
     return await this.anticaptureClient.listVotingPowerHistory(variables);

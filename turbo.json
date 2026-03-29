@@ -3,12 +3,15 @@
   "ui": "tui",
   "tasks": {
     "build": {
-      "dependsOn": ["^build"],
+      "dependsOn": ["^build", "@notification-system/anticapture-client#codegen"],
       "inputs": ["$TURBO_DEFAULT$", ".env*"],
       "outputs": ["dist/**", ".next/**"]
     },
     "check-types": {
-      "dependsOn": ["^check-types"]
+      "dependsOn": ["^build"]
+    },
+    "clean": {
+      "cache": false
     },
     "dev": {
       "cache": false,
@@ -18,8 +21,18 @@
       "inputs": ["**/*.graphql", "codegen.yaml"],
       "outputs": ["src/gql/**"]
     },
-    "test": {
+    "lint": {},
+    "lint:fix": {
+      "cache": false
+    },
+    "start": {
+      "cache": false,
+      "persistent": true,
       "dependsOn": ["^build"]
+    },
+    "test": {
+      "dependsOn": ["^build"],
+      "inputs": ["$TURBO_DEFAULT$", ".env*"]
     }
   }
 }

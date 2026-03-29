@@ -173,13 +173,13 @@ export class NonVotingHandler extends BaseTriggerHandler<ProposalFinishedNotific
     // Sort by endTimestamp (most recent first)
     const sortedByEndTime = proposals.sort((a, b) => {
       if (!a || !b) return 0;
-      return parseInt(b.endTimestamp) - parseInt(a.endTimestamp);
+      return Number(b.endTimestamp) - Number(a.endTimestamp);
     });
     
     // Filter proposals that ended up to the current moment (includes current)
     // and get the most recent PROPOSALS_TO_CHECK proposals
     return sortedByEndTime
-      .filter(p => p && parseInt(p.endTimestamp) <= currentEndTimestamp)
+      .filter(p => p && Number(p.endTimestamp) <= currentEndTimestamp)
       .slice(0, NonVotingHandler.PROPOSALS_TO_CHECK);
   }
 }
