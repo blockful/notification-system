@@ -6,26 +6,36 @@ export declare const SafeDaosResponseSchema: z.ZodEffects<z.ZodObject<{
             id: z.ZodString;
             votingDelay: z.ZodOptional<z.ZodString>;
             chainId: z.ZodNumber;
+            alreadySupportCalldataReview: z.ZodOptional<z.ZodBoolean>;
+            supportOffchainData: z.ZodOptional<z.ZodBoolean>;
         }, "strip", z.ZodTypeAny, {
             id: string;
             chainId: number;
             votingDelay?: string | undefined;
+            alreadySupportCalldataReview?: boolean | undefined;
+            supportOffchainData?: boolean | undefined;
         }, {
             id: string;
             chainId: number;
             votingDelay?: string | undefined;
+            alreadySupportCalldataReview?: boolean | undefined;
+            supportOffchainData?: boolean | undefined;
         }>, "many">;
     }, "strip", z.ZodTypeAny, {
         items: {
             id: string;
             chainId: number;
             votingDelay?: string | undefined;
+            alreadySupportCalldataReview?: boolean | undefined;
+            supportOffchainData?: boolean | undefined;
         }[];
     }, {
         items: {
             id: string;
             chainId: number;
             votingDelay?: string | undefined;
+            alreadySupportCalldataReview?: boolean | undefined;
+            supportOffchainData?: boolean | undefined;
         }[];
     }>>;
 }, "strip", z.ZodTypeAny, {
@@ -34,6 +44,8 @@ export declare const SafeDaosResponseSchema: z.ZodEffects<z.ZodObject<{
             id: string;
             chainId: number;
             votingDelay?: string | undefined;
+            alreadySupportCalldataReview?: boolean | undefined;
+            supportOffchainData?: boolean | undefined;
         }[];
     } | null;
 }, {
@@ -42,6 +54,8 @@ export declare const SafeDaosResponseSchema: z.ZodEffects<z.ZodObject<{
             id: string;
             chainId: number;
             votingDelay?: string | undefined;
+            alreadySupportCalldataReview?: boolean | undefined;
+            supportOffchainData?: boolean | undefined;
         }[];
     } | null;
 }>, {
@@ -50,6 +64,8 @@ export declare const SafeDaosResponseSchema: z.ZodEffects<z.ZodObject<{
             id: string;
             chainId: number;
             votingDelay?: string | undefined;
+            alreadySupportCalldataReview?: boolean | undefined;
+            supportOffchainData?: boolean | undefined;
         }[];
     };
 }, {
@@ -58,6 +74,8 @@ export declare const SafeDaosResponseSchema: z.ZodEffects<z.ZodObject<{
             id: string;
             chainId: number;
             votingDelay?: string | undefined;
+            alreadySupportCalldataReview?: boolean | undefined;
+            supportOffchainData?: boolean | undefined;
         }[];
     } | null;
 }>;
@@ -584,6 +602,7 @@ export declare const OffchainProposalItemSchema: z.ZodObject<{
     link: z.ZodString;
     state: z.ZodString;
     created: z.ZodNumber;
+    end: z.ZodNumber;
 }, "strip", z.ZodTypeAny, {
     link: string;
     id: string;
@@ -591,6 +610,7 @@ export declare const OffchainProposalItemSchema: z.ZodObject<{
     discussion: string;
     state: string;
     created: number;
+    end: number;
 }, {
     link: string;
     id: string;
@@ -598,6 +618,7 @@ export declare const OffchainProposalItemSchema: z.ZodObject<{
     discussion: string;
     state: string;
     created: number;
+    end: number;
 }>;
 export type OffchainProposalItem = z.infer<typeof OffchainProposalItemSchema>;
 export declare const SafeOffchainProposalsResponseSchema: z.ZodEffects<z.ZodObject<{
@@ -609,6 +630,7 @@ export declare const SafeOffchainProposalsResponseSchema: z.ZodEffects<z.ZodObje
             link: z.ZodString;
             state: z.ZodString;
             created: z.ZodNumber;
+            end: z.ZodNumber;
         }, "strip", z.ZodTypeAny, {
             link: string;
             id: string;
@@ -616,6 +638,7 @@ export declare const SafeOffchainProposalsResponseSchema: z.ZodEffects<z.ZodObje
             discussion: string;
             state: string;
             created: number;
+            end: number;
         }, {
             link: string;
             id: string;
@@ -623,6 +646,7 @@ export declare const SafeOffchainProposalsResponseSchema: z.ZodEffects<z.ZodObje
             discussion: string;
             state: string;
             created: number;
+            end: number;
         }>>, "many">;
         totalCount: z.ZodNumber;
     }, "strip", z.ZodTypeAny, {
@@ -633,6 +657,7 @@ export declare const SafeOffchainProposalsResponseSchema: z.ZodEffects<z.ZodObje
             discussion: string;
             state: string;
             created: number;
+            end: number;
         } | null)[];
         totalCount: number;
     }, {
@@ -643,6 +668,7 @@ export declare const SafeOffchainProposalsResponseSchema: z.ZodEffects<z.ZodObje
             discussion: string;
             state: string;
             created: number;
+            end: number;
         } | null)[];
         totalCount: number;
     }>>;
@@ -655,6 +681,7 @@ export declare const SafeOffchainProposalsResponseSchema: z.ZodEffects<z.ZodObje
             discussion: string;
             state: string;
             created: number;
+            end: number;
         } | null)[];
         totalCount: number;
     } | null;
@@ -667,6 +694,7 @@ export declare const SafeOffchainProposalsResponseSchema: z.ZodEffects<z.ZodObje
             discussion: string;
             state: string;
             created: number;
+            end: number;
         } | null)[];
         totalCount: number;
     } | null;
@@ -679,6 +707,7 @@ export declare const SafeOffchainProposalsResponseSchema: z.ZodEffects<z.ZodObje
             discussion: string;
             state: string;
             created: number;
+            end: number;
         }[];
         totalCount: number;
     };
@@ -691,6 +720,7 @@ export declare const SafeOffchainProposalsResponseSchema: z.ZodEffects<z.ZodObje
             discussion: string;
             state: string;
             created: number;
+            end: number;
         } | null)[];
         totalCount: number;
     } | null;

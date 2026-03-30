@@ -11,7 +11,9 @@ export const SafeDaosResponseSchema = z.object({
     items: z.array(z.object({
       id: z.string(),
       votingDelay: z.string().optional(),
-      chainId: z.number()
+      chainId: z.number(),
+      alreadySupportCalldataReview: z.boolean().optional(),
+      supportOffchainData: z.boolean().optional()
     }))
   }).nullable()
 }).transform((data) => {
@@ -138,6 +140,7 @@ export const OffchainProposalItemSchema = z.object({
   link: z.string(),
   state: z.string(),
   created: z.number(),
+  end: z.number(),
 });
 
 export type OffchainProposalItem = z.infer<typeof OffchainProposalItemSchema>;

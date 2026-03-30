@@ -237,6 +237,7 @@ export type QueryAccountBalanceVariationsByAccountIdArgs = {
 export type QueryAccountBalancesArgs = {
     addresses?: InputMaybe<Scalars['JSON']['input']>;
     delegates?: InputMaybe<Scalars['JSON']['input']>;
+    excludeDaoAddresses?: InputMaybe<Scalars['Boolean']['input']>;
     fromDate?: InputMaybe<Scalars['String']['input']>;
     fromValue?: InputMaybe<Scalars['String']['input']>;
     limit?: InputMaybe<Scalars['PositiveInt']['input']>;
@@ -402,6 +403,7 @@ export type QueryOffchainProposalByIdArgs = {
     id: Scalars['String']['input'];
 };
 export type QueryOffchainProposalsArgs = {
+    endDate?: InputMaybe<Scalars['Float']['input']>;
     fromDate?: InputMaybe<Scalars['Float']['input']>;
     limit?: InputMaybe<Scalars['PositiveInt']['input']>;
     orderDirection?: InputMaybe<QueryInput_OffchainProposals_OrderDirection>;
@@ -636,10 +638,12 @@ export type CompareVotes_200_Response = {
 };
 export type Dao_200_Response = {
     __typename?: 'dao_200_response';
+    alreadySupportCalldataReview: Scalars['Boolean']['output'];
     chainId: Scalars['Float']['output'];
     id: Scalars['String']['output'];
     proposalThreshold: Scalars['String']['output'];
     quorum: Scalars['String']['output'];
+    supportOffchainData: Scalars['Boolean']['output'];
     timelockDelay: Scalars['String']['output'];
     votingDelay: Scalars['String']['output'];
     votingPeriod: Scalars['String']['output'];
@@ -768,7 +772,7 @@ export type Proposal_200_Response = {
     status: Scalars['String']['output'];
     targets: Array<Maybe<Scalars['String']['output']>>;
     timestamp: Scalars['String']['output'];
-    title?: Maybe<Scalars['String']['output']>;
+    title: Scalars['String']['output'];
     txHash: Scalars['String']['output'];
     values: Array<Maybe<Scalars['String']['output']>>;
 };
@@ -1094,8 +1098,10 @@ export declare enum QueryInput_VotingPowerVariations_OrderDirection {
     Desc = "desc"
 }
 export declare enum QueryInput_VotingPowers_OrderBy {
+    Balance = "balance",
     DelegationsCount = "delegationsCount",
     SignedVariation = "signedVariation",
+    Total = "total",
     Variation = "variation",
     VotingPower = "votingPower"
 }
@@ -1394,7 +1400,7 @@ export type Query_ProposalsActivity_Proposals_Items_Proposal = {
     abstainVotes: Scalars['String']['output'];
     againstVotes: Scalars['String']['output'];
     daoId: Scalars['String']['output'];
-    description?: Maybe<Scalars['String']['output']>;
+    description: Scalars['String']['output'];
     endBlock: Scalars['Float']['output'];
     forVotes: Scalars['String']['output'];
     id: Scalars['String']['output'];
@@ -1402,6 +1408,7 @@ export type Query_ProposalsActivity_Proposals_Items_Proposal = {
     startBlock: Scalars['Float']['output'];
     status: Scalars['String']['output'];
     timestamp?: Maybe<Scalars['String']['output']>;
+    title: Scalars['String']['output'];
 };
 export type Query_ProposalsActivity_Proposals_Items_UserVote = {
     __typename?: 'query_proposalsActivity_proposals_items_userVote';
@@ -1411,7 +1418,7 @@ export type Query_ProposalsActivity_Proposals_Items_UserVote = {
     support?: Maybe<Scalars['String']['output']>;
     timestamp?: Maybe<Scalars['String']['output']>;
     voterAccountId: Scalars['String']['output'];
-    votingPower: Scalars['String']['output'];
+    votingPower?: Maybe<Scalars['String']['output']>;
 };
 export type Query_Proposals_Items_Items = {
     __typename?: 'query_proposals_items_items';
@@ -1432,7 +1439,7 @@ export type Query_Proposals_Items_Items = {
     status: Scalars['String']['output'];
     targets: Array<Maybe<Scalars['String']['output']>>;
     timestamp: Scalars['String']['output'];
-    title?: Maybe<Scalars['String']['output']>;
+    title: Scalars['String']['output'];
     txHash: Scalars['String']['output'];
     values: Array<Maybe<Scalars['String']['output']>>;
 };
@@ -1582,6 +1589,7 @@ export type Query_VotingPowerVariations_Period = {
 export type Query_VotingPowers_Items_Items = {
     __typename?: 'query_votingPowers_items_items';
     accountId: Scalars['String']['output'];
+    balance?: Maybe<Scalars['String']['output']>;
     delegationsCount: Scalars['Float']['output'];
     proposalsCount: Scalars['Float']['output'];
     variation: Query_VotingPowers_Items_Items_Variation;
@@ -1611,6 +1619,7 @@ export type Token_200_Response = {
     id: Scalars['String']['output'];
     lendingSupply: Scalars['String']['output'];
     name?: Maybe<Scalars['String']['output']>;
+    nonCirculatingSupply: Scalars['String']['output'];
     price: Scalars['String']['output'];
     totalSupply: Scalars['String']['output'];
     treasury: Scalars['String']['output'];
@@ -1648,6 +1657,7 @@ export type Votes_200_Response = {
 export type VotingPowerByAccountId_200_Response = {
     __typename?: 'votingPowerByAccountId_200_response';
     accountId: Scalars['String']['output'];
+    balance?: Maybe<Scalars['String']['output']>;
     delegationsCount: Scalars['Float']['output'];
     proposalsCount: Scalars['Float']['output'];
     variation: Query_VotingPowerByAccountId_Variation;
@@ -1681,6 +1691,8 @@ export type GetDaOsQuery = {
             id: string;
             votingDelay: string;
             chainId: number;
+            alreadySupportCalldataReview: boolean;
+            supportOffchainData: boolean;
         }>;
     };
 };
@@ -1690,6 +1702,7 @@ export type ListOffchainProposalsQueryVariables = Exact<{
     orderDirection?: InputMaybe<QueryInput_OffchainProposals_OrderDirection>;
     status?: InputMaybe<Scalars['JSON']['input']>;
     fromDate?: InputMaybe<Scalars['Float']['input']>;
+    endDate?: InputMaybe<Scalars['Float']['input']>;
 }>;
 export type ListOffchainProposalsQuery = {
     __typename?: 'Query';
@@ -1704,6 +1717,7 @@ export type ListOffchainProposalsQuery = {
             link: string;
             state: string;
             created: number;
+            end: number;
         } | null>;
     } | null;
 };
@@ -1731,7 +1745,7 @@ export type GetProposalByIdQuery = {
         id: string;
         daoId: string;
         proposerAccountId: string;
-        title?: string | null;
+        title: string;
         description: string;
         startBlock: number;
         endBlock: number;
@@ -1763,7 +1777,7 @@ export type ListProposalsQuery = {
             id: string;
             daoId: string;
             proposerAccountId: string;
-            title?: string | null;
+            title: string;
             description: string;
             startBlock: number;
             endBlock: number;

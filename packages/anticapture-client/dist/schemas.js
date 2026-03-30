@@ -13,7 +13,9 @@ exports.SafeDaosResponseSchema = zod_1.z.object({
         items: zod_1.z.array(zod_1.z.object({
             id: zod_1.z.string(),
             votingDelay: zod_1.z.string().optional(),
-            chainId: zod_1.z.number()
+            chainId: zod_1.z.number(),
+            alreadySupportCalldataReview: zod_1.z.boolean().optional(),
+            supportOffchainData: zod_1.z.boolean().optional()
         }))
     }).nullable()
 }).transform((data) => {
@@ -131,6 +133,7 @@ exports.OffchainProposalItemSchema = zod_1.z.object({
     link: zod_1.z.string(),
     state: zod_1.z.string(),
     created: zod_1.z.number(),
+    end: zod_1.z.number(),
 });
 exports.SafeOffchainProposalsResponseSchema = zod_1.z.object({
     offchainProposals: zod_1.z.object({

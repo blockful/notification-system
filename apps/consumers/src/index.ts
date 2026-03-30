@@ -2,11 +2,10 @@
  * Multi-Channel Bot - Main Entry Point
  *
  * This is the main entry point for the multi-channel bot application.
- * It initializes both Telegram and Slack bots based on available tokens.
+ * It initializes Telegram, Slack, and generic webhook consumers.
  *
  * The bot handles DAO tracking notifications for users across multiple
- * platforms (Telegram and Slack) and responds to commands that allow
- * users to customize their notification preferences.
+ * platforms (Telegram, Slack, and any registered webhook endpoint).
  */
 
 import axios from 'axios';
@@ -46,7 +45,8 @@ const app = new App(
   config.rabbitmqUrl,
   ensResolver,
   telegramClient,
-  slackClient
+  slackClient,
+  config.webhookPort
 );
 
 (async () => {

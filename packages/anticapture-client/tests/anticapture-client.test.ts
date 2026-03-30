@@ -35,9 +35,9 @@ describe('AnticaptureClient', () => {
       const result = await client.getDAOs();
 
       expect(result).toEqual([
-        { id: 'UNISWAP', blockTime: 12, votingDelay: '1000' },
-        { id: 'ENS', blockTime: 12, votingDelay: '500' },
-        { id: 'COMPOUND', blockTime: 12, votingDelay: '0' }
+        { id: 'UNISWAP', blockTime: 12, votingDelay: '1000', chainId: undefined, alreadySupportCalldataReview: false, supportOffchainData: false },
+        { id: 'ENS', blockTime: 12, votingDelay: '500', chainId: undefined, alreadySupportCalldataReview: false, supportOffchainData: false },
+        { id: 'COMPOUND', blockTime: 12, votingDelay: '0', chainId: undefined, alreadySupportCalldataReview: false, supportOffchainData: false }
       ]);
     });
 
@@ -85,7 +85,9 @@ describe('AnticaptureClient', () => {
           id,
           blockTime: 12,
           votingDelay: '0',
-          chainId: 1
+          chainId: 1,
+          alreadySupportCalldataReview: true,
+          supportOffchainData: true
         }));
         jest.spyOn(client, 'getDAOs').mockResolvedValue(mockDAOs);
       });
@@ -185,7 +187,9 @@ describe('AnticaptureClient', () => {
           id,
           blockTime: 12,
           votingDelay: '0',
-          chainId: 1
+          chainId: 1,
+          alreadySupportCalldataReview: true,
+          supportOffchainData: true
         }));
         jest.spyOn(client, 'getDAOs').mockResolvedValue(mockDAOs);
       });
@@ -216,7 +220,9 @@ describe('AnticaptureClient', () => {
           id,
           blockTime: 12,
           votingDelay: '0',
-          chainId: 1
+          chainId: 1,
+          alreadySupportCalldataReview: true,
+          supportOffchainData: true
         }));
         jest.spyOn(client, 'getDAOs').mockResolvedValue(mockDAOs);
 

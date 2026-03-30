@@ -13,10 +13,11 @@ interface OffchainProposalStub {
   link: string;
   state: string;
   created: number;
+  end: number;
 }
 
 interface GraphQLScenario {
-  daos: Array<{ id: string; votingDelay?: string; chainId?: number }>;
+  daos: Array<{ id: string; votingDelay?: string; chainId?: number; supportOffchainData?: boolean }>;
   proposals?: Record<string, OffchainProposalStub[]>;
   errors?: Record<string, string>;
 }
@@ -33,6 +34,7 @@ function handleGraphQL(scenario: GraphQLScenario) {
               id: d.id,
               votingDelay: d.votingDelay ?? '0',
               chainId: d.chainId ?? 1,
+              supportOffchainData: d.supportOffchainData ?? true,
             })),
           },
         },
@@ -82,7 +84,7 @@ describe('listOffchainProposals', () => {
     server.use(handleGraphQL({
       daos: [{ id: 'ENS' }],
       proposals: {
-        ENS: [{ id: 'snap-1', title: 'Test Proposal', discussion: 'https://forum.example.com', link: 'https://snapshot.org/snap-1', state: 'active', created: 1700000000 }],
+        ENS: [{ id: 'snap-1', title: 'Test Proposal', discussion: 'https://forum.example.com', link: 'https://snapshot.org/snap-1', state: 'active', created: 1700000000, end: 1700086400 }],
       },
     }));
 
@@ -97,8 +99,8 @@ describe('listOffchainProposals', () => {
     server.use(handleGraphQL({
       daos: [{ id: 'DAO_A' }, { id: 'DAO_B' }],
       proposals: {
-        DAO_A: [{ id: 'snap-a', title: 'From A', discussion: '', link: '', state: 'active', created: 1700000100 }],
-        DAO_B: [{ id: 'snap-b', title: 'From B', discussion: '', link: '', state: 'pending', created: 1700000200 }],
+        DAO_A: [{ id: 'snap-a', title: 'From A', discussion: '', link: '', state: 'active', created: 1700000100, end: 1700086500 }],
+        DAO_B: [{ id: 'snap-b', title: 'From B', discussion: '', link: '', state: 'pending', created: 1700000200, end: 1700086600 }],
       },
     }));
 
@@ -109,11 +111,31 @@ describe('listOffchainProposals', () => {
     expect(result.map(p => p.id)).toEqual(['snap-b', 'snap-a']);
   });
 
+  it('skips DAOs with supportOffchainData false', async () => {
+    server.use(handleGraphQL({
+      daos: [
+        { id: 'ONCHAIN_ONLY', supportOffchainData: false },
+        { id: 'OFFCHAIN_DAO', supportOffchainData: true },
+      ],
+      proposals: {
+        ONCHAIN_ONLY: [{ id: 'snap-should-not-appear', title: 'Should not appear', discussion: '', link: '', state: 'active', created: 1700000000, end: 1700086400 }],
+        OFFCHAIN_DAO: [{ id: 'snap-ok', title: 'OK', discussion: '', link: '', state: 'active', created: 1700000100, end: 1700086500 }],
+      },
+    }));
+
+    const client = createRealClient();
+    const result = await client.listOffchainProposals();
+
+    expect(result).toHaveLength(1);
+    expect(result[0].id).toBe('snap-ok');
+    expect(result[0].daoId).toBe('OFFCHAIN_DAO');
+  });
+
   it('skips DAO on API error and continues with others', async () => {
     server.use(handleGraphQL({
       daos: [{ id: 'OK_DAO' }, { id: 'BAD_DAO' }],
       proposals: {
-        OK_DAO: [{ id: 'snap-ok', title: 'OK', discussion: '', link: '', state: 'active', created: 1700000000 }],
+        OK_DAO: [{ id: 'snap-ok', title: 'OK', discussion: '', link: '', state: 'active', created: 1700000000, end: 1700086400 }],
       },
       errors: {
         BAD_DAO: 'API exploded',

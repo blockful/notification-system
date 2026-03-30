@@ -6,6 +6,7 @@ import { NotificationClientFactory } from './services/notification/notification-
 import { RabbitMQNotificationService } from './services/notification/rabbitmq-notification.service';
 import { NewProposalTriggerHandler } from './services/triggers/new-proposal-trigger.service';
 import { NewOffchainProposalTriggerHandler } from './services/triggers/new-offchain-proposal-trigger.service';
+import { OffchainProposalFinishedTriggerHandler } from './services/triggers/offchain-proposal-finished-trigger.service';
 import { VotingPowerTriggerHandler } from './services/triggers/voting-power-trigger.service';
 import { ProposalFinishedTriggerHandler } from './services/triggers/proposal-finished-trigger.service';
 import { NonVotingHandler } from './services/triggers/non-voting-handler.service';
@@ -59,6 +60,7 @@ export class App {
     const notificationFactory = new NotificationClientFactory();
     notificationFactory.addClient('telegram', new RabbitMQNotificationService(this.publisher));
     notificationFactory.addClient('slack', new RabbitMQNotificationService(this.publisher));
+    notificationFactory.addClient('webhook', new RabbitMQNotificationService(this.publisher));
     const triggerProcessorService = new TriggerProcessorService();
 
     triggerProcessorService.addHandler(
@@ -69,6 +71,11 @@ export class App {
     triggerProcessorService.addHandler(
       NotificationTypeId.NewOffchainProposal,
       new NewOffchainProposalTriggerHandler(subscriptionClient, notificationFactory)
+    );
+
+    triggerProcessorService.addHandler(
+      'offchain-proposal-finished',
+      new OffchainProposalFinishedTriggerHandler(subscriptionClient, notificationFactory)
     );
 
     triggerProcessorService.addHandler(
