@@ -452,23 +452,25 @@ export class AnticaptureClient {
   async listRecentOffchainVotesFromAllDaos(fromDate: number, limit: number = 100): Promise<OffchainVoteWithDaoId[]> {
     const daos = await this.getDAOs();
 
-    const votePromises = daos.map(async (dao) => {
-      try {
-        const votes = await this.listOffchainVotes(dao.id, {
-          fromDate,
-          limit,
-          orderBy: QueryInput_VotesOffchain_OrderBy.Timestamp,
-          orderDirection: QueryInput_VotesOffchain_OrderDirection.Asc
-        });
-        return votes.map(vote => ({
-          ...vote,
-          daoId: dao.id
-        }));
-      } catch (error) {
-        console.warn(`Failed to fetch offchain votes for DAO ${dao.id}:`, error);
-        return [];
-      }
-    });
+    const votePromises = daos
+      .filter(dao => dao.supportOffchainData)
+      .map(async (dao) => {
+        try {
+          const votes = await this.listOffchainVotes(dao.id, {
+            fromDate,
+            limit,
+            orderBy: QueryInput_VotesOffchain_OrderBy.Timestamp,
+            orderDirection: QueryInput_VotesOffchain_OrderDirection.Asc
+          });
+          return votes.map(vote => ({
+            ...vote,
+            daoId: dao.id
+          }));
+        } catch (error) {
+          console.warn(`Failed to fetch offchain votes for DAO ${dao.id}:`, error);
+          return [];
+        }
+      });
 
     const voteArrays = await Promise.all(votePromises);
 
