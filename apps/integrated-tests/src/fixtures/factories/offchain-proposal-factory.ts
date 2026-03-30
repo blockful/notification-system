@@ -10,6 +10,7 @@ export interface OffchainProposalData {
   link: string;
   state: string;
   created: number;
+  end: number;
 }
 
 /**
@@ -39,6 +40,7 @@ export class OffchainProposalFactory {
       link: '',
       state: 'active',
       created: futureTimestamp,
+      end: futureTimestamp + 7 * 24 * 60 * 60,
       ...overrides,
     };
   }

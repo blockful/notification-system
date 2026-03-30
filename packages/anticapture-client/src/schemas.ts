@@ -140,6 +140,7 @@ export const OffchainProposalItemSchema = z.object({
   link: z.string(),
   state: z.string(),
   created: z.number(),
+  end: z.number(),
 });
 
 export type OffchainProposalItem = z.infer<typeof OffchainProposalItemSchema>;
@@ -159,6 +160,37 @@ export const SafeOffchainProposalsResponseSchema = z.object({
       ...data.offchainProposals,
       items: data.offchainProposals.items.filter(
         (item): item is OffchainProposalItem => item !== null
+      ),
+    },
+  };
+});
+
+export const OffchainVoteItemSchema = z.object({
+  voter: z.string(),
+  created: z.number(),
+  proposalId: z.string(),
+  proposalTitle: z.string(),
+  reason: z.string().nullable().optional(),
+  vp: z.number().nullable().optional(),
+});
+
+export type OffchainVoteItem = z.infer<typeof OffchainVoteItemSchema>;
+
+export const SafeOffchainVotesResponseSchema = z.object({
+  votesOffchain: z.object({
+    items: z.array(OffchainVoteItemSchema.nullable()),
+    totalCount: z.number(),
+  }).nullable(),
+}).transform((data) => {
+  if (!data.votesOffchain) {
+    console.warn('OffchainVotesResponse has null votesOffchain:', data);
+    return { votesOffchain: { items: [], totalCount: 0 } };
+  }
+  return {
+    votesOffchain: {
+      ...data.votesOffchain,
+      items: data.votesOffchain.items.filter(
+        (item): item is OffchainVoteItem => item !== null
       ),
     },
   };

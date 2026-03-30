@@ -14,6 +14,7 @@ const envSchema = z.object({
   SUBSCRIPTION_SERVER_URL: z.string(),
   RABBITMQ_URL: z.string().url(),
   PORT: z.coerce.number().positive().optional().default(3002),
+  WEBHOOK_API_PORT: z.coerce.number().positive().default(3003),
   RPC_URL: z.string().optional(),
 });
 
@@ -30,6 +31,7 @@ export function loadConfig() {
     subscriptionServerUrl: env.SUBSCRIPTION_SERVER_URL,
     rabbitmqUrl: env.RABBITMQ_URL,
     port: env.PORT,
-    rpcUrl: env.RPC_URL
+    webhookPort: env.WEBHOOK_API_PORT,
+    rpcUrl: env.RPC_URL,
   } as const;
 } 

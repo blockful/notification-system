@@ -1,0 +1,29 @@
+query ListOffchainVotes(
+  $fromDate: Float
+  $toDate: Float
+  $limit: Float
+  $skip: NonNegativeInt
+  $orderBy: queryInput_votesOffchain_orderBy
+  $orderDirection: queryInput_votesOffchain_orderDirection
+  $voterAddresses: JSON
+) {
+  votesOffchain(
+    fromDate: $fromDate
+    toDate: $toDate
+    limit: $limit
+    skip: $skip
+    orderBy: $orderBy
+    orderDirection: $orderDirection
+    voterAddresses: $voterAddresses
+  ) {
+    items {
+      voter
+      created
+      proposalId
+      proposalTitle
+      reason
+      vp
+    }
+    totalCount
+  }
+}

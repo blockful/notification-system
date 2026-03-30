@@ -5,6 +5,7 @@
 import { describe, it, expect, jest, beforeEach } from '@jest/globals';
 import { VotingPowerChangedTrigger } from '../src/triggers/voting-power-changed-trigger';
 import { createMockDispatcherService, createMockVotingPowerRepository, createMockThresholdRepository, createVotingPowerHistory, mockVotingPowerData } from './mocks';
+import { NotificationTypeId } from '@notification-system/messages';
 
 describe('VotingPowerChangedTrigger', () => {
   let trigger: VotingPowerChangedTrigger;
@@ -66,7 +67,7 @@ describe('VotingPowerChangedTrigger', () => {
       await trigger.process(mockVotingPowerData);
       
       expect(mockDispatcherService.sendMessage).toHaveBeenCalledWith({
-        triggerId: 'voting-power-changed',
+        triggerId: NotificationTypeId.VotingPowerChanged,
         events: mockVotingPowerData
       });
     });
@@ -85,7 +86,7 @@ describe('VotingPowerChangedTrigger', () => {
       await trigger.process(singleItem);
       
       expect(mockDispatcherService.sendMessage).toHaveBeenCalledWith({
-        triggerId: 'voting-power-changed',
+        triggerId: NotificationTypeId.VotingPowerChanged,
         events: singleItem
       });
       
@@ -163,7 +164,7 @@ describe('VotingPowerChangedTrigger', () => {
       await trigger.process(events);
 
       expect(mockDispatcherService.sendMessage).toHaveBeenCalledWith({
-        triggerId: 'voting-power-changed',
+        triggerId: NotificationTypeId.VotingPowerChanged,
         events: [events[1]]
       });
     });
@@ -187,7 +188,7 @@ describe('VotingPowerChangedTrigger', () => {
       await trigger.process(events);
 
       expect(mockDispatcherService.sendMessage).toHaveBeenCalledWith({
-        triggerId: 'voting-power-changed',
+        triggerId: NotificationTypeId.VotingPowerChanged,
         events: [events[1]]
       });
     });
@@ -203,7 +204,7 @@ describe('VotingPowerChangedTrigger', () => {
       await trigger.process(events);
 
       expect(mockDispatcherService.sendMessage).toHaveBeenCalledWith({
-        triggerId: 'voting-power-changed',
+        triggerId: NotificationTypeId.VotingPowerChanged,
         events: [events[0]]
       });
     });
@@ -218,7 +219,7 @@ describe('VotingPowerChangedTrigger', () => {
       await trigger.process(events);
 
       expect(mockDispatcherService.sendMessage).toHaveBeenCalledWith({
-        triggerId: 'voting-power-changed',
+        triggerId: NotificationTypeId.VotingPowerChanged,
         events
       });
     });

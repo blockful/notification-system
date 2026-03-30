@@ -8,6 +8,7 @@ import { ISubscriptionClient } from '../../interfaces/subscription-client.interf
 import { NotificationClientFactory } from '../notification/notification-factory.service';
 import { AnticaptureClient } from '@notification-system/anticapture-client';
 import { FormattingService } from '../formatting.service';
+import { NotificationTypeId } from '@notification-system/messages';
 
 describe('VotingReminderTriggerHandler', () => {
   let handler: VotingReminderTriggerHandler;
@@ -70,7 +71,7 @@ describe('VotingReminderTriggerHandler', () => {
   describe('handleMessage', () => {
     it('should handle empty events array', async () => {
       const message: DispatcherMessage = {
-        triggerId: 'voting-reminder-90',
+        triggerId: NotificationTypeId.VotingReminder90,
         events: []
       };
 
@@ -82,7 +83,7 @@ describe('VotingReminderTriggerHandler', () => {
 
     it('should process voting reminder events successfully', async () => {
       const message: DispatcherMessage = {
-        triggerId: 'voting-reminder-90',
+        triggerId: NotificationTypeId.VotingReminder90,
         events: [mockVotingReminderEvent]
       };
 
@@ -109,12 +110,12 @@ describe('VotingReminderTriggerHandler', () => {
         'test-dao',
         ['0x123', '0x456']
       );
-      expect(mockSubscriptionClient.getWalletOwnersBatch).toHaveBeenCalledWith(['0x456']);
+      expect(mockSubscriptionClient.getWalletOwnersBatch).toHaveBeenCalledWith(['0x456'], NotificationTypeId.VotingReminder90);
     });
 
     it('should skip when no subscribed addresses found', async () => {
       const message: DispatcherMessage = {
-        triggerId: 'voting-reminder-90',
+        triggerId: NotificationTypeId.VotingReminder90,
         events: [mockVotingReminderEvent]
       };
 
@@ -128,7 +129,7 @@ describe('VotingReminderTriggerHandler', () => {
 
     it('should skip when all users have already voted', async () => {
       const message: DispatcherMessage = {
-        triggerId: 'voting-reminder-90',
+        triggerId: NotificationTypeId.VotingReminder90,
         events: [mockVotingReminderEvent]
       };
 
@@ -143,7 +144,7 @@ describe('VotingReminderTriggerHandler', () => {
 
     it('should skip when all users have already received reminders', async () => {
       const message: DispatcherMessage = {
-        triggerId: 'voting-reminder-90',
+        triggerId: NotificationTypeId.VotingReminder90,
         events: [mockVotingReminderEvent]
       };
 
@@ -250,7 +251,7 @@ describe('VotingReminderTriggerHandler', () => {
       const successfulEvent = { ...mockVotingReminderEvent, id: 'successful-proposal' };
       
       const message: DispatcherMessage = {
-        triggerId: 'voting-reminder-90',
+        triggerId: NotificationTypeId.VotingReminder90,
         events: [failingEvent, successfulEvent]
       };
 

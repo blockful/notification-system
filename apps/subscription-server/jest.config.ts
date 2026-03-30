@@ -8,6 +8,9 @@ const config: Config = {
       tsconfig: './tsconfig.json',
     }]
   },
+  moduleNameMapper: {
+    '^@notification-system/messages$': '<rootDir>/../../packages/messages/src/index.ts',
+  },
   moduleFileExtensions: ['ts', 'tsx', 'js', 'jsx', 'json', 'node'],
   roots: ['<rootDir>/src'],
   testRegex: '(/__tests__/.*|(\\.|/)(test|spec))\\.tsx?$'

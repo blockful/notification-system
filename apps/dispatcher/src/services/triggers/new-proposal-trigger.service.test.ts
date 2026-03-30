@@ -5,6 +5,7 @@ import { NotificationClientFactory } from '../notification/notification-factory.
 import { INotificationClient } from '../../interfaces/notification-client.interface';
 import { DispatcherMessage } from '../../interfaces/dispatcher-message.interface';
 import { AnticaptureClient } from '@notification-system/anticapture-client';
+import { NotificationTypeId } from '@notification-system/messages';
 
 describe('NewProposalTriggerHandler', () => {
   let mockSubscriptionClient: jest.Mocked<ISubscriptionClient>;
@@ -94,13 +95,13 @@ describe('NewProposalTriggerHandler', () => {
   describe('handleMessage', () => {
     it('should process single proposal message correctly', async () => {
       const mockMessage: DispatcherMessage = {
-        triggerId: 'new-proposal',
+        triggerId: NotificationTypeId.NewProposal,
         events: [mockProposal]
       };
       
       await handler.handleMessage(mockMessage);
       
-      expect(mockSubscriptionClient.getDaoSubscribers).toHaveBeenCalledWith('dao123', '2023-01-01T00:00:00Z');
+      expect(mockSubscriptionClient.getDaoSubscribers).toHaveBeenCalledWith('dao123', '2023-01-01T00:00:00Z', NotificationTypeId.NewProposal);
       expect(mockSubscriptionClient.shouldSend).toHaveBeenCalledWith(mockUsers, 'prop456', 'dao123');
       expect(mockNotificationClient.sendNotification).toHaveBeenCalledTimes(2);
       expect(mockNotificationClient.sendNotification).toHaveBeenCalledWith(expect.objectContaining({
@@ -120,7 +121,7 @@ describe('NewProposalTriggerHandler', () => {
         { user_id: '1', event_id: 'prop2', dao_id: 'dao456' }
       ];
       const mockMessage: DispatcherMessage = {
-        triggerId: 'new-proposal',
+        triggerId: NotificationTypeId.NewProposal,
         events: [
           { ...mockProposal, id: 'prop1', daoId: 'dao123', description: 'First Proposal' },
           { ...mockProposal, id: 'prop2', daoId: 'dao456', description: 'Second Proposal' }
@@ -133,14 +134,14 @@ describe('NewProposalTriggerHandler', () => {
       await handler.handleMessage(mockMessage);
       
       expect(mockSubscriptionClient.getDaoSubscribers).toHaveBeenCalledTimes(2);
-      expect(mockSubscriptionClient.getDaoSubscribers).toHaveBeenCalledWith('dao123', '2023-01-01T00:00:00Z');
-      expect(mockSubscriptionClient.getDaoSubscribers).toHaveBeenCalledWith('dao456', '2023-01-01T00:00:00Z');
+      expect(mockSubscriptionClient.getDaoSubscribers).toHaveBeenCalledWith('dao123', '2023-01-01T00:00:00Z', NotificationTypeId.NewProposal);
+      expect(mockSubscriptionClient.getDaoSubscribers).toHaveBeenCalledWith('dao456', '2023-01-01T00:00:00Z', NotificationTypeId.NewProposal);
       expect(mockNotificationClient.sendNotification).toHaveBeenCalledTimes(2);
     });
 
     it('should handle empty proposals array', async () => {
       const mockMessage: DispatcherMessage = {
-        triggerId: 'new-proposal',
+        triggerId: NotificationTypeId.NewProposal,
         events: []
       };
       
@@ -152,7 +153,7 @@ describe('NewProposalTriggerHandler', () => {
 
     it('should include calldata review button when DAO does not support it natively', async () => {
       const mockMessage: DispatcherMessage = {
-        triggerId: 'new-proposal',
+        triggerId: NotificationTypeId.NewProposal,
         events: [{ ...mockProposal, daoId: 'dao123' }]
       };
 
@@ -166,7 +167,7 @@ describe('NewProposalTriggerHandler', () => {
 
     it('should NOT include calldata review button when DAO already supports it', async () => {
       const mockMessage: DispatcherMessage = {
-        triggerId: 'new-proposal',
+        triggerId: NotificationTypeId.NewProposal,
         events: [{ ...mockProposal, id: 'prop789', daoId: 'dao456' }]
       };
 
@@ -194,7 +195,7 @@ describe('NewProposalTriggerHandler', () => {
         description: 'Main Title\nDetailed description\nMore details'
       };
       const mockMessage: DispatcherMessage = {
-        triggerId: 'new-proposal',
+        triggerId: NotificationTypeId.NewProposal,
         events: [proposalWithMultilineDesc]
       };
       
@@ -284,7 +285,7 @@ describe('NewProposalTriggerHandler - cross-DAO eventId deduplication', () => {
 
     // First: ENS proposal #5
     await handler.handleMessage({
-      triggerId: 'new-proposal',
+      triggerId: NotificationTypeId.NewProposal,
       events: [makeProposal('5', 'ens.eth')]
     });
 
@@ -293,7 +294,7 @@ describe('NewProposalTriggerHandler - cross-DAO eventId deduplication', () => {
 
     // Second: UNI proposal #5 (same proposal ID, different DAO)
     await handler.handleMessage({
-      triggerId: 'new-proposal',
+      triggerId: NotificationTypeId.NewProposal,
       events: [makeProposal('5', 'uniswap.eth')]
     });
 
@@ -306,7 +307,7 @@ describe('NewProposalTriggerHandler - cross-DAO eventId deduplication', () => {
     const { handler, sentNotifications } = createHandlerWithDeduplication();
 
     const message: DispatcherMessage = {
-      triggerId: 'new-proposal',
+      triggerId: NotificationTypeId.NewProposal,
       events: [makeProposal('10', 'ens.eth')]
     };
 

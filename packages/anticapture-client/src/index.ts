@@ -1,7 +1,7 @@
 export { AnticaptureClient } from './anticapture-client';
 
 // Export Vote types
-export type { VoteWithDaoId } from './anticapture-client';
+export type { VoteWithDaoId, OffchainVoteWithDaoId } from './anticapture-client';
 
 // Export GraphQL types for apps to use
 export type {
@@ -22,8 +22,10 @@ export {
   QueryInput_HistoricalVotingPower_OrderBy,
   QueryInput_HistoricalVotingPower_OrderDirection,
   QueryInput_Votes_OrderBy,
-  QueryInput_Votes_OrderDirection
+  QueryInput_Votes_OrderDirection,
+  QueryInput_VotesOffchain_OrderBy,
+  QueryInput_VotesOffchain_OrderDirection
 } from './gql/graphql';
 
 export { FeedEventType, FeedRelevance } from './schemas';
-export type { ProcessedVotingPowerHistory, OffchainProposalItem } from './schemas';
+export type { ProcessedVotingPowerHistory, OffchainProposalItem, OffchainVoteItem } from './schemas';

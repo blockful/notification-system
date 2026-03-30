@@ -12,6 +12,7 @@ import { slackMessages, convertMarkdownToSlack, appendUtmParams } from '@notific
 import { EnsResolverService } from '../ens-resolver.service';
 import { SlackDAOService } from '../dao/slack-dao.service';
 import { SlackWalletService } from '../wallet/slack-wallet.service';
+import { SlackSettingsService } from '../settings/slack-settings.service';
 import { SlackCommandContext } from '../../interfaces/slack-context.interface';
 
 export class SlackBotService implements BotServiceInterface {
@@ -19,17 +20,20 @@ export class SlackBotService implements BotServiceInterface {
   private ensResolver: EnsResolverService;
   private daoService?: SlackDAOService;
   private walletService?: SlackWalletService;
+  private settingsService?: SlackSettingsService;
 
   constructor(
     slackClient: SlackClientInterface,
     ensResolver: EnsResolverService,
     daoService?: SlackDAOService,
-    walletService?: SlackWalletService
+    walletService?: SlackWalletService,
+    settingsService?: SlackSettingsService
   ) {
     this.slackClient = slackClient;
     this.ensResolver = ensResolver;
     this.daoService = daoService;
     this.walletService = walletService;
+    this.settingsService = settingsService;
 
     this.setupCommands();
   }
@@ -122,6 +126,23 @@ export class SlackBotService implements BotServiceInterface {
       handlers.view('wallet_add_modal', async (ctx) => {
         if (this.walletService) {
           await this.walletService.processWalletSubmission(ctx);
+        }
+      });
+
+      // Settings actions
+      handlers.action('settings_open', async (ctx) => {
+        if (this.settingsService) {
+          await this.settingsService.initialize(ctx);
+        }
+      });
+
+      handlers.action('settings_checkboxes', async (ctx) => {
+        await ctx.ack();
+      });
+
+      handlers.action('settings_confirm', async (ctx) => {
+        if (this.settingsService) {
+          await this.settingsService.confirm(ctx);
         }
       });
     });

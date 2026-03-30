@@ -1,3 +1,4 @@
+import type { NotificationTypeId } from '@notification-system/messages';
 import { DispatcherMessage, MessageProcessingResult } from "../../interfaces/dispatcher-message.interface";
 import { TriggerHandler } from "../../interfaces/base-trigger.interface";
 import { ISubscriptionClient, User } from "../../interfaces/subscription-client.interface";
@@ -37,10 +38,12 @@ export abstract class BaseTriggerHandler<T = any> implements TriggerHandler<T> {
    * @param eventTimestamp Timestamp when the proposal was created
    * @returns List of subscribers that should receive notifications
    */
-  protected async getSubscribers(daoId: string, eventId: string, eventTimestamp?: string): Promise<User[]> {
-    const allSubscribers = await this.subscriptionClient.getDaoSubscribers(daoId, eventTimestamp);
+  protected async getSubscribers(
+    daoId: string, eventId: string, eventTimestamp?: string, triggerType?: NotificationTypeId
+  ): Promise<User[]> {
+    const allSubscribers = await this.subscriptionClient.getDaoSubscribers(daoId, eventTimestamp, triggerType);
     const filteredNotifications = await this.subscriptionClient.shouldSend(allSubscribers, eventId, daoId);
-    return allSubscribers.filter(subscriber => 
+    return allSubscribers.filter(subscriber =>
       filteredNotifications.some(notification => notification.user_id === subscriber.id)
     );
   }

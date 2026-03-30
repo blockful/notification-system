@@ -3,7 +3,7 @@ import { ISubscriptionClient } from "../../interfaces/subscription-client.interf
 import { NotificationClientFactory } from "../notification/notification-factory.service";
 import { BaseTriggerHandler } from "./base-trigger.service";
 import { FormattingService } from "../formatting.service";
-import { newProposalMessages, replacePlaceholders, buildButtons } from '@notification-system/messages';
+import { newProposalMessages, replacePlaceholders, buildButtons, NotificationTypeId } from '@notification-system/messages';
 import { AnticaptureClient } from '@notification-system/anticapture-client';
 import crypto from 'crypto';
 
@@ -33,7 +33,7 @@ export class NewProposalTriggerHandler extends BaseTriggerHandler {
     for (const proposal of message.events) {
       const { daoId, id: proposalId, title, description, timestamp, txHash } = proposal;
       const proposalTitle = title || FormattingService.extractTitle(description, 'Unnamed Proposal');
-      const subscribers = await this.getSubscribers(daoId, proposalId, timestamp);
+      const subscribers = await this.getSubscribers(daoId, proposalId, timestamp, NotificationTypeId.NewProposal);
       const notificationMessage = replacePlaceholders(newProposalMessages.notification, {
         daoId,
         title: proposalTitle

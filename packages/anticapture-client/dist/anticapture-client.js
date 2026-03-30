@@ -348,5 +348,52 @@ class AnticaptureClient {
             return [];
         }
     }
+    /**
+     * Fetches offchain (Snapshot) votes for a specific DAO
+     * @param daoId The DAO ID to query
+     * @param variables Query variables for filtering and pagination
+     * @returns Array of offchain vote items
+     */
+    async listOffchainVotes(daoId, variables) {
+        try {
+            const validated = await this.query(graphql_2.ListOffchainVotesDocument, schemas_1.SafeOffchainVotesResponseSchema, variables, daoId);
+            return validated.votesOffchain.items;
+        }
+        catch (error) {
+            console.warn(`Error fetching offchain votes for DAO ${daoId}:`, error);
+            return [];
+        }
+    }
+    /**
+     * Fetches recent offchain votes from all DAOs since a given timestamp
+     * @param fromDate Fetch votes with created timestamp greater than this value (unix timestamp)
+     * @param limit Maximum number of votes to fetch per DAO (default: 100)
+     * @returns Array of offchain votes from all DAOs with daoId included
+     */
+    async listRecentOffchainVotesFromAllDaos(fromDate, limit = 100) {
+        const daos = await this.getDAOs();
+        const votePromises = daos.map(async (dao) => {
+            try {
+                const votes = await this.listOffchainVotes(dao.id, {
+                    fromDate,
+                    limit,
+                    orderBy: graphql_2.QueryInput_VotesOffchain_OrderBy.Timestamp,
+                    orderDirection: graphql_2.QueryInput_VotesOffchain_OrderDirection.Asc
+                });
+                return votes.map(vote => ({
+                    ...vote,
+                    daoId: dao.id
+                }));
+            }
+            catch (error) {
+                console.warn(`Failed to fetch offchain votes for DAO ${dao.id}:`, error);
+                return [];
+            }
+        });
+        const voteArrays = await Promise.all(votePromises);
+        const allVotes = voteArrays.flat();
+        allVotes.sort((a, b) => a.created - b.created);
+        return allVotes;
+    }
 }
 exports.AnticaptureClient = AnticaptureClient;

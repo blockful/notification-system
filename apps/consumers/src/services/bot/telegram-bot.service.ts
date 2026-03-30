@@ -8,6 +8,7 @@ import { Markup } from 'telegraf';
 import { telegramMessages, uiMessages, ExplorerService, appendUtmParams } from '@notification-system/messages';
 import { TelegramDAOService } from '../dao/telegram-dao.service';
 import { TelegramWalletService } from '../wallet/telegram-wallet.service';
+import { TelegramSettingsService } from '../settings/telegram-settings.service';
 import { EnsResolverService } from '../ens-resolver.service';
 import { ContextWithSession, MatchedContext } from '../../interfaces/bot.interface';
 import { NotificationPayload } from '../../interfaces/notification.interface';
@@ -18,6 +19,7 @@ export class TelegramBotService implements BotServiceInterface {
   private telegramClient: TelegramClientInterface;
   private daoService: TelegramDAOService;
   private walletService: TelegramWalletService;
+  private settingsService: TelegramSettingsService;
   private explorerService: ExplorerService;
   private ensResolver: EnsResolverService;
 
@@ -25,12 +27,14 @@ export class TelegramBotService implements BotServiceInterface {
     telegramClient: TelegramClientInterface,
     daoService: TelegramDAOService,
     walletService: TelegramWalletService,
+    settingsService: TelegramSettingsService,
     explorerService: ExplorerService,
     ensResolver: EnsResolverService
   ) {
     this.telegramClient = telegramClient;
     this.daoService = daoService;
     this.walletService = walletService;
+    this.settingsService = settingsService;
     this.explorerService = explorerService;
     this.ensResolver = ensResolver;
     this.setupCommands();
@@ -42,7 +46,7 @@ export class TelegramBotService implements BotServiceInterface {
   private createPersistentKeyboard() {
     return Markup.keyboard([
       [uiMessages.buttons.daos, uiMessages.buttons.myWallets],
-      [uiMessages.buttons.learnMore]
+      [uiMessages.buttons.settings, uiMessages.buttons.learnMore]
     ])
     .resize()
     .persistent();
@@ -76,6 +80,14 @@ export class TelegramBotService implements BotServiceInterface {
 
       handlers.hears(uiMessages.buttons.learnMore, async (ctx) => {
         await this.replyLearnMore(ctx);
+      });
+
+      handlers.command(/^settings$/i, async (ctx) => {
+        await this.settingsService.initialize(ctx);
+      });
+
+      handlers.hears(uiMessages.buttons.settings, async (ctx) => {
+        await this.settingsService.initialize(ctx);
       });
 
       handlers.action(/^start$/, async (ctx) => {
@@ -145,8 +157,20 @@ export class TelegramBotService implements BotServiceInterface {
         await this.walletService.initialize(ctx);
       });
 
+      handlers.action(/^settings_toggle_(.+)$/, async (ctx) => {
+        await ctx.answerCbQuery();
+        const matchedCtx = ctx as MatchedContext;
+        await this.settingsService.toggle(ctx, matchedCtx.match[1]);
+      });
+
+      handlers.action(/^settings_confirm$/, async (ctx) => {
+        await ctx.answerCbQuery();
+        await this.settingsService.confirm(ctx);
+      });
+
       handlers.action(/^learn_more_settings$/, async (ctx) => {
-        await ctx.answerCbQuery(uiMessages.buttons.settingsComingSoon);
+        await ctx.answerCbQuery();
+        await this.settingsService.initialize(ctx);
       });
 
       handlers.on('message', async (ctx, next) => {
