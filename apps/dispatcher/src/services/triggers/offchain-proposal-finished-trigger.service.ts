@@ -2,7 +2,7 @@ import { DispatcherMessage, MessageProcessingResult } from "../../interfaces/dis
 import { ISubscriptionClient } from "../../interfaces/subscription-client.interface";
 import { NotificationClientFactory } from "../notification/notification-factory.service";
 import { BaseTriggerHandler } from "./base-trigger.service";
-import { offchainProposalFinishedMessages, replacePlaceholders, buildButtons } from '@notification-system/messages';
+import { offchainProposalFinishedMessages, replacePlaceholders, buildButtons, NotificationTypeId } from '@notification-system/messages';
 
 /**
  * Handler for processing "offchain-proposal-finished" trigger messages (Snapshot proposals)
@@ -21,7 +21,7 @@ export class OffchainProposalFinishedTriggerHandler extends BaseTriggerHandler {
       const eventId = `offchain-${proposalId}-finished`;
       const proposalTimestamp = String(end);
 
-      const subscribers = await this.getSubscribers(daoId, eventId, proposalTimestamp);
+      const subscribers = await this.getSubscribers(daoId, eventId, proposalTimestamp, NotificationTypeId.OffchainProposalFinished);
 
       const hasTitle = !!title;
       const messageTemplate = hasTitle
