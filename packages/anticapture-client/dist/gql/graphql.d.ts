@@ -1418,7 +1418,7 @@ export type Query_ProposalsActivity_Proposals_Items_UserVote = {
     support?: Maybe<Scalars['String']['output']>;
     timestamp?: Maybe<Scalars['String']['output']>;
     voterAccountId: Scalars['String']['output'];
-    votingPower?: Maybe<Scalars['String']['output']>;
+    votingPower: Scalars['String']['output'];
 };
 export type Query_Proposals_Items_Items = {
     __typename?: 'query_proposals_items_items';
@@ -1721,6 +1721,31 @@ export type ListOffchainProposalsQuery = {
         } | null>;
     } | null;
 };
+export type ListOffchainVotesQueryVariables = Exact<{
+    fromDate?: InputMaybe<Scalars['Float']['input']>;
+    toDate?: InputMaybe<Scalars['Float']['input']>;
+    limit?: InputMaybe<Scalars['Float']['input']>;
+    skip?: InputMaybe<Scalars['NonNegativeInt']['input']>;
+    orderBy?: InputMaybe<QueryInput_VotesOffchain_OrderBy>;
+    orderDirection?: InputMaybe<QueryInput_VotesOffchain_OrderDirection>;
+    voterAddresses?: InputMaybe<Scalars['JSON']['input']>;
+}>;
+export type ListOffchainVotesQuery = {
+    __typename?: 'Query';
+    votesOffchain?: {
+        __typename?: 'votesOffchain_200_response';
+        totalCount: number;
+        items: Array<{
+            __typename?: 'query_votesOffchain_items_items';
+            voter: string;
+            created: number;
+            proposalId: string;
+            proposalTitle: string;
+            reason: string;
+            vp?: number | null;
+        } | null>;
+    } | null;
+};
 export type ProposalNonVotersQueryVariables = Exact<{
     id: Scalars['String']['input'];
     addresses?: InputMaybe<Scalars['JSON']['input']>;
@@ -1870,35 +1895,10 @@ export type ListHistoricalVotingPowerQuery = {
 };
 export declare const GetDaOsDocument: DocumentNode<GetDaOsQuery, GetDaOsQueryVariables>;
 export declare const ListOffchainProposalsDocument: DocumentNode<ListOffchainProposalsQuery, ListOffchainProposalsQueryVariables>;
+export declare const ListOffchainVotesDocument: DocumentNode<ListOffchainVotesQuery, ListOffchainVotesQueryVariables>;
 export declare const ProposalNonVotersDocument: DocumentNode<ProposalNonVotersQuery, ProposalNonVotersQueryVariables>;
 export declare const GetProposalByIdDocument: DocumentNode<GetProposalByIdQuery, GetProposalByIdQueryVariables>;
 export declare const ListProposalsDocument: DocumentNode<ListProposalsQuery, ListProposalsQueryVariables>;
 export declare const GetEventRelevanceThresholdDocument: DocumentNode<GetEventRelevanceThresholdQuery, GetEventRelevanceThresholdQueryVariables>;
 export declare const ListVotesDocument: DocumentNode<ListVotesQuery, ListVotesQueryVariables>;
-export type ListOffchainVotesQueryVariables = Exact<{
-    fromDate?: InputMaybe<Scalars['Float']['input']>;
-    toDate?: InputMaybe<Scalars['Float']['input']>;
-    limit?: InputMaybe<Scalars['Float']['input']>;
-    skip?: InputMaybe<Scalars['NonNegativeInt']['input']>;
-    orderBy?: InputMaybe<QueryInput_VotesOffchain_OrderBy>;
-    orderDirection?: InputMaybe<QueryInput_VotesOffchain_OrderDirection>;
-    voterAddresses?: InputMaybe<Scalars['JSON']['input']>;
-}>;
-export type ListOffchainVotesQuery = {
-    __typename?: 'Query';
-    votesOffchain?: {
-        __typename?: 'votesOffchain_200_response';
-        totalCount: number;
-        items: Array<{
-            __typename?: 'query_votesOffchain_items_items';
-            voter: string;
-            created: number;
-            proposalId: string;
-            proposalTitle: string;
-            reason: string;
-            vp?: number | null;
-        } | null>;
-    } | null;
-};
-export declare const ListOffchainVotesDocument: DocumentNode<ListOffchainVotesQuery, ListOffchainVotesQueryVariables>;
 export declare const ListHistoricalVotingPowerDocument: DocumentNode<ListHistoricalVotingPowerQuery, ListHistoricalVotingPowerQueryVariables>;

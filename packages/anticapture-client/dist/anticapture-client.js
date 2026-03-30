@@ -372,7 +372,9 @@ class AnticaptureClient {
      */
     async listRecentOffchainVotesFromAllDaos(fromDate, limit = 100) {
         const daos = await this.getDAOs();
-        const votePromises = daos.map(async (dao) => {
+        const votePromises = daos
+            .filter(dao => dao.supportOffchainData)
+            .map(async (dao) => {
             try {
                 const votes = await this.listOffchainVotes(dao.id, {
                     fromDate,
