@@ -1,9 +1,9 @@
-import { describe, it, expect, beforeEach } from '@jest/globals';
+import { describe, it, expect } from '@jest/globals';
 import { OffchainVoteCastTriggerHandler } from './offchain-vote-cast-trigger.service';
 import { NotificationClientFactory } from '../notification/notification-factory.service';
 import { INotificationClient, NotificationPayload } from '../../interfaces/notification-client.interface';
 import { ISubscriptionClient, User, Notification } from '../../interfaces/subscription-client.interface';
-import { offchainVoteCastMessages, replacePlaceholders } from '@notification-system/messages';
+import { offchainVoteCastMessages, replacePlaceholders, NotificationTypeId } from '@notification-system/messages';
 import { OffchainVoteWithDaoId } from '@notification-system/anticapture-client';
 
 const STUB_USER: User = {
@@ -113,7 +113,7 @@ describe('OffchainVoteCastTriggerHandler', () => {
     const { handler, notificationClient } = createHandler();
 
     await handler.handleMessage({
-      triggerId: 'offchain-vote-cast',
+      triggerId: NotificationTypeId.OffchainVoteCast,
       events: [vote1, vote2],
     });
 
@@ -128,7 +128,7 @@ describe('OffchainVoteCastTriggerHandler', () => {
     const { handler, notificationClient } = createHandler();
 
     await handler.handleMessage({
-      triggerId: 'offchain-vote-cast',
+      triggerId: NotificationTypeId.OffchainVoteCast,
       events: [vote],
     });
 
@@ -136,7 +136,7 @@ describe('OffchainVoteCastTriggerHandler', () => {
     expect(notificationClient.sentPayloads).toEqual(firstPayload);
 
     await handler.handleMessage({
-      triggerId: 'offchain-vote-cast',
+      triggerId: NotificationTypeId.OffchainVoteCast,
       events: [vote],
     });
 
@@ -149,7 +149,7 @@ describe('OffchainVoteCastTriggerHandler', () => {
     const { handler, notificationClient } = createHandler(sub);
 
     await handler.handleMessage({
-      triggerId: 'offchain-vote-cast',
+      triggerId: NotificationTypeId.OffchainVoteCast,
       events: [createVote()],
     });
 
@@ -164,7 +164,7 @@ describe('OffchainVoteCastTriggerHandler', () => {
     const { handler, notificationClient } = createHandler();
 
     await handler.handleMessage({
-      triggerId: 'offchain-vote-cast',
+      triggerId: NotificationTypeId.OffchainVoteCast,
       events: [vote],
     });
 
@@ -183,7 +183,7 @@ describe('OffchainVoteCastTriggerHandler', () => {
     const { handler, notificationClient } = createHandler();
 
     await handler.handleMessage({
-      triggerId: 'offchain-vote-cast',
+      triggerId: NotificationTypeId.OffchainVoteCast,
       events: [vote],
     });
 

@@ -7,7 +7,7 @@ export async function up(knex: Knex): Promise<void> {
   });
   
   // Copy existing data converting to ISO string (database-specific SQL)
-  if (knex.client.config.client === 'pg') {
+  if (knex.client.driverName === 'pg') {
     // PostgreSQL
     await knex.raw(`
       UPDATE users 
@@ -33,7 +33,7 @@ export async function up(knex: Knex): Promise<void> {
     table.text('updated_at_new');
   });
   
-  if (knex.client.config.client === 'pg') {
+  if (knex.client.driverName === 'pg') {
     // PostgreSQL
     await knex.raw(`
       UPDATE user_preferences 
@@ -62,7 +62,7 @@ export async function up(knex: Knex): Promise<void> {
     table.text('updated_at_new');
   });
   
-  if (knex.client.config.client === 'pg') {
+  if (knex.client.driverName === 'pg') {
     // PostgreSQL
     await knex.raw(`
       UPDATE user_addresses 
@@ -92,7 +92,7 @@ export async function down(knex: Knex): Promise<void> {
     table.datetime('created_at_old');
   });
   
-  if (knex.client.config.client === 'pg') {
+  if (knex.client.driverName === 'pg') {
     // PostgreSQL
     await knex.raw(`
       UPDATE users 
@@ -117,7 +117,7 @@ export async function down(knex: Knex): Promise<void> {
     table.datetime('updated_at_old');
   });
   
-  if (knex.client.config.client === 'pg') {
+  if (knex.client.driverName === 'pg') {
     // PostgreSQL
     await knex.raw(`
       UPDATE user_preferences 
@@ -146,7 +146,7 @@ export async function down(knex: Knex): Promise<void> {
     table.datetime('updated_at_old');
   });
   
-  if (knex.client.config.client === 'pg') {
+  if (knex.client.driverName === 'pg') {
     // PostgreSQL
     await knex.raw(`
       UPDATE user_addresses 

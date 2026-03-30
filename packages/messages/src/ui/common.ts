@@ -11,10 +11,12 @@ Spotting the "oh no" before it hits your treasury.`,
 
   You will receive alerts for:
 - New Proposals on the DAO
-- Proposal results when it finishes 
+- Proposal results when it finishes
 - Vote reminders
 
-Stay ahead of governance risk. Stay informed.`,
+Stay ahead of governance risk. Stay informed.
+
+Use ⚙️ Settings to choose which notifications you receive.`,
 
   help: `<b>What is Anticapture?</b>
 A governance security research, notification system and dashboard that tracks social dynamics, governance models, and contracts, ensuring security and preventing malicious capture.
@@ -32,6 +34,7 @@ Get notified about risks, changes and proposals that you care about in the DAOs 
   confirmSelection: '✅ Confirm selection',
   selectedDaos: `Success! Your DAOs are now under surveillance (the good kind).
 You'll be notified when things get spicy:`,
+
   editDaos: 'You can edit this list by clicking on 🌐 DAOs',
 
   // Button text
@@ -46,8 +49,7 @@ You'll be notified when things get spicy:`,
     wallets: '📝 Wallets',
     settings: '⚙️ Settings',
     selectAll: 'Select all',
-    unselectAll: 'Unselect all',
-    settingsComingSoon: '⚙️ Settings coming soon!'
+    unselectAll: 'Unselect all'
   },
 
   // Wallet management messages

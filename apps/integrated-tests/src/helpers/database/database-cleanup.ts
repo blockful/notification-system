@@ -7,6 +7,7 @@ import { testConstants } from '../../config';
 export class DatabaseCleanup {
   private db: Knex;
   private static readonly TABLES_TO_CLEAN = [
+    'user_notification_preferences',
     'user_addresses',
     testConstants.tables.notifications,
     testConstants.tables.userPreferences,

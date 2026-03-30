@@ -1,8 +1,9 @@
 import { Trigger } from './base-trigger';
 import { OffchainProposal, OffchainProposalDataSource } from '../interfaces/offchain-proposal.interface';
 import { DispatcherService, DispatcherMessage } from '../interfaces/dispatcher.interface';
+import { NotificationTypeId } from '@notification-system/messages';
 
-const triggerId = 'offchain-proposal-finished';
+const triggerId = NotificationTypeId.OffchainProposalFinished;
 
 export class OffchainProposalFinishedTrigger extends Trigger<OffchainProposal, void> {
   private endTimestampCursor: number;

@@ -1,6 +1,6 @@
 import { describe, test, expect, jest, beforeEach } from '@jest/globals';
 import { SubscriptionService } from './subscription.service';
-import { User, UserPreference, IUserRepository, IPreferenceRepository } from '../interfaces';
+import { User, UserPreference, IUserRepository, IPreferenceRepository, IUserNotificationPreferencesRepository } from '../interfaces';
 import { IUserAddressRepository } from '../interfaces/user-address.interface';
 
 // ---- MOCKS ----
@@ -69,11 +69,18 @@ const createMockUserAddressRepo = (): jest.Mocked<IUserAddressRepository> => ({
   getFollowedAddressByDao: jest.fn()
 });
 
+const createMockNotificationPrefsRepo = (): jest.Mocked<IUserNotificationPreferencesRepository> => ({
+  findByUser: jest.fn(),
+  upsertMany: jest.fn(),
+  filterActiveUsers: jest.fn()
+});
+
 // ---- TESTS ----
 describe('Subscription Service', () => {
   let userRepo: jest.Mocked<IUserRepository>;
   let prefRepo: jest.Mocked<IPreferenceRepository>;
   let userAddressRepo: jest.Mocked<IUserAddressRepository>;
+  let notificationPrefsRepo: jest.Mocked<IUserNotificationPreferencesRepository>;
   let subscriptionService: SubscriptionService;
 
   beforeEach(() => {
@@ -81,7 +88,8 @@ describe('Subscription Service', () => {
     userRepo = createMockUserRepo();
     prefRepo = createMockPrefRepo();
     userAddressRepo = createMockUserAddressRepo();
-    subscriptionService = new SubscriptionService(userRepo, prefRepo, userAddressRepo);
+    notificationPrefsRepo = createMockNotificationPrefsRepo();
+    subscriptionService = new SubscriptionService(userRepo, prefRepo, userAddressRepo, notificationPrefsRepo);
   });
 
   describe('handleSubscription', () => {
@@ -248,8 +256,25 @@ describe('Subscription Service', () => {
     
     test('should handle errors properly', async () => {
       prefRepo.findByDao.mockRejectedValueOnce(new Error('DB Error'));
-      
+
       await expect(subscriptionService.getDaoSubscribers('dao123')).rejects.toThrow('DB Error');
+    });
+
+    test('should filter subscribers by triggerType when provided', async () => {
+      const mockPreferences = [
+        { user_id: '123', is_active: true },
+        { user_id: '456', is_active: true }
+      ] as UserPreference[];
+
+      prefRepo.findByDao.mockResolvedValueOnce(mockPreferences);
+      notificationPrefsRepo.filterActiveUsers.mockResolvedValueOnce(['123']);
+      userRepo.findByIdsWithWorkspaceTokens.mockResolvedValueOnce([mockSubscribers[0]]);
+
+      const result = await subscriptionService.getDaoSubscribers('dao123', undefined, 'PROPOSAL_CREATED');
+
+      expect(notificationPrefsRepo.filterActiveUsers).toHaveBeenCalledWith(['123', '456'], 'PROPOSAL_CREATED');
+      expect(userRepo.findByIdsWithWorkspaceTokens).toHaveBeenCalledWith(['123']);
+      expect(result.subscribers.length).toBe(1);
     });
   });
 }); 

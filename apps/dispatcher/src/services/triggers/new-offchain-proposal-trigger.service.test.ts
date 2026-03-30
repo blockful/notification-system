@@ -4,6 +4,7 @@ import { ISubscriptionClient, User, Notification } from '../../interfaces/subscr
 import { NotificationClientFactory } from '../notification/notification-factory.service';
 import { INotificationClient, NotificationPayload } from '../../interfaces/notification-client.interface';
 import { DispatcherMessage } from '../../interfaces/dispatcher-message.interface';
+import { NotificationTypeId } from '@notification-system/messages';
 
 class SimpleSubscriptionClient implements ISubscriptionClient {
   subscribers: Map<string, User[]> = new Map();
@@ -69,7 +70,7 @@ describe('NewOffchainProposalTriggerHandler', () => {
       subscriptionClient.subscribers.set('test-dao', [testUser]);
 
       const message: DispatcherMessage = {
-        triggerId: 'new-offchain-proposal',
+        triggerId: NotificationTypeId.NewOffchainProposal,
         events: [{
           daoId: 'test-dao', id: 'snap-1', title: 'Grant Program',
           created: 1700000000, discussion: '', link: 'https://snapshot.org/#/test-dao/proposal/snap-1', state: 'active',
@@ -86,7 +87,7 @@ describe('NewOffchainProposalTriggerHandler', () => {
       subscriptionClient.subscribers.set('test-dao', [testUser]);
 
       const message: DispatcherMessage = {
-        triggerId: 'new-offchain-proposal',
+        triggerId: NotificationTypeId.NewOffchainProposal,
         events: [{
           daoId: 'test-dao', id: 'snap-1', title: '',
           created: 1700000000, discussion: '', link: 'https://snapshot.org/#/test-dao/proposal/snap-1', state: 'active',
@@ -102,7 +103,7 @@ describe('NewOffchainProposalTriggerHandler', () => {
       subscriptionClient.subscribers.set('test-dao', [testUser]);
 
       const message: DispatcherMessage = {
-        triggerId: 'new-offchain-proposal',
+        triggerId: NotificationTypeId.NewOffchainProposal,
         events: [{
           daoId: 'test-dao', id: 'snap-123', title: 'Test',
           created: 1700000000, discussion: '', link: 'https://snapshot.org/#/test-dao/proposal/snap-123', state: 'active',
@@ -118,7 +119,7 @@ describe('NewOffchainProposalTriggerHandler', () => {
       subscriptionClient.subscribers.set('test-dao', [testUser]);
 
       const message: DispatcherMessage = {
-        triggerId: 'new-offchain-proposal',
+        triggerId: NotificationTypeId.NewOffchainProposal,
         events: [{
           daoId: 'test-dao', id: 'snap-1', title: 'Test',
           created: 1700000000, discussion: '', link: 'https://snapshot.org/#/test-dao/proposal/snap-1', state: 'active',
@@ -137,7 +138,7 @@ describe('NewOffchainProposalTriggerHandler', () => {
       subscriptionClient.subscribers.set('test-dao', [testUser]);
 
       const message: DispatcherMessage = {
-        triggerId: 'new-offchain-proposal',
+        triggerId: NotificationTypeId.NewOffchainProposal,
         events: [{
           daoId: 'test-dao', id: 'snap-1', title: 'Test',
           created: 1700000000, discussion: 'https://forum.example.com/123', link: 'https://snapshot.org/#/test-dao/proposal/snap-1', state: 'active',
@@ -156,7 +157,7 @@ describe('NewOffchainProposalTriggerHandler', () => {
       subscriptionClient.subscribers.set('test-dao', [testUser]);
 
       const message: DispatcherMessage = {
-        triggerId: 'new-offchain-proposal',
+        triggerId: NotificationTypeId.NewOffchainProposal,
         events: [{
           daoId: 'test-dao', id: 'snap-1', title: 'Test',
           created: 1700000000, discussion: '', link: 'https://snapshot.org/#/test-dao/proposal/snap-1', state: 'active',
@@ -175,7 +176,7 @@ describe('NewOffchainProposalTriggerHandler', () => {
       subscriptionClient.subscribers.set('dao-b', [testUser]);
 
       const message: DispatcherMessage = {
-        triggerId: 'new-offchain-proposal',
+        triggerId: NotificationTypeId.NewOffchainProposal,
         events: [
           { daoId: 'dao-a', id: 'snap-1', title: 'Proposal A', created: 1700000000, discussion: '', link: 'https://snapshot.org/#/dao-a/proposal/snap-1', state: 'active' },
           { daoId: 'dao-b', id: 'snap-2', title: 'Proposal B', created: 1700000100, discussion: '', link: 'https://snapshot.org/#/dao-b/proposal/snap-2', state: 'active' },
@@ -191,7 +192,7 @@ describe('NewOffchainProposalTriggerHandler', () => {
       subscriptionClient.subscribers.set('test-dao', [testUser]);
 
       const message: DispatcherMessage = {
-        triggerId: 'new-offchain-proposal',
+        triggerId: NotificationTypeId.NewOffchainProposal,
         events: [],
       };
 
@@ -205,7 +206,7 @@ describe('NewOffchainProposalTriggerHandler', () => {
       subscriptionClient.subscribers.set('test-dao', [testUser]);
 
       const message: DispatcherMessage = {
-        triggerId: 'new-offchain-proposal',
+        triggerId: NotificationTypeId.NewOffchainProposal,
         events: [{
           daoId: 'test-dao', id: 'snap-1', title: 'Test',
           created: 1700000000, discussion: '', link: 'https://snapshot.org/#/test-dao/proposal/snap-1', state: 'active',

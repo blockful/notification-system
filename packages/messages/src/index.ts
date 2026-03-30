@@ -27,3 +27,4 @@ export * from './formatters/dao-emoji';
 export * from './formatters/explorer.service';
 export * from './formatters/markdown-slack-converter';
 export * from './formatters/utm';
+export * from './notification-types';

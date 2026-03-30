@@ -1,6 +1,7 @@
 import { FastifyInstance, FastifyRequest, FastifyReply } from 'fastify';
 import { SubscriptionService } from '../services/subscription.service';
 import { z } from 'zod';
+import { NotificationTypeId } from '@notification-system/messages';
 
 /**
  * Schema for user address URL parameters
@@ -29,7 +30,8 @@ const addAddressBodySchema = z.object({
  * Schema for batch addresses request body
  */
 const batchAddressesBodySchema = z.object({
-  addresses: z.array(z.string()).describe('Array of wallet addresses')
+  addresses: z.array(z.string()).describe('Array of wallet addresses'),
+  trigger_type: z.nativeEnum(NotificationTypeId).optional().describe('Filter by notification type preference')
 });
 
 /**
@@ -133,11 +135,15 @@ export class UserAddressController {
     // Get users who own a specific wallet address
     fastify.get<{
       Params: { address: string };
+      Querystring: { trigger_type?: string };
     }>('/users/by-address/:address', {
       schema: {
         description: 'Get users who own a specific wallet address',
         params: z.object({
           address: z.string().describe('The wallet address')
+        }),
+        querystring: z.object({
+          trigger_type: z.nativeEnum(NotificationTypeId).optional().describe('Filter by notification type preference')
         }),
         response: {
           200: z.array(z.object({
@@ -151,9 +157,10 @@ export class UserAddressController {
       }
     }, async (request: FastifyRequest, reply: FastifyReply) => {
       const { address } = request.params as { address: string };
-      
+      const { trigger_type } = request.query as { trigger_type?: NotificationTypeId };
+
       try {
-        const users = await this.subscriptionService.getUsersByWalletAddress(address);
+        const users = await this.subscriptionService.getUsersByWalletAddress(address, trigger_type);
         return reply.send(users);
       } catch (error: any) {
         return reply.status(500).send({ error: error.message });
@@ -178,10 +185,10 @@ export class UserAddressController {
         }
       }
     }, async (request: FastifyRequest, reply: FastifyReply) => {
-      const { addresses } = request.body as { addresses: string[] };
-      
+      const { addresses, trigger_type } = request.body as { addresses: string[]; trigger_type?: NotificationTypeId };
+
       try {
-        const result = await this.subscriptionService.getUsersByWalletAddressesBatch(addresses);
+        const result = await this.subscriptionService.getUsersByWalletAddressesBatch(addresses, trigger_type);
         return reply.send(result);
       } catch (error: any) {
         return reply.status(500).send({ error: error.message });

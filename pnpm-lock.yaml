@@ -324,6 +324,9 @@ importers:
       '@notification-system/anticapture-client':
         specifier: workspace:*
         version: link:../../packages/anticapture-client
+      '@notification-system/messages':
+        specifier: workspace:*
+        version: link:../../packages/messages
       '@notification-system/rabbitmq-client':
         specifier: workspace:*
         version: link:../../packages/rabbitmq-client
@@ -394,6 +397,9 @@ importers:
       '@jest/globals':
         specifier: ^29.7.0
         version: 29.7.0
+      '@notification-system/messages':
+        specifier: workspace:*
+        version: link:../../packages/messages
       '@slack/web-api':
         specifier: ^6.13.0
         version: 6.13.0
@@ -428,6 +434,9 @@ importers:
         specifier: ^3.24.3
         version: 3.24.3
     devDependencies:
+      '@electric-sql/pglite':
+        specifier: ^0.4.2
+        version: 0.4.2
       '@types/jest':
         specifier: ^29.5.14
         version: 29.5.14
@@ -440,6 +449,9 @@ importers:
       jest:
         specifier: ^29.7.0
         version: 29.7.0(@types/node@24.3.1)(ts-node@10.9.2(@swc/core@1.11.24)(@types/node@24.3.1)(typescript@5.8.3))
+      knex-pglite:
+        specifier: ^0.13.0
+        version: 0.13.0(@electric-sql/pglite@0.4.2)(knex@3.1.0(pg@8.16.0))
       ts-jest:
         specifier: ^29.3.2
         version: 29.3.2(@babel/core@7.27.1)(@jest/transform@29.7.0)(@jest/types@29.6.3)(babel-jest@29.7.0(@babel/core@7.27.1))(jest@29.7.0(@types/node@24.3.1)(ts-node@10.9.2(@swc/core@1.11.24)(@types/node@24.3.1)(typescript@5.8.3)))(typescript@5.8.3)
@@ -749,6 +761,9 @@ packages:
   '@cspotcode/source-map-support@0.8.1':
     resolution: {integrity: sha512-IchNf6dN4tHoMFIn/7OE8LWZ19Y6q/67Bmf6vnGREv8RSbBVb9LPJxEcnwrcwX6ixSvaiGoomAUvu4YSxXrVgw==}
     engines: {node: '>=12'}
+
+  '@electric-sql/pglite@0.4.2':
+    resolution: {integrity: sha512-1GUUl/MZpy5QWgWisD3Epho3GkJrZ1MzVgQpo2pifQWUs96F9rXKZxeVLPhkwFYck34CH/kQ8lis6wX9ifn3kg==}
 
   '@envelop/core@5.2.3':
     resolution: {integrity: sha512-KfoGlYD/XXQSc3BkM1/k15+JQbkQ4ateHazeZoWl9P71FsLTDXSjGy6j7QqfhpIDSbxNISqhPMfZHYSbDFOofQ==}
@@ -3909,6 +3924,12 @@ packages:
     resolution: {integrity: sha512-eTIzlVOSUR+JxdDFepEYcBMtZ9Qqdef+rnzWdRZuMbOywu5tO2w2N7rqjoANZ5k9vywhL6Br1VRjUIgTQx4E8w==}
     engines: {node: '>=6'}
 
+  knex-pglite@0.13.0:
+    resolution: {integrity: sha512-p27m7uXwjWLOJ6qb6JheCJViWBrDghU16ZyMVtUyOzwMo024OBKeEA20gwu6sxaAjdSnqT3lOkwlNqvSQxNQYg==}
+    peerDependencies:
+      '@electric-sql/pglite': 0.x
+      knex: 3.x
+
   knex@3.1.0:
     resolution: {integrity: sha512-GLoII6hR0c4ti243gMs5/1Rb3B+AjwMOfjYm97pu0FOQa7JH56hgBxYf5WK2525ceSbBY1cjeZ9yk99GPMB6Kw==}
     engines: {node: '>=16'}
@@ -6026,6 +6047,8 @@ snapshots:
   '@cspotcode/source-map-support@0.8.1':
     dependencies:
       '@jridgewell/trace-mapping': 0.3.9
+
+  '@electric-sql/pglite@0.4.2': {}
 
   '@envelop/core@5.2.3':
     dependencies:
@@ -10265,6 +10288,11 @@ snapshots:
       json-buffer: 3.0.1
 
   kleur@3.0.3: {}
+
+  knex-pglite@0.13.0(@electric-sql/pglite@0.4.2)(knex@3.1.0(pg@8.16.0)):
+    dependencies:
+      '@electric-sql/pglite': 0.4.2
+      knex: 3.1.0(pg@8.16.0)
 
   knex@3.1.0(pg@8.16.0):
     dependencies:

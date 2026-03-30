@@ -5,6 +5,7 @@ import { NotificationClientFactory } from '../notification/notification-factory.
 import { INotificationClient, NotificationPayload } from '../../interfaces/notification-client.interface';
 import { DispatcherMessage } from '../../interfaces/dispatcher-message.interface';
 import { zeroAddress } from 'viem';
+import { NotificationTypeId } from '@notification-system/messages';
 
 describe('VotingPowerTriggerHandler', () => {
   let mockSubscriptionClient: jest.Mocked<ISubscriptionClient>;
@@ -67,7 +68,7 @@ describe('VotingPowerTriggerHandler', () => {
   describe('handleMessage', () => {
     it('should handle empty events array', async () => {
       const mockMessage: DispatcherMessage = {
-        triggerId: 'voting-power-changed',
+        triggerId: NotificationTypeId.VotingPowerChanged,
         events: []
       };
       
@@ -79,7 +80,7 @@ describe('VotingPowerTriggerHandler', () => {
 
     it('should filter out invalid events', async () => {
       const mockMessage: DispatcherMessage = {
-        triggerId: 'voting-power-changed',
+        triggerId: NotificationTypeId.VotingPowerChanged,
         events: [
           // Missing daoId
           {
@@ -110,7 +111,7 @@ describe('VotingPowerTriggerHandler', () => {
 
     it('should include sourceAccountIds in batch wallet owners lookup', async () => {
       const mockMessage: DispatcherMessage = {
-        triggerId: 'voting-power-changed',
+        triggerId: NotificationTypeId.VotingPowerChanged,
         events: [
           {
             accountId: '0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045',
@@ -124,13 +125,13 @@ describe('VotingPowerTriggerHandler', () => {
           }
         ]
       };
-      
+
       await handler.handleMessage(mockMessage);
-      
+
       expect(mockSubscriptionClient.getWalletOwnersBatch).toHaveBeenCalledWith([
         '0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045',
         '0xEF8305E140ac520225DAf050e2f71d5fBcC543e7'
-      ]);
+      ], NotificationTypeId.VotingPowerChanged);
     });
   });
 
@@ -150,7 +151,7 @@ describe('VotingPowerTriggerHandler', () => {
       };
 
       const mockMessage: DispatcherMessage = {
-        triggerId: 'voting-power-changed',
+        triggerId: NotificationTypeId.VotingPowerChanged,
         events: [delegationEvent]
       };
       
@@ -192,7 +193,7 @@ describe('VotingPowerTriggerHandler', () => {
       };
 
       const mockMessage: DispatcherMessage = {
-        triggerId: 'voting-power-changed',
+        triggerId: NotificationTypeId.VotingPowerChanged,
         events: [delegationEvent]
       };
       
@@ -234,7 +235,7 @@ describe('VotingPowerTriggerHandler', () => {
       };
 
       const mockMessage: DispatcherMessage = {
-        triggerId: 'voting-power-changed',
+        triggerId: NotificationTypeId.VotingPowerChanged,
         events: [delegationEvent]
       };
       
@@ -275,7 +276,7 @@ describe('VotingPowerTriggerHandler', () => {
       };
 
       const mockMessage: DispatcherMessage = {
-        triggerId: 'voting-power-changed',
+        triggerId: NotificationTypeId.VotingPowerChanged,
         events: [undelegationEvent]
       };
       
@@ -317,7 +318,7 @@ describe('VotingPowerTriggerHandler', () => {
       };
 
       const mockMessage: DispatcherMessage = {
-        triggerId: 'voting-power-changed',
+        triggerId: NotificationTypeId.VotingPowerChanged,
         events: [undelegationEvent]
       };
       
@@ -357,7 +358,7 @@ describe('VotingPowerTriggerHandler', () => {
       };
 
       const mockMessage: DispatcherMessage = {
-        triggerId: 'voting-power-changed',
+        triggerId: NotificationTypeId.VotingPowerChanged,
         events: [delegationEvent]
       };
       
@@ -389,7 +390,7 @@ describe('VotingPowerTriggerHandler', () => {
       };
 
       const mockMessage: DispatcherMessage = {
-        triggerId: 'voting-power-changed',
+        triggerId: NotificationTypeId.VotingPowerChanged,
         events: [delegationEvent]
       };
       
@@ -442,7 +443,7 @@ describe('VotingPowerTriggerHandler', () => {
       };
 
       const mockMessage: DispatcherMessage = {
-        triggerId: 'voting-power-changed',
+        triggerId: NotificationTypeId.VotingPowerChanged,
         events: [transferEvent]
       };
 
@@ -482,7 +483,7 @@ describe('VotingPowerTriggerHandler', () => {
       };
 
       const mockMessage: DispatcherMessage = {
-        triggerId: 'voting-power-changed',
+        triggerId: NotificationTypeId.VotingPowerChanged,
         events: [transferEvent]
       };
 
@@ -525,7 +526,7 @@ describe('VotingPowerTriggerHandler', () => {
       };
 
       const mockMessage: DispatcherMessage = {
-        triggerId: 'voting-power-changed',
+        triggerId: NotificationTypeId.VotingPowerChanged,
         events: [otherEvent]
       };
 
@@ -556,7 +557,7 @@ describe('VotingPowerTriggerHandler', () => {
       };
 
       const mockMessage: DispatcherMessage = {
-        triggerId: 'voting-power-changed',
+        triggerId: NotificationTypeId.VotingPowerChanged,
         events: [otherEvent]
       };
 
@@ -587,7 +588,7 @@ describe('VotingPowerTriggerHandler', () => {
       };
 
       const mockMessage: DispatcherMessage = {
-        triggerId: 'voting-power-changed',
+        triggerId: NotificationTypeId.VotingPowerChanged,
         events: [otherEvent]
       };
 
@@ -618,7 +619,7 @@ describe('VotingPowerTriggerHandler', () => {
       };
 
       const mockMessage: DispatcherMessage = {
-        triggerId: 'voting-power-changed',
+        triggerId: NotificationTypeId.VotingPowerChanged,
         events: [otherEvent]
       };
 
@@ -651,7 +652,7 @@ describe('VotingPowerTriggerHandler', () => {
       };
 
       const mockMessage: DispatcherMessage = {
-        triggerId: 'voting-power-changed',
+        triggerId: NotificationTypeId.VotingPowerChanged,
         events: [delegationEvent]
       };
       
@@ -674,7 +675,7 @@ describe('VotingPowerTriggerHandler', () => {
       };
 
       const mockMessage: DispatcherMessage = {
-        triggerId: 'voting-power-changed',
+        triggerId: NotificationTypeId.VotingPowerChanged,
         events: [delegationEvent]
       };
       
@@ -697,7 +698,7 @@ describe('VotingPowerTriggerHandler', () => {
       };
 
       const mockMessage: DispatcherMessage = {
-        triggerId: 'voting-power-changed',
+        triggerId: NotificationTypeId.VotingPowerChanged,
         events: [delegationEvent]
       };
       
@@ -766,7 +767,7 @@ describe('VotingPowerTriggerHandler - eventId deduplication', () => {
     });
 
     await handler.handleMessage({
-      triggerId: 'voting-power-changed',
+      triggerId: NotificationTypeId.VotingPowerChanged,
       events: [
         {
           daoId: 'test-dao',
@@ -815,7 +816,7 @@ describe('VotingPowerTriggerHandler - eventId deduplication', () => {
     });
 
     await handler.handleMessage({
-      triggerId: 'voting-power-changed',
+      triggerId: NotificationTypeId.VotingPowerChanged,
       events: [
         {
           daoId: 'test-dao',
@@ -858,7 +859,7 @@ describe('VotingPowerTriggerHandler - eventId deduplication', () => {
     });
 
     const message: DispatcherMessage = {
-      triggerId: 'voting-power-changed',
+      triggerId: NotificationTypeId.VotingPowerChanged,
       events: [
         {
           daoId: 'test-dao',

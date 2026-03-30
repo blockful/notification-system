@@ -3,6 +3,7 @@ import { VoteConfirmationTriggerHandler } from './vote-confirmation-trigger.serv
 import { NotificationClientFactory } from '../notification/notification-factory.service';
 import { AnticaptureClient } from '@notification-system/anticapture-client';
 import { NotificationPayload } from '../../interfaces/notification-client.interface';
+import { NotificationTypeId } from '@notification-system/messages';
 
 function createHandler() {
   const sentNotifications: NotificationPayload[] = [];
@@ -41,7 +42,7 @@ describe('VoteConfirmationTriggerHandler', () => {
     const { handler, sentNotifications } = createHandler();
 
     await handler.handleMessage({
-      triggerId: 'vote-confirmation',
+      triggerId: NotificationTypeId.VoteConfirmation,
       events: [
         { daoId: 'test-dao', proposalId: 'proposal-1', voterAddress: '0xVoter123', support: 1, votingPower: '1000000000000000000', timestamp: 1767225600, transactionHash: '0xSameTxHash', proposalTitle: 'Proposal 1' },
         { daoId: 'test-dao', proposalId: 'proposal-2', voterAddress: '0xVoter123', support: 0, votingPower: '1000000000000000000', timestamp: 1767225600, transactionHash: '0xSameTxHash', proposalTitle: 'Proposal 2' },

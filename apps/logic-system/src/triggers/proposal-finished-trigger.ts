@@ -3,6 +3,7 @@ import { ProposalRepository } from '../repositories/proposal.repository';
 import { RabbitMQDispatcherService } from '../api-clients/rabbitmq-dispatcher.service';
 import { DispatcherMessage } from '../interfaces/dispatcher.interface';
 import { ProposalOnChain, ProposalFinishedNotification } from '../interfaces/proposal.interface';
+import { NotificationTypeId } from '@notification-system/messages';
 
 /**
  * Trigger for detecting finished proposals
@@ -17,7 +18,7 @@ export class ProposalFinishedTrigger extends Trigger<ProposalOnChain, void> {
     interval: number,
     initialTimestamp?: string
   ) {
-    super('proposal-finished', interval);
+    super(NotificationTypeId.ProposalFinished, interval);
     // Use provided timestamp or default to 24 hours lookback
     if (initialTimestamp) {
       this.endTimestampCursor = parseInt(initialTimestamp, 10);

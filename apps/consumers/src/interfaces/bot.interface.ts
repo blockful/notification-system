@@ -11,6 +11,7 @@ export interface ContextWithSession extends Context {
         walletsToRemove?: Set<string>;
         awaitingWalletInput?: boolean;
         fromStart?: boolean;
+        notificationSelections?: Record<string, boolean>;
     };
 }
 

@@ -8,8 +8,9 @@ import { VotingPowerRepository } from '../repositories/voting-power.repository';
 import { ThresholdRepository } from '../repositories/threshold.repository';
 import { DispatcherService, DispatcherMessage } from '../interfaces/dispatcher.interface';
 import { ProcessedVotingPowerHistory, FeedEventType } from '@notification-system/anticapture-client';
+import { NotificationTypeId } from '@notification-system/messages';
 
-const triggerId = 'voting-power-changed';
+const triggerId = NotificationTypeId.VotingPowerChanged;
 
 export class VotingPowerChangedTrigger extends Trigger<ProcessedVotingPowerHistory, void> {
   private lastProcessedTimestamp: string = Math.floor(Date.now() / 1000).toString();

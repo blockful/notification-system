@@ -1,3 +1,4 @@
+import type { NotificationTypeId } from '@notification-system/messages';
 import { SubscriptionService } from '../services/subscription.service';
 import { toSubscriptionResponse, toUserResponse } from '../mappers';
 
@@ -38,9 +39,9 @@ export class DaoHandler {
    * @param daoId - The ID of the DAO
    * @param eventTimestamp - Optional timestamp to filter subscribers by subscription date
    */
-  async getDaoSubscribers(daoId: string, eventTimestamp?: string) {
-    const { subscribers } = await this.subscriptionService.getDaoSubscribers(daoId, eventTimestamp);
-    
+  async getDaoSubscribers(daoId: string, eventTimestamp?: string, triggerType?: NotificationTypeId) {
+    const { subscribers } = await this.subscriptionService.getDaoSubscribers(daoId, eventTimestamp, triggerType);
+
     return subscribers.map(toUserResponse);
   }
 

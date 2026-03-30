@@ -6,6 +6,7 @@ import { describe, it, expect, jest, beforeEach, afterEach } from '@jest/globals
 import { NewProposalTrigger } from '../src/triggers/new-proposal-trigger';
 import { ProposalOnChain } from '../src/interfaces/proposal.interface';
 import { createProposal, createMockDispatcherService, createMockProposalDataSource } from './mocks';
+import { NotificationTypeId } from '@notification-system/messages';
 
 describe('NewProposalTrigger', () => {
   let mockDispatcherService: ReturnType<typeof createMockDispatcherService>;
@@ -40,7 +41,7 @@ describe('NewProposalTrigger', () => {
       
       expect(mockDispatcherService.sendMessage).toHaveBeenCalledTimes(1);
       expect(mockDispatcherService.sendMessage).toHaveBeenCalledWith({
-        triggerId: 'new-proposal',
+        triggerId: NotificationTypeId.NewProposal,
         events: proposals
       });
       
@@ -55,7 +56,7 @@ describe('NewProposalTrigger', () => {
       await trigger.process([proposal]);
       
       expect(mockDispatcherService.sendMessage).toHaveBeenCalledWith({
-        triggerId: 'new-proposal',
+        triggerId: NotificationTypeId.NewProposal,
         events: [proposal]
       });
     });

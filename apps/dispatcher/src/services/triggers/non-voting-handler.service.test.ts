@@ -3,6 +3,7 @@ import { ISubscriptionClient } from '../../interfaces/subscription-client.interf
 import { NotificationClientFactory } from '../notification/notification-factory.service';
 import { INotificationClient } from '../../interfaces/notification-client.interface';
 import { AnticaptureClient } from '@notification-system/anticapture-client';
+import { NotificationTypeId } from '@notification-system/messages';
 import {
   createProposalNotification,
   createDispatcherMessage,
@@ -82,8 +83,8 @@ describe('NonVotingHandler', () => {
 
     await handler.handleMessage(message);
 
-    expect(mockSubscriptionClient.getWalletOwnersBatch).toHaveBeenCalledWith([TestAddresses.ADDRESS_1]);
-    expect(mockSubscriptionClient.getDaoSubscribers).toHaveBeenCalledWith('ENS');
+    expect(mockSubscriptionClient.getWalletOwnersBatch).toHaveBeenCalledWith([TestAddresses.ADDRESS_1], NotificationTypeId.NonVoting);
+    expect(mockSubscriptionClient.getDaoSubscribers).toHaveBeenCalledWith('ENS', undefined, NotificationTypeId.NonVoting);
     expect(mockNotificationClient.sendNotification).toHaveBeenCalled();
 
     const sentAddress = mockNotificationClient.sendNotification.mock.calls[0][0].metadata?.addresses?.nonVoterAddress;
@@ -164,7 +165,7 @@ describe('NonVotingHandler', () => {
 
     // Should not throw, but return gracefully
     const result = await handler.handleMessage(message);
-    expect(result.messageId).toBe('proposal-finished');
+    expect(result.messageId).toBe(NotificationTypeId.ProposalFinished);
     expect(mockSubscriptionClient.getFollowedAddresses).not.toHaveBeenCalled();
   });
 

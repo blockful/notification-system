@@ -37,7 +37,7 @@ export class VotingReminderTrigger extends Trigger<ProposalOnChain> {
     thresholdPercentage: number = 75,
     windowSize: number = DEFAULT_WINDOW_SIZE
   ) {
-    super(TRIGGER_ID_PREFIX, interval);
+    super(`${TRIGGER_ID_PREFIX}-${thresholdPercentage}`, interval);
     this.thresholdPercentage = thresholdPercentage;
     this.windowSize = windowSize;
   }

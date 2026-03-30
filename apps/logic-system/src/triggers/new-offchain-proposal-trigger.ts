@@ -6,8 +6,9 @@
 import { Trigger } from './base-trigger';
 import { OffchainProposal, OffchainProposalDataSource, ListOffchainProposalsOptions } from '../interfaces/offchain-proposal.interface';
 import { DispatcherService, DispatcherMessage } from '../interfaces/dispatcher.interface';
+import { NotificationTypeId } from '@notification-system/messages';
 
-const triggerId = 'new-offchain-proposal';
+const triggerId = NotificationTypeId.NewOffchainProposal;
 
 export class NewOffchainProposalTrigger extends Trigger<OffchainProposal, ListOffchainProposalsOptions> {
   private timestampCursor: number;

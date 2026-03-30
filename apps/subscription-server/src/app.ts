@@ -8,6 +8,7 @@ import { initial_routes } from './controllers/initial_routes';
 import { DaoController, NotificationController } from './controllers';
 import { UserAddressController } from './controllers/user-address.controller';
 import { SlackOAuthController } from './controllers/slack-oauth.controller';
+import { SettingsController } from './controllers/settings.controller';
 
 export class App {
   private server: FastifyInstance;
@@ -20,7 +21,8 @@ export class App {
     private daoController: DaoController,
     private notificationController: NotificationController,
     private userAddressController: UserAddressController,
-    private slackOAuthController: SlackOAuthController
+    private slackOAuthController: SlackOAuthController,
+    private settingsController: SettingsController
   ) {
     this.db = db;
     this.port = port;
@@ -68,6 +70,7 @@ export class App {
     this.server.register((app) => this.notificationController.register(app));
     this.server.register((app) => this.userAddressController.register(app));
     this.server.register((app) => this.slackOAuthController.register(app));
+    this.server.register((app) => this.settingsController.register(app));
   }
 
   async start(): Promise<void> {

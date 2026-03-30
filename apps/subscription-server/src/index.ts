@@ -8,6 +8,10 @@ import { KnexUserRepository, KnexPreferenceRepository, KnexNotificationRepositor
 import { SubscriptionService, NotificationService } from './services';
 import { DaoHandler } from './handlers/dao.handlers';
 import { WorkspaceService } from './services/workspace.service';
+import { UserNotificationPreferencesRepository } from './repositories/user-notification-preferences.repository';
+import { SettingsService } from './services/settings.service';
+import { SettingsHandler } from './handlers/settings.handler';
+import { SettingsController } from './controllers/settings.controller';
 
 const config = loadConfig();
 
@@ -21,17 +25,21 @@ const userRepository = new KnexUserRepository(db, config.tokenEncryptionKey);
 const preferenceRepository = new KnexPreferenceRepository(db);
 const notificationRepository = new KnexNotificationRepository(db);
 const userAddressRepository = new KnexUserAddressRepository(db);
+const notificationPrefsRepository = new UserNotificationPreferencesRepository(db);
 
 // Service instances
 const workspaceService = new WorkspaceService(db, config.tokenEncryptionKey);
-const subscriptionService = new SubscriptionService(userRepository, preferenceRepository, userAddressRepository);
+const subscriptionService = new SubscriptionService(userRepository, preferenceRepository, userAddressRepository, notificationPrefsRepository);
 const notificationService = new NotificationService(notificationRepository);
+const settingsService = new SettingsService(notificationPrefsRepository);
 
 // Handler instances
 const daoHandler = new DaoHandler(subscriptionService);
+const settingsHandler = new SettingsHandler(settingsService, userRepository);
 
 // Controller instances
 const daoController = new DaoController(daoHandler);
+const settingsController = new SettingsController(settingsHandler);
 const notificationController = new NotificationController(notificationService);
 const userAddressController = new UserAddressController(subscriptionService);
 const slackOAuthController = new SlackOAuthController(
@@ -47,7 +55,8 @@ const app = new App(
   daoController,
   notificationController,
   userAddressController,
-  slackOAuthController
+  slackOAuthController,
+  settingsController
 );
 
 (async () => {

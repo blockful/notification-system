@@ -1,6 +1,7 @@
 import { User, Notification } from '../../interfaces/subscription-client.interface';
 import { DispatcherMessage } from '../../interfaces/dispatcher-message.interface';
 import { ProposalFinishedNotification } from '../../interfaces/notification-client.interface';
+import { NotificationTypeId } from '@notification-system/messages';
 
 // Test Data Factories
 export function createProposalNotification(overrides: Partial<ProposalFinishedNotification> = {}): ProposalFinishedNotification {
@@ -20,7 +21,7 @@ export function createProposalNotification(overrides: Partial<ProposalFinishedNo
 
 export function createDispatcherMessage(events: ProposalFinishedNotification[]): DispatcherMessage<ProposalFinishedNotification> {
   return {
-    triggerId: 'proposal-finished',
+    triggerId: NotificationTypeId.ProposalFinished,
     events
   };
 }
