@@ -58,19 +58,14 @@ export class TelegramSettingsService extends BaseSettingsService {
   private buildKeyboard(selections: Record<NotificationTypeId, boolean>) {
     const rows: Array<Array<{ text: string; callback_data: string }>> = [];
 
-    // 2 buttons per row
+    // 1 button per row for full-width display
     const notificationTypeIds = Object.values(NotificationTypeId);
-    for (let i = 0; i < notificationTypeIds.length; i += 2) {
-      const row: Array<{ text: string; callback_data: string }> = [];
-      for (let j = i; j < Math.min(i + 2, notificationTypeIds.length); j++) {
-        const id = notificationTypeIds[j];
-        const prefix = selections[id] ? '✅' : '❌';
-        row.push({
-          text: `${prefix} ${NOTIFICATION_TYPES[id]}`,
-          callback_data: `settings_toggle_${id}`
-        });
-      }
-      rows.push(row);
+    for (const id of notificationTypeIds) {
+      const prefix = selections[id] ? '✅' : '❌';
+      rows.push([{
+        text: `${prefix} ${NOTIFICATION_TYPES[id]}`,
+        callback_data: `settings_toggle_${id}`
+      }]);
     }
 
     // Save button

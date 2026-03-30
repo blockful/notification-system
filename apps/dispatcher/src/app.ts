@@ -74,7 +74,7 @@ export class App {
     );
 
     triggerProcessorService.addHandler(
-      'offchain-proposal-finished',
+      NotificationTypeId.OffchainProposalFinished,
       new OffchainProposalFinishedTriggerHandler(subscriptionClient, notificationFactory)
     );
 

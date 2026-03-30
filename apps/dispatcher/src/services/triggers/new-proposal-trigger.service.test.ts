@@ -153,7 +153,7 @@ describe('NewProposalTriggerHandler', () => {
 
     it('should include calldata review button when DAO does not support it natively', async () => {
       const mockMessage: DispatcherMessage = {
-        triggerId: 'new-proposal',
+        triggerId: NotificationTypeId.NewProposal,
         events: [{ ...mockProposal, daoId: 'dao123' }]
       };
 
@@ -167,7 +167,7 @@ describe('NewProposalTriggerHandler', () => {
 
     it('should NOT include calldata review button when DAO already supports it', async () => {
       const mockMessage: DispatcherMessage = {
-        triggerId: 'new-proposal',
+        triggerId: NotificationTypeId.NewProposal,
         events: [{ ...mockProposal, id: 'prop789', daoId: 'dao456' }]
       };
 

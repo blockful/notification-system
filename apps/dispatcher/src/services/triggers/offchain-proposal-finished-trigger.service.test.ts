@@ -4,6 +4,7 @@ import { ISubscriptionClient, User, Notification } from '../../interfaces/subscr
 import { NotificationClientFactory } from '../notification/notification-factory.service';
 import { INotificationClient, NotificationPayload } from '../../interfaces/notification-client.interface';
 import { DispatcherMessage } from '../../interfaces/dispatcher-message.interface';
+import { NotificationTypeId } from '@notification-system/messages';
 
 class SimpleSubscriptionClient implements ISubscriptionClient {
   subscribers: Map<string, User[]> = new Map();
@@ -71,7 +72,7 @@ describe('OffchainProposalFinishedTriggerHandler', () => {
       subscriptionClient.subscribers.set('test-dao', [testUser]);
 
       const message: DispatcherMessage = {
-        triggerId: 'offchain-proposal-finished',
+        triggerId: NotificationTypeId.OffchainProposalFinished,
         events: [{
           daoId: 'test-dao', id: 'snap-1', title: 'Grant Program',
           created: 1700000000, end: 1700100000, discussion: '',
@@ -96,7 +97,7 @@ describe('OffchainProposalFinishedTriggerHandler', () => {
       subscriptionClient.subscribers.set('test-dao', [testUser]);
 
       const message: DispatcherMessage = {
-        triggerId: 'offchain-proposal-finished',
+        triggerId: NotificationTypeId.OffchainProposalFinished,
         events: [{
           daoId: 'test-dao', id: 'snap-1', title: '',
           created: 1700000000, end: 1700100000, discussion: '',
@@ -121,7 +122,7 @@ describe('OffchainProposalFinishedTriggerHandler', () => {
       subscriptionClient.subscribers.set('test-dao', [testUser]);
 
       const message: DispatcherMessage = {
-        triggerId: 'offchain-proposal-finished',
+        triggerId: NotificationTypeId.OffchainProposalFinished,
         events: [{
           daoId: 'test-dao', id: 'snap-123', title: 'Test',
           created: 1700000000, end: 1700100000, discussion: '',
@@ -142,7 +143,7 @@ describe('OffchainProposalFinishedTriggerHandler', () => {
       subscriptionClient.subscribers.set('test-dao', [testUser]);
 
       const message: DispatcherMessage = {
-        triggerId: 'offchain-proposal-finished',
+        triggerId: NotificationTypeId.OffchainProposalFinished,
         events: [{
           daoId: 'test-dao', id: 'snap-1', title: 'Test',
           created: 1700000000, end: 1700100000, discussion: '',
@@ -159,7 +160,7 @@ describe('OffchainProposalFinishedTriggerHandler', () => {
       subscriptionClient.subscribers.set('test-dao', [testUser]);
 
       const message: DispatcherMessage = {
-        triggerId: 'offchain-proposal-finished',
+        triggerId: NotificationTypeId.OffchainProposalFinished,
         events: [{
           daoId: 'test-dao', id: 'snap-1', title: 'Test',
           created: 1700000000, end: 1700100000, discussion: '',
@@ -186,7 +187,7 @@ describe('OffchainProposalFinishedTriggerHandler', () => {
       subscriptionClient.subscribers.set('dao-b', [testUser]);
 
       const message: DispatcherMessage = {
-        triggerId: 'offchain-proposal-finished',
+        triggerId: NotificationTypeId.OffchainProposalFinished,
         events: [
           { daoId: 'dao-a', id: 'snap-1', title: 'Proposal A', created: 1700000000, end: 1700100000, discussion: '', link: 'https://snapshot.org/#/dao-a/proposal/snap-1', state: 'closed' },
           { daoId: 'dao-b', id: 'snap-2', title: 'Proposal B', created: 1700000100, end: 1700100100, discussion: '', link: 'https://snapshot.org/#/dao-b/proposal/snap-2', state: 'closed' },
@@ -218,7 +219,7 @@ describe('OffchainProposalFinishedTriggerHandler', () => {
       subscriptionClient.subscribers.set('test-dao', [testUser]);
 
       const message: DispatcherMessage = {
-        triggerId: 'offchain-proposal-finished',
+        triggerId: NotificationTypeId.OffchainProposalFinished,
         events: [],
       };
 
@@ -232,7 +233,7 @@ describe('OffchainProposalFinishedTriggerHandler', () => {
       subscriptionClient.subscribers.set('test-dao', [testUser]);
 
       const message: DispatcherMessage = {
-        triggerId: 'offchain-proposal-finished',
+        triggerId: NotificationTypeId.OffchainProposalFinished,
         events: [{
           daoId: 'test-dao', id: 'snap-1', title: 'Test',
           created: 1700000000, end: 1700100000, discussion: '',
