@@ -15,11 +15,13 @@ interface VotingReminderEvent {
   id: string;
   daoId: string;
   title?: string;
-  description: string;
+  description?: string;
   startTimestamp: number;
   endTimestamp: number;
   timeElapsedPercentage: number;
   thresholdPercentage: number;
+  link?: string;
+  discussion?: string;
 }
 
 /**
@@ -152,7 +154,7 @@ export class VotingReminderTriggerHandler extends BaseTriggerHandler<VotingRemin
    */
   private createReminderMessage(event: VotingReminderEvent, address?: string): string {
     const timeRemaining = FormattingService.calculateTimeRemaining(event.endTimestamp);
-    const title = event.title || FormattingService.extractTitle(event.description);
+    const title = event.title || FormattingService.extractTitle(event.description ?? '');
 
     // Get the message key based on threshold
     const messageKey = votingReminderMessages.getMessageKey(event.thresholdPercentage);
@@ -165,7 +167,8 @@ export class VotingReminderTriggerHandler extends BaseTriggerHandler<VotingRemin
       daoId: event.daoId,
       title,
       timeRemaining,
-      thresholdPercentage: event.thresholdPercentage.toString()
+      thresholdPercentage: event.thresholdPercentage.toString(),
+      address: address || ''
     });
   }
 }

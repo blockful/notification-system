@@ -1,7 +1,8 @@
 import { ProposalDataSource, ProposalOnChain, ProposalOrNull, ListProposalsOptions } from '../interfaces/proposal.interface';
+import { VotingReminderDataSource, VotingReminderProposal } from '../interfaces/voting-reminder.interface';
 import { AnticaptureClient, ListProposalsQueryVariables } from '@notification-system/anticapture-client';
 
-export class ProposalRepository implements ProposalDataSource {
+export class ProposalRepository implements ProposalDataSource, VotingReminderDataSource {
   private anticaptureClient: AnticaptureClient;
 
   constructor(anticaptureClient: AnticaptureClient) {
@@ -57,6 +58,24 @@ export class ProposalRepository implements ProposalDataSource {
 
     // Filter out null values and ensure we return ProposalOnChain[]
     return (result || []).filter(proposal => proposal !== null) as ProposalOnChain[];
+  }
+
+  async listActiveForReminder(): Promise<VotingReminderProposal[]> {
+    const proposals = await this.listAll({
+      status: 'ACTIVE',
+      includeOptimisticProposals: false,
+    });
+
+    return proposals
+      .filter(p => p.timestamp != null && p.endTimestamp != null)
+      .map(p => ({
+        id: p.id,
+        daoId: p.daoId,
+        title: p.title ?? undefined,
+        description: p.description ?? undefined,
+        startTime: p.timestamp,
+        endTime: p.endTimestamp,
+      }));
   }
 
 }
