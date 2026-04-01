@@ -24,7 +24,7 @@ export interface VotingReminderEvent {
   discussion?: string;
 }
 
-const DEFAULT_TRIGGER_ID_PREFIX = 'voting-reminder';
+const TRIGGER_ID_PREFIX = 'voting-reminder';
 // 5% window the event will be triggered between thresholdPercentage and thresholdPercentage + window
 const DEFAULT_WINDOW_SIZE = 5;
 
@@ -38,9 +38,8 @@ export class VotingReminderTrigger extends Trigger<VotingReminderProposal> {
     interval: number,
     thresholdPercentage: number = 75,
     windowSize: number = DEFAULT_WINDOW_SIZE,
-    triggerIdPrefix: string = DEFAULT_TRIGGER_ID_PREFIX
   ) {
-    super(`${triggerIdPrefix}-${thresholdPercentage}`, interval);
+    super(`${TRIGGER_ID_PREFIX}-${thresholdPercentage}`, interval);
     this.thresholdPercentage = thresholdPercentage;
     this.windowSize = windowSize;
   }
