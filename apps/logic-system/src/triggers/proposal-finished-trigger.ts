@@ -60,7 +60,7 @@ export class ProposalFinishedTrigger extends Trigger<ProposalOnChain, void> {
       daoId: proposal?.daoId || '',
       title: proposal?.title || undefined,
       description: proposal?.description || '',
-      endTimestamp: proposal?.endTimestamp ? parseInt(proposal.endTimestamp) : 0,
+      endTimestamp: proposal?.endTimestamp ?? 0,
       status: proposal?.status || 'unknown',
       forVotes: proposal?.forVotes || '0',
       againstVotes: proposal?.againstVotes || '0',

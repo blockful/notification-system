@@ -85,8 +85,8 @@ export class VotingReminderTrigger extends Trigger<ProposalOnChain> {
         return false;
       }
 
-      const startTime = parseInt(proposal.timestamp);
-      const endTime = parseInt(proposal.endTimestamp);
+      const startTime = proposal.timestamp;
+      const endTime = proposal.endTimestamp;
       
       // Skip if proposal is not active
       if (now <= startTime || now >= endTime) {
@@ -131,8 +131,8 @@ export class VotingReminderTrigger extends Trigger<ProposalOnChain> {
     }
     
     const now = Math.floor(Date.now() / 1000);
-    const startTime = parseInt(proposal.timestamp);
-    const endTime = parseInt(proposal.endTimestamp);
+    const startTime = proposal.timestamp;
+    const endTime = proposal.endTimestamp;
     const timeElapsedPercentage = this.calculateTimeElapsedPercentage(startTime, endTime, now);
 
     return {

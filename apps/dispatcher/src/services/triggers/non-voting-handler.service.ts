@@ -3,7 +3,7 @@ import { DispatcherMessage, MessageProcessingResult } from '../../interfaces/dis
 import { ISubscriptionClient } from '../../interfaces/subscription-client.interface';
 import { NotificationClientFactory } from '../notification/notification-factory.service';
 import { ProposalFinishedNotification } from '../../interfaces/notification-client.interface';
-import { AnticaptureClient, QueryInput_Proposals_OrderDirection } from '@notification-system/anticapture-client';
+import { AnticaptureClient, OrderDirection, QueryInput_Proposals_Status_Items } from '@notification-system/anticapture-client';
 import { BatchNotificationService } from '../batch-notification.service';
 import { FormattingService } from '../formatting.service';
 import { ValidationService } from '../validation.service';
@@ -161,9 +161,9 @@ export class NonVotingHandler extends BaseTriggerHandler<ProposalFinishedNotific
     currentEndTimestamp: number
   ): Promise<any[]> {
     const proposals = await this.anticaptureClient!.listProposals({
-      status: ['EXECUTED', 'SUCCEEDED', 'DEFEATED', 'EXPIRED', 'CANCELED'],
+      status: [QueryInput_Proposals_Status_Items.Executed, QueryInput_Proposals_Status_Items.Succeeded, QueryInput_Proposals_Status_Items.Defeated, QueryInput_Proposals_Status_Items.Expired, QueryInput_Proposals_Status_Items.Canceled],
       limit: NonVotingHandler.PROPOSALS_TO_CHECK * NonVotingHandler.FETCH_MARGIN_MULTIPLIER,
-      orderDirection: QueryInput_Proposals_OrderDirection.Desc
+      orderDirection: OrderDirection.Desc
     }, daoId);
 
     // If proposals is undefined or empty, return empty array
@@ -174,13 +174,13 @@ export class NonVotingHandler extends BaseTriggerHandler<ProposalFinishedNotific
     // Sort by endTimestamp (most recent first)
     const sortedByEndTime = proposals.sort((a, b) => {
       if (!a || !b) return 0;
-      return parseInt(b.endTimestamp) - parseInt(a.endTimestamp);
+      return (b.endTimestamp ?? 0) - (a.endTimestamp ?? 0);
     });
     
     // Filter proposals that ended up to the current moment (includes current)
     // and get the most recent PROPOSALS_TO_CHECK proposals
     return sortedByEndTime
-      .filter(p => p && parseInt(p.endTimestamp) <= currentEndTimestamp)
+      .filter(p => p && (p.endTimestamp ?? 0) <= currentEndTimestamp)
       .slice(0, NonVotingHandler.PROPOSALS_TO_CHECK);
   }
 }

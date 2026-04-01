@@ -16,7 +16,7 @@ import type {
   ListOffchainProposalsQueryVariables,
   ListOffchainVotesQueryVariables,
 } from './gql/graphql';
-import { GetDaOsDocument, GetProposalByIdDocument, ListProposalsDocument, ListHistoricalVotingPowerDocument, ListVotesDocument, ProposalNonVotersDocument, GetEventRelevanceThresholdDocument, QueryInput_Votes_OrderBy, QueryInput_Votes_OrderDirection, QueryInput_VotesOffchain_OrderBy, QueryInput_VotesOffchain_OrderDirection, ListOffchainProposalsDocument, ListOffchainVotesDocument } from './gql/graphql';
+import { GetDaOsDocument, GetProposalByIdDocument, ListProposalsDocument, ListHistoricalVotingPowerDocument, ListVotesDocument, ProposalNonVotersDocument, GetEventRelevanceThresholdDocument, QueryInput_Votes_OrderBy, OrderDirection, QueryInput_VotesOffchain_OrderBy, ListOffchainProposalsDocument, ListOffchainVotesDocument } from './gql/graphql';
 import {
   SafeDaosResponseSchema,
   SafeProposalByIdResponseSchema,
@@ -26,6 +26,7 @@ import {
   SafeProposalNonVotersResponseSchema,
   SafeOffchainProposalsResponseSchema,
   SafeOffchainVotesResponseSchema,
+  SafeOffchainProposalNonVotersResponseSchema,
   processProposals,
   processVotingPowerHistory,
   ProcessedVotingPowerHistory,
@@ -205,9 +206,9 @@ export class AnticaptureClient {
 
       // Sort globally by timestamp desc (most recent first)
       if (variables?.fromEndDate) {
-        allProposals.sort((a, b) => parseInt(b?.endTimestamp || '0') - parseInt(a?.endTimestamp || '0'));
+        allProposals.sort((a, b) => (b?.endTimestamp ?? 0) - (a?.endTimestamp ?? 0));
       } else {
-        allProposals.sort((a, b) => parseInt(b?.timestamp || '0') - parseInt(a?.timestamp || '0') || 0);
+        allProposals.sort((a, b) => (b?.timestamp ?? 0) - (a?.timestamp ?? 0));
       }
 
       return allProposals;
@@ -270,7 +271,7 @@ export class AnticaptureClient {
         variables,
         daoId
       );
-      return validated.votes.items.filter(item => item !== null) as VoteItem[];
+      return validated.votes.items.filter(item => item !== null) as unknown as VoteItem[];
     } catch (error) {
       console.warn(`Error fetching votes for DAO ${daoId}:`, error);
       return [];
@@ -311,6 +312,48 @@ export class AnticaptureClient {
   }
 
   /**
+   * Fetches addresses that haven't voted on a specific offchain (Snapshot) proposal
+   * @param proposalId The Snapshot proposal ID to check
+   * @param addresses Optional array of addresses to filter by
+   * @returns List of non-voters
+   */
+  async getOffchainProposalNonVoters(
+    proposalId: string,
+    addresses?: string[],
+  ): Promise<{ voter: string; votingPower?: string }[]> {
+    try {
+      const response = await this.httpClient.post('', {
+        query: `query OffchainProposalNonVoters($id: String!, $addresses: String, $orderDirection: String) {
+        offchainProposalNonVoters(id: $id, addresses: $addresses, orderDirection: $orderDirection) {
+          items {
+            voter
+            votingPower
+          }
+        }
+      }`,
+        variables: {
+          id: proposalId,
+          ...(addresses && { addresses: addresses.join(',') }),
+          orderDirection: 'desc'
+        }
+      }, { headers: this.buildHeaders() });
+
+      if (response.data.errors) {
+        throw new Error(JSON.stringify(response.data.errors));
+      }
+
+      const validated = SafeOffchainProposalNonVotersResponseSchema.parse(
+        this.toLowercase(response.data.data)
+      );
+
+      return validated.offchainProposalNonVoters.items;
+    } catch (error) {
+      console.warn(`Error fetching offchain non-voters for proposal ${proposalId}:`, error);
+      return [];
+    }
+  }
+
+  /**
    * List recent votes from all DAOs since a given timestamp
    * @param timestampGt Fetch votes with timestamp greater than this value (unix timestamp as string)
    * @param limit Maximum number of votes to fetch per DAO (default: 100)
@@ -327,7 +370,7 @@ export class AnticaptureClient {
           fromDate: parseInt(timestampGt),
           limit,
           orderBy: QueryInput_Votes_OrderBy.Timestamp,
-          orderDirection: QueryInput_Votes_OrderDirection.Asc
+          orderDirection: OrderDirection.Asc
         });
         // Add daoId to each vote
         return votes.map(vote => ({
@@ -460,7 +503,7 @@ export class AnticaptureClient {
             fromDate,
             limit,
             orderBy: QueryInput_VotesOffchain_OrderBy.Timestamp,
-            orderDirection: QueryInput_VotesOffchain_OrderDirection.Asc
+            orderDirection: OrderDirection.Asc
           });
           return votes.map(vote => ({
             ...vote,

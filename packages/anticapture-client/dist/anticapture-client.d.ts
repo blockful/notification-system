@@ -73,6 +73,16 @@ export declare class AnticaptureClient {
      */
     getProposalNonVoters(proposalId: string, daoId: string, addresses?: string[]): Promise<ProposalNonVoter[]>;
     /**
+     * Fetches addresses that haven't voted on a specific offchain (Snapshot) proposal
+     * @param proposalId The Snapshot proposal ID to check
+     * @param addresses Optional array of addresses to filter by
+     * @returns List of non-voters
+     */
+    getOffchainProposalNonVoters(proposalId: string, addresses?: string[]): Promise<{
+        voter: string;
+        votingPower?: string;
+    }[]>;
+    /**
      * List recent votes from all DAOs since a given timestamp
      * @param timestampGt Fetch votes with timestamp greater than this value (unix timestamp as string)
      * @param limit Maximum number of votes to fetch per DAO (default: 100)
