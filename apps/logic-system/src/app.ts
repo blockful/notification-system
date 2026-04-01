@@ -29,6 +29,7 @@ export class App {
   private votingReminderTrigger30!: VotingReminderTrigger;
   private votingReminderTrigger60!: VotingReminderTrigger;
   private votingReminderTrigger90!: VotingReminderTrigger;
+  private offchainVotingReminderTrigger75!: VotingReminderTrigger;
   private proposalStatus: ProposalStatus;
   private rabbitMQConnection!: RabbitMQConnection;
   private rabbitMQPublisher!: RabbitMQPublisher;
@@ -139,6 +140,15 @@ export class App {
       triggerInterval,
       90, // 90% threshold
     );
+
+    this.offchainVotingReminderTrigger75 = new VotingReminderTrigger(
+      dispatcherService,
+      offchainProposalRepository,
+      triggerInterval,
+      75, // 75% threshold
+      5,  // default window size
+      'offchain-voting-reminder' // prefix → produces ID 'offchain-voting-reminder-75'
+    );
   }
 
   async start(): Promise<void> {
@@ -155,6 +165,7 @@ export class App {
     this.votingReminderTrigger30.start();
     this.votingReminderTrigger60.start();
     this.votingReminderTrigger90.start();
+    this.offchainVotingReminderTrigger75.start();
     
     console.log('Logic system is running. Press Ctrl+C to stop.');
   }
@@ -187,6 +198,18 @@ export class App {
     if (this.offchainProposalFinishedTrigger) {
       this.offchainProposalFinishedTrigger.reset(initialTimestamp);
     }
+    if (this.votingReminderTrigger30) {
+      this.votingReminderTrigger30.stop();
+    }
+    if (this.votingReminderTrigger60) {
+      this.votingReminderTrigger60.stop();
+    }
+    if (this.votingReminderTrigger90) {
+      this.votingReminderTrigger90.stop();
+    }
+    if (this.offchainVotingReminderTrigger75) {
+      this.offchainVotingReminderTrigger75.stop();
+    }
   }
 
   async stop(): Promise<void> {
@@ -200,6 +223,7 @@ export class App {
     await this.votingReminderTrigger30.stop();
     await this.votingReminderTrigger60.stop();
     await this.votingReminderTrigger90.stop();
+    await this.offchainVotingReminderTrigger75.stop();
     if (this.rabbitMQPublisher) {
       await this.rabbitMQPublisher.close();
     }
