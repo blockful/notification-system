@@ -1,6 +1,5 @@
 import type { GetProposalByIdQuery } from '@notification-system/anticapture-client';
 
-// Extract only the OnchainProposal variant (not ErrorResponse) from the union
 type RawProposal = NonNullable<GetProposalByIdQuery['proposal']>;
 export type ProposalOnChain = Extract<RawProposal, { __typename?: 'OnchainProposal' }>;
 export type ProposalOrNull = ProposalOnChain | null;
