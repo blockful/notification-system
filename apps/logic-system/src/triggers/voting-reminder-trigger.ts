@@ -88,17 +88,14 @@ export class VotingReminderTrigger extends Trigger<VotingReminderProposal> {
         return false;
       }
 
-      const startTime = proposal.startTime;
-      const endTime = proposal.endTime;
-
       // Skip if proposal is not active
-      if (now <= startTime || now >= endTime) {
+      if (now <= proposal.startTime || now >= proposal.endTime) {
         return false;
       }
 
       const timeElapsedPercentage = this.calculateTimeElapsedPercentage(
-        startTime,
-        endTime,
+        proposal.startTime,
+        proposal.endTime,
         now
       );
 
