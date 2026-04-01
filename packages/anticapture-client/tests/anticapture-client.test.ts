@@ -6,10 +6,10 @@ import { TEST_FIXTURES } from './constants';
 
 describe('AnticaptureClient', () => {
   let client: AnticaptureClient;
-  let mockQuery: jest.Mock<() => Promise<any>>;
+  let mockRequest: jest.Mock<() => Promise<any>>;
 
   beforeEach(() => {
-    ({ client, mockQuery } = createMockClient());
+    ({ client, mockRequest } = createMockClient());
   });
 
   afterEach(() => {
@@ -18,7 +18,7 @@ describe('AnticaptureClient', () => {
 
   describe('getDAOs', () => {
     it('returns empty array for empty response', async () => {
-      mockQuery.mockResolvedValue({ daos: { items: [] } });
+      mockRequest.mockResolvedValue({ items: [], totalCount: 0 });
       
       const result = await client.getDAOs();
       
@@ -26,23 +26,22 @@ describe('AnticaptureClient', () => {
     });
 
     it('adds blockTime and defaults to valid DAOs', async () => {
-      mockQuery.mockResolvedValue({
-        daos: {
-          items: Object.values(TEST_FIXTURES.daos)
-        }
+      mockRequest.mockResolvedValue({
+        items: Object.values(TEST_FIXTURES.daos),
+        totalCount: 3
       });
 
       const result = await client.getDAOs();
 
       expect(result).toEqual([
-        { id: 'UNISWAP', blockTime: 12, votingDelay: '1000', chainId: undefined, alreadySupportCalldataReview: false, supportOffchainData: false },
-        { id: 'ENS', blockTime: 12, votingDelay: '500', chainId: undefined, alreadySupportCalldataReview: false, supportOffchainData: false },
-        { id: 'COMPOUND', blockTime: 12, votingDelay: '0', chainId: undefined, alreadySupportCalldataReview: false, supportOffchainData: false }
+        { id: 'UNISWAP', blockTime: 12, votingDelay: '1000', chainId: 1, alreadySupportCalldataReview: false, supportOffchainData: false },
+        { id: 'ENS', blockTime: 12, votingDelay: '500', chainId: 1, alreadySupportCalldataReview: false, supportOffchainData: false },
+        { id: 'COMPOUND', blockTime: 12, votingDelay: '0', chainId: 1, alreadySupportCalldataReview: false, supportOffchainData: false }
       ]);
     });
 
     it('handles API errors gracefully', async () => {
-      mockQuery.mockRejectedValue(new Error('Internal Server Error'));
+      mockRequest.mockRejectedValue(new Error('Internal Server Error'));
       
       const result = await client.getDAOs();
       
@@ -52,12 +51,7 @@ describe('AnticaptureClient', () => {
 
   describe('listProposals', () => {
     it('returns empty array for empty response', async () => {
-      mockQuery.mockResolvedValue({
-        proposals: {
-          items: [],
-          totalCount: 0
-        }
-      });
+      mockRequest.mockResolvedValue({ items: [], totalCount: 0 });
 
       const result = await client.listProposals({}, 'UNISWAP');
 
@@ -65,11 +59,9 @@ describe('AnticaptureClient', () => {
     });
 
     it('adds daoId to each proposal', async () => {
-      mockQuery.mockResolvedValue({
-        proposals: {
-          items: TEST_FIXTURES.proposals.basic,
-          totalCount: TEST_FIXTURES.proposals.basic.length
-        }
+      mockRequest.mockResolvedValue({
+        items: TEST_FIXTURES.proposals.basic,
+        totalCount: TEST_FIXTURES.proposals.basic.length
       });
 
       const result = await client.listProposals({}, 'UNISWAP');
@@ -93,58 +85,44 @@ describe('AnticaptureClient', () => {
       });
 
       it('continues processing when one DAO fails', async () => {
-        mockQuery
-          .mockResolvedValueOnce(createProposalResponse('p1', 'Proposal 1'))
+        mockRequest
+          .mockResolvedValueOnce({ items: [{ ...createProposalResponse('p1', 'Proposal 1').items[0], daoId: 'dao1' }], totalCount: 1 })
           .mockRejectedValueOnce(new Error('DAO2 failed'))
-          .mockResolvedValueOnce(createProposalResponse('p3', 'Proposal 3'));
+          .mockResolvedValueOnce({ items: [{ ...createProposalResponse('p3', 'Proposal 3').items[0], daoId: 'dao3' }], totalCount: 1 });
 
         const result = await client.listProposals();
 
         expect(result).toEqual([
-          { id: 'p1', description: 'Proposal 1', title: null, daoId: 'DAO1' },
-          { id: 'p3', description: 'Proposal 3', title: null, daoId: 'DAO3' }
+          expect.objectContaining({ id: 'p1', description: 'Proposal 1', daoId: 'DAO1' }),
+          expect.objectContaining({ id: 'p3', description: 'Proposal 3', daoId: 'DAO3' })
         ]);
       });
 
       it('sorts proposals globally by timestamp DESC regardless of DAO order', async () => {
         // Simulate proposals from different DAOs with unsorted timestamps
-        mockQuery
-          .mockResolvedValueOnce({
-            proposals: {
-              items: [{ id: 'dao1-old', description: 'Old from DAO1', title: null, timestamp: '1000' }],
-              totalCount: 1
-            }
-          })
-          .mockResolvedValueOnce({
-            proposals: {
-              items: [{ id: 'dao2-newest', description: 'Newest from DAO2', title: null, timestamp: '3000' }],
-              totalCount: 1
-            }
-          })
-          .mockResolvedValueOnce({
-            proposals: {
-              items: [{ id: 'dao3-middle', description: 'Middle from DAO3', title: null, timestamp: '2000' }],
-              totalCount: 1
-            }
-          });
+        mockRequest
+          .mockResolvedValueOnce({ items: [{ ...createProposalResponse('dao1-old', 'Old from DAO1').items[0], timestamp: 1000 }], totalCount: 1 })
+          .mockResolvedValueOnce({ items: [{ ...createProposalResponse('dao2-newest', 'Newest from DAO2').items[0], timestamp: 3000 }], totalCount: 1 })
+          .mockResolvedValueOnce({ items: [{ ...createProposalResponse('dao3-middle', 'Middle from DAO3').items[0], timestamp: 2000 }], totalCount: 1 });
 
         const result = await client.listProposals();
 
         // Should be sorted by timestamp DESC (newest first)
         expect(result).toHaveLength(3);
         expect(result[0]!.id).toBe('dao2-newest');
-        expect(result[0]!.timestamp).toBe('3000');
+        expect(result[0]!.timestamp).toBe(3000);
         expect(result[1]!.id).toBe('dao3-middle');
-        expect(result[1]!.timestamp).toBe('2000');
+        expect(result[1]!.timestamp).toBe(2000);
         expect(result[2]!.id).toBe('dao1-old');
-        expect(result[2]!.timestamp).toBe('1000');
+        expect(result[2]!.timestamp).toBe(1000);
       });
     });
   });
 
   describe('getProposalById', () => {
     it('returns null when API fails', async () => {
-      mockQuery.mockRejectedValue(new Error('API Error'));
+      jest.spyOn(client, 'getDAOs').mockResolvedValue([{ id: 'ENS', blockTime: 12, votingDelay: '0', chainId: 1, alreadySupportCalldataReview: false, supportOffchainData: false }]);
+      mockRequest.mockRejectedValue(new Error('API Error'));
       
       const result = await client.getProposalById('proposal-123');
       
@@ -154,9 +132,7 @@ describe('AnticaptureClient', () => {
 
   describe('getEventThreshold', () => {
     it('returns threshold string for a valid response', async () => {
-      mockQuery.mockResolvedValue({
-        getEventRelevanceThreshold: { threshold: '40000000000000000000000' }
-      });
+      mockRequest.mockResolvedValue({ threshold: '40000000000000000000000' });
 
       const result = await client.getEventThreshold('ENS', FeedEventType.Delegation, FeedRelevance.High);
 
@@ -164,7 +140,7 @@ describe('AnticaptureClient', () => {
     });
 
     it('returns null when query throws', async () => {
-      mockQuery.mockRejectedValue(new Error('Something went wrong'));
+      mockRequest.mockRejectedValue(new Error('Something went wrong'));
 
       const result = await client.getEventThreshold('ENS', FeedEventType.Vote, FeedRelevance.High);
 
@@ -172,7 +148,7 @@ describe('AnticaptureClient', () => {
     });
 
     it('returns null when response has unexpected shape', async () => {
-      mockQuery.mockResolvedValue({ unexpected: 'data' });
+      mockRequest.mockResolvedValue({ unexpected: 'data' });
 
       const result = await client.getEventThreshold('ENS', FeedEventType.Transfer, FeedRelevance.High);
 
@@ -195,7 +171,7 @@ describe('AnticaptureClient', () => {
       });
 
       it('filters out failed DAOs and processes valid ones', async () => {
-        mockQuery
+        mockRequest
           .mockResolvedValueOnce(createVotingPowerResponse('100', 'acc1'))
           .mockRejectedValueOnce(new Error('ERROR_DAO failed'))
           .mockResolvedValueOnce(createVotingPowerResponse('200', 'acc2'));
@@ -226,7 +202,7 @@ describe('AnticaptureClient', () => {
         }));
         jest.spyOn(client, 'getDAOs').mockResolvedValue(mockDAOs);
 
-        mockQuery
+        mockRequest
           .mockRejectedValueOnce(new Error('DAO1 error'))
           .mockRejectedValueOnce(new Error('DAO2 error'));
 

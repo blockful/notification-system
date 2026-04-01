@@ -5,30 +5,52 @@ import axios from 'axios';
 export function createMockClient() {
   const mockAxios = axios.create();
   const client = new AnticaptureClient(mockAxios);
-  const mockQuery = jest.fn<() => Promise<any>>();
-  (client as any).query = mockQuery;
-  return { client, mockQuery };
+  const mockRequest = jest.fn<() => Promise<any>>();
+  (client as any).request = mockRequest;
+  return { client, mockRequest };
 }
 
 export function createProposalResponse(id: string, description: string, title?: string) {
   return {
-    proposals: {
-      items: [{ id, description, title: title || null }],
-      totalCount: 1
-    }
+    items: [{
+      id,
+      daoId: 'uni',
+      txHash: '0xtx',
+      proposerAccountId: '0x1111111111111111111111111111111111111111',
+      title: title || '',
+      description,
+      startBlock: 1,
+      endBlock: 2,
+      timestamp: 1,
+      status: 'ACTIVE',
+      forVotes: '0',
+      againstVotes: '0',
+      abstainVotes: '0',
+      startTimestamp: 1,
+      endTimestamp: 2,
+      quorum: '0',
+      calldatas: [],
+      values: [],
+      targets: [],
+      proposalType: null
+    }],
+    totalCount: 1
   };
 }
 
 export function createVotingPowerResponse(timestamp: string, accountId: string) {
   return {
-    historicalVotingPower: {
-      items: [{
-        timestamp,
-        address: `0x${accountId.replace('acc', '')}`,
-        votingPower: '1000',
-        accountId
-      }],
-      totalCount: 1
-    }
+    items: [{
+      timestamp,
+      daoId: 'ens',
+      transactionHash: '0xtx',
+      votingPower: '1000',
+      delta: '10',
+      accountId,
+      logIndex: 0,
+      delegation: null,
+      transfer: null
+    }],
+    totalCount: 1
   };
 }

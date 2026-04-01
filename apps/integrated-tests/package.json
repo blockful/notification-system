@@ -4,7 +4,7 @@
   "description": "Integration tests for the notification system",
   "main": "index.js",
   "scripts": {
-    "test": "jest"
+    "test": "node ./src/setup/jest/run-jest-if-runtime.cjs"
   },
   "devDependencies": {
     "@jest/globals": "^29.7.0",

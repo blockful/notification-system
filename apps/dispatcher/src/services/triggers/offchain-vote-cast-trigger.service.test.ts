@@ -77,7 +77,7 @@ function buildExpectedMessage(vote: OffchainVoteWithDaoId): string {
   return replacePlaceholders(template, {
     address: vote.voter,
     daoId: vote.daoId,
-    proposalTitle: vote.proposalTitle,
+    proposalTitle: vote.proposalTitle ?? '',
     ...(hasReason && { reason: vote.reason! }),
   });
 }
@@ -94,15 +94,19 @@ function buildExpectedPayload(vote: OffchainVoteWithDaoId): NotificationPayload 
 }
 
 function createVote(overrides?: Partial<OffchainVoteWithDaoId>): OffchainVoteWithDaoId {
-  return {
-    daoId: 'test-dao',
-    proposalId: 'snap-1',
-    voter: '0xvoter123',
-    created: 1700000000,
-    proposalTitle: 'Test Proposal',
-    reason: '',
-    vp: 100,
+  const vote = {
     ...overrides,
+  };
+
+  return {
+    daoId: vote.daoId ?? 'test-dao',
+    proposalId: vote.proposalId ?? 'snap-1',
+    voter: vote.voter ?? '0xvoter123',
+    choice: vote.choice ?? 1,
+    created: vote.created ?? 1700000000,
+    proposalTitle: vote.proposalTitle ?? 'Test Proposal',
+    reason: vote.reason ?? '',
+    vp: vote.vp ?? 100,
   };
 }
 

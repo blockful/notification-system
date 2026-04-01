@@ -128,7 +128,7 @@ export class OffchainVoteCastTriggerHandler extends BaseTriggerHandler<OffchainV
     return replacePlaceholders(messageTemplate, {
       address: vote.voter,
       daoId: vote.daoId,
-      proposalTitle: vote.proposalTitle,
+      proposalTitle: vote.proposalTitle ?? '',
       ...(hasReason && { reason: vote.reason! })
     });
   }

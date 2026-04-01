@@ -1,45 +1,52 @@
-import { AxiosInstance } from 'axios';
+import axios, { AxiosInstance } from 'axios';
 import axiosRetry, { exponentialDelay, isNetworkOrIdempotentRequestError } from 'axios-retry';
-import { print } from 'graphql';
-import type { TypedDocumentNode } from '@graphql-typed-document-node/core';
 import { z } from 'zod';
 import { getAddress, isAddress } from 'viem';
+import { toApiDaoId, toLegacyDaoId } from './dao-id';
 import type {
-  GetProposalByIdQuery,
-  GetProposalByIdQueryVariables,
-  ListProposalsQuery,
-  ListProposalsQueryVariables,
-  ListHistoricalVotingPowerQueryVariables,
-  ListVotesQuery,
-  ListVotesQueryVariables,
-  OnchainProposal,
-  ProposalNonVotersQueryVariables,
-  ListOffchainProposalsQueryVariables,
-  ListOffchainVotesQueryVariables,
-} from './gql/graphql';
-import { GetDaOsDocument, GetProposalByIdDocument, ListProposalsDocument, ListHistoricalVotingPowerDocument, ListVotesDocument, ProposalNonVotersDocument, GetEventRelevanceThresholdDocument, QueryInput_Votes_OrderBy, QueryInput_VotesOffchain_OrderBy, ListOffchainProposalsDocument, ListOffchainVotesDocument, OrderDirection } from './gql/graphql';
-import {
-  SafeDaosResponseSchema,
-  SafeProposalByIdResponseSchema,
-  SafeProposalsResponseSchema,
-  SafeHistoricalVotingPowerResponseSchema,
-  SafeVotesResponseSchema,
-  SafeProposalNonVotersResponseSchema,
-  SafeOffchainProposalsResponseSchema,
-  SafeOffchainVotesResponseSchema,
-  processProposals,
-  processVotingPowerHistory,
-  ProcessedVotingPowerHistory,
-  EventThresholdResponseSchema,
+  Dao,
   FeedEventType,
   FeedRelevance,
+  HistoricalVotingPower,
+  ListHistoricalVotingPowerQueryVariables,
+  ListOffchainProposalsQueryVariables,
+  ListOffchainVotesQueryVariables,
+  ListProposalsQueryVariables,
+  ListVotesQueryVariables,
   OffchainProposalItem,
-  OffchainVoteItem } from './schemas';
-type ProposalItems = NonNullable<ListProposalsQuery['proposals']>['items'];
-type VotingPowerHistoryItems = ProcessedVotingPowerHistory[];
-type ProposalNonVoter = z.infer<typeof SafeProposalNonVotersResponseSchema>['proposalNonVoters']['items'][0];
-type VoteItem = NonNullable<NonNullable<ListVotesQuery['votes']>['items'][0]>;
-export type VoteWithDaoId = VoteItem & { daoId: string };
+  OffchainVoteItem,
+  OnchainProposal,
+  OnchainVote,
+  ProposalNonVoter,
+} from './types';
+import {
+  OrderDirection,
+  QueryInput_Votes_OrderBy,
+  QueryInput_VotesOffchain_OrderBy,
+} from './types';
+import {
+  EventThresholdResponseSchema,
+  FeedEventType as FeedEventTypeEnum,
+  FeedRelevance as FeedRelevanceEnum,
+  normalizeDao,
+  normalizeNonVoter,
+  normalizeOffchainProposal,
+  normalizeOffchainVote,
+  normalizeProposal,
+  normalizeVote,
+  processVotingPowerHistory,
+  ProcessedVotingPowerHistory,
+  SafeDaosResponseSchema,
+  SafeHistoricalVotingPowerResponseSchema,
+  SafeOffchainProposalsResponseSchema,
+  SafeOffchainVotesResponseSchema,
+  SafeProposalByIdResponseSchema,
+  SafeProposalNonVotersResponseSchema,
+  SafeProposalsResponseSchema,
+  SafeVotesResponseSchema,
+} from './schemas';
+
+export type VoteWithDaoId = OnchainVote & { daoId: string };
 export type OffchainVoteWithDaoId = OffchainVoteItem & { daoId: string };
 
 export class AnticaptureClient {
@@ -48,13 +55,14 @@ export class AnticaptureClient {
   constructor(httpClient: AxiosInstance, maxRetries: number = 4, timeout: number = 15000) {
     this.httpClient = httpClient;
     this.httpClient.defaults.timeout = timeout;
+    this.httpClient.defaults.baseURL = this.normalizeBaseUrl(this.httpClient.defaults.baseURL);
 
     axiosRetry(this.httpClient, {
       retries: maxRetries,
-      retryDelay: exponentialDelay, // 1s, 2s, 4s, 8s
+      retryDelay: exponentialDelay,
       retryCondition: (error) => {
         return isNetworkOrIdempotentRequestError(error) ||
-               (error.response?.status !== undefined && error.response.status >= 500);
+          (error.response?.status !== undefined && error.response.status >= 500);
       },
       onRetry: (retryCount, error, requestConfig) => {
         console.warn(
@@ -64,13 +72,12 @@ export class AnticaptureClient {
     });
   }
 
-  /**
-   * Recursively normalizes Ethereum addresses in an object/array structure
-   * @param obj - Any value to process
-   * @param transformer - Function to transform each detected address
-   * @returns The processed value with transformed addresses
-   */
-  private normalizeAddressesInObject(obj: any, transformer: (address: string) => string): any {
+  private normalizeBaseUrl(baseURL?: string): string | undefined {
+    if (!baseURL) return baseURL;
+    return baseURL.replace(/\/graphql\/?$/, '');
+  }
+
+  private normalizeAddressesInObject(obj: unknown, transformer: (address: string) => string): unknown {
     if (obj == null) return obj;
 
     if (typeof obj === 'string') {
@@ -87,395 +94,324 @@ export class AnticaptureClient {
 
     if (typeof obj === 'object') {
       return Object.fromEntries(
-        Object.entries(obj).map(([k, v]) => [k, this.normalizeAddressesInObject(v, transformer)])
+        Object.entries(obj).map(([key, value]) => [key, this.normalizeAddressesInObject(value, transformer)])
       );
     }
 
     return obj;
   }
 
-  /**
-   * Converts addresses to EIP-55 checksum format (for API input - case-sensitive API)
-   */
-  private toChecksum(obj: any): any {
-    return this.normalizeAddressesInObject(obj, (address) => getAddress(address));
+  private toChecksum<T>(obj: T): T {
+    return this.normalizeAddressesInObject(obj, (address) => getAddress(address)) as T;
   }
 
-  /**
-   * Converts addresses to lowercase (for our system - case-insensitive DB)
-   */
-  private toLowercase(obj: any): any {
-    return this.normalizeAddressesInObject(obj, (address) => address.toLowerCase());
+  private toLowercase<T>(obj: T): T {
+    return this.normalizeAddressesInObject(obj, (address) => address.toLowerCase()) as T;
   }
 
-  private async query<TResult, TVariables, TSchema extends z.ZodSchema<any>>(
-    document: TypedDocumentNode<TResult, TVariables>,
+  private serializeParams(params?: object): Record<string, unknown> | undefined {
+    if (!params) return undefined;
+
+    return Object.fromEntries(
+      Object.entries(params)
+        .filter(([, value]) => value !== undefined)
+        .map(([key, value]) => [key, Array.isArray(value) ? value.join(',') : value])
+    );
+  }
+
+  private async request<TSchema extends z.ZodSchema>(
+    path: string,
     schema: TSchema,
-    variables?: TVariables,
-    daoId?: string
+    params?: object
   ): Promise<z.infer<TSchema>> {
-    const headers = this.buildHeaders(daoId);
+    const response = await this.httpClient.get(path, {
+      headers: {
+        Accept: 'application/json',
+        'x-client-source': 'notification-system',
+      },
+      params: this.serializeParams(this.toChecksum(params)),
+    });
 
-    // INPUT: Convert addresses to checksum format for case-sensitive API
-    const checksummedVariables = variables ? this.toChecksum(variables) : variables;
-
-    const response = await this.httpClient.post('', {
-      query: print(document),
-      variables: checksummedVariables,
-    }, { headers });
-
-    if (response.data.errors) {
-      throw new Error(JSON.stringify(response.data.errors));
-    }
-
-    return schema.parse(this.toLowercase(response.data.data));
+    return schema.parse(this.toLowercase(response.data));
   }
 
-  private buildHeaders(daoId?: string): Record<string, string> {
-    const headers: Record<string, string> = {
-      'Content-Type': 'application/json',
-      'Accept': 'application/json',
-      'x-client-source': 'notification-system'
-    };
-
-    if (daoId) {
-      headers["anticapture-dao-id"] = daoId;
-    }
-
-    return headers;
+  private buildDaoPath(daoId: string): string {
+    return `/${encodeURIComponent(toApiDaoId(daoId))}`;
   }
 
-
-  /**
-   * Fetches all DAOs from the anticapture GraphQL API with full type safety
-   * @returns Array of DAO objects with blockTime added
-   */
   async getDAOs(): Promise<Array<{ id: string; blockTime: number; votingDelay: string; chainId: number; alreadySupportCalldataReview: boolean; supportOffchainData: boolean }>> {
     try {
-      const validated = await this.query(GetDaOsDocument, SafeDaosResponseSchema, undefined, undefined);
-      return validated.daos.items.map((dao) => ({
-        id: dao.id,
-        // blockTime: dao.blockTime, // TODO: Uncomment when API supports this field
-        blockTime: 12, // Temporary hardcoded value - Ethereum block time
-        votingDelay: dao.votingDelay || '0',
-        chainId: dao.chainId,
-        alreadySupportCalldataReview: dao.alreadySupportCalldataReview ?? false,
-        supportOffchainData: dao.supportOffchainData ?? false
-      }));
+      const validated = await this.request('/daos', SafeDaosResponseSchema);
+      return validated.items.map((dao) => {
+        const normalized = normalizeDao(dao);
+        return {
+          id: normalized.id,
+          blockTime: 12,
+          votingDelay: normalized.votingDelay,
+          chainId: normalized.chainId,
+          alreadySupportCalldataReview: normalized.alreadySupportCalldataReview,
+          supportOffchainData: normalized.supportOffchainData,
+        };
+      });
     } catch (error) {
-      console.warn('Returning empty DAO list due to API error: ', error instanceof Error ? error.message : error);
+      console.warn('Returning empty DAO list due to API error:', error instanceof Error ? error.message : error);
       return [];
     }
   }
 
-
-  /**
-   * Fetches a single proposal by ID with full type safety
-   */
   async getProposalById(id: string): Promise<OnchainProposal | null> {
-    try {
-      const variables: GetProposalByIdQueryVariables = {
-        id: id
-      };
+    const daos = await this.getDAOs();
 
-      const validated = await this.query(GetProposalByIdDocument, SafeProposalByIdResponseSchema, variables, undefined);
-      return validated.proposal?.__typename === 'OnchainProposal' ? validated.proposal : null;
-    } catch (error) {
-      console.warn(`Returning null for proposal ${id} due to API error`, error instanceof Error ? error.message : error);
-      return null;
+    for (const dao of daos) {
+      try {
+        const proposal = await this.request(
+          `${this.buildDaoPath(dao.id)}/proposals/${encodeURIComponent(id)}`,
+          SafeProposalByIdResponseSchema
+        );
+        return normalizeProposal(proposal);
+      } catch (error) {
+        if (axios.isAxiosError(error) && error.response?.status === 404) {
+          continue;
+        }
+
+        console.warn(
+          `Skipping proposal lookup for DAO ${dao.id} due to API error:`,
+          error instanceof Error ? error.message : error
+        );
+      }
     }
+
+    return null;
   }
 
-
-  async listProposals(variables?: ListProposalsQueryVariables, daoId?: string): Promise<ProposalItems> {
+  async listProposals(variables?: ListProposalsQueryVariables, daoId?: string): Promise<OnchainProposal[]> {
     if (!daoId) {
       const allDAOs = await this.getDAOs();
-      const allProposals: ProposalItems = [];
-
-      for (const dao of allDAOs) {
+      const results = await Promise.all(allDAOs.map(async (dao) => {
         try {
-          const validated = await this.query(ListProposalsDocument, SafeProposalsResponseSchema, variables, dao.id);
-          const processed = processProposals(validated, dao.id);
-          if (processed && processed.length > 0) {
-            allProposals.push(...processed);
-          }
+          const validated = await this.request(
+            `${this.buildDaoPath(dao.id)}/proposals`,
+            SafeProposalsResponseSchema,
+            variables
+          );
+          return validated.items.map(normalizeProposal);
         } catch (error) {
           console.warn(`Skipping ${dao.id} due to API error: ${error instanceof Error ? error.message : error}`);
+          return [];
         }
-      }
+      }));
 
-      // Sort globally by timestamp desc (most recent first)
+      const allProposals = results.flat();
       if (variables?.fromEndDate) {
-        allProposals.sort((a, b) => Number(b?.endTimestamp || 0) - Number(a?.endTimestamp || 0));
+        allProposals.sort((a, b) => b.endTimestamp - a.endTimestamp);
       } else {
-        allProposals.sort((a, b) => Number(b?.timestamp || 0) - Number(a?.timestamp || 0) || 0);
+        allProposals.sort((a, b) => b.timestamp - a.timestamp);
       }
-
       return allProposals;
     }
 
     try {
-      const validated = await this.query(ListProposalsDocument, SafeProposalsResponseSchema, variables, daoId);
-      return processProposals(validated, daoId!) || [];
+      const validated = await this.request(
+        `${this.buildDaoPath(daoId)}/proposals`,
+        SafeProposalsResponseSchema,
+        variables
+      );
+      return validated.items.map(normalizeProposal);
     } catch (error) {
       console.warn(`Error querying proposals for DAO ${daoId}: ${error instanceof Error ? error.message : error}`);
       return [];
     }
   }
 
-  /**
-   * Lists voting power history with full type safety
-   * Uses the new historicalVotingPower query which properly returns delegation and transfer data
-   * @param variables - Query variables for filtering and pagination (fromDate, limit, skip, orderBy, orderDirection, accountId)
-   * @param daoId - Optional specific DAO ID to query. If not provided, queries all DAOs
-   * @returns Array of voting power history items
-   */
-  async listVotingPowerHistory(variables?: ListHistoricalVotingPowerQueryVariables, daoId?: string): Promise<VotingPowerHistoryItems> {
+  async listVotingPowerHistory(
+    variables?: ListHistoricalVotingPowerQueryVariables,
+    daoId?: string
+  ): Promise<ProcessedVotingPowerHistory[]> {
     if (!daoId) {
       const allDAOs = await this.getDAOs();
-      const queryPromises = allDAOs.map(async (dao) => {
+      const results = await Promise.all(allDAOs.map(async (dao) => {
         try {
-          const validated = await this.query(ListHistoricalVotingPowerDocument, SafeHistoricalVotingPowerResponseSchema, variables, dao.id);
-          return processVotingPowerHistory(validated, dao.id, dao.chainId);
+          const validated = await this.request(
+            `${this.buildDaoPath(dao.id)}/voting-powers/historical`,
+            SafeHistoricalVotingPowerResponseSchema,
+            variables
+          );
+          return processVotingPowerHistory(validated.items as HistoricalVotingPower[], dao.id, dao.chainId);
         } catch (error) {
           console.warn(`Skipping ${dao.id} due to API error: ${error instanceof Error ? error.message : error}`);
           return [];
         }
-      });
+      }));
 
-      const results = await Promise.all(queryPromises);
-      return results.flat().sort((a: ProcessedVotingPowerHistory, b: ProcessedVotingPowerHistory) =>
-        parseInt(a.timestamp) - parseInt(b.timestamp)
-      );
+      return results.flat().sort((a, b) => Number(a.timestamp) - Number(b.timestamp));
     }
 
     try {
-      const validated = await this.query(ListHistoricalVotingPowerDocument, SafeHistoricalVotingPowerResponseSchema, variables, daoId);
-      return processVotingPowerHistory(validated, daoId!);
+      const validated = await this.request(
+        `${this.buildDaoPath(daoId)}/voting-powers/historical`,
+        SafeHistoricalVotingPowerResponseSchema,
+        variables
+      );
+      return processVotingPowerHistory(validated.items as HistoricalVotingPower[], daoId);
     } catch (error) {
       console.warn(`Error querying voting power history for DAO ${daoId}: ${error instanceof Error ? error.message : error}`);
       return [];
     }
   }
 
-  /**
-   * Fetches votes for specific proposals and voter addresses
-   * @param variables Query variables including daoId
-   * @returns List of votes matching the criteria
-   */
-  async listVotes(daoId: string, variables?: ListVotesQueryVariables): Promise<VoteItem[]> {
+  async listVotes(daoId: string, variables?: ListVotesQueryVariables): Promise<OnchainVote[]> {
     try {
-      const validated = await this.query(
-        ListVotesDocument,
+      const validated = await this.request(
+        `${this.buildDaoPath(daoId)}/votes`,
         SafeVotesResponseSchema,
-        variables,
-        daoId
+        variables
       );
-      return validated.votes.items.filter(item => item !== null) as VoteItem[];
+      return validated.items.map(normalizeVote);
     } catch (error) {
-      console.warn(`Error fetching votes for DAO ${daoId}:`, error);
+      console.warn(`Error fetching votes for DAO ${daoId}:`, error instanceof Error ? error.message : error);
       return [];
     }
   }
 
-  /**
-   * Fetches addresses that haven't voted on a specific proposal
-   * Note: API already filters for addresses with votingPower > 0
-   * @param proposalId The proposal ID to check
-   * @param daoId The DAO ID for the header
-   * @param addresses Optional array of addresses to filter by
-   * @returns List of non-voters with their voting power details
-   */
   async getProposalNonVoters(
     proposalId: string,
     daoId: string,
     addresses?: string[],
   ): Promise<ProposalNonVoter[]> {
     try {
-      const variables: ProposalNonVotersQueryVariables = {
-        id: proposalId,
-        ...(addresses && { addresses: addresses }),
-      };
-
-      const validated = await this.query(
-        ProposalNonVotersDocument,
+      const validated = await this.request(
+        `${this.buildDaoPath(daoId)}/proposals/${encodeURIComponent(proposalId)}/non-voters`,
         SafeProposalNonVotersResponseSchema,
-        variables,
-        daoId
+        addresses ? { addresses } : undefined
       );
-
-      return validated.proposalNonVoters.items;
+      return validated.items.map(normalizeNonVoter);
     } catch (error) {
-      console.warn(`Error fetching non-voters for proposal ${proposalId}:`, error);
+      console.warn(`Error fetching non-voters for proposal ${proposalId}:`, error instanceof Error ? error.message : error);
       return [];
     }
   }
 
-  /**
-   * List recent votes from all DAOs since a given timestamp
-   * @param timestampGt Fetch votes with timestamp greater than this value (unix timestamp as string)
-   * @param limit Maximum number of votes to fetch per DAO (default: 100)
-   * @returns Array of votes from all DAOs with daoId included
-   */
   async listRecentVotesFromAllDaos(timestampGt: string, limit: number = 100): Promise<VoteWithDaoId[]> {
-    // First, fetch all DAOs
     const daos = await this.getDAOs();
-
-    // Fetch votes from each DAO in parallel
-    const votePromises = daos.map(async (dao) => {
+    const voteArrays = await Promise.all(daos.map(async (dao) => {
       try {
         const votes = await this.listVotes(dao.id, {
-          fromDate: parseInt(timestampGt),
+          fromDate: Number(timestampGt),
           limit,
           orderBy: QueryInput_Votes_OrderBy.Timestamp,
-          orderDirection: OrderDirection.Asc
+          orderDirection: OrderDirection.Asc,
         });
-        // Add daoId to each vote
+
         return votes.map(vote => ({
           ...vote,
-          daoId: dao.id
+          daoId: dao.id,
         }));
       } catch (error) {
-        console.warn(`Failed to fetch votes for DAO ${dao.id}:`, error);
-        return []; // Return empty array for failed DAOs
+        console.warn(`Failed to fetch votes for DAO ${dao.id}:`, error instanceof Error ? error.message : error);
+        return [];
       }
-    });
+    }));
 
-    const voteArrays = await Promise.all(votePromises);
-
-    // Flatten and sort by timestamp
-    const allVotes = voteArrays.flat();
-    allVotes.sort((a: VoteWithDaoId, b: VoteWithDaoId) => {
-      return a.timestamp - b.timestamp;
-    });
-
-    return allVotes;
+    return voteArrays.flat().sort((a, b) => a.timestamp - b.timestamp);
   }
 
-  /**
-   * Fetches the event relevance threshold for a given DAO, event type, and relevance level.
-   * Used to filter out low-impact events (e.g., small delegation changes).
-   * @returns Threshold as a numeric string, or null if unavailable (fail-open)
-   */
   async getEventThreshold(
     daoId: string,
     type: FeedEventType,
     relevance: FeedRelevance
   ): Promise<string | null> {
     try {
-      const validated = await this.query(
-        GetEventRelevanceThresholdDocument,
+      const validated = await this.request(
+        `${this.buildDaoPath(daoId)}/event-relevance/threshold`,
         EventThresholdResponseSchema,
-        { type, relevance },
-        daoId
+        { type, relevance }
       );
-      return validated.getEventRelevanceThreshold.threshold;
+      return validated.threshold ?? null;
     } catch (error) {
       console.warn(
         `[AnticaptureClient] Error fetching threshold for ${daoId}/${type}:`,
         error instanceof Error ? error.message : error
       );
       return null;
-
     }
-  };
-  /*
-   * Lists offchain (Snapshot) proposals from all DAOs or a specific DAO
-   * @param variables Query variables (skip, limit, orderDirection, status, fromDate)
-   * @param daoId Optional specific DAO ID. If not provided, queries all DAOs
-   * @returns Array of offchain proposal items with daoId attached
-   */
+  }
+
   async listOffchainProposals(
     variables?: ListOffchainProposalsQueryVariables,
     daoId?: string
   ): Promise<(OffchainProposalItem & { daoId: string })[]> {
     if (!daoId) {
       const allDAOs = await this.getDAOs();
-      const allProposals: (OffchainProposalItem & { daoId: string })[] = [];
-
-      for (const dao of allDAOs) {
+      const results = await Promise.all(allDAOs.map(async (dao) => {
         if (!dao.supportOffchainData) {
-          continue;
+          return [];
         }
 
         try {
-          const validated = await this.query(ListOffchainProposalsDocument, SafeOffchainProposalsResponseSchema, variables, dao.id);
-          const items = validated.offchainProposals.items.map(item => ({ ...item, daoId: dao.id }));
-          if (items.length > 0) {
-            allProposals.push(...items);
-          }
+          const validated = await this.request(
+            `${this.buildDaoPath(dao.id)}/offchain/proposals`,
+            SafeOffchainProposalsResponseSchema,
+            variables
+          );
+          return validated.items.map(item => ({ ...normalizeOffchainProposal(item), daoId: dao.id }));
         } catch (error) {
           console.warn(`Skipping offchain proposals for ${dao.id} due to API error: ${error instanceof Error ? error.message : error}`);
+          return [];
         }
-      }
+      }));
 
-      // Sort by created timestamp desc (most recent first)
-      allProposals.sort((a, b) => b.created - a.created);
-      return allProposals;
+      return results.flat().sort((a, b) => b.created - a.created);
     }
 
     try {
-      const validated = await this.query(ListOffchainProposalsDocument, SafeOffchainProposalsResponseSchema, variables, daoId);
-      return validated.offchainProposals.items.map(item => ({ ...item, daoId }));
+      const validated = await this.request(
+        `${this.buildDaoPath(daoId)}/offchain/proposals`,
+        SafeOffchainProposalsResponseSchema,
+        variables
+      );
+      return validated.items.map(item => ({ ...normalizeOffchainProposal(item), daoId: toLegacyDaoId(daoId) }));
     } catch (error) {
       console.warn(`Error querying offchain proposals for DAO ${daoId}: ${error instanceof Error ? error.message : error}`);
       return [];
     }
   }
 
-  /**
-   * Fetches offchain (Snapshot) votes for a specific DAO
-   * @param daoId The DAO ID to query
-   * @param variables Query variables for filtering and pagination
-   * @returns Array of offchain vote items
-   */
   async listOffchainVotes(daoId: string, variables?: ListOffchainVotesQueryVariables): Promise<OffchainVoteItem[]> {
     try {
-      const validated = await this.query(
-        ListOffchainVotesDocument,
+      const validated = await this.request(
+        `${this.buildDaoPath(daoId)}/offchain/votes`,
         SafeOffchainVotesResponseSchema,
-        variables,
-        daoId
+        variables
       );
-      return validated.votesOffchain.items;
+      return validated.items.map(normalizeOffchainVote);
     } catch (error) {
-      console.warn(`Error fetching offchain votes for DAO ${daoId}:`, error);
+      console.warn(`Error fetching offchain votes for DAO ${daoId}:`, error instanceof Error ? error.message : error);
       return [];
     }
   }
 
-  /**
-   * Fetches recent offchain votes from all DAOs since a given timestamp
-   * @param fromDate Fetch votes with created timestamp greater than this value (unix timestamp)
-   * @param limit Maximum number of votes to fetch per DAO (default: 100)
-   * @returns Array of offchain votes from all DAOs with daoId included
-   */
   async listRecentOffchainVotesFromAllDaos(fromDate: number, limit: number = 100): Promise<OffchainVoteWithDaoId[]> {
     const daos = await this.getDAOs();
-
-    const votePromises = daos.map(async (dao) => {
+    const voteArrays = await Promise.all(daos.map(async (dao) => {
       try {
         const votes = await this.listOffchainVotes(dao.id, {
           fromDate,
           limit,
           orderBy: QueryInput_VotesOffchain_OrderBy.Timestamp,
-          orderDirection: OrderDirection.Asc
+          orderDirection: OrderDirection.Asc,
         });
         return votes.map(vote => ({
           ...vote,
-          daoId: dao.id
+          daoId: dao.id,
         }));
       } catch (error) {
-        console.warn(`Failed to fetch offchain votes for DAO ${dao.id}:`, error);
+        console.warn(`Failed to fetch offchain votes for DAO ${dao.id}:`, error instanceof Error ? error.message : error);
         return [];
       }
-    });
+    }));
 
-    const voteArrays = await Promise.all(votePromises);
-
-    const allVotes = voteArrays.flat();
-    allVotes.sort((a, b) => a.created - b.created);
-
-    return allVotes;
+    return voteArrays.flat().sort((a, b) => a.created - b.created);
   }
 }
+
+export { FeedEventTypeEnum as FeedEventType, FeedRelevanceEnum as FeedRelevance };

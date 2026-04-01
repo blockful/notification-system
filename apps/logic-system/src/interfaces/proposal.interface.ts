@@ -1,5 +1,5 @@
-import { type OnchainProposal as ProposalOnChain } from "@notification-system/anticapture-client/dist/gql/graphql";
-export { type OnchainProposal as ProposalOnChain } from "@notification-system/anticapture-client/dist/gql/graphql";
+import { type OnchainProposal as ProposalOnChain } from "@notification-system/anticapture-client";
+export { type OnchainProposal as ProposalOnChain } from "@notification-system/anticapture-client";
 
 /**
  * Valid status values for a proposal

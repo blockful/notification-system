@@ -55,6 +55,13 @@ describe('NonVotingHandler', () => {
     );
   });
 
+  const createNonVoter = (voter: string) => ({
+    voter,
+    votingPower: '1',
+    lastVoteTimestamp: 0,
+    votingPowerVariation: '0'
+  });
+
   it('should notify when address did not vote in any of the last 3 proposals', async () => {
     const message = createDispatcherMessage([
       createProposalNotification({ id: 'proposal-3' })
@@ -69,7 +76,7 @@ describe('NonVotingHandler', () => {
     mockAnticaptureClient.listProposals.mockResolvedValue(lastProposals as any);
     mockSubscriptionClient.getFollowedAddresses.mockResolvedValue([TestAddresses.ADDRESS_1]);
     mockAnticaptureClient.getProposalNonVoters
-      .mockResolvedValue([{ voter: TestAddresses.ADDRESS_1 }]);
+      .mockResolvedValue([createNonVoter(TestAddresses.ADDRESS_1)]);
 
     const followers = [createUser()];
     mockSubscriptionClient.getWalletOwnersBatch.mockResolvedValue({
@@ -105,9 +112,9 @@ describe('NonVotingHandler', () => {
     mockAnticaptureClient.listProposals.mockResolvedValue(lastProposals as any);
     mockSubscriptionClient.getFollowedAddresses.mockResolvedValue(followedAddresses);
     mockAnticaptureClient.getProposalNonVoters
-      .mockResolvedValueOnce([{ voter: TestAddresses.ADDRESS_1 }]) // proposal-3
+      .mockResolvedValueOnce([createNonVoter(TestAddresses.ADDRESS_1)]) // proposal-3
       .mockResolvedValueOnce([])                                   // proposal-2: voted!
-      .mockResolvedValueOnce([{ voter: TestAddresses.ADDRESS_1 }]); // proposal-1
+      .mockResolvedValueOnce([createNonVoter(TestAddresses.ADDRESS_1)]); // proposal-1
 
     await handler.handleMessage(message);
 
@@ -185,7 +192,7 @@ describe('NonVotingHandler', () => {
     mockAnticaptureClient.listProposals.mockResolvedValue(lastProposals as any);
     mockSubscriptionClient.getFollowedAddresses.mockResolvedValue(followedAddresses);
     mockAnticaptureClient.getProposalNonVoters
-      .mockResolvedValue([{ voter: TestAddresses.ADDRESS_LONG }]);
+      .mockResolvedValue([createNonVoter(TestAddresses.ADDRESS_LONG)]);
     mockSubscriptionClient.getWalletOwnersBatch.mockResolvedValue({
       [TestAddresses.ADDRESS_LONG]: followers
     });

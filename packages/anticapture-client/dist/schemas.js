@@ -1,46 +1,60 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.SafeOffchainVotesResponseSchema = exports.OffchainVoteItemSchema = exports.SafeOffchainProposalsResponseSchema = exports.OffchainProposalItemSchema = exports.EventThresholdResponseSchema = exports.SafeProposalNonVotersResponseSchema = exports.SafeVotesResponseSchema = exports.SafeHistoricalVotingPowerResponseSchema = exports.SafeProposalByIdResponseSchema = exports.SafeProposalsResponseSchema = exports.SafeDaosResponseSchema = exports.FeedRelevance = exports.FeedEventType = void 0;
-exports.processProposals = processProposals;
+exports.SafeOffchainVotesResponseSchema = exports.OffchainVoteItemSchema = exports.SafeOffchainProposalsResponseSchema = exports.OffchainProposalItemSchema = exports.EventThresholdResponseSchema = exports.SafeProposalNonVotersResponseSchema = exports.SafeVotesResponseSchema = exports.SafeHistoricalVotingPowerResponseSchema = exports.SafeProposalByIdResponseSchema = exports.SafeProposalsResponseSchema = exports.OnchainProposalSchema = exports.SafeDaosResponseSchema = exports.DaoSchema = exports.FeedRelevance = exports.FeedEventType = void 0;
+exports.normalizeDao = normalizeDao;
+exports.normalizeProposal = normalizeProposal;
+exports.normalizeVote = normalizeVote;
+exports.normalizeNonVoter = normalizeNonVoter;
+exports.normalizeOffchainProposal = normalizeOffchainProposal;
+exports.normalizeOffchainVote = normalizeOffchainVote;
 exports.processVotingPowerHistory = processVotingPowerHistory;
 const zod_1 = require("zod");
-var graphql_1 = require("./gql/graphql");
-Object.defineProperty(exports, "FeedEventType", { enumerable: true, get: function () { return graphql_1.FeedEventType; } });
-Object.defineProperty(exports, "FeedRelevance", { enumerable: true, get: function () { return graphql_1.FeedRelevance; } });
-// Schema with built-in transformation and fallbacks
+const dao_id_1 = require("./dao-id");
+var types_1 = require("./types");
+Object.defineProperty(exports, "FeedEventType", { enumerable: true, get: function () { return types_1.FeedEventType; } });
+Object.defineProperty(exports, "FeedRelevance", { enumerable: true, get: function () { return types_1.FeedRelevance; } });
+exports.DaoSchema = zod_1.z.object({
+    id: zod_1.z.string(),
+    chainId: zod_1.z.number(),
+    quorum: zod_1.z.string(),
+    proposalThreshold: zod_1.z.string(),
+    votingDelay: zod_1.z.string(),
+    votingPeriod: zod_1.z.string(),
+    timelockDelay: zod_1.z.string(),
+    alreadySupportCalldataReview: zod_1.z.boolean(),
+    supportOffchainData: zod_1.z.boolean(),
+});
 exports.SafeDaosResponseSchema = zod_1.z.object({
-    daos: zod_1.z.object({
-        items: zod_1.z.array(zod_1.z.object({
-            id: zod_1.z.string(),
-            votingDelay: zod_1.z.string().optional(),
-            chainId: zod_1.z.number(),
-            alreadySupportCalldataReview: zod_1.z.boolean().optional(),
-            supportOffchainData: zod_1.z.boolean().optional()
-        }))
-    }).nullable()
-}).transform((data) => {
-    if (!data.daos || !data.daos.items) {
-        console.warn('DaosResponse has null daos or items:', data);
-        return { daos: { items: [] } };
-    }
-    return { daos: { items: data.daos.items } };
+    items: zod_1.z.array(exports.DaoSchema),
+    totalCount: zod_1.z.number(),
+});
+exports.OnchainProposalSchema = zod_1.z.object({
+    id: zod_1.z.string(),
+    daoId: zod_1.z.string(),
+    txHash: zod_1.z.string(),
+    proposerAccountId: zod_1.z.string(),
+    title: zod_1.z.string(),
+    description: zod_1.z.string(),
+    startBlock: zod_1.z.number(),
+    endBlock: zod_1.z.number(),
+    timestamp: zod_1.z.number(),
+    status: zod_1.z.string(),
+    forVotes: zod_1.z.string(),
+    againstVotes: zod_1.z.string(),
+    abstainVotes: zod_1.z.string(),
+    startTimestamp: zod_1.z.number(),
+    endTimestamp: zod_1.z.number(),
+    quorum: zod_1.z.string(),
+    calldatas: zod_1.z.array(zod_1.z.string()),
+    values: zod_1.z.array(zod_1.z.string()),
+    targets: zod_1.z.array(zod_1.z.string()),
+    proposalType: zod_1.z.number().nullable(),
 });
 exports.SafeProposalsResponseSchema = zod_1.z.object({
-    proposals: zod_1.z.object({
-        items: zod_1.z.array(zod_1.z.any()),
-        totalCount: zod_1.z.number()
-    }).nullable()
-}).transform((data) => {
-    if (!data.proposals) {
-        console.warn('ProposalsResponse has null proposals:', data);
-        return { proposals: { items: [], totalCount: 0 } };
-    }
-    return { proposals: data.proposals };
+    items: zod_1.z.array(exports.OnchainProposalSchema),
+    totalCount: zod_1.z.number(),
 });
-exports.SafeProposalByIdResponseSchema = zod_1.z.object({
-    proposal: zod_1.z.any().nullable()
-});
-// Define schema for historical voting power item
+exports.SafeProposalByIdResponseSchema = exports.OnchainProposalSchema;
 const HistoricalVotingPowerItemSchema = zod_1.z.object({
     accountId: zod_1.z.string(),
     timestamp: zod_1.z.string(),
@@ -53,159 +67,122 @@ const HistoricalVotingPowerItemSchema = zod_1.z.object({
         from: zod_1.z.string(),
         to: zod_1.z.string(),
         value: zod_1.z.string(),
-        previousDelegate: zod_1.z.string().nullable()
+        previousDelegate: zod_1.z.string().nullable(),
     }).nullable(),
     transfer: zod_1.z.object({
         from: zod_1.z.string(),
         to: zod_1.z.string(),
-        value: zod_1.z.string()
-    }).nullable()
+        value: zod_1.z.string(),
+    }).nullable(),
 });
 exports.SafeHistoricalVotingPowerResponseSchema = zod_1.z.object({
-    historicalVotingPower: zod_1.z.object({
-        items: zod_1.z.array(HistoricalVotingPowerItemSchema.nullable()),
-        totalCount: zod_1.z.number()
-    }).nullable()
-}).transform((data) => {
-    // Ensure we always have a valid structure
-    const items = data.historicalVotingPower?.items?.filter((item) => item !== null) || [];
-    return {
-        historicalVotingPower: {
-            items,
-            totalCount: data.historicalVotingPower?.totalCount || 0
-        }
-    };
+    items: zod_1.z.array(HistoricalVotingPowerItemSchema),
+    totalCount: zod_1.z.number(),
+});
+const VoteItemSchema = zod_1.z.object({
+    transactionHash: zod_1.z.string(),
+    proposalId: zod_1.z.string(),
+    voterAddress: zod_1.z.string(),
+    support: zod_1.z.union([zod_1.z.string(), zod_1.z.number()]).transform(String).nullable().optional(),
+    votingPower: zod_1.z.string(),
+    timestamp: zod_1.z.number(),
+    reason: zod_1.z.string().nullable().optional(),
+    proposalTitle: zod_1.z.string().nullable().optional(),
 });
 exports.SafeVotesResponseSchema = zod_1.z.object({
-    votes: zod_1.z.object({
-        items: zod_1.z.array(zod_1.z.object({
-            transactionHash: zod_1.z.string(),
-            proposalId: zod_1.z.string(),
-            voterAddress: zod_1.z.string(),
-            support: zod_1.z.union([zod_1.z.string(), zod_1.z.number()]).transform(String).nullable().optional(),
-            votingPower: zod_1.z.string(),
-            timestamp: zod_1.z.number(),
-            reason: zod_1.z.string().nullable().optional(),
-            proposalTitle: zod_1.z.string().nullable().optional(),
-        }).nullable()),
-        totalCount: zod_1.z.number(),
-    }).nullable(),
-}).transform((data) => {
-    if (!data.votes) {
-        console.warn('VotesResponse has no votes:', data);
-        return { votes: { items: [], totalCount: 0 } };
-    }
-    return {
-        votes: {
-            ...data.votes,
-            items: data.votes.items.filter((item) => item !== null)
-        }
-    };
+    items: zod_1.z.array(VoteItemSchema),
+    totalCount: zod_1.z.number(),
+});
+const ProposalNonVoterSchema = zod_1.z.object({
+    voter: zod_1.z.string(),
+    votingPower: zod_1.z.string(),
+    lastVoteTimestamp: zod_1.z.number(),
+    votingPowerVariation: zod_1.z.string(),
 });
 exports.SafeProposalNonVotersResponseSchema = zod_1.z.object({
-    proposalNonVoters: zod_1.z.object({
-        items: zod_1.z.array(zod_1.z.object({
-            voter: zod_1.z.string()
-        }).nullable()),
-        totalCount: zod_1.z.number().optional()
-    }).nullable()
-}).transform((data) => {
-    if (!data.proposalNonVoters) {
-        console.warn('ProposalNonVotersResponse has null proposalNonVoters:', data);
-        return { proposalNonVoters: { items: [], totalCount: 0 } };
-    }
-    return {
-        proposalNonVoters: {
-            ...data.proposalNonVoters,
-            items: data.proposalNonVoters.items.filter((item) => item !== null)
-        }
-    };
+    items: zod_1.z.array(ProposalNonVoterSchema),
+    totalCount: zod_1.z.number(),
 });
 exports.EventThresholdResponseSchema = zod_1.z.object({
-    getEventRelevanceThreshold: zod_1.z.object({
-        threshold: zod_1.z.string()
-    })
+    threshold: zod_1.z.string(),
 });
 exports.OffchainProposalItemSchema = zod_1.z.object({
     id: zod_1.z.string(),
+    spaceId: zod_1.z.string(),
+    author: zod_1.z.string(),
     title: zod_1.z.string(),
+    body: zod_1.z.string(),
     discussion: zod_1.z.string(),
-    link: zod_1.z.string(),
+    type: zod_1.z.string(),
+    start: zod_1.z.number(),
+    end: zod_1.z.number(),
     state: zod_1.z.string(),
     created: zod_1.z.number(),
-    end: zod_1.z.number(),
+    updated: zod_1.z.number(),
+    link: zod_1.z.string(),
+    flagged: zod_1.z.boolean(),
+    scores: zod_1.z.array(zod_1.z.number()),
+    choices: zod_1.z.array(zod_1.z.string()),
+    network: zod_1.z.string(),
+    snapshot: zod_1.z.number().nullable(),
+    strategies: zod_1.z.array(zod_1.z.object({
+        name: zod_1.z.string(),
+        network: zod_1.z.string(),
+        params: zod_1.z.record(zod_1.z.unknown()),
+    })),
 });
 exports.SafeOffchainProposalsResponseSchema = zod_1.z.object({
-    offchainProposals: zod_1.z.object({
-        items: zod_1.z.array(exports.OffchainProposalItemSchema.nullable()),
-        totalCount: zod_1.z.number(),
-    }).nullable(),
-}).transform((data) => {
-    if (!data.offchainProposals) {
-        console.warn('OffchainProposalsResponse has null offchainProposals:', data);
-        return { offchainProposals: { items: [], totalCount: 0 } };
-    }
-    return {
-        offchainProposals: {
-            ...data.offchainProposals,
-            items: data.offchainProposals.items.filter((item) => item !== null),
-        },
-    };
+    items: zod_1.z.array(exports.OffchainProposalItemSchema),
+    totalCount: zod_1.z.number(),
 });
 exports.OffchainVoteItemSchema = zod_1.z.object({
     voter: zod_1.z.string(),
+    choice: zod_1.z.union([zod_1.z.string(), zod_1.z.number(), zod_1.z.record(zod_1.z.number())]),
     created: zod_1.z.number(),
     proposalId: zod_1.z.string(),
-    proposalTitle: zod_1.z.string(),
-    reason: zod_1.z.string().nullable().optional(),
-    vp: zod_1.z.number().nullable().optional(),
+    proposalTitle: zod_1.z.string().nullable(),
+    reason: zod_1.z.string(),
+    vp: zod_1.z.number().nullable(),
 });
 exports.SafeOffchainVotesResponseSchema = zod_1.z.object({
-    votesOffchain: zod_1.z.object({
-        items: zod_1.z.array(exports.OffchainVoteItemSchema.nullable()),
-        totalCount: zod_1.z.number(),
-    }).nullable(),
-}).transform((data) => {
-    if (!data.votesOffchain) {
-        console.warn('OffchainVotesResponse has null votesOffchain:', data);
-        return { votesOffchain: { items: [], totalCount: 0 } };
-    }
-    return {
-        votesOffchain: {
-            ...data.votesOffchain,
-            items: data.votesOffchain.items.filter((item) => item !== null),
-        },
-    };
+    items: zod_1.z.array(exports.OffchainVoteItemSchema),
+    totalCount: zod_1.z.number(),
 });
-// Internal helper function to process validated proposals
-function processProposals(validated, daoId) {
-    return validated.proposals.items.reduce((acc, proposal) => {
-        if (proposal !== null) {
-            acc.push({
-                ...proposal,
-                daoId: daoId
-            });
-        }
-        return acc;
-    }, []);
+function normalizeDao(dao) {
+    return {
+        ...dao,
+        id: (0, dao_id_1.toLegacyDaoId)(dao.id),
+    };
 }
-// Internal helper function to process validated voting power history
-function processVotingPowerHistory(validated, daoId, chainId) {
-    return validated.historicalVotingPower.items
+function normalizeProposal(proposal) {
+    return {
+        ...proposal,
+        daoId: (0, dao_id_1.toLegacyDaoId)(proposal.daoId),
+    };
+}
+function normalizeVote(vote) {
+    return vote;
+}
+function normalizeNonVoter(voter) {
+    return voter;
+}
+function normalizeOffchainProposal(proposal) {
+    return proposal;
+}
+function normalizeOffchainVote(vote) {
+    return vote;
+}
+function processVotingPowerHistory(items, daoId, chainId) {
+    return items
         .filter(item => item.accountId)
-        .map((item) => {
-        const processed = {
-            ...item,
-            accountId: item.accountId,
-            daoId: daoId,
-            delta: item.delta,
-            changeType: item.delegation ? 'delegation' : item.transfer ? 'transfer' : 'other',
-            sourceAccountId: item.transfer?.from || item.delegation?.from || '',
-            targetAccountId: item.accountId,
-            previousDelegate: item.delegation?.previousDelegate || null,
-            newDelegate: item.delegation?.to || null,
-            ...(chainId !== undefined && { chainId })
-        };
-        return processed;
-    });
+        .map(item => ({
+        ...item,
+        daoId: (0, dao_id_1.toLegacyDaoId)(daoId),
+        changeType: item.delegation ? 'delegation' : item.transfer ? 'transfer' : 'other',
+        sourceAccountId: item.transfer?.from || item.delegation?.from || '',
+        targetAccountId: item.accountId,
+        previousDelegate: item.delegation?.previousDelegate || null,
+        newDelegate: item.delegation?.to || null,
+        chainId,
+    }));
 }

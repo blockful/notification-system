@@ -33,6 +33,13 @@ describe('VotingReminderTriggerHandler', () => {
     thresholdPercentage: 90
   };
 
+  const createNonVoter = (voter: string) => ({
+    voter,
+    votingPower: '1',
+    lastVoteTimestamp: 0,
+    votingPowerVariation: '0'
+  });
+
   beforeEach(() => {
     mockSubscriptionClient = {
       getFollowedAddresses: jest.fn(),
@@ -89,7 +96,7 @@ describe('VotingReminderTriggerHandler', () => {
       // Setup mocks
       mockSubscriptionClient.getFollowedAddresses.mockResolvedValue(['0x123', '0x456']);
       mockAnticaptureClient.getProposalNonVoters.mockResolvedValue([
-        {voter: '0x456'}  // Only 0x456 hasn't voted
+        createNonVoter('0x456')  // Only 0x456 hasn't voted
       ]);
       mockSubscriptionClient.getWalletOwnersBatch.mockResolvedValue({
         '0x456': [mockUser] // Only 0x456 (non-voter) has users
@@ -149,7 +156,7 @@ describe('VotingReminderTriggerHandler', () => {
 
       mockSubscriptionClient.getFollowedAddresses.mockResolvedValue(['0x456']);
       mockAnticaptureClient.getProposalNonVoters.mockResolvedValue([
-        {voter: '0x456'}
+        createNonVoter('0x456')
       ]);
       mockSubscriptionClient.getWalletOwnersBatch.mockResolvedValue({
         '0x456': [mockUser]
@@ -260,7 +267,7 @@ describe('VotingReminderTriggerHandler', () => {
         .mockResolvedValueOnce(['0x456']);
 
       mockAnticaptureClient.getProposalNonVoters.mockResolvedValue([
-        {voter: '0x456'}
+        createNonVoter('0x456')
       ]);
       mockSubscriptionClient.getWalletOwnersBatch.mockResolvedValue({
         '0x456': [mockUser]
