@@ -13,6 +13,7 @@ import { NonVotingHandler } from './services/triggers/non-voting-handler.service
 import { VoteConfirmationTriggerHandler } from './services/triggers/vote-confirmation-trigger.service';
 import { OffchainVoteCastTriggerHandler } from './services/triggers/offchain-vote-cast-trigger.service';
 import { VotingReminderTriggerHandler } from './services/triggers/voting-reminder-trigger.service';
+import { OffchainVotingReminderTriggerHandler } from './services/triggers/offchain-voting-reminder-trigger.service';
 import { RabbitMQConnection, RabbitMQPublisher } from '@notification-system/rabbitmq-client';
 import { AnticaptureClient } from '@notification-system/anticapture-client';
 import { NotificationTypeId } from '@notification-system/messages';
@@ -115,6 +116,11 @@ export class App {
     triggerProcessorService.addHandler(
       NotificationTypeId.VotingReminder90,
       new VotingReminderTriggerHandler(subscriptionClient, notificationFactory, anticaptureClient)
+    );
+
+    triggerProcessorService.addHandler(
+      NotificationTypeId.OffchainVotingReminder75,
+      new OffchainVotingReminderTriggerHandler(subscriptionClient, notificationFactory, anticaptureClient)
     );
 
     this.rabbitMQConsumerService = new RabbitMQConsumerService(this.rabbitmqUrl, triggerProcessorService);
