@@ -804,15 +804,15 @@ export declare const OffchainVoteItemSchema: z.ZodObject<{
     reason: z.ZodOptional<z.ZodNullable<z.ZodString>>;
     vp: z.ZodOptional<z.ZodNullable<z.ZodNumber>>;
 }, "strip", z.ZodTypeAny, {
-    created: number;
     voter: string;
+    created: number;
     proposalId: string;
     proposalTitle: string;
     reason?: string | null | undefined;
     vp?: number | null | undefined;
 }, {
-    created: number;
     voter: string;
+    created: number;
     proposalId: string;
     proposalTitle: string;
     reason?: string | null | undefined;
@@ -829,15 +829,15 @@ export declare const SafeOffchainVotesResponseSchema: z.ZodEffects<z.ZodObject<{
             reason: z.ZodOptional<z.ZodNullable<z.ZodString>>;
             vp: z.ZodOptional<z.ZodNullable<z.ZodNumber>>;
         }, "strip", z.ZodTypeAny, {
-            created: number;
             voter: string;
+            created: number;
             proposalId: string;
             proposalTitle: string;
             reason?: string | null | undefined;
             vp?: number | null | undefined;
         }, {
-            created: number;
             voter: string;
+            created: number;
             proposalId: string;
             proposalTitle: string;
             reason?: string | null | undefined;
@@ -846,8 +846,8 @@ export declare const SafeOffchainVotesResponseSchema: z.ZodEffects<z.ZodObject<{
         totalCount: z.ZodNumber;
     }, "strip", z.ZodTypeAny, {
         items: ({
-            created: number;
             voter: string;
+            created: number;
             proposalId: string;
             proposalTitle: string;
             reason?: string | null | undefined;
@@ -856,8 +856,8 @@ export declare const SafeOffchainVotesResponseSchema: z.ZodEffects<z.ZodObject<{
         totalCount: number;
     }, {
         items: ({
-            created: number;
             voter: string;
+            created: number;
             proposalId: string;
             proposalTitle: string;
             reason?: string | null | undefined;
@@ -868,8 +868,8 @@ export declare const SafeOffchainVotesResponseSchema: z.ZodEffects<z.ZodObject<{
 }, "strip", z.ZodTypeAny, {
     votesOffchain: {
         items: ({
-            created: number;
             voter: string;
+            created: number;
             proposalId: string;
             proposalTitle: string;
             reason?: string | null | undefined;
@@ -880,8 +880,8 @@ export declare const SafeOffchainVotesResponseSchema: z.ZodEffects<z.ZodObject<{
 }, {
     votesOffchain: {
         items: ({
-            created: number;
             voter: string;
+            created: number;
             proposalId: string;
             proposalTitle: string;
             reason?: string | null | undefined;
@@ -892,8 +892,8 @@ export declare const SafeOffchainVotesResponseSchema: z.ZodEffects<z.ZodObject<{
 }>, {
     votesOffchain: {
         items: {
-            created: number;
             voter: string;
+            created: number;
             proposalId: string;
             proposalTitle: string;
             reason?: string | null | undefined;
@@ -904,8 +904,8 @@ export declare const SafeOffchainVotesResponseSchema: z.ZodEffects<z.ZodObject<{
 }, {
     votesOffchain: {
         items: ({
-            created: number;
             voter: string;
+            created: number;
             proposalId: string;
             proposalTitle: string;
             reason?: string | null | undefined;

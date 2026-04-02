@@ -1702,6 +1702,23 @@ export type ListHistoricalVotingPowerQuery = {
         } | null>;
     } | null;
 };
+export type OffchainProposalNonVotersQueryVariables = Exact<{
+    id: Scalars['String']['input'];
+    addresses?: InputMaybe<Scalars['String']['input']>;
+    orderDirection?: InputMaybe<Scalars['String']['input']>;
+}>;
+export type OffchainProposalNonVotersQuery = {
+    __typename?: 'Query';
+    offchainProposalNonVoters?: {
+        __typename?: 'OffchainVotersResponse';
+        items: Array<{
+            __typename?: 'OffchainVoter';
+            voter: string;
+            votingPower?: string | null;
+        } | null>;
+    } | null;
+};
+export declare const OffchainProposalNonVotersDocument: DocumentNode<OffchainProposalNonVotersQuery, OffchainProposalNonVotersQueryVariables>;
 export declare const GetDaOsDocument: DocumentNode<GetDaOsQuery, GetDaOsQueryVariables>;
 export declare const ListOffchainProposalsDocument: DocumentNode<ListOffchainProposalsQuery, ListOffchainProposalsQueryVariables>;
 export declare const ListOffchainVotesDocument: DocumentNode<ListOffchainVotesQuery, ListOffchainVotesQueryVariables>;

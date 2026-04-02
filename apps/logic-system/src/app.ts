@@ -13,9 +13,8 @@ import { ThresholdRepository } from './repositories/threshold.repository';
 import { VotesRepository } from './repositories/votes.repository';
 import { OffchainVotesRepository } from './repositories/offchain-votes.repository';
 import { RabbitMQDispatcherService } from './api-clients/rabbitmq-dispatcher.service';
-import { AnticaptureClient } from '@notification-system/anticapture-client';
+import { AnticaptureClient, QueryInput_Proposals_Status_Items } from '@notification-system/anticapture-client';
 import { RabbitMQConnection, RabbitMQPublisher } from '@notification-system/rabbitmq-client';
-import { ProposalStatus } from './interfaces/proposal.interface';
 import { AxiosInstance } from 'axios';
 
 export class App {
@@ -30,14 +29,14 @@ export class App {
   private votingReminderTrigger60!: VotingReminderTrigger;
   private votingReminderTrigger90!: VotingReminderTrigger;
   private offchainVotingReminderTrigger75!: VotingReminderTrigger;
-  private proposalStatus: ProposalStatus;
+  private proposalStatus: QueryInput_Proposals_Status_Items;
   private rabbitMQConnection!: RabbitMQConnection;
   private rabbitMQPublisher!: RabbitMQPublisher;
   private initPromise: Promise<void>;
 
   constructor(
-    triggerInterval: number, 
-    proposalStatus: ProposalStatus,
+    triggerInterval: number,
+    proposalStatus: QueryInput_Proposals_Status_Items,
     anticaptureHttpClient: AxiosInstance,
     rabbitmqUrl: string,
     initialTimestamp?: string

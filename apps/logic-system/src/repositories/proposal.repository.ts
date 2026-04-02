@@ -1,6 +1,7 @@
 import { ProposalDataSource, ProposalOnChain, ProposalOrNull, ListProposalsOptions } from '../interfaces/proposal.interface';
 import { VotingReminderDataSource, VotingReminderProposal } from '../interfaces/voting-reminder.interface';
-import { AnticaptureClient, ListProposalsQueryVariables } from '@notification-system/anticapture-client';
+import { AnticaptureClient, ListProposalsQueryVariables, OrderDirection, QueryInput_Proposals_Status_Items } from '@notification-system/anticapture-client';
+import { mapOnchainToReminderProposal } from '../mappers/proposal-reminder.mapper';
 
 export class ProposalRepository implements ProposalDataSource, VotingReminderDataSource {
   private anticaptureClient: AnticaptureClient;
@@ -20,7 +21,7 @@ export class ProposalRepository implements ProposalDataSource, VotingReminderDat
 
     // Status filtering
     if (options?.status) {
-      variables.status = options.status as any;
+      variables.status = options.status;
     }
 
     // Date filtering
@@ -46,11 +47,9 @@ export class ProposalRepository implements ProposalDataSource, VotingReminderDat
       variables.skip = options.skip;
     }
 
-    // Ordering - enum requires cast
-    if (options?.orderDirection === 'asc') {
-      variables.orderDirection = 'asc' as any;
-    } else if (options?.orderDirection === 'desc') {
-      variables.orderDirection = 'desc' as any;
+    // Ordering
+    if (options?.orderDirection) {
+      variables.orderDirection = options.orderDirection;
     }
 
     const daoId = options?.daoId;
@@ -62,20 +61,13 @@ export class ProposalRepository implements ProposalDataSource, VotingReminderDat
 
   async listActiveForReminder(): Promise<VotingReminderProposal[]> {
     const proposals = await this.listAll({
-      status: 'ACTIVE',
+      status: QueryInput_Proposals_Status_Items.Active,
       includeOptimisticProposals: false,
     });
 
     return proposals
       .filter(p => p.timestamp != null && p.endTimestamp != null)
-      .map(p => ({
-        id: p.id,
-        daoId: p.daoId,
-        title: p.title ?? undefined,
-        description: p.description ?? undefined,
-        startTime: p.timestamp,
-        endTime: p.endTimestamp,
-      }));
+      .map(mapOnchainToReminderProposal);
   }
 
 }

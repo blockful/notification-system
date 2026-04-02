@@ -265,25 +265,12 @@ class AnticaptureClient {
      */
     async getOffchainProposalNonVoters(proposalId, addresses) {
         try {
-            const response = await this.httpClient.post('', {
-                query: `query OffchainProposalNonVoters($id: String!, $addresses: String, $orderDirection: String) {
-        offchainProposalNonVoters(id: $id, addresses: $addresses, orderDirection: $orderDirection) {
-          items {
-            voter
-            votingPower
-          }
-        }
-      }`,
-                variables: {
-                    id: proposalId,
-                    ...(addresses && { addresses: addresses.join(',') }),
-                    orderDirection: 'desc'
-                }
-            }, { headers: this.buildHeaders() });
-            if (response.data.errors) {
-                throw new Error(JSON.stringify(response.data.errors));
-            }
-            const validated = schemas_1.SafeOffchainProposalNonVotersResponseSchema.parse(this.toLowercase(response.data.data));
+            const variables = {
+                id: proposalId,
+                ...(addresses && { addresses: addresses.join(',') }),
+                orderDirection: 'desc',
+            };
+            const validated = await this.query(graphql_2.OffchainProposalNonVotersDocument, schemas_1.SafeOffchainProposalNonVotersResponseSchema, variables);
             return validated.offchainProposalNonVoters.items;
         }
         catch (error) {

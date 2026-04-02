@@ -10,13 +10,13 @@ import type {
   ListProposalsQuery,
   ListProposalsQueryVariables,
   ListHistoricalVotingPowerQueryVariables,
-  ListVotesQuery,
   ListVotesQueryVariables,
   ProposalNonVotersQueryVariables,
   ListOffchainProposalsQueryVariables,
   ListOffchainVotesQueryVariables,
 } from './gql/graphql';
-import { GetDaOsDocument, GetProposalByIdDocument, ListProposalsDocument, ListHistoricalVotingPowerDocument, ListVotesDocument, ProposalNonVotersDocument, GetEventRelevanceThresholdDocument, QueryInput_Votes_OrderBy, OrderDirection, QueryInput_VotesOffchain_OrderBy, ListOffchainProposalsDocument, ListOffchainVotesDocument } from './gql/graphql';
+import { GetDaOsDocument, GetProposalByIdDocument, ListProposalsDocument, ListHistoricalVotingPowerDocument, ListVotesDocument, ProposalNonVotersDocument, GetEventRelevanceThresholdDocument, QueryInput_Votes_OrderBy, OrderDirection, QueryInput_VotesOffchain_OrderBy, ListOffchainProposalsDocument, ListOffchainVotesDocument, OffchainProposalNonVotersDocument } from './gql/graphql';
+import type { OffchainProposalNonVotersQueryVariables } from './gql/graphql';
 import {
   SafeDaosResponseSchema,
   SafeProposalByIdResponseSchema,
@@ -38,7 +38,7 @@ import {
 type ProposalItems = NonNullable<ListProposalsQuery['proposals']>['items'];
 type VotingPowerHistoryItems = ProcessedVotingPowerHistory[];
 type ProposalNonVoter = z.infer<typeof SafeProposalNonVotersResponseSchema>['proposalNonVoters']['items'][0];
-type VoteItem = NonNullable<NonNullable<ListVotesQuery['votes']>['items'][0]>;
+type VoteItem = z.infer<typeof SafeVotesResponseSchema>['votes']['items'][0];
 export type VoteWithDaoId = VoteItem & { daoId: string };
 export type OffchainVoteWithDaoId = OffchainVoteItem & { daoId: string };
 
@@ -271,7 +271,7 @@ export class AnticaptureClient {
         variables,
         daoId
       );
-      return validated.votes.items.filter(item => item !== null) as unknown as VoteItem[];
+      return validated.votes.items;
     } catch (error) {
       console.warn(`Error fetching votes for DAO ${daoId}:`, error);
       return [];
@@ -322,28 +322,16 @@ export class AnticaptureClient {
     addresses?: string[],
   ): Promise<{ voter: string; votingPower?: string }[]> {
     try {
-      const response = await this.httpClient.post('', {
-        query: `query OffchainProposalNonVoters($id: String!, $addresses: String, $orderDirection: String) {
-        offchainProposalNonVoters(id: $id, addresses: $addresses, orderDirection: $orderDirection) {
-          items {
-            voter
-            votingPower
-          }
-        }
-      }`,
-        variables: {
-          id: proposalId,
-          ...(addresses && { addresses: addresses.join(',') }),
-          orderDirection: 'desc'
-        }
-      }, { headers: this.buildHeaders() });
+      const variables: OffchainProposalNonVotersQueryVariables = {
+        id: proposalId,
+        ...(addresses && { addresses: addresses.join(',') }),
+        orderDirection: 'desc',
+      };
 
-      if (response.data.errors) {
-        throw new Error(JSON.stringify(response.data.errors));
-      }
-
-      const validated = SafeOffchainProposalNonVotersResponseSchema.parse(
-        this.toLowercase(response.data.data)
+      const validated = await this.query(
+        OffchainProposalNonVotersDocument,
+        SafeOffchainProposalNonVotersResponseSchema,
+        variables,
       );
 
       return validated.offchainProposalNonVoters.items;
