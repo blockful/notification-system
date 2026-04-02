@@ -228,7 +228,7 @@ class AnticaptureClient {
     async listVotes(daoId, variables) {
         try {
             const validated = await this.query(graphql_2.ListVotesDocument, schemas_1.SafeVotesResponseSchema, variables, daoId);
-            return validated.votes.items.filter(item => item !== null);
+            return validated.votes.items;
         }
         catch (error) {
             console.warn(`Error fetching votes for DAO ${daoId}:`, error);

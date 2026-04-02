@@ -1,11 +1,11 @@
 import { AxiosInstance } from 'axios';
 import { z } from 'zod';
-import type { GetProposalByIdQuery, ListProposalsQuery, ListProposalsQueryVariables, ListHistoricalVotingPowerQueryVariables, ListVotesQuery, ListVotesQueryVariables, ListOffchainProposalsQueryVariables, ListOffchainVotesQueryVariables } from './gql/graphql';
-import { SafeProposalNonVotersResponseSchema, ProcessedVotingPowerHistory, FeedEventType, FeedRelevance, OffchainProposalItem, OffchainVoteItem } from './schemas';
+import type { GetProposalByIdQuery, ListProposalsQuery, ListProposalsQueryVariables, ListHistoricalVotingPowerQueryVariables, ListVotesQueryVariables, ListOffchainProposalsQueryVariables, ListOffchainVotesQueryVariables } from './gql/graphql';
+import { SafeVotesResponseSchema, SafeProposalNonVotersResponseSchema, ProcessedVotingPowerHistory, FeedEventType, FeedRelevance, OffchainProposalItem, OffchainVoteItem } from './schemas';
 type ProposalItems = NonNullable<ListProposalsQuery['proposals']>['items'];
 type VotingPowerHistoryItems = ProcessedVotingPowerHistory[];
 type ProposalNonVoter = z.infer<typeof SafeProposalNonVotersResponseSchema>['proposalNonVoters']['items'][0];
-type VoteItem = NonNullable<NonNullable<ListVotesQuery['votes']>['items'][0]>;
+type VoteItem = z.infer<typeof SafeVotesResponseSchema>['votes']['items'][0];
 export type VoteWithDaoId = VoteItem & {
     daoId: string;
 };

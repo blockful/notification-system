@@ -64,6 +64,13 @@ const ctaButtonConfigs: Record<string, CtaButtonConfig> = {
         ? `${BASE_URL}/${daoId}/governance/proposal/${proposalId}`
         : BASE_URL
   },
+  'voting-reminder': {
+    text: 'Cast your vote',
+    buildUrl: ({ daoId, proposalId }) =>
+      daoId && proposalId
+        ? `${BASE_URL}/${daoId}/governance/proposal/${proposalId}`
+        : BASE_URL
+  },
   newOffchainProposal: {
     text: 'Cast your vote',
     buildUrl: ({ proposalUrl }) =>
@@ -78,7 +85,12 @@ const ctaButtonConfigs: Record<string, CtaButtonConfig> = {
     text: 'Cast your vote',
     buildUrl: ({ proposalUrl }) =>
       proposalUrl || BASE_URL
-  }
+  },
+  'offchain-voting-reminder': {
+    text: 'Cast your vote',
+    buildUrl: ({ proposalUrl }) =>
+      proposalUrl || BASE_URL
+  },
 };
 
 /**
