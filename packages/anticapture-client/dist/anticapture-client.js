@@ -267,8 +267,8 @@ class AnticaptureClient {
         try {
             const variables = {
                 id: proposalId,
-                ...(addresses && { addresses: addresses.join(',') }),
-                orderDirection: 'desc',
+                ...(addresses && { addresses }),
+                orderDirection: graphql_2.OrderDirection.Desc,
             };
             const validated = await this.query(graphql_2.OffchainProposalNonVotersDocument, schemas_1.SafeOffchainProposalNonVotersResponseSchema, variables);
             return validated.offchainProposalNonVoters.items;

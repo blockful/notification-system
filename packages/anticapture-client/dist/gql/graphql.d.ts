@@ -673,6 +673,8 @@ export type Query = {
     lastUpdate?: Maybe<LastUpdateResponse>;
     /** Returns a single offchain (Snapshot) proposal by its ID */
     offchainProposalById?: Maybe<OffchainProposalById_Response>;
+    /** Returns the active delegates that did not vote on a given offchain proposal */
+    offchainProposalNonVoters?: Maybe<OffchainProposalNonVoters_200_Response>;
     /** Returns a list of offchain (Snapshot) proposals */
     offchainProposals?: Maybe<OffchainProposalsResponse>;
     /** Returns a single proposal by its ID */
@@ -893,6 +895,13 @@ export type QueryLastUpdateArgs = {
 };
 export type QueryOffchainProposalByIdArgs = {
     id: Scalars['String']['input'];
+};
+export type QueryOffchainProposalNonVotersArgs = {
+    addresses?: InputMaybe<Array<InputMaybe<Scalars['String']['input']>>>;
+    id: Scalars['String']['input'];
+    limit?: InputMaybe<Scalars['Int']['input']>;
+    orderDirection?: InputMaybe<OrderDirection>;
+    skip?: InputMaybe<Scalars['Int']['input']>;
 };
 export type QueryOffchainProposalsArgs = {
     endDate?: InputMaybe<Scalars['Int']['input']>;
@@ -1281,6 +1290,11 @@ export type GetAddresses_200_Response = {
     results: Array<Maybe<Query_GetAddresses_Results_Items>>;
 };
 export type OffchainProposalById_Response = ErrorResponse | OffchainProposal;
+export type OffchainProposalNonVoters_200_Response = {
+    __typename?: 'offchainProposalNonVoters_200_response';
+    items: Array<Maybe<Query_OffchainProposalNonVoters_Items_Items>>;
+    totalCount: Scalars['Float']['output'];
+};
 export type Proposal_Response = ErrorResponse | OnchainProposal;
 export declare enum QueryInput_AccountBalances_OrderBy {
     Balance = "balance",
@@ -1479,6 +1493,11 @@ export type Query_GetAddresses_Results_Items_Ens = {
     /** Primary ENS name reverse-resolved for this address */
     name?: Maybe<Scalars['String']['output']>;
 };
+export type Query_OffchainProposalNonVoters_Items_Items = {
+    __typename?: 'query_offchainProposalNonVoters_items_items';
+    voter: Scalars['String']['output'];
+    votingPower: Scalars['String']['output'];
+};
 export type Query_OffchainProposals_Items_Items_Strategies_Items = {
     __typename?: 'query_offchainProposals_items_items_strategies_items';
     name: Scalars['String']['output'];
@@ -1502,6 +1521,22 @@ export type GetDaOsQuery = {
             supportOffchainData: boolean;
         }>;
     };
+};
+export type OffchainProposalNonVotersQueryVariables = Exact<{
+    id: Scalars['String']['input'];
+    addresses?: InputMaybe<Array<InputMaybe<Scalars['String']['input']>> | InputMaybe<Scalars['String']['input']>>;
+    orderDirection?: InputMaybe<OrderDirection>;
+}>;
+export type OffchainProposalNonVotersQuery = {
+    __typename?: 'Query';
+    offchainProposalNonVoters?: {
+        __typename?: 'offchainProposalNonVoters_200_response';
+        items: Array<{
+            __typename?: 'query_offchainProposalNonVoters_items_items';
+            voter: string;
+            votingPower: string;
+        } | null>;
+    } | null;
 };
 export type ListOffchainProposalsQueryVariables = Exact<{
     skip?: InputMaybe<Scalars['Int']['input']>;
@@ -1702,24 +1737,8 @@ export type ListHistoricalVotingPowerQuery = {
         } | null>;
     } | null;
 };
-export type OffchainProposalNonVotersQueryVariables = Exact<{
-    id: Scalars['String']['input'];
-    addresses?: InputMaybe<Scalars['String']['input']>;
-    orderDirection?: InputMaybe<Scalars['String']['input']>;
-}>;
-export type OffchainProposalNonVotersQuery = {
-    __typename?: 'Query';
-    offchainProposalNonVoters?: {
-        __typename?: 'OffchainVotersResponse';
-        items: Array<{
-            __typename?: 'OffchainVoter';
-            voter: string;
-            votingPower?: string | null;
-        } | null>;
-    } | null;
-};
-export declare const OffchainProposalNonVotersDocument: DocumentNode<OffchainProposalNonVotersQuery, OffchainProposalNonVotersQueryVariables>;
 export declare const GetDaOsDocument: DocumentNode<GetDaOsQuery, GetDaOsQueryVariables>;
+export declare const OffchainProposalNonVotersDocument: DocumentNode<OffchainProposalNonVotersQuery, OffchainProposalNonVotersQueryVariables>;
 export declare const ListOffchainProposalsDocument: DocumentNode<ListOffchainProposalsQuery, ListOffchainProposalsQueryVariables>;
 export declare const ListOffchainVotesDocument: DocumentNode<ListOffchainVotesQuery, ListOffchainVotesQueryVariables>;
 export declare const ProposalNonVotersDocument: DocumentNode<ProposalNonVotersQuery, ProposalNonVotersQueryVariables>;

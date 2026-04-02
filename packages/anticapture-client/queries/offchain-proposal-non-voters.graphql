@@ -1,4 +1,4 @@
-query OffchainProposalNonVoters($id: String!, $addresses: String, $orderDirection: String) {
+query OffchainProposalNonVoters($id: String!, $addresses: [String], $orderDirection: OrderDirection) {
   offchainProposalNonVoters(id: $id, addresses: $addresses, orderDirection: $orderDirection) {
     items {
       voter

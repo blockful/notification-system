@@ -324,8 +324,8 @@ export class AnticaptureClient {
     try {
       const variables: OffchainProposalNonVotersQueryVariables = {
         id: proposalId,
-        ...(addresses && { addresses: addresses.join(',') }),
-        orderDirection: 'desc',
+        ...(addresses && { addresses }),
+        orderDirection: OrderDirection.Desc,
       };
 
       const validated = await this.query(

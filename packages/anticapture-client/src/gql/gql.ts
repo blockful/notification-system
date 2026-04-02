@@ -15,6 +15,7 @@ import type { TypedDocumentNode as DocumentNode } from '@graphql-typed-document-
  */
 type Documents = {
     "query GetDAOs {\n  daos {\n    items {\n      id\n      votingDelay\n      chainId\n      alreadySupportCalldataReview\n      supportOffchainData\n    }\n  }\n}": typeof types.GetDaOsDocument,
+    "query OffchainProposalNonVoters($id: String!, $addresses: [String], $orderDirection: OrderDirection) {\n  offchainProposalNonVoters(\n    id: $id\n    addresses: $addresses\n    orderDirection: $orderDirection\n  ) {\n    items {\n      voter\n      votingPower\n    }\n  }\n}": typeof types.OffchainProposalNonVotersDocument,
     "query ListOffchainProposals($skip: Int, $limit: Int, $orderDirection: OrderDirection, $status: [queryInput_offchainProposals_status_items], $fromDate: Int, $endDate: Int) {\n  offchainProposals(\n    skip: $skip\n    limit: $limit\n    orderDirection: $orderDirection\n    status: $status\n    fromDate: $fromDate\n    endDate: $endDate\n  ) {\n    items {\n      id\n      title\n      discussion\n      link\n      state\n      created\n      end\n    }\n    totalCount\n  }\n}": typeof types.ListOffchainProposalsDocument,
     "query ListOffchainVotes($fromDate: Int, $toDate: Int, $limit: Int, $skip: Int, $orderBy: queryInput_votesOffchain_orderBy, $orderDirection: OrderDirection, $voterAddresses: [String]) {\n  votesOffchain(\n    fromDate: $fromDate\n    toDate: $toDate\n    limit: $limit\n    skip: $skip\n    orderBy: $orderBy\n    orderDirection: $orderDirection\n    voterAddresses: $voterAddresses\n  ) {\n    items {\n      voter\n      created\n      proposalId\n      proposalTitle\n      reason\n      vp\n    }\n    totalCount\n  }\n}": typeof types.ListOffchainVotesDocument,
     "query ProposalNonVoters($id: String!, $addresses: [String]) {\n  proposalNonVoters(id: $id, addresses: $addresses) {\n    items {\n      voter\n    }\n  }\n}": typeof types.ProposalNonVotersDocument,
@@ -25,6 +26,7 @@ type Documents = {
 };
 const documents: Documents = {
     "query GetDAOs {\n  daos {\n    items {\n      id\n      votingDelay\n      chainId\n      alreadySupportCalldataReview\n      supportOffchainData\n    }\n  }\n}": types.GetDaOsDocument,
+    "query OffchainProposalNonVoters($id: String!, $addresses: [String], $orderDirection: OrderDirection) {\n  offchainProposalNonVoters(\n    id: $id\n    addresses: $addresses\n    orderDirection: $orderDirection\n  ) {\n    items {\n      voter\n      votingPower\n    }\n  }\n}": types.OffchainProposalNonVotersDocument,
     "query ListOffchainProposals($skip: Int, $limit: Int, $orderDirection: OrderDirection, $status: [queryInput_offchainProposals_status_items], $fromDate: Int, $endDate: Int) {\n  offchainProposals(\n    skip: $skip\n    limit: $limit\n    orderDirection: $orderDirection\n    status: $status\n    fromDate: $fromDate\n    endDate: $endDate\n  ) {\n    items {\n      id\n      title\n      discussion\n      link\n      state\n      created\n      end\n    }\n    totalCount\n  }\n}": types.ListOffchainProposalsDocument,
     "query ListOffchainVotes($fromDate: Int, $toDate: Int, $limit: Int, $skip: Int, $orderBy: queryInput_votesOffchain_orderBy, $orderDirection: OrderDirection, $voterAddresses: [String]) {\n  votesOffchain(\n    fromDate: $fromDate\n    toDate: $toDate\n    limit: $limit\n    skip: $skip\n    orderBy: $orderBy\n    orderDirection: $orderDirection\n    voterAddresses: $voterAddresses\n  ) {\n    items {\n      voter\n      created\n      proposalId\n      proposalTitle\n      reason\n      vp\n    }\n    totalCount\n  }\n}": types.ListOffchainVotesDocument,
     "query ProposalNonVoters($id: String!, $addresses: [String]) {\n  proposalNonVoters(id: $id, addresses: $addresses) {\n    items {\n      voter\n    }\n  }\n}": types.ProposalNonVotersDocument,
@@ -52,6 +54,10 @@ export function graphql(source: string): unknown;
  * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
  */
 export function graphql(source: "query GetDAOs {\n  daos {\n    items {\n      id\n      votingDelay\n      chainId\n      alreadySupportCalldataReview\n      supportOffchainData\n    }\n  }\n}"): (typeof documents)["query GetDAOs {\n  daos {\n    items {\n      id\n      votingDelay\n      chainId\n      alreadySupportCalldataReview\n      supportOffchainData\n    }\n  }\n}"];
+/**
+ * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
+ */
+export function graphql(source: "query OffchainProposalNonVoters($id: String!, $addresses: [String], $orderDirection: OrderDirection) {\n  offchainProposalNonVoters(\n    id: $id\n    addresses: $addresses\n    orderDirection: $orderDirection\n  ) {\n    items {\n      voter\n      votingPower\n    }\n  }\n}"): (typeof documents)["query OffchainProposalNonVoters($id: String!, $addresses: [String], $orderDirection: OrderDirection) {\n  offchainProposalNonVoters(\n    id: $id\n    addresses: $addresses\n    orderDirection: $orderDirection\n  ) {\n    items {\n      voter\n      votingPower\n    }\n  }\n}"];
 /**
  * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
  */

@@ -109,7 +109,7 @@ export class VotingReminderTriggerHandler extends BaseTriggerHandler<VotingRemin
       event.daoId,
       triggerType,
       () => `${event.id}-${event.thresholdPercentage}-${this.triggerType}`,
-      (address) => this.createReminderMessage(event, address),
+      (_address) => this.createReminderMessage(event),
       (address) => ({
         triggerType: this.triggerType,
         proposalId: event.id,
@@ -127,7 +127,7 @@ export class VotingReminderTriggerHandler extends BaseTriggerHandler<VotingRemin
   /**
    * Creates the reminder message based on proposal data and urgency level
    */
-  private createReminderMessage(event: VotingReminderEvent, address?: string): string {
+  private createReminderMessage(event: VotingReminderEvent): string {
     const timeRemaining = FormattingService.calculateTimeRemaining(event.endTimestamp);
     const title =
       event.title || FormattingService.extractTitle(event.description ?? '') || 'Untitled Proposal';
@@ -144,7 +144,6 @@ export class VotingReminderTriggerHandler extends BaseTriggerHandler<VotingRemin
       title,
       timeRemaining,
       thresholdPercentage: event.thresholdPercentage.toString(),
-      address: address || '',
     });
   }
 }
