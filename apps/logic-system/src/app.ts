@@ -199,15 +199,19 @@ export class App {
     }
     if (this.votingReminderTrigger30) {
       this.votingReminderTrigger30.stop();
+      this.votingReminderTrigger30.start();
     }
     if (this.votingReminderTrigger60) {
       this.votingReminderTrigger60.stop();
+      this.votingReminderTrigger60.start();
     }
     if (this.votingReminderTrigger90) {
       this.votingReminderTrigger90.stop();
+      this.votingReminderTrigger90.start();
     }
     if (this.offchainVotingReminderTrigger75) {
       this.offchainVotingReminderTrigger75.stop();
+      this.offchainVotingReminderTrigger75.start();
     }
   }
 
