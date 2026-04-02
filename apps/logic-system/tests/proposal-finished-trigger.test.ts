@@ -76,15 +76,15 @@ describe('ProposalFinishedTrigger', () => {
             id: 'prop1',
             daoId: 'dao1',
             description: 'Test proposal 1 description',
-            timestamp: '1625097600',
-            endTimestamp: '1625097600'
+            timestamp: 1625097600,
+            endTimestamp: 1625097600
           }),
           createFinishedProposal('DEFEATED', {
             id: 'prop2',
             daoId: 'dao2',
             description: 'Test proposal 2 description',
-            timestamp: '1625184000',
-            endTimestamp: '1625184000',
+            timestamp: 1625184000,
+            endTimestamp: 1625184000,
             forVotes: '200000000000000000000',
             againstVotes: '800000000000000000000',
             abstainVotes: '50000000000000000000'
@@ -125,7 +125,6 @@ describe('ProposalFinishedTrigger', () => {
 
       it('should handle proposals with missing optional fields', async () => {
         const proposal = createProposalWithMissingFields();
-        // @ts-expect-error - we want to test the case where the proposal is missing some fields
         proposal.id = 'prop1';
         
         await trigger.process([proposal]);
@@ -175,15 +174,15 @@ describe('ProposalFinishedTrigger', () => {
         const proposalA = createFinishedProposal('EXECUTED', {
           id: 'proposal-a',
           daoId: 'dao1',
-          timestamp: '1000',
-          endTimestamp: '2000'
+          timestamp: 1000,
+          endTimestamp: 2000
         });
 
         const proposalB = createFinishedProposal('DEFEATED', {
           id: 'proposal-b',
           daoId: 'dao1',
-          timestamp: '1100',
-          endTimestamp: '2100'
+          timestamp: 1100,
+          endTimestamp: 2100
         });
 
         // First execution: process proposal A

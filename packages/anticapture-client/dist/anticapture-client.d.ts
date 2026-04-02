@@ -1,11 +1,11 @@
 import { AxiosInstance } from 'axios';
 import { z } from 'zod';
-import type { GetProposalByIdQuery, ListProposalsQuery, ListProposalsQueryVariables, ListHistoricalVotingPowerQueryVariables, ListVotesQuery, ListVotesQueryVariables, ListOffchainProposalsQueryVariables, ListOffchainVotesQueryVariables } from './gql/graphql';
-import { SafeProposalNonVotersResponseSchema, ProcessedVotingPowerHistory, FeedEventType, FeedRelevance, OffchainProposalItem, OffchainVoteItem } from './schemas';
+import type { GetProposalByIdQuery, ListProposalsQuery, ListProposalsQueryVariables, ListHistoricalVotingPowerQueryVariables, ListVotesQueryVariables, ListOffchainProposalsQueryVariables, ListOffchainVotesQueryVariables } from './gql/graphql';
+import { SafeVotesResponseSchema, SafeProposalNonVotersResponseSchema, ProcessedVotingPowerHistory, FeedEventType, FeedRelevance, OffchainProposalItem, OffchainVoteItem } from './schemas';
 type ProposalItems = NonNullable<ListProposalsQuery['proposals']>['items'];
 type VotingPowerHistoryItems = ProcessedVotingPowerHistory[];
 type ProposalNonVoter = z.infer<typeof SafeProposalNonVotersResponseSchema>['proposalNonVoters']['items'][0];
-type VoteItem = NonNullable<NonNullable<ListVotesQuery['votes']>['items'][0]>;
+type VoteItem = z.infer<typeof SafeVotesResponseSchema>['votes']['items'][0];
 export type VoteWithDaoId = VoteItem & {
     daoId: string;
 };
@@ -72,6 +72,16 @@ export declare class AnticaptureClient {
      * @returns List of non-voters with their voting power details
      */
     getProposalNonVoters(proposalId: string, daoId: string, addresses?: string[]): Promise<ProposalNonVoter[]>;
+    /**
+     * Fetches addresses that haven't voted on a specific offchain (Snapshot) proposal
+     * @param proposalId The Snapshot proposal ID to check
+     * @param addresses Optional array of addresses to filter by
+     * @returns List of non-voters
+     */
+    getOffchainProposalNonVoters(proposalId: string, addresses?: string[]): Promise<{
+        voter: string;
+        votingPower?: string;
+    }[]>;
     /**
      * List recent votes from all DAOs since a given timestamp
      * @param timestampGt Fetch votes with timestamp greater than this value (unix timestamp as string)

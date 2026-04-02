@@ -24,6 +24,7 @@ import { SlackTestClient } from '../../test-clients/slack-test.client';
 import { jest } from '@jest/globals';
 import { mockTelegramSendMessage } from '../../mocks/telegram-mock-setup';
 import { mockSlackSendMessage } from '../../mocks/slack-mock-setup';
+import { QueryInput_Proposals_Status_Items } from '@notification-system/anticapture-client';
 
 /**
  * @notice Type definition for test applications container
@@ -185,7 +186,8 @@ const startConsumer = async (
     rabbitmqUrl,
     mockEnsResolver,
     telegramClient,
-    slackClient
+    slackClient,
+    3003
   );
   await consumerApp.start();
   return consumerApp;
@@ -226,7 +228,7 @@ const startLogicSystem = async (
   const oneYearAgo = Math.floor((Date.now() - 365 * 24 * 60 * 60 * 1000) / 1000).toString();
   const logicSystemApp = new LogicSystemApp(
     TEST_CONFIG.logicSystem.interval,
-    TEST_CONFIG.logicSystem.proposalState,
+    QueryInput_Proposals_Status_Items.Active,
     mockHttpClient,
     rabbitmqUrl,
     oneYearAgo
