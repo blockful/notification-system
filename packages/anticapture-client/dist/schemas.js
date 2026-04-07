@@ -5,8 +5,8 @@ exports.processProposals = processProposals;
 exports.processVotingPowerHistory = processVotingPowerHistory;
 const zod_1 = require("zod");
 var graphql_1 = require("./gql/graphql");
-Object.defineProperty(exports, "FeedEventType", { enumerable: true, get: function () { return graphql_1.QueryInput_GetEventRelevanceThreshold_Type; } });
-Object.defineProperty(exports, "FeedRelevance", { enumerable: true, get: function () { return graphql_1.QueryInput_GetEventRelevanceThreshold_Relevance; } });
+Object.defineProperty(exports, "FeedEventType", { enumerable: true, get: function () { return graphql_1.FeedEventType; } });
+Object.defineProperty(exports, "FeedRelevance", { enumerable: true, get: function () { return graphql_1.FeedRelevance; } });
 // Schema with built-in transformation and fallbacks
 exports.SafeDaosResponseSchema = zod_1.z.object({
     daos: zod_1.z.object({
@@ -82,11 +82,11 @@ exports.SafeVotesResponseSchema = zod_1.z.object({
             transactionHash: zod_1.z.string(),
             proposalId: zod_1.z.string(),
             voterAddress: zod_1.z.string(),
-            support: zod_1.z.number(),
+            support: zod_1.z.string().nullable().optional(),
             votingPower: zod_1.z.string(),
             timestamp: zod_1.z.number(),
             reason: zod_1.z.string().nullable().optional(),
-            proposalTitle: zod_1.z.string(),
+            proposalTitle: zod_1.z.string().nullable().optional(),
         }).nullable()),
         totalCount: zod_1.z.number(),
     }).nullable(),

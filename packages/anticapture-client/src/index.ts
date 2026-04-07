@@ -18,13 +18,11 @@ export type {
 
 // Export GraphQL enums
 export {
-  QueryInput_Proposals_OrderDirection,
+  OrderDirection,
   QueryInput_HistoricalVotingPower_OrderBy,
-  QueryInput_HistoricalVotingPower_OrderDirection,
+  QueryInput_Proposals_Status_Items,
   QueryInput_Votes_OrderBy,
-  QueryInput_Votes_OrderDirection,
   QueryInput_VotesOffchain_OrderBy,
-  QueryInput_VotesOffchain_OrderDirection
 } from './gql/graphql';
 
 export { FeedEventType, FeedRelevance } from './schemas';
