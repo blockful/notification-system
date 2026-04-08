@@ -172,10 +172,10 @@ class AnticaptureClient {
             }
             // Sort globally by timestamp desc (most recent first)
             if (variables?.fromEndDate) {
-                allProposals.sort((a, b) => parseInt(b?.endTimestamp || '0') - parseInt(a?.endTimestamp || '0'));
+                allProposals.sort((a, b) => (b?.endTimestamp ?? 0) - (a?.endTimestamp ?? 0));
             }
             else {
-                allProposals.sort((a, b) => parseInt(b?.timestamp || '0') - parseInt(a?.timestamp || '0') || 0);
+                allProposals.sort((a, b) => (b?.timestamp ?? 0) - (a?.timestamp ?? 0));
             }
             return allProposals;
         }
@@ -273,7 +273,7 @@ class AnticaptureClient {
                     fromDate: parseInt(timestampGt),
                     limit,
                     orderBy: graphql_2.QueryInput_Votes_OrderBy.Timestamp,
-                    orderDirection: graphql_2.QueryInput_Votes_OrderDirection.Asc
+                    orderDirection: graphql_2.OrderDirection.Asc
                 });
                 // Add daoId to each vote
                 return votes.map(vote => ({
@@ -380,7 +380,7 @@ class AnticaptureClient {
                     fromDate,
                     limit,
                     orderBy: graphql_2.QueryInput_VotesOffchain_OrderBy.Timestamp,
-                    orderDirection: graphql_2.QueryInput_VotesOffchain_OrderDirection.Asc
+                    orderDirection: graphql_2.OrderDirection.Asc
                 });
                 return votes.map(vote => ({
                     ...vote,

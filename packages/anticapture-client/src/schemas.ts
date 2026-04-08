@@ -1,8 +1,8 @@
 import { z } from 'zod';
 
 export {
-  QueryInput_GetEventRelevanceThreshold_Type as FeedEventType,
-  QueryInput_GetEventRelevanceThreshold_Relevance as FeedRelevance,
+  FeedEventType,
+  FeedRelevance,
 } from './gql/graphql';
 
 // Schema with built-in transformation and fallbacks
@@ -86,11 +86,11 @@ export const SafeVotesResponseSchema = z.object({
       transactionHash: z.string(),
       proposalId: z.string(),
       voterAddress: z.string(),
-      support: z.number(),
+      support: z.string().nullable().optional(),
       votingPower: z.string(),
       timestamp: z.number(),
       reason: z.string().nullable().optional(),
-      proposalTitle: z.string(),
+      proposalTitle: z.string().nullable().optional(),
     }).nullable()),
     totalCount: z.number(),
   }).nullable(),

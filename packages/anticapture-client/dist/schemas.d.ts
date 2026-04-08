@@ -1,5 +1,5 @@
 import { z } from 'zod';
-export { QueryInput_GetEventRelevanceThreshold_Type as FeedEventType, QueryInput_GetEventRelevanceThreshold_Relevance as FeedRelevance, } from './gql/graphql';
+export { FeedEventType, FeedRelevance, } from './gql/graphql';
 export declare const SafeDaosResponseSchema: z.ZodEffects<z.ZodObject<{
     daos: z.ZodNullable<z.ZodObject<{
         items: z.ZodArray<z.ZodObject<{
@@ -421,28 +421,28 @@ export declare const SafeVotesResponseSchema: z.ZodEffects<z.ZodObject<{
             transactionHash: z.ZodString;
             proposalId: z.ZodString;
             voterAddress: z.ZodString;
-            support: z.ZodNumber;
+            support: z.ZodOptional<z.ZodNullable<z.ZodString>>;
             votingPower: z.ZodString;
             timestamp: z.ZodNumber;
             reason: z.ZodOptional<z.ZodNullable<z.ZodString>>;
-            proposalTitle: z.ZodString;
+            proposalTitle: z.ZodOptional<z.ZodNullable<z.ZodString>>;
         }, "strip", z.ZodTypeAny, {
             timestamp: number;
             votingPower: string;
-            support: number;
             proposalId: string;
-            proposalTitle: string;
             transactionHash: string;
             voterAddress: string;
+            support?: string | null | undefined;
+            proposalTitle?: string | null | undefined;
             reason?: string | null | undefined;
         }, {
             timestamp: number;
             votingPower: string;
-            support: number;
             proposalId: string;
-            proposalTitle: string;
             transactionHash: string;
             voterAddress: string;
+            support?: string | null | undefined;
+            proposalTitle?: string | null | undefined;
             reason?: string | null | undefined;
         }>>, "many">;
         totalCount: z.ZodNumber;
@@ -450,11 +450,11 @@ export declare const SafeVotesResponseSchema: z.ZodEffects<z.ZodObject<{
         items: ({
             timestamp: number;
             votingPower: string;
-            support: number;
             proposalId: string;
-            proposalTitle: string;
             transactionHash: string;
             voterAddress: string;
+            support?: string | null | undefined;
+            proposalTitle?: string | null | undefined;
             reason?: string | null | undefined;
         } | null)[];
         totalCount: number;
@@ -462,11 +462,11 @@ export declare const SafeVotesResponseSchema: z.ZodEffects<z.ZodObject<{
         items: ({
             timestamp: number;
             votingPower: string;
-            support: number;
             proposalId: string;
-            proposalTitle: string;
             transactionHash: string;
             voterAddress: string;
+            support?: string | null | undefined;
+            proposalTitle?: string | null | undefined;
             reason?: string | null | undefined;
         } | null)[];
         totalCount: number;
@@ -476,11 +476,11 @@ export declare const SafeVotesResponseSchema: z.ZodEffects<z.ZodObject<{
         items: ({
             timestamp: number;
             votingPower: string;
-            support: number;
             proposalId: string;
-            proposalTitle: string;
             transactionHash: string;
             voterAddress: string;
+            support?: string | null | undefined;
+            proposalTitle?: string | null | undefined;
             reason?: string | null | undefined;
         } | null)[];
         totalCount: number;
@@ -490,11 +490,11 @@ export declare const SafeVotesResponseSchema: z.ZodEffects<z.ZodObject<{
         items: ({
             timestamp: number;
             votingPower: string;
-            support: number;
             proposalId: string;
-            proposalTitle: string;
             transactionHash: string;
             voterAddress: string;
+            support?: string | null | undefined;
+            proposalTitle?: string | null | undefined;
             reason?: string | null | undefined;
         } | null)[];
         totalCount: number;
@@ -504,11 +504,11 @@ export declare const SafeVotesResponseSchema: z.ZodEffects<z.ZodObject<{
         items: {
             timestamp: number;
             votingPower: string;
-            support: number;
             proposalId: string;
-            proposalTitle: string;
             transactionHash: string;
             voterAddress: string;
+            support?: string | null | undefined;
+            proposalTitle?: string | null | undefined;
             reason?: string | null | undefined;
         }[];
         totalCount: number;
@@ -518,11 +518,11 @@ export declare const SafeVotesResponseSchema: z.ZodEffects<z.ZodObject<{
         items: ({
             timestamp: number;
             votingPower: string;
-            support: number;
             proposalId: string;
-            proposalTitle: string;
             transactionHash: string;
             voterAddress: string;
+            support?: string | null | undefined;
+            proposalTitle?: string | null | undefined;
             reason?: string | null | undefined;
         } | null)[];
         totalCount: number;

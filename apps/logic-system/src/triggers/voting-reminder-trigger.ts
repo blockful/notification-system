@@ -6,6 +6,7 @@
 
 import { Trigger } from './base-trigger';
 import { ProposalOnChain, ProposalDataSource } from '../interfaces/proposal.interface';
+import { QueryInput_Proposals_Status_Items } from '@notification-system/anticapture-client';
 import { DispatcherService, DispatcherMessage } from '../interfaces/dispatcher.interface';
 
 /**
@@ -85,9 +86,9 @@ export class VotingReminderTrigger extends Trigger<ProposalOnChain> {
         return false;
       }
 
-      const startTime = parseInt(proposal.timestamp);
-      const endTime = parseInt(proposal.endTimestamp);
-      
+      const startTime = Number(proposal.timestamp);
+      const endTime = Number(proposal.endTimestamp);
+
       // Skip if proposal is not active
       if (now <= startTime || now >= endTime) {
         return false;
@@ -131,8 +132,8 @@ export class VotingReminderTrigger extends Trigger<ProposalOnChain> {
     }
     
     const now = Math.floor(Date.now() / 1000);
-    const startTime = parseInt(proposal.timestamp);
-    const endTime = parseInt(proposal.endTimestamp);
+    const startTime = Number(proposal.timestamp);
+    const endTime = Number(proposal.endTimestamp);
     const timeElapsedPercentage = this.calculateTimeElapsedPercentage(startTime, endTime, now);
 
     return {
@@ -153,7 +154,7 @@ export class VotingReminderTrigger extends Trigger<ProposalOnChain> {
    */
   protected async fetchData(): Promise<ProposalOnChain[]> {
     return await this.proposalRepository.listAll({
-      status: 'ACTIVE',
+      status: QueryInput_Proposals_Status_Items.Active,
       includeOptimisticProposals: false
     });
   }

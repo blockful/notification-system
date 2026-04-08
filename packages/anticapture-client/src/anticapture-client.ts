@@ -16,7 +16,7 @@ import type {
   ListOffchainProposalsQueryVariables,
   ListOffchainVotesQueryVariables,
 } from './gql/graphql';
-import { GetDaOsDocument, GetProposalByIdDocument, ListProposalsDocument, ListHistoricalVotingPowerDocument, ListVotesDocument, ProposalNonVotersDocument, GetEventRelevanceThresholdDocument, QueryInput_Votes_OrderBy, QueryInput_Votes_OrderDirection, QueryInput_VotesOffchain_OrderBy, QueryInput_VotesOffchain_OrderDirection, ListOffchainProposalsDocument, ListOffchainVotesDocument } from './gql/graphql';
+import { GetDaOsDocument, GetProposalByIdDocument, ListProposalsDocument, ListHistoricalVotingPowerDocument, ListVotesDocument, ProposalNonVotersDocument, GetEventRelevanceThresholdDocument, QueryInput_Votes_OrderBy, OrderDirection, QueryInput_VotesOffchain_OrderBy, ListOffchainProposalsDocument, ListOffchainVotesDocument } from './gql/graphql';
 import {
   SafeDaosResponseSchema,
   SafeProposalByIdResponseSchema,
@@ -205,9 +205,9 @@ export class AnticaptureClient {
 
       // Sort globally by timestamp desc (most recent first)
       if (variables?.fromEndDate) {
-        allProposals.sort((a, b) => parseInt(b?.endTimestamp || '0') - parseInt(a?.endTimestamp || '0'));
+        allProposals.sort((a, b) => (b?.endTimestamp ?? 0) - (a?.endTimestamp ?? 0));
       } else {
-        allProposals.sort((a, b) => parseInt(b?.timestamp || '0') - parseInt(a?.timestamp || '0') || 0);
+        allProposals.sort((a, b) => (b?.timestamp ?? 0) - (a?.timestamp ?? 0));
       }
 
       return allProposals;
@@ -327,7 +327,7 @@ export class AnticaptureClient {
           fromDate: parseInt(timestampGt),
           limit,
           orderBy: QueryInput_Votes_OrderBy.Timestamp,
-          orderDirection: QueryInput_Votes_OrderDirection.Asc
+          orderDirection: OrderDirection.Asc
         });
         // Add daoId to each vote
         return votes.map(vote => ({
@@ -460,7 +460,7 @@ export class AnticaptureClient {
             fromDate,
             limit,
             orderBy: QueryInput_VotesOffchain_OrderBy.Timestamp,
-            orderDirection: QueryInput_VotesOffchain_OrderDirection.Asc
+            orderDirection: OrderDirection.Asc
           });
           return votes.map(vote => ({
             ...vote,

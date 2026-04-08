@@ -1,20 +1,10 @@
-import type { GetProposalByIdQuery } from '@notification-system/anticapture-client';
+import type { ListProposalsQuery } from '@notification-system/anticapture-client';
+import { QueryInput_Proposals_Status_Items } from '@notification-system/anticapture-client';
 
-export type ProposalOnChain = GetProposalByIdQuery['proposal'];
+export type ProposalOnChain = NonNullable<NonNullable<ListProposalsQuery['proposals']>['items'][number]>;
 export type ProposalOrNull = ProposalOnChain | null;
 
-/**
- * Valid status values for a proposal
- */
-export type ProposalStatus = 
-    | 'PENDING'
-    | 'ACTIVE'
-    | 'SUCCEEDED'
-    | 'DEFEATED'
-    | 'EXECUTED'
-    | 'CANCELED'
-    | 'QUEUED'
-    | 'EXPIRED';
+export type ProposalStatus = QueryInput_Proposals_Status_Items;
 
 /**
  * Options for listing proposals (matches new API parameters)
@@ -24,8 +14,8 @@ export interface ListProposalsOptions {
     skip?: number;
     /** Maximum number of proposals to return */
     limit?: number;
-    /** Filter by status - can be string or array */
-    status?: string | string[];
+    /** Filter by status */
+    status?: QueryInput_Proposals_Status_Items | QueryInput_Proposals_Status_Items[];
     /** Filter by DAO (passed as header, not query param) */
     daoId?: string;
     /** Filter proposals after this date (timestamp in seconds) */
@@ -33,7 +23,7 @@ export interface ListProposalsOptions {
     /** Filter proposals by end timestamp (timestamp in seconds) */
     fromEndDate?: number;
     /** Order direction - asc or desc */
-    orderDirection?: string;
+    orderDirection?: 'asc' | 'desc';
     /** Whether to include optimistic proposals (true=include, false=exclude, undefined=both) */
     includeOptimisticProposals?: boolean;
 }

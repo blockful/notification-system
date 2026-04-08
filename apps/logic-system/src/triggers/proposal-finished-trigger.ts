@@ -4,12 +4,19 @@ import { RabbitMQDispatcherService } from '../api-clients/rabbitmq-dispatcher.se
 import { DispatcherMessage } from '../interfaces/dispatcher.interface';
 import { ProposalOnChain, ProposalFinishedNotification } from '../interfaces/proposal.interface';
 import { NotificationTypeId } from '@notification-system/messages';
+import { QueryInput_Proposals_Status_Items } from '@notification-system/anticapture-client';
 
 /**
  * Trigger for detecting finished proposals
  */
 export class ProposalFinishedTrigger extends Trigger<ProposalOnChain, void> {
-  private readonly finishedStatuses = ['EXECUTED', 'DEFEATED', 'SUCCEEDED', 'EXPIRED', 'CANCELED'];
+  private readonly finishedStatuses: QueryInput_Proposals_Status_Items[] = [
+    QueryInput_Proposals_Status_Items.Executed,
+    QueryInput_Proposals_Status_Items.Defeated,
+    QueryInput_Proposals_Status_Items.Succeeded,
+    QueryInput_Proposals_Status_Items.Expired,
+    QueryInput_Proposals_Status_Items.Canceled,
+  ];
   private endTimestampCursor: number;
 
   constructor(
@@ -58,9 +65,9 @@ export class ProposalFinishedTrigger extends Trigger<ProposalOnChain, void> {
     const notifications: ProposalFinishedNotification[] = data.map(proposal => ({
       id: proposal?.id || '',
       daoId: proposal?.daoId || '',
-      title: proposal?.title || undefined,
+      ...(proposal?.title ? { title: proposal.title } : {}),
       description: proposal?.description || '',
-      endTimestamp: proposal?.endTimestamp ? parseInt(proposal.endTimestamp) : 0,
+      endTimestamp: Number(proposal?.endTimestamp) || 0,
       status: proposal?.status || 'unknown',
       forVotes: proposal?.forVotes || '0',
       againstVotes: proposal?.againstVotes || '0',
