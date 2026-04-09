@@ -13,9 +13,10 @@ import { NonVotingHandler } from './services/triggers/non-voting-handler.service
 import { VoteConfirmationTriggerHandler } from './services/triggers/vote-confirmation-trigger.service';
 import { OffchainVoteCastTriggerHandler } from './services/triggers/offchain-vote-cast-trigger.service';
 import { VotingReminderTriggerHandler } from './services/triggers/voting-reminder-trigger.service';
+import { NonVotersSource } from './interfaces/voting-reminder.interface';
 import { RabbitMQConnection, RabbitMQPublisher } from '@notification-system/rabbitmq-client';
 import { AnticaptureClient } from '@notification-system/anticapture-client';
-import { NotificationTypeId } from '@notification-system/messages';
+import { NotificationTypeId, votingReminderMessages, offchainVotingReminderMessages } from '@notification-system/messages';
 
 export class App {
   private rabbitMQConsumerService!: RabbitMQConsumerService;
@@ -104,17 +105,30 @@ export class App {
       new OffchainVoteCastTriggerHandler(subscriptionClient, notificationFactory)
     );
 
+    const onchainNonVotersSource: NonVotersSource = {
+      getNonVoters: (id, daoId, addrs) => anticaptureClient.getProposalNonVoters(id, daoId, addrs)
+    };
+
+    const offchainNonVotersSource: NonVotersSource = {
+      getNonVoters: (id, _daoId, addrs) => anticaptureClient.getOffchainProposalNonVoters(id, addrs)
+    };
+
     triggerProcessorService.addHandler(
       NotificationTypeId.VotingReminder30,
-      new VotingReminderTriggerHandler(subscriptionClient, notificationFactory, anticaptureClient)
+      new VotingReminderTriggerHandler(subscriptionClient, notificationFactory, anticaptureClient, onchainNonVotersSource, votingReminderMessages, 'voting-reminder')
     );
     triggerProcessorService.addHandler(
       NotificationTypeId.VotingReminder60,
-      new VotingReminderTriggerHandler(subscriptionClient, notificationFactory, anticaptureClient)
+      new VotingReminderTriggerHandler(subscriptionClient, notificationFactory, anticaptureClient, onchainNonVotersSource, votingReminderMessages, 'voting-reminder')
     );
     triggerProcessorService.addHandler(
       NotificationTypeId.VotingReminder90,
-      new VotingReminderTriggerHandler(subscriptionClient, notificationFactory, anticaptureClient)
+      new VotingReminderTriggerHandler(subscriptionClient, notificationFactory, anticaptureClient, onchainNonVotersSource, votingReminderMessages, 'voting-reminder')
+    );
+
+    triggerProcessorService.addHandler(
+      NotificationTypeId.OffchainVotingReminder75,
+      new VotingReminderTriggerHandler(subscriptionClient, notificationFactory, anticaptureClient, offchainNonVotersSource, offchainVotingReminderMessages, 'offchain-voting-reminder')
     );
 
     this.rabbitMQConsumerService = new RabbitMQConsumerService(this.rabbitmqUrl, triggerProcessorService);

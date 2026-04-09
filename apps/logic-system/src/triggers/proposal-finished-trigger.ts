@@ -4,7 +4,7 @@ import { RabbitMQDispatcherService } from '../api-clients/rabbitmq-dispatcher.se
 import { DispatcherMessage } from '../interfaces/dispatcher.interface';
 import { ProposalOnChain, ProposalFinishedNotification } from '../interfaces/proposal.interface';
 import { NotificationTypeId } from '@notification-system/messages';
-import { QueryInput_Proposals_Status_Items } from '@notification-system/anticapture-client';
+import { OrderDirection, QueryInput_Proposals_Status_Items } from '@notification-system/anticapture-client';
 
 /**
  * Trigger for detecting finished proposals
@@ -50,9 +50,9 @@ export class ProposalFinishedTrigger extends Trigger<ProposalOnChain, void> {
 
   protected async fetchData(): Promise<ProposalOnChain[]> {
     return await this.proposalRepository.listAll({
-      status: this.finishedStatuses,  // API accepts array
+      status: this.finishedStatuses,
       fromEndDate: this.endTimestampCursor,
-      orderDirection: 'desc',  // API orders by endTimestamp when using fromEndDate
+      orderDirection: OrderDirection.Desc,
       limit: 100
     });
   }
@@ -67,7 +67,7 @@ export class ProposalFinishedTrigger extends Trigger<ProposalOnChain, void> {
       daoId: proposal?.daoId || '',
       ...(proposal?.title ? { title: proposal.title } : {}),
       description: proposal?.description || '',
-      endTimestamp: Number(proposal?.endTimestamp) || 0,
+      endTimestamp: proposal?.endTimestamp ?? 0,
       status: proposal?.status || 'unknown',
       forVotes: proposal?.forVotes || '0',
       againstVotes: proposal?.againstVotes || '0',

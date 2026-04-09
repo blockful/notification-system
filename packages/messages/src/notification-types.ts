@@ -10,6 +10,7 @@ export enum NotificationTypeId {
   VoteConfirmation = 'vote-confirmation',
   OffchainVoteCast = 'offchain-vote-cast',
   OffchainProposalFinished = 'offchain-proposal-finished',
+  OffchainVotingReminder75 = 'offchain-voting-reminder-75',
 }
 
 export const NOTIFICATION_TYPES: Record<NotificationTypeId, string> = {
@@ -24,4 +25,5 @@ export const NOTIFICATION_TYPES: Record<NotificationTypeId, string> = {
   [NotificationTypeId.VoteConfirmation]: 'Vote Confirmation',
   [NotificationTypeId.OffchainVoteCast]: 'Offchain Vote',
   [NotificationTypeId.OffchainProposalFinished]: 'Offchain Proposal Finished',
+  [NotificationTypeId.OffchainVotingReminder75]: 'Offchain Vote Reminder 75%',
 };

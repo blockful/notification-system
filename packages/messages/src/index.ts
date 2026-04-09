@@ -13,6 +13,7 @@ export * from './triggers/voting-power';
 export * from './triggers/offchain-vote-cast';
 export * from './triggers/non-voting';
 export * from './triggers/delegation-change';
+export * from './triggers/offchain-voting-reminder';
 export * from './triggers/buttons';
 
 // Export UI messages

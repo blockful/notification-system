@@ -20,9 +20,9 @@ export type {
 export {
   OrderDirection,
   QueryInput_HistoricalVotingPower_OrderBy,
-  QueryInput_Proposals_Status_Items,
   QueryInput_Votes_OrderBy,
   QueryInput_VotesOffchain_OrderBy,
+  QueryInput_Proposals_Status_Items,
 } from './gql/graphql';
 
 export { FeedEventType, FeedRelevance } from './schemas';

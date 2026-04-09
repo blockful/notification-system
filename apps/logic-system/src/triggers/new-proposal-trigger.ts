@@ -55,7 +55,7 @@ export class NewProposalTrigger extends Trigger<ProposalOnChain, ListProposalsOp
     // Update timestamp to the most recent proposal's timestamp + 1
     // Since data comes ordered by timestamp desc, the first item has the latest timestamp
     if (data[0]?.timestamp) {
-      this.timestampCursor = Number(data[0].timestamp) + 1;
+      this.timestampCursor = data[0].timestamp + 1;
     }
   }
 

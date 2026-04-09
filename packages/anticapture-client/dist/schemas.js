@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.SafeOffchainVotesResponseSchema = exports.OffchainVoteItemSchema = exports.SafeOffchainProposalsResponseSchema = exports.OffchainProposalItemSchema = exports.EventThresholdResponseSchema = exports.SafeProposalNonVotersResponseSchema = exports.SafeVotesResponseSchema = exports.SafeHistoricalVotingPowerResponseSchema = exports.SafeProposalByIdResponseSchema = exports.SafeProposalsResponseSchema = exports.SafeDaosResponseSchema = exports.FeedRelevance = exports.FeedEventType = void 0;
+exports.SafeOffchainVotesResponseSchema = exports.OffchainVoteItemSchema = exports.SafeOffchainProposalsResponseSchema = exports.OffchainProposalItemSchema = exports.EventThresholdResponseSchema = exports.SafeOffchainProposalNonVotersResponseSchema = exports.SafeProposalNonVotersResponseSchema = exports.SafeVotesResponseSchema = exports.SafeHistoricalVotingPowerResponseSchema = exports.SafeProposalByIdResponseSchema = exports.SafeProposalsResponseSchema = exports.SafeDaosResponseSchema = exports.FeedRelevance = exports.FeedEventType = void 0;
 exports.processProposals = processProposals;
 exports.processVotingPowerHistory = processVotingPowerHistory;
 const zod_1 = require("zod");
@@ -121,6 +121,26 @@ exports.SafeProposalNonVotersResponseSchema = zod_1.z.object({
         }
     };
 });
+exports.SafeOffchainProposalNonVotersResponseSchema = zod_1.z.object({
+    offchainProposalNonVoters: zod_1.z.object({
+        items: zod_1.z.array(zod_1.z.object({
+            voter: zod_1.z.string(),
+            votingPower: zod_1.z.string().optional()
+        }).nullable()),
+        totalCount: zod_1.z.number().optional()
+    }).nullable()
+}).transform((data) => {
+    if (!data.offchainProposalNonVoters) {
+        console.warn('OffchainProposalNonVotersResponse has null offchainProposalNonVoters:', data);
+        return { offchainProposalNonVoters: { items: [], totalCount: 0 } };
+    }
+    return {
+        offchainProposalNonVoters: {
+            ...data.offchainProposalNonVoters,
+            items: data.offchainProposalNonVoters.items.filter((item) => item !== null)
+        }
+    };
+});
 exports.EventThresholdResponseSchema = zod_1.z.object({
     getEventRelevanceThreshold: zod_1.z.object({
         threshold: zod_1.z.string()
@@ -134,6 +154,7 @@ exports.OffchainProposalItemSchema = zod_1.z.object({
     state: zod_1.z.string(),
     created: zod_1.z.number(),
     end: zod_1.z.number(),
+    start: zod_1.z.number().optional(),
 });
 exports.SafeOffchainProposalsResponseSchema = zod_1.z.object({
     offchainProposals: zod_1.z.object({

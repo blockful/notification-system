@@ -88,7 +88,7 @@ export class GraphQLMockSetup {
           filtered = filtered.filter(p => p.daoId === config.headers['anticapture-dao-id']);
         }
         return Promise.resolve({
-          data: { data: { offchainProposals: { items: filtered.map(p => ({ id: p.id, title: p.title, discussion: p.discussion, link: p.link, state: p.state, created: p.created, end: p.end })), totalCount: filtered.length } } }
+          data: { data: { offchainProposals: { items: filtered.map(p => ({ id: p.id, title: p.title, discussion: p.discussion, link: p.link, state: p.state, created: p.created, end: p.end, start: p.start })), totalCount: filtered.length } } }
         });
       }
 
@@ -195,6 +195,30 @@ export class GraphQLMockSetup {
 
         return Promise.resolve({
           data: { data: { votes: { items, totalCount: items.length } } }
+        });
+      }
+
+      // Handle offchain proposal non-voters (MUST come before ProposalNonVoters check)
+      if (data.query?.includes('OffchainProposalNonVoters')) {
+        const proposalId = data.variables?.id;
+        const addressesFilter = data.variables?.addresses || [];
+
+        // Get addresses that voted on this offchain proposal
+        const votersSet = new Set(
+          offchainVotesData
+            .filter((v: any) => v.proposalId === proposalId)
+            .map((v: any) => v.voter.toLowerCase())
+        );
+
+        // Filter to find non-voters from the provided address list
+        const nonVoterItems = addressesFilter
+          .filter((addr: string) => !votersSet.has(addr.toLowerCase()))
+          .map((addr: string) => ({
+            voter: addr
+          }));
+
+        return Promise.resolve({
+          data: { data: { offchainProposalNonVoters: { items: nonVoterItems, totalCount: nonVoterItems.length } } }
         });
       }
 

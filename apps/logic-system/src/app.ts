@@ -13,9 +13,8 @@ import { ThresholdRepository } from './repositories/threshold.repository';
 import { VotesRepository } from './repositories/votes.repository';
 import { OffchainVotesRepository } from './repositories/offchain-votes.repository';
 import { RabbitMQDispatcherService } from './api-clients/rabbitmq-dispatcher.service';
-import { AnticaptureClient } from '@notification-system/anticapture-client';
+import { AnticaptureClient, QueryInput_Proposals_Status_Items } from '@notification-system/anticapture-client';
 import { RabbitMQConnection, RabbitMQPublisher } from '@notification-system/rabbitmq-client';
-import { ProposalStatus } from './interfaces/proposal.interface';
 import { AxiosInstance } from 'axios';
 
 export class App {
@@ -29,14 +28,15 @@ export class App {
   private votingReminderTrigger30!: VotingReminderTrigger;
   private votingReminderTrigger60!: VotingReminderTrigger;
   private votingReminderTrigger90!: VotingReminderTrigger;
-  private proposalStatus: ProposalStatus;
+  private offchainVotingReminderTrigger75!: VotingReminderTrigger;
+  private proposalStatus: QueryInput_Proposals_Status_Items;
   private rabbitMQConnection!: RabbitMQConnection;
   private rabbitMQPublisher!: RabbitMQPublisher;
   private initPromise: Promise<void>;
 
   constructor(
-    triggerInterval: number, 
-    proposalStatus: ProposalStatus,
+    triggerInterval: number,
+    proposalStatus: QueryInput_Proposals_Status_Items,
     anticaptureHttpClient: AxiosInstance,
     rabbitmqUrl: string,
     initialTimestamp?: string
@@ -139,6 +139,15 @@ export class App {
       triggerInterval,
       90, // 90% threshold
     );
+
+    this.offchainVotingReminderTrigger75 = new VotingReminderTrigger(
+      dispatcherService,
+      offchainProposalRepository,
+      triggerInterval,
+      75, // 75% threshold
+      5,  // default window size
+      'offchain-voting-reminder' // prefix → produces ID 'offchain-voting-reminder-75'
+    );
   }
 
   async start(): Promise<void> {
@@ -155,6 +164,7 @@ export class App {
     this.votingReminderTrigger30.start();
     this.votingReminderTrigger60.start();
     this.votingReminderTrigger90.start();
+    this.offchainVotingReminderTrigger75.start();
     
     console.log('Logic system is running. Press Ctrl+C to stop.');
   }
@@ -187,6 +197,22 @@ export class App {
     if (this.offchainProposalFinishedTrigger) {
       this.offchainProposalFinishedTrigger.reset(initialTimestamp);
     }
+    if (this.votingReminderTrigger30) {
+      this.votingReminderTrigger30.stop();
+      this.votingReminderTrigger30.start();
+    }
+    if (this.votingReminderTrigger60) {
+      this.votingReminderTrigger60.stop();
+      this.votingReminderTrigger60.start();
+    }
+    if (this.votingReminderTrigger90) {
+      this.votingReminderTrigger90.stop();
+      this.votingReminderTrigger90.start();
+    }
+    if (this.offchainVotingReminderTrigger75) {
+      this.offchainVotingReminderTrigger75.stop();
+      this.offchainVotingReminderTrigger75.start();
+    }
   }
 
   async stop(): Promise<void> {
@@ -200,6 +226,7 @@ export class App {
     await this.votingReminderTrigger30.stop();
     await this.votingReminderTrigger60.stop();
     await this.votingReminderTrigger90.stop();
+    await this.offchainVotingReminderTrigger75.stop();
     if (this.rabbitMQPublisher) {
       await this.rabbitMQPublisher.close();
     }

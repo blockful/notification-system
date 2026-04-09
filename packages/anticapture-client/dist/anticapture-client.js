@@ -228,7 +228,7 @@ class AnticaptureClient {
     async listVotes(daoId, variables) {
         try {
             const validated = await this.query(graphql_2.ListVotesDocument, schemas_1.SafeVotesResponseSchema, variables, daoId);
-            return validated.votes.items.filter(item => item !== null);
+            return validated.votes.items;
         }
         catch (error) {
             console.warn(`Error fetching votes for DAO ${daoId}:`, error);
@@ -254,6 +254,27 @@ class AnticaptureClient {
         }
         catch (error) {
             console.warn(`Error fetching non-voters for proposal ${proposalId}:`, error);
+            return [];
+        }
+    }
+    /**
+     * Fetches addresses that haven't voted on a specific offchain (Snapshot) proposal
+     * @param proposalId The Snapshot proposal ID to check
+     * @param addresses Optional array of addresses to filter by
+     * @returns List of non-voters
+     */
+    async getOffchainProposalNonVoters(proposalId, addresses) {
+        try {
+            const variables = {
+                id: proposalId,
+                ...(addresses && { addresses }),
+                orderDirection: graphql_2.OrderDirection.Desc,
+            };
+            const validated = await this.query(graphql_2.OffchainProposalNonVotersDocument, schemas_1.SafeOffchainProposalNonVotersResponseSchema, variables);
+            return validated.offchainProposalNonVoters.items;
+        }
+        catch (error) {
+            console.warn(`Error fetching offchain non-voters for proposal ${proposalId}:`, error);
             return [];
         }
     }
