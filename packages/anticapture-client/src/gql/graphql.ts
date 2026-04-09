@@ -1414,6 +1414,10 @@ export type VotingPowersResponse = {
   totalCount: Scalars['Int']['output'];
 };
 
+export enum Error_Const {
+  Error = 'error'
+}
+
 export type GetAddress_200_Response = {
   __typename?: 'getAddress_200_response';
   /** EIP-55 checksummed Ethereum address */
@@ -1437,6 +1441,8 @@ export type OffchainProposalNonVoters_200_Response = {
   items: Array<Maybe<Query_OffchainProposalNonVoters_Items_Items>>;
   totalCount: Scalars['Float']['output'];
 };
+
+export type Proposal_Response = ErrorResponse | OnchainProposal;
 
 export type Proposal_Response = ErrorResponse | OnchainProposal;
 
