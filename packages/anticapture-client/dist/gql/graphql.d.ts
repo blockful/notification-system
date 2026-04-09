@@ -370,6 +370,11 @@ export type LastUpdateResponse = {
     /** Latest refresh time in ISO-8601 format. */
     lastUpdate: Scalars['DateTime']['output'];
 };
+export type OffchainNonVoter = {
+    __typename?: 'OffchainNonVoter';
+    voter: Scalars['String']['output'];
+    votingPower: Scalars['String']['output'];
+};
 export type OffchainProposal = {
     __typename?: 'OffchainProposal';
     /** Address or ENS of the author. */
@@ -413,13 +418,18 @@ export type OffchainProposalsResponse = {
 };
 export type OffchainVote = {
     __typename?: 'OffchainVote';
-    choice: Scalars['JSON']['output'];
+    choice?: Maybe<Array<Maybe<Scalars['String']['output']>>>;
     created: Scalars['Int']['output'];
     proposalId: Scalars['String']['output'];
     proposalTitle?: Maybe<Scalars['String']['output']>;
     reason: Scalars['String']['output'];
     voter: Scalars['String']['output'];
     vp?: Maybe<Scalars['Float']['output']>;
+};
+export type OffchainVotersResponse = {
+    __typename?: 'OffchainVotersResponse';
+    items: Array<Maybe<OffchainNonVoter>>;
+    totalCount: Scalars['Int']['output'];
 };
 export type OffchainVotesResponse = {
     __typename?: 'OffchainVotesResponse';
@@ -659,6 +669,8 @@ export type Query = {
     getLiquidTreasury?: Maybe<TreasuryResponse>;
     /** Get historical Total Treasury (liquid treasury + DAO token treasury) */
     getTotalTreasury?: Maybe<TreasuryResponse>;
+    /** Check API and database health */
+    health?: Maybe<Health_Response>;
     /** Returns historical balance deltas for one account, enriched with the transfer that caused each change. */
     historicalBalances?: Maybe<HistoricalBalancesResponse>;
     /** Get historical delegations for an account, with optional filtering and sorting */
@@ -674,7 +686,7 @@ export type Query = {
     /** Returns a single offchain (Snapshot) proposal by its ID */
     offchainProposalById?: Maybe<OffchainProposalById_Response>;
     /** Returns the active delegates that did not vote on a given offchain proposal */
-    offchainProposalNonVoters?: Maybe<OffchainProposalNonVoters_200_Response>;
+    offchainProposalNonVoters?: Maybe<OffchainProposalNonVoters_Response>;
     /** Returns a list of offchain (Snapshot) proposals */
     offchainProposals?: Maybe<OffchainProposalsResponse>;
     /** Returns a single proposal by its ID */
@@ -1275,6 +1287,9 @@ export type VotingPowersResponse = {
     /** Total number of matching voting power rows. */
     totalCount: Scalars['Int']['output'];
 };
+export declare enum Error_Const {
+    Error = "error"
+}
 export type GetAddress_200_Response = {
     __typename?: 'getAddress_200_response';
     /** EIP-55 checksummed Ethereum address */
@@ -1289,12 +1304,23 @@ export type GetAddresses_200_Response = {
     /** Enrichment results for each successfully resolved address. Addresses that failed to resolve are omitted. */
     results: Array<Maybe<Query_GetAddresses_Results_Items>>;
 };
-export type OffchainProposalById_Response = ErrorResponse | OffchainProposal;
-export type OffchainProposalNonVoters_200_Response = {
-    __typename?: 'offchainProposalNonVoters_200_response';
-    items: Array<Maybe<Query_OffchainProposalNonVoters_Items_Items>>;
-    totalCount: Scalars['Float']['output'];
+export type Health_200_Response = {
+    __typename?: 'health_200_response';
+    database: Ok_Const;
+    status: Ok_Const;
 };
+export type Health_503_Response = {
+    __typename?: 'health_503_response';
+    database: Error_Const;
+    message: Scalars['String']['output'];
+    status: Error_Const;
+};
+export type Health_Response = Health_200_Response | Health_503_Response;
+export type OffchainProposalById_Response = ErrorResponse | OffchainProposal;
+export type OffchainProposalNonVoters_Response = ErrorResponse | OffchainVotersResponse;
+export declare enum Ok_Const {
+    Ok = "ok"
+}
 export type Proposal_Response = ErrorResponse | OnchainProposal;
 export declare enum QueryInput_AccountBalances_OrderBy {
     Balance = "balance",
@@ -1493,11 +1519,6 @@ export type Query_GetAddresses_Results_Items_Ens = {
     /** Primary ENS name reverse-resolved for this address */
     name?: Maybe<Scalars['String']['output']>;
 };
-export type Query_OffchainProposalNonVoters_Items_Items = {
-    __typename?: 'query_offchainProposalNonVoters_items_items';
-    voter: Scalars['String']['output'];
-    votingPower: Scalars['String']['output'];
-};
 export type Query_OffchainProposals_Items_Items_Strategies_Items = {
     __typename?: 'query_offchainProposals_items_items_strategies_items';
     name: Scalars['String']['output'];
@@ -1530,9 +1551,11 @@ export type OffchainProposalNonVotersQueryVariables = Exact<{
 export type OffchainProposalNonVotersQuery = {
     __typename?: 'Query';
     offchainProposalNonVoters?: {
-        __typename?: 'offchainProposalNonVoters_200_response';
+        __typename?: 'ErrorResponse';
+    } | {
+        __typename?: 'OffchainVotersResponse';
         items: Array<{
-            __typename?: 'query_offchainProposalNonVoters_items_items';
+            __typename?: 'OffchainNonVoter';
             voter: string;
             votingPower: string;
         } | null>;
