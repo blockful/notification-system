@@ -201,8 +201,7 @@ export class GraphQLMockSetup {
       // Handle offchain proposal non-voters (MUST come before ProposalNonVoters check)
       if (data.query?.includes('OffchainProposalNonVoters')) {
         const proposalId = data.variables?.id;
-        const addressesStr = data.variables?.addresses || '';
-        const addressesFilter = addressesStr ? addressesStr.split(',') : [];
+        const addressesFilter = data.variables?.addresses || [];
 
         // Get addresses that voted on this offchain proposal
         const votersSet = new Set(
