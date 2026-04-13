@@ -1,26 +1,18 @@
 import type { NotificationTypeId } from '@notification-system/messages';
+
 import { BaseTriggerHandler } from './base-trigger.service';
 import { DispatcherMessage, MessageProcessingResult } from '../../interfaces/dispatcher-message.interface';
 import { NotificationClientFactory } from '../notification/notification-factory.service';
 import { ISubscriptionClient } from '../../interfaces/subscription-client.interface';
 import { AnticaptureClient } from '@notification-system/anticapture-client';
 import { FormattingService } from '../formatting.service';
-import { votingReminderMessages, replacePlaceholders, buildButtons } from '@notification-system/messages';
+import { replacePlaceholders, buildButtons } from '@notification-system/messages';
 import { BatchNotificationService } from '../batch-notification.service';
-
-/**
- * Event data received from logic system for voting reminders
- */
-interface VotingReminderEvent {
-  id: string;
-  daoId: string;
-  title?: string;
-  description: string;
-  startTimestamp: number;
-  endTimestamp: number;
-  timeElapsedPercentage: number;
-  thresholdPercentage: number;
-}
+import {
+  VotingReminderEvent,
+  NonVotersSource,
+  VotingReminderMessageSet,
+} from '../../interfaces/voting-reminder.interface';
 
 /**
  * Processing statistics for monitoring
@@ -41,7 +33,10 @@ export class VotingReminderTriggerHandler extends BaseTriggerHandler<VotingRemin
   constructor(
     protected readonly subscriptionClient: ISubscriptionClient,
     protected readonly notificationFactory: NotificationClientFactory,
-    anticaptureClient: AnticaptureClient
+    anticaptureClient: AnticaptureClient,
+    private readonly nonVotersSource: NonVotersSource,
+    private readonly messages: VotingReminderMessageSet,
+    private readonly triggerType: string,
   ) {
     super(subscriptionClient, notificationFactory, anticaptureClient);
     this.batchNotificationService = new BatchNotificationService(subscriptionClient, notificationFactory);
@@ -49,11 +44,11 @@ export class VotingReminderTriggerHandler extends BaseTriggerHandler<VotingRemin
 
   async handleMessage(message: DispatcherMessage<VotingReminderEvent>): Promise<MessageProcessingResult> {
     const events = message.events;
-    
+
     if (!events || events.length === 0) {
-      return { 
-        messageId: `voting-reminder-empty-${Date.now()}`,
-        timestamp: new Date().toISOString()
+      return {
+        messageId: `${this.triggerType}-empty-${Date.now()}`,
+        timestamp: new Date().toISOString(),
       };
     }
 
@@ -70,11 +65,13 @@ export class VotingReminderTriggerHandler extends BaseTriggerHandler<VotingRemin
       }
     }
 
-    console.log(`[VotingReminderHandler] Processing complete - Sent: ${processedCount.sent}, Skipped: ${processedCount.skipped}, Failed: ${processedCount.failed}`);
-    
-    return { 
-      messageId: `voting-reminder-${Date.now()}`,
-      timestamp: new Date().toISOString()
+    console.log(
+      `[${this.triggerType}] Processing complete - Sent: ${processedCount.sent}, Skipped: ${processedCount.skipped}, Failed: ${processedCount.failed}`,
+    );
+
+    return {
+      messageId: `${this.triggerType}-${Date.now()}`,
+      timestamp: new Date().toISOString(),
     };
   }
 
@@ -90,11 +87,8 @@ export class VotingReminderTriggerHandler extends BaseTriggerHandler<VotingRemin
     }
 
     // Check which addresses haven't voted yet
-    const nonVotingAddresses = await this.getNonVotingAddresses(
-      event.id, 
-      event.daoId, 
-      subscribedAddresses
-    );
+    const nonVoters = await this.nonVotersSource.getNonVoters(event.id, event.daoId, subscribedAddresses);
+    const nonVotingAddresses = nonVoters.map((nv) => nv.voter);
 
     if (nonVotingAddresses.length === 0) {
       return { sent: 0, skipped: 1, failed: 0 };
@@ -102,9 +96,11 @@ export class VotingReminderTriggerHandler extends BaseTriggerHandler<VotingRemin
 
     // Build buttons for voting reminder
     const buttons = buildButtons({
-      triggerType: 'votingReminder',
+      triggerType: this.triggerType,
       daoId: event.daoId,
-      proposalId: event.id
+      proposalId: event.id,
+      proposalUrl: event.link,
+      discussionUrl: event.discussion,
     });
 
     // Send reminders using batch notification service
@@ -112,60 +108,42 @@ export class VotingReminderTriggerHandler extends BaseTriggerHandler<VotingRemin
       nonVotingAddresses,
       event.daoId,
       triggerType,
-      () => `${event.id}-${event.thresholdPercentage}-reminder`,
-      (address) => this.createReminderMessage(event, address),
+      () => `${event.id}-${event.thresholdPercentage}-${this.triggerType}`,
+      (_address) => this.createReminderMessage(event),
       (address) => ({
-        triggerType: 'votingReminder',
+        triggerType: this.triggerType,
         proposalId: event.id,
         thresholdPercentage: event.thresholdPercentage,
         timeElapsedPercentage: event.timeElapsedPercentage,
         timeRemaining: FormattingService.calculateTimeRemaining(event.endTimestamp),
-        addresses: { address: address }
+        addresses: { address: address },
       }),
-      () => buttons
+      () => buttons,
     );
-    return {
-      sent: sentCount,
-      skipped: 0,
-      failed: 0
-    };
-  }
 
-  /**
-   * Gets addresses that haven't voted on the specific proposal
-   */
-  private async getNonVotingAddresses(
-    proposalId: string,
-    daoId: string,
-    subscribedAddresses: string[]
-  ): Promise<string[]> {
-    const nonVoters = await this.anticaptureClient!.getProposalNonVoters(
-      proposalId,
-      daoId,
-      subscribedAddresses
-    );
-    return nonVoters.map(nv => nv.voter);
+    return { sent: sentCount, skipped: 0, failed: 0 };
   }
 
   /**
    * Creates the reminder message based on proposal data and urgency level
    */
-  private createReminderMessage(event: VotingReminderEvent, address?: string): string {
+  private createReminderMessage(event: VotingReminderEvent): string {
     const timeRemaining = FormattingService.calculateTimeRemaining(event.endTimestamp);
-    const title = event.title || FormattingService.extractTitle(event.description);
+    const title =
+      event.title || FormattingService.extractTitle(event.description ?? '') || 'Untitled Proposal';
 
     // Get the message key based on threshold
-    const messageKey = votingReminderMessages.getMessageKey(event.thresholdPercentage);
+    const messageKey = this.messages.getMessageKey(event.thresholdPercentage);
 
     // Get the complete message template
-    const messageTemplate = votingReminderMessages[messageKey];
+    const messageTemplate = this.messages.getTemplate(messageKey);
 
     // Replace all placeholders
     return replacePlaceholders(messageTemplate, {
       daoId: event.daoId,
       title,
       timeRemaining,
-      thresholdPercentage: event.thresholdPercentage.toString()
+      thresholdPercentage: event.thresholdPercentage.toString(),
     });
   }
 }

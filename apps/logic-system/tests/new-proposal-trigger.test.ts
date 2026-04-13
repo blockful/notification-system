@@ -7,6 +7,7 @@ import { NewProposalTrigger } from '../src/triggers/new-proposal-trigger';
 import { ProposalOnChain } from '../src/interfaces/proposal.interface';
 import { createProposal, createMockDispatcherService, createMockProposalDataSource } from './mocks';
 import { NotificationTypeId } from '@notification-system/messages';
+import { QueryInput_Proposals_Status_Items } from '@notification-system/anticapture-client';
 
 describe('NewProposalTrigger', () => {
   let mockDispatcherService: ReturnType<typeof createMockDispatcherService>;
@@ -33,8 +34,8 @@ describe('NewProposalTrigger', () => {
 
     it('should send proposals and update timestampCursor', async () => {
       const proposals: ProposalOnChain[] = [
-        createProposal({ status: 'ACTIVE', timestamp: '1000' }),
-        createProposal({ id: '2', status: 'ACTIVE', description: 'Second proposal\nWith details', timestamp: '900' })
+        createProposal({ status: 'ACTIVE', timestamp: 1000 }),
+        createProposal({ id: '2', status: 'ACTIVE', description: 'Second proposal\nWith details', timestamp: 900 })
       ];
       
       await trigger.process(proposals);
@@ -88,7 +89,7 @@ describe('NewProposalTrigger', () => {
 
     it('should start the interval and fetch proposals with status and timestamp filter', () => {
       const initialTimestamp = trigger['timestampCursor'];
-      trigger.start({ status: 'ACTIVE' });
+      trigger.start({ status: QueryInput_Proposals_Status_Items.Active });
       jest.advanceTimersByTime(60000);
       
       expect(mockProposalDataSource.listAll).toHaveBeenCalledTimes(1);
@@ -101,8 +102,8 @@ describe('NewProposalTrigger', () => {
     it('should stop and restart the interval if start is called twice', () => {
       const stopSpy = jest.spyOn(trigger, 'stop');
       const initialTimestamp = trigger['timestampCursor'];
-      trigger.start({ status: 'ACTIVE' });
-      trigger.start({ status: 'ACTIVE' });
+      trigger.start({ status: QueryInput_Proposals_Status_Items.Active });
+      trigger.start({ status: QueryInput_Proposals_Status_Items.Active });
       expect(stopSpy).toHaveBeenCalledTimes(1);
       jest.advanceTimersByTime(60000);
       
@@ -114,7 +115,7 @@ describe('NewProposalTrigger', () => {
     
     it('should stop the interval when stop is called', () => {
       const initialTimestamp = trigger['timestampCursor'];
-      trigger.start({ status: 'ACTIVE' });
+      trigger.start({ status: QueryInput_Proposals_Status_Items.Active });
       jest.advanceTimersByTime(60000);
       
       expect(mockProposalDataSource.listAll).toHaveBeenCalledTimes(1);

@@ -1,7 +1,9 @@
 import { AnticaptureClient } from '@notification-system/anticapture-client';
 import { OffchainProposalDataSource, OffchainProposal, ListOffchainProposalsOptions } from '../interfaces/offchain-proposal.interface';
+import { VotingReminderProposal, VotingReminderDataSource } from '../interfaces/voting-reminder.interface';
+import { mapOffchainToReminderProposal } from '../mappers/proposal-reminder.mapper';
 
-export class OffchainProposalRepository implements OffchainProposalDataSource {
+export class OffchainProposalRepository implements OffchainProposalDataSource, VotingReminderDataSource {
   private anticaptureClient: AnticaptureClient;
 
   constructor(anticaptureClient: AnticaptureClient) {
@@ -32,5 +34,10 @@ export class OffchainProposalRepository implements OffchainProposalDataSource {
     }
 
     return await this.anticaptureClient.listOffchainProposals(variables);
+  }
+
+  async listActiveForReminder(): Promise<VotingReminderProposal[]> {
+    const proposals = await this.listAll({ status: 'active' });
+    return proposals.map(mapOffchainToReminderProposal);
   }
 }

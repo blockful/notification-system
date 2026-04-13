@@ -19,7 +19,7 @@ export class VotingPowerRepository {
       orderBy: QueryInput_HistoricalVotingPower_OrderBy.Timestamp,
       orderDirection: OrderDirection.Asc,
       limit: 100,
-      fromDate: parseInt(timestampGt)
+      fromDate: parseInt(timestampGt, 10)
     };
 
     return await this.anticaptureClient.listVotingPowerHistory(variables);

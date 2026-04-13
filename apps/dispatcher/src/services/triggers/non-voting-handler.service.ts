@@ -3,7 +3,7 @@ import { DispatcherMessage, MessageProcessingResult } from '../../interfaces/dis
 import { ISubscriptionClient } from '../../interfaces/subscription-client.interface';
 import { NotificationClientFactory } from '../notification/notification-factory.service';
 import { ProposalFinishedNotification } from '../../interfaces/notification-client.interface';
-import { AnticaptureClient, OrderDirection } from '@notification-system/anticapture-client';
+import { AnticaptureClient, OrderDirection, QueryInput_Proposals_Status_Items } from '@notification-system/anticapture-client';
 import { BatchNotificationService } from '../batch-notification.service';
 import { FormattingService } from '../formatting.service';
 import { ValidationService } from '../validation.service';
@@ -161,7 +161,7 @@ export class NonVotingHandler extends BaseTriggerHandler<ProposalFinishedNotific
     currentEndTimestamp: number
   ): Promise<any[]> {
     const proposals = await this.anticaptureClient!.listProposals({
-      status: ['EXECUTED', 'SUCCEEDED', 'DEFEATED', 'EXPIRED', 'CANCELED'] as any,
+      status: [QueryInput_Proposals_Status_Items.Executed, QueryInput_Proposals_Status_Items.Succeeded, QueryInput_Proposals_Status_Items.Defeated, QueryInput_Proposals_Status_Items.Expired, QueryInput_Proposals_Status_Items.Canceled],
       limit: NonVotingHandler.PROPOSALS_TO_CHECK * NonVotingHandler.FETCH_MARGIN_MULTIPLIER,
       orderDirection: OrderDirection.Desc
     }, daoId);
