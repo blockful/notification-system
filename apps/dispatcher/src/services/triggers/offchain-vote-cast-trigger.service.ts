@@ -131,7 +131,8 @@ export class OffchainVoteCastTriggerHandler extends BaseTriggerHandler<OffchainV
       [user],
       message,
       eventId,
-      vote.daoId
+      vote.daoId,
+      { addresses: { address: vote.voter } }
     );
   }
 
@@ -143,7 +144,6 @@ export class OffchainVoteCastTriggerHandler extends BaseTriggerHandler<OffchainV
       : offchainVoteCastMessages.withoutReason;
 
     return replacePlaceholders(messageTemplate, {
-      address: vote.voter,
       daoId: vote.daoId,
       proposalTitle: vote.proposalTitle,
       ...(hasReason && { reason: vote.reason! })
