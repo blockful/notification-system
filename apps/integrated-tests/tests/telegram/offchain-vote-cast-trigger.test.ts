@@ -70,6 +70,8 @@ describe('Offchain Vote Cast Trigger - Integration Test', () => {
     expect(message.text).toContain('🗳️');
     expect(message.text).toContain(proposalTitle);
     expect(message.text).toContain('Reason: "Fully support this initiative!"');
+    expect(message.text).toContain('vitalik.eth');
+    expect(message.text).not.toContain(voterAddress);
   });
 
   test('should NOT send duplicate notifications for same offchain vote', async () => {
