@@ -50,7 +50,7 @@ export class App {
     const proposalRepository = wrapWithTracing(new ProposalRepository(anticaptureClient));
     const offchainProposalRepository = wrapWithTracing(new OffchainProposalRepository(anticaptureClient));
     const votingPowerRepository = wrapWithTracing(new VotingPowerRepository(anticaptureClient));
-    const thresholdRepository = wrapWithTracing(new ThresholdRepository(anticaptureClient));
+    const thresholdRepository = wrapWithTracing(new ThresholdRepository(anticaptureClient, undefined, logger));
     const votesRepository = wrapWithTracing(new VotesRepository(anticaptureClient));
     const offchainVotesRepository = wrapWithTracing(new OffchainVotesRepository(anticaptureClient));
 
@@ -112,13 +112,15 @@ export class App {
     this.voteConfirmationTrigger = new VoteConfirmationTrigger(
       dispatcherService,
       votesRepository,
-      triggerInterval
+      triggerInterval,
+      logger,
     );
 
     this.offchainVoteCastTrigger = new OffchainVoteCastTrigger(
       dispatcherService,
       offchainVotesRepository,
-      triggerInterval
+      triggerInterval,
+      logger,
     );
 
     // Initialize voting reminder triggers with different thresholds
