@@ -25,9 +25,11 @@
     "typescript": "^5.8.3"
   },
   "dependencies": {
+    "@anticapture/observability": "^1.0.0",
     "@notification-system/anticapture-client": "workspace:*",
     "@notification-system/messages": "workspace:*",
     "@notification-system/rabbitmq-client": "workspace:*",
+    "@opentelemetry/api": "^1.9.0",
     "@slack/bolt": "^4.4.0",
     "@slack/web-api": "^7.10.0",
     "axios": "^1.7.2",
