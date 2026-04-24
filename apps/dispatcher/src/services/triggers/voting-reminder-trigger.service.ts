@@ -8,6 +8,7 @@ import { AnticaptureClient } from '@notification-system/anticapture-client';
 import { FormattingService } from '../formatting.service';
 import { replacePlaceholders, buildButtons } from '@notification-system/messages';
 import { BatchNotificationService } from '../batch-notification.service';
+import { wrapWithTracing } from '@anticapture/observability';
 import {
   VotingReminderEvent,
   NonVotersSource,
@@ -39,7 +40,7 @@ export class VotingReminderTriggerHandler extends BaseTriggerHandler<VotingRemin
     private readonly triggerType: string,
   ) {
     super(subscriptionClient, notificationFactory, anticaptureClient);
-    this.batchNotificationService = new BatchNotificationService(subscriptionClient, notificationFactory);
+    this.batchNotificationService = wrapWithTracing(new BatchNotificationService(subscriptionClient, notificationFactory));
   }
 
   async handleMessage(message: DispatcherMessage<VotingReminderEvent>): Promise<MessageProcessingResult> {

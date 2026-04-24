@@ -5,6 +5,7 @@ import { NotificationClientFactory } from '../notification/notification-factory.
 import { ProposalFinishedNotification } from '../../interfaces/notification-client.interface';
 import { AnticaptureClient, OrderDirection, QueryInput_Proposals_Status_Items } from '@notification-system/anticapture-client';
 import { BatchNotificationService } from '../batch-notification.service';
+import { wrapWithTracing } from '@anticapture/observability';
 import { FormattingService } from '../formatting.service';
 import { ValidationService } from '../validation.service';
 import { nonVotingMessages, replacePlaceholders, buildButtons, NotificationTypeId } from '@notification-system/messages';
@@ -25,7 +26,7 @@ export class NonVotingHandler extends BaseTriggerHandler<ProposalFinishedNotific
     anticaptureClient: AnticaptureClient
   ) {
     super(subscriptionClient, notificationFactory, anticaptureClient);
-    this.batchNotificationService = new BatchNotificationService(subscriptionClient, notificationFactory);
+    this.batchNotificationService = wrapWithTracing(new BatchNotificationService(subscriptionClient, notificationFactory));
   }
 
   async handleMessage(message: DispatcherMessage<ProposalFinishedNotification>): Promise<MessageProcessingResult> {
