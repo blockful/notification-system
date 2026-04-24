@@ -12,7 +12,7 @@ import './instrumentation';
 
 import axios from 'axios';
 import { App } from './app';
-import { createLogger } from '@anticapture/observability';
+import { createLogger, wrapWithTracing } from '@anticapture/observability';
 
 const logger = createLogger('consumers');
 import { loadConfig } from './config/env';
@@ -23,18 +23,18 @@ import { SlackClient } from './clients/slack.client';
 const config = loadConfig();
 
 // Create ENS resolver
-const ensResolver = new EnsResolverService(config.rpcUrl);
+const ensResolver = wrapWithTracing(new EnsResolverService(config.rpcUrl));
 
 // Create Telegram client for production
-const telegramClient = new TelegramClient(config.telegramBotToken);
+const telegramClient = wrapWithTracing(new TelegramClient(config.telegramBotToken));
 
 // Create Slack client
-const slackClient = new SlackClient(
+const slackClient = wrapWithTracing(new SlackClient(
   config.slackSigningSecret,
   config.subscriptionServerUrl,
   config.tokenEncryptionKey,
   config.port
-);
+));
 
 // Create and start the application
 const app = new App(
