@@ -1,6 +1,9 @@
+import './instrumentation';
+
 import axios from 'axios';
 import { App } from './app';
 import { env } from './config/env';
+import { logger } from './logger';
 
 const app = new App(
   env.TRIGGER_INTERVAL,
@@ -16,7 +19,10 @@ const app = new App(
   env.RABBITMQ_URL,
 );
 
-app.start();
+app.start().catch((err) => {
+  logger.error({ err }, 'logic-system failed to start');
+  process.exit(1);
+});
 
 //@ts-ignore
 BigInt.prototype.toJSON = function () {

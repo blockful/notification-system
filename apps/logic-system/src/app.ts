@@ -16,6 +16,7 @@ import { RabbitMQDispatcherService } from './api-clients/rabbitmq-dispatcher.ser
 import { AnticaptureClient, QueryInput_Proposals_Status_Items } from '@notification-system/anticapture-client';
 import { RabbitMQConnection, RabbitMQPublisher } from '@notification-system/rabbitmq-client';
 import { AxiosInstance } from 'axios';
+import { logger } from './logger';
 
 export class App {
   private trigger!: NewProposalTrigger;
@@ -166,7 +167,7 @@ export class App {
     this.votingReminderTrigger90.start();
     this.offchainVotingReminderTrigger75.start();
     
-    console.log('Logic system is running. Press Ctrl+C to stop.');
+    logger.info('logic-system running');
   }
 
   /**
