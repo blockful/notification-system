@@ -1,3 +1,5 @@
 import { createObservabilityProvider } from '@anticapture/observability';
 
-createObservabilityProvider('subscription-server');
+const observability = createObservabilityProvider('subscription-server');
+
+export const exporter = observability.exporter;

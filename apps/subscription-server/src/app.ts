@@ -9,7 +9,8 @@ import { DaoController, NotificationController } from './controllers';
 import { UserAddressController } from './controllers/user-address.controller';
 import { SlackOAuthController } from './controllers/slack-oauth.controller';
 import { SettingsController } from './controllers/settings.controller';
-import { createLogger } from '@anticapture/observability';
+import { createLogger, collectPrometheusMetrics } from '@anticapture/observability';
+import { exporter } from './instrumentation';
 
 const logger = createLogger('subscription-server');
 
@@ -32,7 +33,15 @@ export class App {
     this.server = fastify();
 
     this.setupFastify();
+    this.setupMetricsRoute();
     this.setupRoutes();
+  }
+
+  private setupMetricsRoute(): void {
+    this.server.get('/metrics', async (_req, reply) => {
+      const { body, contentType } = await collectPrometheusMetrics(exporter);
+      return reply.type(contentType).send(body);
+    });
   }
 
   private setupFastify(): void {
