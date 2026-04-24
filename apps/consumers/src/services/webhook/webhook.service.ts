@@ -3,18 +3,22 @@ import { AnticaptureClient } from '@notification-system/anticapture-client';
 import { NotificationPayload } from '../../interfaces/notification.interface';
 import { BotServiceInterface } from '../../interfaces/bot-service.interface';
 import { SubscriptionAPIService } from '../subscription-api.service';
+import { createLogger, type Logger } from '@anticapture/observability';
 
 export class WebhookService implements BotServiceInterface {
   private httpClient: AxiosInstance;
+  private readonly logger: Logger;
 
   constructor(
     private anticaptureClient: AnticaptureClient,
-    private subscriptionApi: SubscriptionAPIService
+    private subscriptionApi: SubscriptionAPIService,
+    logger: Logger = createLogger('consumers'),
   ) {
     this.httpClient = axios.create({
       timeout: 30000,
       headers: { 'Content-Type': 'application/json' },
     });
+    this.logger = logger.child({ component: 'WebhookService' });
   }
 
   async sendNotification(payload: NotificationPayload): Promise<string> {
@@ -36,7 +40,10 @@ export class WebhookService implements BotServiceInterface {
     const response = await this.httpClient.post(url, body);
     const responseId = response.data?.id || response.data?.messageId || `webhook-${Date.now()}`;
 
-    console.log(`[Webhook] Notification delivered to ${url} for user ${payload.userId}: ${responseId}`);
+    this.logger.info(
+      { url, userId: payload.userId, responseId, event: 'webhook.delivered' },
+      'notification delivered',
+    );
     return responseId;
   }
 

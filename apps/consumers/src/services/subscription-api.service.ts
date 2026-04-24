@@ -6,17 +6,23 @@
 import axios, { AxiosInstance } from 'axios';
 import type { NotificationTypeId } from '@notification-system/messages';
 import { UserSubscriptionResponse, UserResponse } from '../interfaces/subscription.interface';
+import { createLogger, type Logger } from '@anticapture/observability';
 
 export class SubscriptionAPIService {
   private client: AxiosInstance;
+  private readonly logger: Logger;
 
-  constructor(private readonly baseUrl: string) {
+  constructor(
+    private readonly baseUrl: string,
+    logger: Logger = createLogger('consumers'),
+  ) {
     this.client = axios.create({
       baseURL: this.baseUrl,
       headers: {
         'Content-Type': 'application/json',
       },
     });
+    this.logger = logger.child({ component: 'SubscriptionAPIService' });
   }
 
   /**
@@ -90,7 +96,10 @@ export class SubscriptionAPIService {
           userDAOs.push(daoId.toUpperCase());
         }
       } catch (error) {
-        console.error(`Error checking subscription for DAO ${daoId}:`, error);
+        this.logger.error(
+          { err: error, daoId, event: 'subscription.check_failed' },
+          'error checking subscription for DAO',
+        );
       }
     }
     

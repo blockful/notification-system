@@ -41,14 +41,14 @@ export class App {
     slackClient: SlackClientInterface,
     webhookPort: number
   ) {
-    const subscriptionApi = wrapWithTracing(new SubscriptionAPIService(subscriptionServerUrl));
+    const subscriptionApi = wrapWithTracing(new SubscriptionAPIService(subscriptionServerUrl, logger));
     const anticaptureClient = wrapWithTracing(new AnticaptureClient(httpClient));
     const explorerService = new ExplorerService();
 
     // Telegram services
-    const telegramDaoService = wrapWithTracing(new TelegramDAOService(anticaptureClient, subscriptionApi));
-    const telegramWalletService = wrapWithTracing(new TelegramWalletService(subscriptionApi, ensResolver));
-    const telegramSettingsService = wrapWithTracing(new TelegramSettingsService(subscriptionApi));
+    const telegramDaoService = wrapWithTracing(new TelegramDAOService(anticaptureClient, subscriptionApi, logger));
+    const telegramWalletService = wrapWithTracing(new TelegramWalletService(subscriptionApi, ensResolver, logger));
+    const telegramSettingsService = wrapWithTracing(new TelegramSettingsService(subscriptionApi, logger));
 
     this.telegramBotService = wrapWithTracing(new TelegramBotService(
       telegramClient,
@@ -59,22 +59,23 @@ export class App {
       ensResolver
     ));
 
-    const slackDaoService = wrapWithTracing(new SlackDAOService(anticaptureClient, subscriptionApi));
-    const slackWalletService = wrapWithTracing(new SlackWalletService(subscriptionApi, ensResolver));
-    const slackSettingsService = wrapWithTracing(new SlackSettingsService(subscriptionApi));
+    const slackDaoService = wrapWithTracing(new SlackDAOService(anticaptureClient, subscriptionApi, logger));
+    const slackWalletService = wrapWithTracing(new SlackWalletService(subscriptionApi, ensResolver, logger));
+    const slackSettingsService = wrapWithTracing(new SlackSettingsService(subscriptionApi, logger));
 
     this.slackBotService = wrapWithTracing(new SlackBotService(
       slackClient,
       ensResolver,
       slackDaoService,
       slackWalletService,
-      slackSettingsService
+      slackSettingsService,
+      logger,
     ));
 
-    this.webhookService = wrapWithTracing(new WebhookService(anticaptureClient, subscriptionApi));
+    this.webhookService = wrapWithTracing(new WebhookService(anticaptureClient, subscriptionApi, logger));
 
     const webhookController = new WebhookController(this.webhookService);
-    this.webhookServer = new WebhookServer(webhookController);
+    this.webhookServer = new WebhookServer(webhookController, logger);
 
     this.rabbitmqUrl = rabbitmqUrl;
     this.webhookPort = webhookPort;
@@ -84,21 +85,24 @@ export class App {
     this.rabbitmqTelegramConsumerService = await RabbitMQNotificationConsumerService.create(
       this.rabbitmqUrl,
       this.telegramBotService,
-      'telegram'
+      'telegram',
+      logger,
     );
     logger.info('telegram consumer connected to RabbitMQ');
 
     this.rabbitmqSlackConsumerService = await RabbitMQNotificationConsumerService.create(
       this.rabbitmqUrl,
       this.slackBotService,
-      'slack'
+      'slack',
+      logger,
     );
     logger.info('slack consumer connected to RabbitMQ');
 
     this.rabbitmqWebhookConsumerService = await RabbitMQNotificationConsumerService.create(
       this.rabbitmqUrl,
       this.webhookService,
-      'webhook'
+      'webhook',
+      logger,
     );
     logger.info('webhook consumer connected to RabbitMQ');
 

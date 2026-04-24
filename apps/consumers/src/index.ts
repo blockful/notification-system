@@ -23,17 +23,18 @@ import { SlackClient } from './clients/slack.client';
 const config = loadConfig();
 
 // Create ENS resolver
-const ensResolver = wrapWithTracing(new EnsResolverService(config.rpcUrl));
+const ensResolver = wrapWithTracing(new EnsResolverService(config.rpcUrl, logger));
 
 // Create Telegram client for production
-const telegramClient = wrapWithTracing(new TelegramClient(config.telegramBotToken));
+const telegramClient = wrapWithTracing(new TelegramClient(config.telegramBotToken, undefined, logger));
 
 // Create Slack client
 const slackClient = wrapWithTracing(new SlackClient(
   config.slackSigningSecret,
   config.subscriptionServerUrl,
   config.tokenEncryptionKey,
-  config.port
+  config.port,
+  logger,
 ));
 
 // Create and start the application

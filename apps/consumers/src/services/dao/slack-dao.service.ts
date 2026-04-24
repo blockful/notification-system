@@ -64,7 +64,7 @@ export class SlackDAOService extends BaseDAOService {
         });
       }
     } catch (error) {
-      console.error('Error loading DAOs:', error);
+      this.logger.error({ err: error, event: 'dao.load_failed' }, 'error loading DAOs');
       if (context.respond) {
         await context.respond({
           blocks: errorMessage(slackMessages.dao.loadError),
@@ -108,7 +108,7 @@ export class SlackDAOService extends BaseDAOService {
         });
       }
     } catch (error) {
-      console.error('Error listing subscriptions:', error);
+      this.logger.error({ err: error, event: 'dao.list_subscriptions_failed' }, 'error listing subscriptions');
       if (context.respond) {
         await context.respond({
           text: slackMessages.dao.listError,
@@ -176,7 +176,7 @@ export class SlackDAOService extends BaseDAOService {
         });
       }
     } catch (error) {
-      console.error('Error updating subscriptions:', error);
+      this.logger.error({ err: error, event: 'dao.update_failed' }, 'error updating subscriptions');
       if (context.respond) {
         await context.respond({
           replace_original: false,

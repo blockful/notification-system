@@ -7,6 +7,7 @@
 import { AnticaptureClient } from '@notification-system/anticapture-client';
 import { SubscriptionAPIService } from '../subscription-api.service';
 import { getDaoWithEmoji } from '@notification-system/messages';
+import { createLogger, type Logger } from '@anticapture/observability';
 
 export interface DAOSelectionState {
   selections: Set<string>;
@@ -14,10 +15,15 @@ export interface DAOSelectionState {
 }
 
 export abstract class BaseDAOService {
+  protected readonly logger: Logger;
+
   constructor(
     protected readonly anticaptureClient: AnticaptureClient,
-    protected readonly subscriptionApi: SubscriptionAPIService
-  ) {}
+    protected readonly subscriptionApi: SubscriptionAPIService,
+    logger: Logger = createLogger('consumers'),
+  ) {
+    this.logger = logger.child({ component: `${this.getPlatformId()}-dao` });
+  }
 
   /**
    * Abstract method to get the platform identifier
