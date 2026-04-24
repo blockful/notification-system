@@ -5,7 +5,7 @@ import { NotificationClientFactory } from '../notification/notification-factory.
 import { ProposalFinishedNotification } from '../../interfaces/notification-client.interface';
 import { AnticaptureClient, OrderDirection, QueryInput_Proposals_Status_Items } from '@notification-system/anticapture-client';
 import { BatchNotificationService } from '../batch-notification.service';
-import { wrapWithTracing } from '@anticapture/observability';
+import { createLogger, type Logger, wrapWithTracing } from '@anticapture/observability';
 import { FormattingService } from '../formatting.service';
 import { ValidationService } from '../validation.service';
 import { nonVotingMessages, replacePlaceholders, buildButtons, NotificationTypeId } from '@notification-system/messages';
@@ -23,10 +23,11 @@ export class NonVotingHandler extends BaseTriggerHandler<ProposalFinishedNotific
   constructor(
     subscriptionClient: ISubscriptionClient,
     notificationFactory: NotificationClientFactory,
-    anticaptureClient: AnticaptureClient
+    anticaptureClient: AnticaptureClient,
+    logger: Logger = createLogger('dispatcher'),
   ) {
-    super(subscriptionClient, notificationFactory, anticaptureClient);
-    this.batchNotificationService = wrapWithTracing(new BatchNotificationService(subscriptionClient, notificationFactory));
+    super(subscriptionClient, notificationFactory, anticaptureClient, logger);
+    this.batchNotificationService = wrapWithTracing(new BatchNotificationService(subscriptionClient, notificationFactory, logger));
   }
 
   async handleMessage(message: DispatcherMessage<ProposalFinishedNotification>): Promise<MessageProcessingResult> {
@@ -36,7 +37,10 @@ export class NonVotingHandler extends BaseTriggerHandler<ProposalFinishedNotific
       try {
         await this.processNonVotingAddresses(proposal);
       } catch (error) {
-        console.error(`Error processing non-voting addresses for proposal ${proposal.id}:`, error);
+        this.logger.error(
+          { err: error, proposalId: proposal.id, event: 'non_voting.process_failed' },
+          'error processing non-voting addresses for proposal',
+        );
         // Continue processing other proposals even if one fails
       }
     }

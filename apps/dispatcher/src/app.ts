@@ -65,7 +65,7 @@ export class App {
     notificationFactory.addClient('telegram', wrapWithTracing(new RabbitMQNotificationService(this.publisher)));
     notificationFactory.addClient('slack', wrapWithTracing(new RabbitMQNotificationService(this.publisher)));
     notificationFactory.addClient('webhook', wrapWithTracing(new RabbitMQNotificationService(this.publisher)));
-    const triggerProcessorService = wrapWithTracing(new TriggerProcessorService());
+    const triggerProcessorService = wrapWithTracing(new TriggerProcessorService(logger));
 
     triggerProcessorService.addHandler(
       NotificationTypeId.NewProposal,
@@ -95,17 +95,17 @@ export class App {
     // Add second handler for proposal-finished to process non-voting addresses
     triggerProcessorService.addHandler(
       NotificationTypeId.ProposalFinished,
-      wrapWithTracing(new NonVotingHandler(subscriptionClient, notificationFactory, anticaptureClient))
+      wrapWithTracing(new NonVotingHandler(subscriptionClient, notificationFactory, anticaptureClient, logger))
     );
 
     triggerProcessorService.addHandler(
       NotificationTypeId.VoteConfirmation,
-      wrapWithTracing(new VoteConfirmationTriggerHandler(subscriptionClient, notificationFactory, anticaptureClient))
+      wrapWithTracing(new VoteConfirmationTriggerHandler(subscriptionClient, notificationFactory, anticaptureClient, logger))
     );
 
     triggerProcessorService.addHandler(
       NotificationTypeId.OffchainVoteCast,
-      wrapWithTracing(new OffchainVoteCastTriggerHandler(subscriptionClient, notificationFactory))
+      wrapWithTracing(new OffchainVoteCastTriggerHandler(subscriptionClient, notificationFactory, logger))
     );
 
     const onchainNonVotersSource: NonVotersSource = {
@@ -118,20 +118,20 @@ export class App {
 
     triggerProcessorService.addHandler(
       NotificationTypeId.VotingReminder30,
-      wrapWithTracing(new VotingReminderTriggerHandler(subscriptionClient, notificationFactory, anticaptureClient, onchainNonVotersSource, votingReminderMessages, 'voting-reminder'))
+      wrapWithTracing(new VotingReminderTriggerHandler(subscriptionClient, notificationFactory, anticaptureClient, onchainNonVotersSource, votingReminderMessages, 'voting-reminder', logger))
     );
     triggerProcessorService.addHandler(
       NotificationTypeId.VotingReminder60,
-      wrapWithTracing(new VotingReminderTriggerHandler(subscriptionClient, notificationFactory, anticaptureClient, onchainNonVotersSource, votingReminderMessages, 'voting-reminder'))
+      wrapWithTracing(new VotingReminderTriggerHandler(subscriptionClient, notificationFactory, anticaptureClient, onchainNonVotersSource, votingReminderMessages, 'voting-reminder', logger))
     );
     triggerProcessorService.addHandler(
       NotificationTypeId.VotingReminder90,
-      wrapWithTracing(new VotingReminderTriggerHandler(subscriptionClient, notificationFactory, anticaptureClient, onchainNonVotersSource, votingReminderMessages, 'voting-reminder'))
+      wrapWithTracing(new VotingReminderTriggerHandler(subscriptionClient, notificationFactory, anticaptureClient, onchainNonVotersSource, votingReminderMessages, 'voting-reminder', logger))
     );
 
     triggerProcessorService.addHandler(
       NotificationTypeId.OffchainVotingReminder75,
-      wrapWithTracing(new VotingReminderTriggerHandler(subscriptionClient, notificationFactory, anticaptureClient, offchainNonVotersSource, offchainVotingReminderMessages, 'offchain-voting-reminder'))
+      wrapWithTracing(new VotingReminderTriggerHandler(subscriptionClient, notificationFactory, anticaptureClient, offchainNonVotersSource, offchainVotingReminderMessages, 'offchain-voting-reminder', logger))
     );
 
     this.rabbitMQConsumerService = wrapWithTracing(new RabbitMQConsumerService(this.rabbitmqUrl, triggerProcessorService));

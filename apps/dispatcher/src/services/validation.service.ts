@@ -1,3 +1,7 @@
+import { createLogger } from '@anticapture/observability';
+
+const moduleLogger = createLogger('dispatcher').child({ component: 'ValidationService' });
+
 /**
  * Service for common validation operations
  */
@@ -16,7 +20,10 @@ export class ValidationService {
   ): boolean {
     if (items.length < minimumRequired) {
       if (context) {
-        console.log(`Not enough ${context}. Found: ${items.length}, Required: ${minimumRequired}`);
+        moduleLogger.debug(
+          { context, found: items.length, required: minimumRequired, event: 'validation.not_enough_items' },
+          'not enough items',
+        );
       }
       return false;
     }
@@ -32,7 +39,7 @@ export class ValidationService {
   static hasItems<T>(items: T[], context?: string): boolean {
     if (items.length === 0) {
       if (context) {
-        console.log(`No ${context}`);
+        moduleLogger.debug({ context, event: 'validation.no_items' }, 'no items');
       }
       return false;
     }

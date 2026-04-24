@@ -8,7 +8,7 @@ import { AnticaptureClient } from '@notification-system/anticapture-client';
 import { FormattingService } from '../formatting.service';
 import { replacePlaceholders, buildButtons } from '@notification-system/messages';
 import { BatchNotificationService } from '../batch-notification.service';
-import { wrapWithTracing } from '@anticapture/observability';
+import { createLogger, type Logger, wrapWithTracing } from '@anticapture/observability';
 import {
   VotingReminderEvent,
   NonVotersSource,
@@ -38,9 +38,10 @@ export class VotingReminderTriggerHandler extends BaseTriggerHandler<VotingRemin
     private readonly nonVotersSource: NonVotersSource,
     private readonly messages: VotingReminderMessageSet,
     private readonly triggerType: string,
+    logger: Logger = createLogger('dispatcher'),
   ) {
-    super(subscriptionClient, notificationFactory, anticaptureClient);
-    this.batchNotificationService = wrapWithTracing(new BatchNotificationService(subscriptionClient, notificationFactory));
+    super(subscriptionClient, notificationFactory, anticaptureClient, logger);
+    this.batchNotificationService = wrapWithTracing(new BatchNotificationService(subscriptionClient, notificationFactory, logger));
   }
 
   async handleMessage(message: DispatcherMessage<VotingReminderEvent>): Promise<MessageProcessingResult> {
@@ -66,8 +67,15 @@ export class VotingReminderTriggerHandler extends BaseTriggerHandler<VotingRemin
       }
     }
 
-    console.log(
-      `[${this.triggerType}] Processing complete - Sent: ${processedCount.sent}, Skipped: ${processedCount.skipped}, Failed: ${processedCount.failed}`,
+    this.logger.info(
+      {
+        triggerType: this.triggerType,
+        sent: processedCount.sent,
+        skipped: processedCount.skipped,
+        failed: processedCount.failed,
+        event: 'voting_reminder.processed',
+      },
+      'processing complete',
     );
 
     return {

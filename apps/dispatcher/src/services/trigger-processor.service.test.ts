@@ -64,20 +64,14 @@ describe('TriggerProcessorService', () => {
     });
 
     it('should return unhandled response for unknown trigger', async () => {
-      const consoleSpy = jest.spyOn(console, 'log').mockImplementation(() => {});
-      
       const mockMessage: DispatcherMessage = {
         triggerId: 'unknown-trigger' as any,
         ...MOCK_MESSAGE_BASE
       };
-      
+
       const result = await service.processTrigger(mockMessage);
-      
-      // Should log and return unhandled response
-      expect(consoleSpy).toHaveBeenCalledWith('No handler registered for trigger: unknown-trigger');
+
       expect(result.messageId).toMatch(/^unhandled-unknown-trigger-/);
-      
-      consoleSpy.mockRestore();
     });
   });
 
@@ -128,38 +122,27 @@ describe('TriggerProcessorService', () => {
       expect(result.timestamp).toBe('2023-01-01T11:00:00Z'); // Latest timestamp
     });
 
-    it('should log errors but continue when some handlers fail', async () => {
+    it('should continue when some handlers fail', async () => {
       const handler1 = { handleMessage: jest.fn() } as any;
       const handler2 = { handleMessage: jest.fn() } as any;
-      const consoleSpy = jest.spyOn(console, 'error').mockImplementation(() => {});
-      
+
       handler1.handleMessage.mockRejectedValue(new Error('Handler 1 failed'));
       handler2.handleMessage.mockResolvedValue({ messageId: 'result2', timestamp: '2023-01-01T10:00:00Z' });
-      
+
       service.addHandler('failing-trigger', handler1);
       service.addHandler('failing-trigger', handler2);
-      
+
       const mockMessage: DispatcherMessage = {
         triggerId: 'failing-trigger' as any,
         ...MOCK_MESSAGE_BASE
       };
-      
-      // Should return successful result and log error
+
       const result = await service.processTrigger(mockMessage);
       expect(result.messageId).toBe('result2');
       expect(result.timestamp).toBe('2023-01-01T10:00:00Z');
-      
-      // Should log the error
-      expect(consoleSpy).toHaveBeenCalledWith(
-        '1 handler(s) failed for trigger failing-trigger. Errors:',
-        'Handler 1 failed'
-      );
-      
-      // Both handlers should still be called
+
       expect(handler1.handleMessage).toHaveBeenCalledWith(mockMessage);
       expect(handler2.handleMessage).toHaveBeenCalledWith(mockMessage);
-      
-      consoleSpy.mockRestore();
     });
 
     it('should throw error when all handlers fail', async () => {

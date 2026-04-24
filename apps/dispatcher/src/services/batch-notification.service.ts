@@ -1,16 +1,22 @@
 import type { NotificationTypeId } from '@notification-system/messages';
 import { ISubscriptionClient, User, Notification } from '../interfaces/subscription-client.interface';
 import { NotificationClientFactory } from './notification/notification-factory.service';
+import { createLogger, type Logger } from '@anticapture/observability';
 
 /**
  * Service for handling batch notification processing
  * Provides reusable batch operations for sending notifications efficiently
  */
 export class BatchNotificationService {
+  private readonly logger: Logger;
+
   constructor(
     private readonly subscriptionClient: ISubscriptionClient,
-    private readonly notificationFactory: NotificationClientFactory
-  ) {}
+    private readonly notificationFactory: NotificationClientFactory,
+    logger: Logger = createLogger('dispatcher'),
+  ) {
+    this.logger = logger.child({ component: 'BatchNotificationService' });
+  }
 
   /**
    * Prepares batch data by fetching followers and applying deduplication
@@ -145,7 +151,10 @@ export class BatchNotificationService {
             metadata: buttons ? { ...metadata, buttons } : metadata
           })
           .catch(error => {
-            console.error(`Failed to send notification to user ${follower.id}:`, error);
+            this.logger.error(
+              { err: error, userId: follower.id, event: 'notification.send_failed' },
+              'failed to send notification',
+            );
           })
       );
     }
