@@ -3,7 +3,9 @@ import './instrumentation';
 import axios from 'axios';
 import { App } from './app';
 import { env } from './config/env';
-import { logger } from './logger';
+import { createLogger } from '@anticapture/observability';
+
+const logger = createLogger('logic-system');
 
 const app = new App(
   env.TRIGGER_INTERVAL,

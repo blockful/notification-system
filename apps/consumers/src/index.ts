@@ -12,7 +12,9 @@ import './instrumentation';
 
 import axios from 'axios';
 import { App } from './app';
-import { logger } from './logger';
+import { createLogger } from '@anticapture/observability';
+
+const logger = createLogger('consumers');
 import { loadConfig } from './config/env';
 import { EnsResolverService } from './services/ens-resolver.service';
 import { TelegramClient } from './clients/telegram.client';

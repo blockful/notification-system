@@ -2,7 +2,9 @@ import './instrumentation';
 
 import { App } from './app';
 import { loadConfig } from './envConfig';
-import { logger } from './logger';
+import { createLogger } from '@anticapture/observability';
+
+const logger = createLogger('dispatcher');
 
 const config = loadConfig();
 const app = new App(

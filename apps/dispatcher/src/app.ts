@@ -17,7 +17,9 @@ import { NonVotersSource } from './interfaces/voting-reminder.interface';
 import { RabbitMQConnection, RabbitMQPublisher } from '@notification-system/rabbitmq-client';
 import { AnticaptureClient } from '@notification-system/anticapture-client';
 import { NotificationTypeId, votingReminderMessages, offchainVotingReminderMessages } from '@notification-system/messages';
-import { logger } from './logger';
+import { createLogger } from '@anticapture/observability';
+
+const logger = createLogger('dispatcher');
 
 export class App {
   private rabbitMQConsumerService!: RabbitMQConsumerService;

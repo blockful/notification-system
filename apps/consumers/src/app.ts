@@ -17,7 +17,9 @@ import { SubscriptionAPIService } from './services/subscription-api.service';
 import { RabbitMQNotificationConsumerService } from './services/rabbitmq-notification-consumer.service';
 import { TelegramClientInterface } from './interfaces/telegram-client.interface';
 import { SlackClientInterface } from './interfaces/slack-client.interface';
-import { logger } from './logger';
+import { createLogger } from '@anticapture/observability';
+
+const logger = createLogger('consumers');
 
 export class App {
   private telegramBotService: TelegramBotService;

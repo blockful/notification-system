@@ -16,7 +16,9 @@ import { RabbitMQDispatcherService } from './api-clients/rabbitmq-dispatcher.ser
 import { AnticaptureClient, QueryInput_Proposals_Status_Items } from '@notification-system/anticapture-client';
 import { RabbitMQConnection, RabbitMQPublisher } from '@notification-system/rabbitmq-client';
 import { AxiosInstance } from 'axios';
-import { logger } from './logger';
+import { createLogger } from '@anticapture/observability';
+
+const logger = createLogger('logic-system');
 
 export class App {
   private trigger!: NewProposalTrigger;

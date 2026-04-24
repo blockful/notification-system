@@ -9,7 +9,9 @@ import { DaoController, NotificationController } from './controllers';
 import { UserAddressController } from './controllers/user-address.controller';
 import { SlackOAuthController } from './controllers/slack-oauth.controller';
 import { SettingsController } from './controllers/settings.controller';
-import { logger } from './logger';
+import { createLogger } from '@anticapture/observability';
+
+const logger = createLogger('subscription-server');
 
 export class App {
   private server: FastifyInstance;

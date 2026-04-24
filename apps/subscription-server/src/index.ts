@@ -2,7 +2,9 @@ import './instrumentation';
 
 import Knex from 'knex';
 import { App } from './app';
-import { logger } from './logger';
+import { createLogger } from '@anticapture/observability';
+
+const logger = createLogger('subscription-server');
 import { loadConfig } from './config';
 import { DaoController, NotificationController } from './controllers';
 import { UserAddressController } from './controllers/user-address.controller';
