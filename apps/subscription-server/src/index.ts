@@ -26,7 +26,7 @@ const db = Knex({
 });
 
 // Repository instances
-const userRepository = wrapWithTracing(new KnexUserRepository(db, config.tokenEncryptionKey));
+const userRepository = wrapWithTracing(new KnexUserRepository(db, config.tokenEncryptionKey, logger));
 const preferenceRepository = wrapWithTracing(new KnexPreferenceRepository(db));
 const notificationRepository = wrapWithTracing(new KnexNotificationRepository(db));
 const userAddressRepository = wrapWithTracing(new KnexUserAddressRepository(db));
@@ -51,7 +51,8 @@ const slackOAuthController = new SlackOAuthController(
   workspaceService,
   config.slackClientId,
   config.slackClientSecret,
-  config.slackRedirectUri
+  config.slackRedirectUri,
+  logger,
 );
 
 const app = new App(

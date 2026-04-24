@@ -1,6 +1,7 @@
 import { FastifyInstance, FastifyReply, FastifyRequest } from 'fastify';
 import { WebClient } from '@slack/web-api';
 import { WorkspaceService, WorkspaceData } from '../services/workspace.service';
+import { createLogger, type Logger } from '@anticapture/observability';
 
 /**
  * Controller handling Slack OAuth flow
@@ -8,14 +9,17 @@ import { WorkspaceService, WorkspaceData } from '../services/workspace.service';
  */
 export class SlackOAuthController {
   private slackClient: WebClient;
+  private readonly logger: Logger;
 
   constructor(
     private workspaceService: WorkspaceService,
     private slackClientId: string,
     private slackClientSecret: string,
-    private slackRedirectUri: string
+    private slackRedirectUri: string,
+    logger: Logger = createLogger('subscription-server'),
   ) {
     this.slackClient = new WebClient();
+    this.logger = logger.child({ component: 'SlackOAuthController' });
   }
 
   /**
@@ -118,7 +122,7 @@ export class SlackOAuthController {
         .send(successHtml);
 
     } catch (error) {
-      console.error('OAuth error:', error);
+      this.logger.error({ err: error, event: 'slack_oauth.callback_failed' }, 'slack oauth error');
 
       const errorHtml = this.generateErrorPage(error instanceof Error ? error.message : 'Unknown error');
 
@@ -190,7 +194,10 @@ export class SlackOAuthController {
         }
       });
     } catch (error) {
-      console.error(`Error fetching installation for workspace ${workspaceId}:`, error);
+      this.logger.error(
+        { err: error, workspaceId, event: 'slack_oauth.installation_fetch_failed' },
+        'error fetching workspace installation',
+      );
       return reply.code(500).send({
         error: 'Failed to fetch workspace installation'
       });

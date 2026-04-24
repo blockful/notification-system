@@ -8,16 +8,22 @@ import { v4 as uuidv4 } from 'uuid';
 import { IUserRepository, IPreferenceRepository, INotificationRepository, User, UserPreference, Notification } from '../interfaces';
 import { IUserAddressRepository, UserAddress } from '../interfaces/user-address.interface';
 import { CryptoUtil } from '../utils/crypto';
+import { createLogger, type Logger } from '@anticapture/observability';
 
 /**
  * User repository implementation using Knex
  * Handles all user-related database operations
  */
 export class KnexUserRepository implements IUserRepository {
+  private readonly logger: Logger;
+
   constructor(
     private readonly knex: Knex,
-    private readonly tokenEncryptionKey?: string
-  ) {}
+    private readonly tokenEncryptionKey?: string,
+    logger: Logger = createLogger('subscription-server'),
+  ) {
+    this.logger = logger.child({ component: 'KnexUserRepository' });
+  }
 
   /**
    * Finds a user by their channel and channel-specific user ID
@@ -102,7 +108,10 @@ export class KnexUserRepository implements IUserRepository {
         try {
           user.token = CryptoUtil.decrypt(encrypted_token, this.tokenEncryptionKey!);
         } catch (error) {
-          console.error(`Failed to decrypt token for user ${user.id}:`, error);
+          this.logger.error(
+            { err: error, userId: user.id, event: 'token.decrypt_failed' },
+            'failed to decrypt workspace token',
+          );
         }
       }
       return user;
