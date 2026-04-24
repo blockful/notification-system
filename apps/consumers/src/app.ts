@@ -17,6 +17,8 @@ import { SubscriptionAPIService } from './services/subscription-api.service';
 import { RabbitMQNotificationConsumerService } from './services/rabbitmq-notification-consumer.service';
 import { TelegramClientInterface } from './interfaces/telegram-client.interface';
 import { SlackClientInterface } from './interfaces/slack-client.interface';
+import { logger } from './logger';
+
 export class App {
   private telegramBotService: TelegramBotService;
   private slackBotService: SlackBotService;
@@ -82,28 +84,28 @@ export class App {
       this.telegramBotService,
       'telegram'
     );
-    console.log('Telegram consumer connected to RabbitMQ');
+    logger.info('telegram consumer connected to RabbitMQ');
 
     this.rabbitmqSlackConsumerService = await RabbitMQNotificationConsumerService.create(
       this.rabbitmqUrl,
       this.slackBotService,
       'slack'
     );
-    console.log('Slack consumer connected to RabbitMQ');
+    logger.info('slack consumer connected to RabbitMQ');
 
     this.rabbitmqWebhookConsumerService = await RabbitMQNotificationConsumerService.create(
       this.rabbitmqUrl,
       this.webhookService,
       'webhook'
     );
-    console.log('Webhook consumer connected to RabbitMQ');
+    logger.info('webhook consumer connected to RabbitMQ');
 
     await this.webhookServer.start(this.webhookPort);
 
     this.telegramBotService.launch();
     this.slackBotService.launch();
 
-    console.log('All bot services have been initialized');
+    logger.info('all bot services initialized');
   }
 
   async stop(): Promise<void> {

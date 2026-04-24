@@ -8,8 +8,11 @@
  * platforms (Telegram, Slack, and any registered webhook endpoint).
  */
 
+import './instrumentation';
+
 import axios from 'axios';
 import { App } from './app';
+import { logger } from './logger';
 import { loadConfig } from './config/env';
 import { EnsResolverService } from './services/ens-resolver.service';
 import { TelegramClient } from './clients/telegram.client';
@@ -50,5 +53,10 @@ const app = new App(
 );
 
 (async () => {
-  await app.start();
+  try {
+    await app.start();
+  } catch (err) {
+    logger.error({ err }, 'consumers failed to start');
+    process.exit(1);
+  }
 })();
