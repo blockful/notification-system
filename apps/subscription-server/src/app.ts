@@ -9,6 +9,7 @@ import { DaoController, NotificationController } from './controllers';
 import { UserAddressController } from './controllers/user-address.controller';
 import { SlackOAuthController } from './controllers/slack-oauth.controller';
 import { SettingsController } from './controllers/settings.controller';
+import { logger } from './logger';
 
 export class App {
   private server: FastifyInstance;
@@ -41,7 +42,7 @@ export class App {
     });
 
     this.server.setErrorHandler((error, request, reply) => {
-      console.error(`Error occurred: ${error.message}`);
+      logger.error({ err: error, method: request.method, path: request.url }, 'request failed');
       return reply.code(error.statusCode || 500).send({
         message: error.message || 'Internal server error',
         error: error.stack || 'Unknown error'
@@ -75,7 +76,7 @@ export class App {
 
   async start(): Promise<void> {
     await this.server.listen({ port: this.port, host: '0.0.0.0' });
-    console.log(`HTTP server running on port ${this.port}!`);
+    logger.info({ port: this.port }, 'subscription-server listening');
   }
 
   async stop(): Promise<void> {

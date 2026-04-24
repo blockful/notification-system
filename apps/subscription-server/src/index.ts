@@ -1,5 +1,8 @@
+import './instrumentation';
+
 import Knex from 'knex';
 import { App } from './app';
+import { logger } from './logger';
 import { loadConfig } from './config';
 import { DaoController, NotificationController } from './controllers';
 import { UserAddressController } from './controllers/user-address.controller';
@@ -60,5 +63,10 @@ const app = new App(
 );
 
 (async () => {
-  await app.start();
+  try {
+    await app.start();
+  } catch (err) {
+    logger.error({ err }, 'subscription-server failed to start');
+    process.exit(1);
+  }
 })();
