@@ -17,6 +17,7 @@ import { NonVotersSource } from './interfaces/voting-reminder.interface';
 import { RabbitMQConnection, RabbitMQPublisher } from '@notification-system/rabbitmq-client';
 import { AnticaptureClient } from '@notification-system/anticapture-client';
 import { NotificationTypeId, votingReminderMessages, offchainVotingReminderMessages } from '@notification-system/messages';
+import { logger } from './logger';
 
 export class App {
   private rabbitMQConsumerService!: RabbitMQConsumerService;
@@ -138,7 +139,7 @@ export class App {
   async start(): Promise<void> {
     await this.setupServices();
     await this.rabbitMQConsumerService?.start();
-    console.log('Dispatcher service running!');
+    logger.info('dispatcher service running');
   }
 
   async stop(): Promise<void> {
