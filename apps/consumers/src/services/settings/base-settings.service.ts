@@ -1,11 +1,17 @@
 import { NotificationTypeId } from '@notification-system/messages';
 import { SubscriptionAPIService } from '../subscription-api.service';
+import { createLogger, type Logger } from '@anticapture/observability';
 
 export abstract class BaseSettingsService {
+  protected readonly logger: Logger;
+
   constructor(
     protected subscriptionApi: SubscriptionAPIService,
-    protected platform: string
-  ) {}
+    protected platform: string,
+    logger: Logger = createLogger('consumers'),
+  ) {
+    this.logger = logger.child({ component: `${platform}-settings` });
+  }
 
   protected async loadPreferences(channelUserId: string): Promise<Record<NotificationTypeId, boolean>> {
     const stored = await this.subscriptionApi.getNotificationPreferences(

@@ -1,5 +1,10 @@
+import './instrumentation';
+
 import Knex from 'knex';
 import { App } from './app';
+import { createLogger, wrapWithTracing } from '@anticapture/observability';
+
+const logger = createLogger('subscription-server');
 import { loadConfig } from './config';
 import { DaoController, NotificationController } from './controllers';
 import { UserAddressController } from './controllers/user-address.controller';
@@ -21,21 +26,21 @@ const db = Knex({
 });
 
 // Repository instances
-const userRepository = new KnexUserRepository(db, config.tokenEncryptionKey);
-const preferenceRepository = new KnexPreferenceRepository(db);
-const notificationRepository = new KnexNotificationRepository(db);
-const userAddressRepository = new KnexUserAddressRepository(db);
-const notificationPrefsRepository = new UserNotificationPreferencesRepository(db);
+const userRepository = wrapWithTracing(new KnexUserRepository(db, config.tokenEncryptionKey, logger));
+const preferenceRepository = wrapWithTracing(new KnexPreferenceRepository(db));
+const notificationRepository = wrapWithTracing(new KnexNotificationRepository(db));
+const userAddressRepository = wrapWithTracing(new KnexUserAddressRepository(db));
+const notificationPrefsRepository = wrapWithTracing(new UserNotificationPreferencesRepository(db));
 
 // Service instances
-const workspaceService = new WorkspaceService(db, config.tokenEncryptionKey);
-const subscriptionService = new SubscriptionService(userRepository, preferenceRepository, userAddressRepository, notificationPrefsRepository);
-const notificationService = new NotificationService(notificationRepository);
-const settingsService = new SettingsService(notificationPrefsRepository);
+const workspaceService = wrapWithTracing(new WorkspaceService(db, config.tokenEncryptionKey));
+const subscriptionService = wrapWithTracing(new SubscriptionService(userRepository, preferenceRepository, userAddressRepository, notificationPrefsRepository));
+const notificationService = wrapWithTracing(new NotificationService(notificationRepository));
+const settingsService = wrapWithTracing(new SettingsService(notificationPrefsRepository));
 
 // Handler instances
-const daoHandler = new DaoHandler(subscriptionService);
-const settingsHandler = new SettingsHandler(settingsService, userRepository);
+const daoHandler = wrapWithTracing(new DaoHandler(subscriptionService));
+const settingsHandler = wrapWithTracing(new SettingsHandler(settingsService, userRepository));
 
 // Controller instances
 const daoController = new DaoController(daoHandler);
@@ -46,7 +51,8 @@ const slackOAuthController = new SlackOAuthController(
   workspaceService,
   config.slackClientId,
   config.slackClientSecret,
-  config.slackRedirectUri
+  config.slackRedirectUri,
+  logger,
 );
 
 const app = new App(
@@ -60,5 +66,10 @@ const app = new App(
 );
 
 (async () => {
-  await app.start();
+  try {
+    await app.start();
+  } catch (err) {
+    logger.error({ err }, 'subscription-server failed to start');
+    process.exit(1);
+  }
 })();

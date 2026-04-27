@@ -1,3 +1,5 @@
+import { createLogger, type Logger } from '@anticapture/observability';
+
 /**
  * Base abstract class for all triggers in the system
  */
@@ -36,9 +38,12 @@ export abstract class Trigger<TData, TFilterOptions = void> {
      */
     private readonly maxConsecutiveFailures = 5;
 
-    constructor(id: string, interval: number) {
+    protected readonly logger: Logger;
+
+    constructor(id: string, interval: number, logger: Logger = createLogger('logic-system')) {
         this.id = id;
         this.interval = interval;
+        this.logger = logger.child({ component: id });
     }
 
     /**
@@ -98,11 +103,22 @@ export abstract class Trigger<TData, TFilterOptions = void> {
     private async handleError(error: unknown): Promise<void> {
         this.consecutiveFailures++;
         if (this.consecutiveFailures >= this.maxConsecutiveFailures) {
-            console.error(`[Trigger ${this.id}] Stopped after ${this.consecutiveFailures} consecutive failures. Last error: ${error instanceof Error ? error.message : 'Unknown error'}`);
+            this.logger.error(
+                { err: error, consecutiveFailures: this.consecutiveFailures, event: 'trigger.stopped_after_failures' },
+                'trigger stopped after consecutive failures',
+            );
             await this.stop();
             return;
         }
-        console.log(`[Trigger ${this.id}] Will retry on next interval. Failures: ${this.consecutiveFailures}/${this.maxConsecutiveFailures}`);
+        this.logger.warn(
+            {
+                err: error,
+                consecutiveFailures: this.consecutiveFailures,
+                maxConsecutiveFailures: this.maxConsecutiveFailures,
+                event: 'trigger.will_retry',
+            },
+            'trigger will retry on next interval',
+        );
     }
 
     /**

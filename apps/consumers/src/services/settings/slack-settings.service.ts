@@ -2,10 +2,11 @@ import { NOTIFICATION_TYPES, NotificationTypeId } from '@notification-system/mes
 import { BaseSettingsService } from './base-settings.service';
 import { SubscriptionAPIService } from '../subscription-api.service';
 import { SlackActionContext } from '../../interfaces/slack-context.interface';
+import { createLogger, type Logger } from '@anticapture/observability';
 
 export class SlackSettingsService extends BaseSettingsService {
-  constructor(subscriptionApi: SubscriptionAPIService) {
-    super(subscriptionApi, 'slack');
+  constructor(subscriptionApi: SubscriptionAPIService, logger: Logger = createLogger('consumers')) {
+    super(subscriptionApi, 'slack', logger);
   }
 
   async initialize(ctx: SlackActionContext): Promise<void> {
@@ -71,7 +72,7 @@ export class SlackSettingsService extends BaseSettingsService {
         });
       }
     } catch (error) {
-      console.error('Error loading notification settings:', error);
+      this.logger.error({ err: error, event: 'settings.load_failed' }, 'error loading notification settings');
       if (ctx.respond) {
         await ctx.respond({
           text: 'Sorry, there was an error loading your settings. Please try again later.',
@@ -121,7 +122,7 @@ export class SlackSettingsService extends BaseSettingsService {
         });
       }
     } catch (error) {
-      console.error('Error saving notification settings:', error);
+      this.logger.error({ err: error, event: 'settings.save_failed' }, 'error saving notification settings');
       if (ctx.respond) {
         await ctx.respond({
           text: '❌ Failed to save your preferences. Please try again.',

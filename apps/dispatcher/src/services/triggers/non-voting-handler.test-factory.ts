@@ -3,6 +3,8 @@ import { DispatcherMessage } from '../../interfaces/dispatcher-message.interface
 import { ProposalFinishedNotification } from '../../interfaces/notification-client.interface';
 import { NotificationTypeId } from '@notification-system/messages';
 
+const BASE_TIMESTAMP = 1_700_000_000_000;
+
 // Test Data Factories
 export function createProposalNotification(overrides: Partial<ProposalFinishedNotification> = {}): ProposalFinishedNotification {
   return {
@@ -10,7 +12,7 @@ export function createProposalNotification(overrides: Partial<ProposalFinishedNo
     daoId: 'ENS',
     title: 'Proposal 3',
     description: 'Test proposal',
-    endTimestamp: Date.now(),
+    endTimestamp: BASE_TIMESTAMP,
     status: 'SUCCEEDED',
     forVotes: '1000000',
     againstVotes: '500000',
@@ -26,7 +28,7 @@ export function createDispatcherMessage(events: ProposalFinishedNotification[]):
   };
 }
 
-export function createProposal(id: string, title: string, daoId: string = 'ENS') {
+export function createProposal(id: string, title: string, daoId: string = 'ENS', endTimestamp: number = BASE_TIMESTAMP) {
   return {
     id,
     title,
@@ -35,8 +37,8 @@ export function createProposal(id: string, title: string, daoId: string = 'ENS')
     description: `${title} description`,
     startBlock: 100,
     endBlock: 200,
-    endTimestamp: Date.now(),
-    timestamp: new Date().toISOString(),
+    endTimestamp,
+    timestamp: new Date(endTimestamp).toISOString(),
     status: 'SUCCEEDED' as any,
     forVotes: '1000000',
     againstVotes: '500000',

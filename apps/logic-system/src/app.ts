@@ -16,6 +16,9 @@ import { RabbitMQDispatcherService } from './api-clients/rabbitmq-dispatcher.ser
 import { AnticaptureClient, QueryInput_Proposals_Status_Items } from '@notification-system/anticapture-client';
 import { RabbitMQConnection, RabbitMQPublisher } from '@notification-system/rabbitmq-client';
 import { AxiosInstance } from 'axios';
+import { createLogger, wrapWithTracing } from '@anticapture/observability';
+
+const logger = createLogger('logic-system');
 
 export class App {
   private trigger!: NewProposalTrigger;
@@ -43,13 +46,13 @@ export class App {
   ) {
     this.proposalStatus = proposalStatus;
     
-    const anticaptureClient = new AnticaptureClient(anticaptureHttpClient);
-    const proposalRepository = new ProposalRepository(anticaptureClient);
-    const offchainProposalRepository = new OffchainProposalRepository(anticaptureClient);
-    const votingPowerRepository = new VotingPowerRepository(anticaptureClient);
-    const thresholdRepository = new ThresholdRepository(anticaptureClient);
-    const votesRepository = new VotesRepository(anticaptureClient);
-    const offchainVotesRepository = new OffchainVotesRepository(anticaptureClient);
+    const anticaptureClient = wrapWithTracing(new AnticaptureClient(anticaptureHttpClient));
+    const proposalRepository = wrapWithTracing(new ProposalRepository(anticaptureClient));
+    const offchainProposalRepository = wrapWithTracing(new OffchainProposalRepository(anticaptureClient));
+    const votingPowerRepository = wrapWithTracing(new VotingPowerRepository(anticaptureClient));
+    const thresholdRepository = wrapWithTracing(new ThresholdRepository(anticaptureClient, undefined, logger));
+    const votesRepository = wrapWithTracing(new VotesRepository(anticaptureClient));
+    const offchainVotesRepository = wrapWithTracing(new OffchainVotesRepository(anticaptureClient));
 
     this.initPromise = this.initializeRabbitMQ(rabbitmqUrl, proposalRepository, offchainProposalRepository, votingPowerRepository, thresholdRepository, votesRepository, offchainVotesRepository, triggerInterval, initialTimestamp);
   }
@@ -69,7 +72,7 @@ export class App {
     await this.rabbitMQConnection.connect();
     
     this.rabbitMQPublisher = await RabbitMQPublisher.create(this.rabbitMQConnection);
-    const dispatcherService = new RabbitMQDispatcherService(this.rabbitMQPublisher);
+    const dispatcherService = wrapWithTracing(new RabbitMQDispatcherService(this.rabbitMQPublisher));
 
     this.trigger = new NewProposalTrigger(
       dispatcherService,
@@ -109,13 +112,15 @@ export class App {
     this.voteConfirmationTrigger = new VoteConfirmationTrigger(
       dispatcherService,
       votesRepository,
-      triggerInterval
+      triggerInterval,
+      logger,
     );
 
     this.offchainVoteCastTrigger = new OffchainVoteCastTrigger(
       dispatcherService,
       offchainVotesRepository,
-      triggerInterval
+      triggerInterval,
+      logger,
     );
 
     // Initialize voting reminder triggers with different thresholds
@@ -166,7 +171,7 @@ export class App {
     this.votingReminderTrigger90.start();
     this.offchainVotingReminderTrigger75.start();
     
-    console.log('Logic system is running. Press Ctrl+C to stop.');
+    logger.info('logic-system running');
   }
 
   /**

@@ -6,6 +6,7 @@
 import { SubscriptionAPIService } from '../subscription-api.service';
 import { EnsResolverService } from '../ens-resolver.service';
 import { uiMessages } from '@notification-system/messages';
+import { createLogger, type Logger } from '@anticapture/observability';
 
 export interface WalletInfo {
   address: string;
@@ -13,10 +14,16 @@ export interface WalletInfo {
 }
 
 export class BaseWalletService {
+  protected readonly logger: Logger;
+
   constructor(
     protected subscriptionApi: SubscriptionAPIService,
-    protected ensResolver: EnsResolverService
-  ) {}
+    protected ensResolver: EnsResolverService,
+    logger: Logger = createLogger('consumers'),
+    component: string = 'BaseWalletService',
+  ) {
+    this.logger = logger.child({ component });
+  }
 
   /**
    * Validates and normalizes a wallet address or ENS name
@@ -118,7 +125,7 @@ export class BaseWalletService {
         address
       };
     } catch (error) {
-      console.error('Error adding wallet:', error);
+      this.logger.error({ err: error, event: 'wallet.add_failed' }, 'error adding wallet');
       return {
         success: false,
         message: uiMessages.errors.generic
@@ -154,7 +161,7 @@ export class BaseWalletService {
         removedCount: addresses.length
       };
     } catch (error) {
-      console.error('Error removing wallets:', error);
+      this.logger.error({ err: error, event: 'wallet.remove_failed' }, 'error removing wallets');
       return {
         success: false,
         message: uiMessages.errors.generic

@@ -1,6 +1,7 @@
 import { RabbitMQConnection, RabbitMQConsumer, RabbitMQMessage } from '@notification-system/rabbitmq-client';
 import { NotificationPayload } from '../interfaces/notification.interface';
 import { BotServiceInterface } from '../interfaces/bot-service.interface';
+import { createLogger, type Logger } from '@anticapture/observability';
 
 /**
  * Generic service to consume notification messages from RabbitMQ Topic Exchange
@@ -8,13 +9,17 @@ import { BotServiceInterface } from '../interfaces/bot-service.interface';
  */
 export class RabbitMQNotificationConsumerService<T extends BotServiceInterface> {
   private static readonly EXCHANGE_NAME = 'notifications.exchange';
+  private readonly logger: Logger;
 
   private constructor(
     private readonly connection: RabbitMQConnection,
     private readonly consumer: RabbitMQConsumer,
     private readonly botService: T,
-    private readonly channel: string
-  ) {}
+    private readonly channel: string,
+    logger: Logger,
+  ) {
+    this.logger = logger.child({ component: 'RabbitMQNotificationConsumerService', channel });
+  }
 
   /**
    * Creates a notification consumer for a specific channel
@@ -25,7 +30,8 @@ export class RabbitMQNotificationConsumerService<T extends BotServiceInterface> 
   static async create<T extends BotServiceInterface>(
     rabbitmqUrl: string,
     botService: T,
-    channel: string
+    channel: string,
+    logger: Logger = createLogger('consumers'),
   ): Promise<RabbitMQNotificationConsumerService<T>> {
     const connection = new RabbitMQConnection(rabbitmqUrl);
     await connection.connect();
@@ -40,7 +46,8 @@ export class RabbitMQNotificationConsumerService<T extends BotServiceInterface> 
       connection,
       consumer,
       botService,
-      channel
+      channel,
+      logger,
     );
 
     await consumer.consumeFromTopic(
@@ -51,7 +58,10 @@ export class RabbitMQNotificationConsumerService<T extends BotServiceInterface> 
       }
     );
 
-    console.log(`✅ ${channel.charAt(0).toUpperCase() + channel.slice(1)} consumer connected and listening on pattern: ${bindingPattern}`);
+    service.logger.info(
+      { bindingPattern, event: 'consumer.connected' },
+      'consumer connected and listening',
+    );
 
     return service;
   }
@@ -69,7 +79,10 @@ export class RabbitMQNotificationConsumerService<T extends BotServiceInterface> 
   private async processNotification(message: RabbitMQMessage<NotificationPayload>): Promise<void> {
     // Validate message type
     if (message.type !== 'NOTIFICATION_EVENT') {
-      console.log(`[${this.channel}] Skipping non-notification message type: ${message.type}`);
+      this.logger.debug(
+        { messageType: message.type, event: 'notification.skipped_non_notification' },
+        'skipping non-notification message type',
+      );
       return;
     }
 
@@ -77,18 +90,27 @@ export class RabbitMQNotificationConsumerService<T extends BotServiceInterface> 
 
     // Validate payload structure
     if (!payload || !payload.userId || !payload.message) {
-      console.error(`[${this.channel}] Invalid notification payload:`, payload);
+      this.logger.error(
+        { payload, event: 'notification.invalid_payload' },
+        'invalid notification payload',
+      );
       return;
     }
 
     // Validate channel matches
     if (payload.channel !== this.channel) {
-      console.error(`[${this.channel}] Channel mismatch. Expected ${this.channel}, got ${payload.channel}`);
+      this.logger.error(
+        { expected: this.channel, got: payload.channel, event: 'notification.channel_mismatch' },
+        'channel mismatch',
+      );
       return;
     }
 
     // Send notification using the bot service
     await this.botService.sendNotification(payload);
-    console.log(`[${this.channel}] Notification sent successfully to user ${payload.userId}`);
+    this.logger.info(
+      { userId: payload.userId, event: 'notification.sent' },
+      'notification sent',
+    );
   }
 }

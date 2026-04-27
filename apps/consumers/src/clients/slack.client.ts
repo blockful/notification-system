@@ -21,6 +21,7 @@ import {
 } from '../interfaces/slack-context.interface';
 import { CryptoUtil } from '../utils/crypto';
 import { convertMarkdownToSlack } from '@notification-system/messages';
+import { createLogger, type Logger } from '@anticapture/observability';
 
 export class SlackClient implements SlackClientInterface {
   private boltApp: App;
@@ -28,17 +29,20 @@ export class SlackClient implements SlackClientInterface {
   private subscriptionServerUrl: string;
   private tokenEncryptionKey: string;
   private port: number;
-  
+  private readonly logger: Logger;
+
   constructor(
     signingSecret: string,
     subscriptionServerUrl: string,
     tokenEncryptionKey: string,
-    port: number
+    port: number,
+    logger: Logger = createLogger('consumers'),
   ) {
     this.sessionStorage = new InMemorySessionStorage();
     this.subscriptionServerUrl = subscriptionServerUrl;
     this.tokenEncryptionKey = tokenEncryptionKey;
     this.port = port;
+    this.logger = logger.child({ component: 'SlackClient' });
     this.boltApp = this.createBoltApp(signingSecret);
   }
 
@@ -69,7 +73,7 @@ export class SlackClient implements SlackClientInterface {
       deleteInstallation: async () => {}
     };
 
-    console.log('✅ Slack client: OAuth mode initialized');
+    this.logger.info({ event: 'slack_client.oauth_initialized' }, 'slack client OAuth mode initialized');
     return new App({
       signingSecret,
       receiver: new HTTPReceiver({
@@ -127,7 +131,7 @@ export class SlackClient implements SlackClientInterface {
     });
 
     if (!result.ok) {
-      console.error(`Failed to send Slack message: ${result.error}`);
+      this.logger.error({ slackError: result.error, event: 'slack.send_failed' }, 'failed to send Slack message');
     }
 
     return {
@@ -160,7 +164,7 @@ export class SlackClient implements SlackClientInterface {
         await handler(context);
         this.sessionStorage.set(userId, context.session);
       } catch (error) {
-        console.error(`Error handling command ${command}:`, error);
+        this.logger.error({ err: error, command, event: 'slack.command_failed' }, 'error handling command');
         await args.ack();
         await args.respond({
           text: '❌ An error occurred while processing your command. Please try again.',
@@ -193,7 +197,7 @@ export class SlackClient implements SlackClientInterface {
         await handler(context);
         this.sessionStorage.set(userId, context.session);
       } catch (error) {
-        console.error(`Error handling action ${actionId}:`, error);
+        this.logger.error({ err: error, actionId, event: 'slack.action_failed' }, 'error handling action');
         await args.ack();
       }
     });
@@ -221,7 +225,7 @@ export class SlackClient implements SlackClientInterface {
         await handler(context);
         this.sessionStorage.set(userId, context.session);
       } catch (error) {
-        console.error(`Error handling view ${callbackId}:`, error);
+        this.logger.error({ err: error, callbackId, event: 'slack.view_failed' }, 'error handling view');
         await args.ack();
       }
     });
@@ -250,7 +254,7 @@ export class SlackClient implements SlackClientInterface {
         await handler(context);
         this.sessionStorage.set(userId, context.session);
       } catch (error) {
-        console.error(`Error handling message pattern ${pattern}:`, error);
+        this.logger.error({ err: error, pattern, event: 'slack.message_pattern_failed' }, 'error handling message pattern');
       }
     });
   }
@@ -266,7 +270,7 @@ export class SlackClient implements SlackClientInterface {
       try {
         await handler(args);
       } catch (error) {
-        console.error(`Error handling event ${eventType}:`, error);
+        this.logger.error({ err: error, eventType, event: 'slack.event_failed' }, 'error handling event');
       }
     });
   }
@@ -288,12 +292,12 @@ export class SlackClient implements SlackClientInterface {
    * Launch the Slack bot
    */
   async launch(): Promise<void> {
-    console.log('🚀 Starting Slack Bolt app...');
+    this.logger.info({ event: 'slack_bot.starting' }, 'starting Slack Bolt app');
     try {
       await this.boltApp.start(this.port);
-      console.log(`⚡ Slack bot is running on port ${this.port}!`);
+      this.logger.info({ port: this.port, event: 'slack_bot.started' }, 'slack bot is running');
     } catch (error) {
-      console.error('❌ Failed to start Slack bot:', error);
+      this.logger.error({ err: error, event: 'slack_bot.start_failed' }, 'failed to start slack bot');
       throw error;
     }
   }
@@ -303,7 +307,7 @@ export class SlackClient implements SlackClientInterface {
    */
   async stop(signal?: string): Promise<void> {
     await this.boltApp.stop();
-    console.log(`Slack bot stopped (${signal || 'manual'})`);
+    this.logger.info({ signal: signal || 'manual', event: 'slack_bot.stopped' }, 'slack bot stopped');
   }
 
   /**

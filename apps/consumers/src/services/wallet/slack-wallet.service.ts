@@ -20,14 +20,16 @@ import {
   walletSelectionList
 } from '../../utils/slack-blocks-templates';
 import { slackMessages, replacePlaceholders } from '@notification-system/messages';
+import { createLogger, type Logger } from '@anticapture/observability';
 
 export class SlackWalletService extends BaseWalletService {
 
   constructor(
     subscriptionApi: SubscriptionAPIService,
-    ensResolver: EnsResolverService
+    ensResolver: EnsResolverService,
+    logger: Logger = createLogger('consumers'),
   ) {
-    super(subscriptionApi, ensResolver);
+    super(subscriptionApi, ensResolver, logger, 'slack-wallet');
   }
 
   /**
@@ -52,7 +54,7 @@ export class SlackWalletService extends BaseWalletService {
       await context.ack();
       await this.listWallets(context);
     } catch (error) {
-      console.error('Error in wallet initialization:', error);
+      this.logger.error({ err: error, event: 'wallet.init_failed' }, 'error in wallet initialization');
       if (context.respond) {
         await context.respond({
           text: slackMessages.genericError,
@@ -139,7 +141,7 @@ export class SlackWalletService extends BaseWalletService {
         });
       }
     } catch (error) {
-      console.error('Error listing wallets:', error);
+      this.logger.error({ err: error, event: 'wallet.list_failed' }, 'error listing wallets');
       if (context.respond) {
         await context.respond({
           text: slackMessages.wallet.loadError,
@@ -216,7 +218,7 @@ export class SlackWalletService extends BaseWalletService {
 
       await context.ack();
     } catch (error) {
-      console.error('Error opening wallet modal:', error);
+      this.logger.error({ err: error, event: 'wallet.modal_open_failed' }, 'error opening wallet modal');
       await context.ack();
       if (context.respond) {
         await context.respond({
@@ -298,7 +300,7 @@ export class SlackWalletService extends BaseWalletService {
         }
       }
     } catch (error) {
-      console.error('Error processing wallet submission:', error);
+      this.logger.error({ err: error, event: 'wallet.submit_failed' }, 'error processing wallet submission');
       await context.ack({
         response_action: 'errors',
         errors: {
@@ -348,7 +350,7 @@ export class SlackWalletService extends BaseWalletService {
         });
       }
     } catch (error) {
-      console.error('Error starting wallet removal:', error);
+      this.logger.error({ err: error, event: 'wallet.start_remove_failed' }, 'error starting wallet removal');
       if (context.respond) {
         await context.respond({
           text: slackMessages.genericError,
@@ -417,7 +419,7 @@ export class SlackWalletService extends BaseWalletService {
         });
       }
     } catch (error) {
-      console.error('Error removing wallets:', error);
+      this.logger.error({ err: error, event: 'wallet.remove_failed' }, 'error removing wallets');
       if (context.respond) {
         await context.respond({
           replace_original: false,

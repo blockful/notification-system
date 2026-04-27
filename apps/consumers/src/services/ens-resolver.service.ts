@@ -6,19 +6,22 @@
 import { createPublicClient, http, getAddress } from 'viem';
 import { mainnet } from 'viem/chains';
 import { normalize } from 'viem/ens';
+import { createLogger, type Logger } from '@anticapture/observability';
 
 export class EnsResolverService {
   private client;
+  private readonly logger: Logger;
 
-  constructor(rpcUrl?: string) {
+  constructor(rpcUrl?: string, logger: Logger = createLogger('consumers')) {
     this.client = createPublicClient({
       chain: mainnet,
       transport: http(rpcUrl, {
         timeout: 5_000,  // 5 seconds timeout
-        retryCount: 3,   // Try 3 times  
+        retryCount: 3,   // Try 3 times
         retryDelay: 500   // Wait 500ms between retries
       })
     });
+    this.logger = logger.child({ component: 'EnsResolverService' });
   }
 
   /**
@@ -33,7 +36,10 @@ export class EnsResolverService {
       });
       return address;
     } catch (error) {
-      console.error(`Failed to resolve ENS name ${ensName}:`, error);
+      this.logger.error(
+        { err: error, ensName, event: 'ens.resolve_failed' },
+        'failed to resolve ENS name',
+      );
       return null;
     }
   }
@@ -51,7 +57,10 @@ export class EnsResolverService {
       });
       if (ensName) return ensName;
     } catch (error) {
-      console.error(`Failed to lookup ENS for address ${address}:`, error);
+      this.logger.error(
+        { err: error, address, event: 'ens.lookup_failed' },
+        'failed to lookup ENS for address',
+      );
     }
     
     return address;

@@ -17,6 +17,10 @@ import { SubscriptionAPIService } from './services/subscription-api.service';
 import { RabbitMQNotificationConsumerService } from './services/rabbitmq-notification-consumer.service';
 import { TelegramClientInterface } from './interfaces/telegram-client.interface';
 import { SlackClientInterface } from './interfaces/slack-client.interface';
+import { createLogger, wrapWithTracing } from '@anticapture/observability';
+
+const logger = createLogger('consumers');
+
 export class App {
   private telegramBotService: TelegramBotService;
   private slackBotService: SlackBotService;
@@ -37,40 +41,41 @@ export class App {
     slackClient: SlackClientInterface,
     webhookPort: number
   ) {
-    const subscriptionApi = new SubscriptionAPIService(subscriptionServerUrl);
-    const anticaptureClient = new AnticaptureClient(httpClient);
+    const subscriptionApi = wrapWithTracing(new SubscriptionAPIService(subscriptionServerUrl, logger));
+    const anticaptureClient = wrapWithTracing(new AnticaptureClient(httpClient));
     const explorerService = new ExplorerService();
 
     // Telegram services
-    const telegramDaoService = new TelegramDAOService(anticaptureClient, subscriptionApi);
-    const telegramWalletService = new TelegramWalletService(subscriptionApi, ensResolver);
-    const telegramSettingsService = new TelegramSettingsService(subscriptionApi);
+    const telegramDaoService = wrapWithTracing(new TelegramDAOService(anticaptureClient, subscriptionApi, logger));
+    const telegramWalletService = wrapWithTracing(new TelegramWalletService(subscriptionApi, ensResolver, logger));
+    const telegramSettingsService = wrapWithTracing(new TelegramSettingsService(subscriptionApi, logger));
 
-    this.telegramBotService = new TelegramBotService(
+    this.telegramBotService = wrapWithTracing(new TelegramBotService(
       telegramClient,
       telegramDaoService,
       telegramWalletService,
       telegramSettingsService,
       explorerService,
       ensResolver
-    );
+    ));
 
-    const slackDaoService = new SlackDAOService(anticaptureClient, subscriptionApi);
-    const slackWalletService = new SlackWalletService(subscriptionApi, ensResolver);
-    const slackSettingsService = new SlackSettingsService(subscriptionApi);
+    const slackDaoService = wrapWithTracing(new SlackDAOService(anticaptureClient, subscriptionApi, logger));
+    const slackWalletService = wrapWithTracing(new SlackWalletService(subscriptionApi, ensResolver, logger));
+    const slackSettingsService = wrapWithTracing(new SlackSettingsService(subscriptionApi, logger));
 
-    this.slackBotService = new SlackBotService(
+    this.slackBotService = wrapWithTracing(new SlackBotService(
       slackClient,
       ensResolver,
       slackDaoService,
       slackWalletService,
-      slackSettingsService
-    );
+      slackSettingsService,
+      logger,
+    ));
 
-    this.webhookService = new WebhookService(anticaptureClient, subscriptionApi);
+    this.webhookService = wrapWithTracing(new WebhookService(anticaptureClient, subscriptionApi, logger));
 
     const webhookController = new WebhookController(this.webhookService);
-    this.webhookServer = new WebhookServer(webhookController);
+    this.webhookServer = new WebhookServer(webhookController, logger);
 
     this.rabbitmqUrl = rabbitmqUrl;
     this.webhookPort = webhookPort;
@@ -80,30 +85,33 @@ export class App {
     this.rabbitmqTelegramConsumerService = await RabbitMQNotificationConsumerService.create(
       this.rabbitmqUrl,
       this.telegramBotService,
-      'telegram'
+      'telegram',
+      logger,
     );
-    console.log('Telegram consumer connected to RabbitMQ');
+    logger.info('telegram consumer connected to RabbitMQ');
 
     this.rabbitmqSlackConsumerService = await RabbitMQNotificationConsumerService.create(
       this.rabbitmqUrl,
       this.slackBotService,
-      'slack'
+      'slack',
+      logger,
     );
-    console.log('Slack consumer connected to RabbitMQ');
+    logger.info('slack consumer connected to RabbitMQ');
 
     this.rabbitmqWebhookConsumerService = await RabbitMQNotificationConsumerService.create(
       this.rabbitmqUrl,
       this.webhookService,
-      'webhook'
+      'webhook',
+      logger,
     );
-    console.log('Webhook consumer connected to RabbitMQ');
+    logger.info('webhook consumer connected to RabbitMQ');
 
     await this.webhookServer.start(this.webhookPort);
 
     this.telegramBotService.launch();
     this.slackBotService.launch();
 
-    console.log('All bot services have been initialized');
+    logger.info('all bot services initialized');
   }
 
   async stop(): Promise<void> {

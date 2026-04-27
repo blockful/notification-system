@@ -12,16 +12,23 @@ import {
   HandlerRegistration 
 } from '../interfaces/telegram-client.interface';
 import { ContextWithSession } from '../interfaces/bot.interface';
+import { createLogger, type Logger } from '@anticapture/observability';
 
 export class TelegramClient implements TelegramClientInterface {
   private bot: Telegraf<ContextWithSession>;
   private running: boolean = false;
   private sendOnlyMode: boolean;
+  private readonly logger: Logger;
 
-  constructor(token: string, options?: { sendOnlyMode?: boolean }) {
+  constructor(
+    token: string,
+    options?: { sendOnlyMode?: boolean },
+    logger: Logger = createLogger('consumers'),
+  ) {
     this.bot = new Telegraf<ContextWithSession>(token);
     this.bot.use(session());
     this.sendOnlyMode = options?.sendOnlyMode || false;
+    this.logger = logger.child({ component: 'TelegramClient' });
   }
 
   async sendMessage(
@@ -58,13 +65,13 @@ export class TelegramClient implements TelegramClientInterface {
     if (this.sendOnlyMode) {
       // In send-only mode, don't start polling/webhook
       this.running = true;
-      console.log('🤖 Bot ready for sending messages (send-only mode)');
+      this.logger.info({ event: 'telegram_bot.send_only_ready' }, 'bot ready for sending messages (send-only mode)');
       return;
     }
-    
+
     await this.bot.launch();
     this.running = true;
-    console.log('🤖 Bot is running...');
+    this.logger.info({ event: 'telegram_bot.started' }, 'bot is running');
   }
 
   stop(signal?: string): void {
