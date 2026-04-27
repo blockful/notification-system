@@ -321,6 +321,9 @@ importers:
 
   apps/logic-system:
     dependencies:
+      '@anticapture/client':
+        specifier: ^1.0.0
+        version: 1.0.0
       '@notification-system/anticapture-client':
         specifier: workspace:*
         version: link:../../packages/anticapture-client
@@ -573,6 +576,17 @@ packages:
   '@ampproject/remapping@2.3.0':
     resolution: {integrity: sha512-30iZtAPgz+LTIYoeivqYo853f02jBYSd5uGnGpkFV0M3xOt9aN73erkgYAmZU43x4VfqcnLxW9Kpg3R5LC4YYw==}
     engines: {node: '>=6.0.0'}
+
+  '@anticapture/client@1.0.0':
+    resolution: {integrity: sha512-lJK5jAILq8CBt6Mdfmto7ugp/xgw0Mrz+eM1JrKgC/7uo7WLoua2MT87h9lf2rd+5dcrJM0akq+PaeEty1sW0w==}
+    peerDependencies:
+      '@tanstack/react-query': ^5.0.0
+      react: ^19.0.0
+    peerDependenciesMeta:
+      '@tanstack/react-query':
+        optional: true
+      react:
+        optional: true
 
   '@ardatan/relay-compiler@12.0.3':
     resolution: {integrity: sha512-mBDFOGvAoVlWaWqs3hm1AciGHSQE1rqFc/liZTyYz/Oek9yZdT5H26pH2zAFuEiTiBVPPyMuqf5VjOFPI2DGsQ==}
@@ -5829,6 +5843,8 @@ snapshots:
     dependencies:
       '@jridgewell/gen-mapping': 0.3.8
       '@jridgewell/trace-mapping': 0.3.25
+
+  '@anticapture/client@1.0.0': {}
 
   '@ardatan/relay-compiler@12.0.3(encoding@0.1.13)(graphql@16.11.0)':
     dependencies:

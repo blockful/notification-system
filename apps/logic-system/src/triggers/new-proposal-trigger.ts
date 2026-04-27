@@ -4,17 +4,16 @@
  */
 
 import { Trigger } from './base-trigger';
-import { ProposalOnChain, ListProposalsOptions, ProposalDataSource } from '../interfaces/proposal.interface';
 import { DispatcherService, DispatcherMessage } from '../interfaces/dispatcher.interface';
 import { NotificationTypeId } from '@notification-system/messages';
+import { OnchainProposal, proposals, proposalsPathParamsDaoEnum, ProposalsQueryParams } from "@anticapture/client"
 
 const triggerId = NotificationTypeId.NewProposal;
 
-export class NewProposalTrigger extends Trigger<ProposalOnChain, ListProposalsOptions> {
+export class NewProposalTrigger extends Trigger<OnchainProposal, ProposalsQueryParams> {
   private timestampCursor: number;
   constructor(
     private readonly dispatcherService: DispatcherService,
-    private readonly proposalRepository: ProposalDataSource,
     interval: number,
     initialTimestamp?: string
   ) {
@@ -41,15 +40,15 @@ export class NewProposalTrigger extends Trigger<ProposalOnChain, ListProposalsOp
     }
   }
 
-  async process(data: ProposalOnChain[]) {
+  async process(data: OnchainProposal[]) {
     if (data.length === 0) {
       return;
     }
-    
+
     const message: DispatcherMessage = {
       triggerId: this.id,
       events: data
-    };   
+    };
     await this.dispatcherService.sendMessage(message);
 
     // Update timestamp to the most recent proposal's timestamp + 1
@@ -63,13 +62,22 @@ export class NewProposalTrigger extends Trigger<ProposalOnChain, ListProposalsOp
    * Fetches proposals from the database
    * @returns Array of proposals
    */
-  protected async fetchData(options?: ListProposalsOptions): Promise<ProposalOnChain[]> {
+  protected async fetchData(options?: ProposalsQueryParams): Promise<OnchainProposal[]> {
     if (!options?.status) {
       throw new Error('Status is required in filter options');
     }
-    return await this.proposalRepository.listAll({
-      status: options.status,
-      fromDate: this.timestampCursor
-    });
+
+    const responses = await Promise.all(Object.values(proposalsPathParamsDaoEnum).map(dao =>
+      proposals(dao, {
+        fromDate: this.timestampCursor,
+        status: options.status,
+      }, {
+        headers: {
+          "x-client-source": "notification-system"
+        }
+      })
+    ))
+
+    return responses.flatMap((r) => r.items);
   }
 } 

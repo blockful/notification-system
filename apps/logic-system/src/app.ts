@@ -42,7 +42,7 @@ export class App {
     initialTimestamp?: string
   ) {
     this.proposalStatus = proposalStatus;
-    
+
     const anticaptureClient = new AnticaptureClient(anticaptureHttpClient);
     const proposalRepository = new ProposalRepository(anticaptureClient);
     const offchainProposalRepository = new OffchainProposalRepository(anticaptureClient);
@@ -67,13 +67,12 @@ export class App {
   ): Promise<void> {
     this.rabbitMQConnection = new RabbitMQConnection(rabbitmqUrl);
     await this.rabbitMQConnection.connect();
-    
+
     this.rabbitMQPublisher = await RabbitMQPublisher.create(this.rabbitMQConnection);
     const dispatcherService = new RabbitMQDispatcherService(this.rabbitMQPublisher);
 
     this.trigger = new NewProposalTrigger(
       dispatcherService,
-      proposalRepository,
       triggerInterval,
       initialTimestamp
     );
@@ -165,7 +164,7 @@ export class App {
     this.votingReminderTrigger60.start();
     this.votingReminderTrigger90.start();
     this.offchainVotingReminderTrigger75.start();
-    
+
     console.log('Logic system is running. Press Ctrl+C to stop.');
   }
 
