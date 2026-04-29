@@ -12,6 +12,7 @@ const envSchema = z.object({
   RABBITMQ_URL: z.string().url(),
   TRIGGER_INTERVAL: z.coerce.number().optional().default(60000),
   PROPOSAL_STATUS: z.nativeEnum(QueryInput_Proposals_Status_Items),
+  PORT: z.coerce.number().positive().optional().default(3005),
 });
 
 const _env = envSchema.safeParse(process.env);
