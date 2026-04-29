@@ -91,7 +91,10 @@ services:
       context: .
       dockerfile: apps/dispatcher/Dockerfile
     container_name: dispatcher
+    ports:
+      - "3004:3004"
     environment:
+      PORT: 3004
       ANTICAPTURE_GRAPHQL_ENDPOINT: ${ANTICAPTURE_GRAPHQL_ENDPOINT}
       BLOCKFUL_API_TOKEN: ${BLOCKFUL_API_TOKEN:-}
       RABBITMQ_URL: amqp://admin:admin@rabbitmq:5672
@@ -111,6 +114,8 @@ services:
       context: .
       dockerfile: apps/logic-system/Dockerfile
     container_name: logic-system
+    ports:
+      - "3005:3005"
     environment:
       ANTICAPTURE_GRAPHQL_ENDPOINT: ${ANTICAPTURE_GRAPHQL_ENDPOINT}
       BLOCKFUL_API_TOKEN: ${BLOCKFUL_API_TOKEN:-}
