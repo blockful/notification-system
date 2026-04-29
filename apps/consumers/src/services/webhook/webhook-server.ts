@@ -1,6 +1,7 @@
 import fastify, { FastifyInstance } from 'fastify';
-import { validatorCompiler, serializerCompiler } from 'fastify-type-provider-zod';
+import { validatorCompiler, serializerCompiler, ZodTypeProvider } from 'fastify-type-provider-zod';
 import fastifyCors from '@fastify/cors';
+import { z } from 'zod';
 import { WebhookController } from './webhook.controller';
 import { createLogger, type Logger } from '@anticapture/observability';
 
@@ -19,6 +20,12 @@ export class WebhookServer {
     this.server.register(fastifyCors, { origin: '*' });
 
     this.server.register((app) => this.webhookController.register(app));
+    this.server.withTypeProvider<ZodTypeProvider>().get('/health', {
+      schema: {
+        tags: ['health'],
+        response: { 200: z.object({ status: z.string(), timestamp: z.string() }) },
+      },
+    }, () => ({ status: 'ok', timestamp: new Date().toISOString() }));
     this.logger = logger.child({ component: 'WebhookServer' });
   }
 
