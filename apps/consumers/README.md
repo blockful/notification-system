@@ -53,14 +53,14 @@ src/
 | Variable | Required | Description |
 |----------|----------|-------------|
 | `TELEGRAM_BOT_TOKEN` | ✅ | Telegram bot authentication token |
-| `ANTICAPTURE_GRAPHQL_ENDPOINT` | ✅ | GraphQL API endpoint for DAO data |
+| `ANTICAPTURE_API_URL` | ✅ | GraphQL API endpoint for DAO data |
 | `SUBSCRIPTION_SERVER_URL` | ✅ | Subscription management API URL |
 | `RABBITMQ_URL` | ✅ | RabbitMQ connection string |
 
 ### Example Configuration
 ```bash
 TELEGRAM_BOT_TOKEN=123456:ABC-DEF1234ghIkl-zyx57W2v1u123ew11
-ANTICAPTURE_GRAPHQL_ENDPOINT=https://api.anticapture.xyz/graphql
+ANTICAPTURE_API_URL=https://api.anticapture.xyz/graphql
 SUBSCRIPTION_SERVER_URL=http://subscription-server:3001
 RABBITMQ_URL=amqp://user:pass@rabbitmq:5672
 ```

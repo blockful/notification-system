@@ -1,6 +1,5 @@
 import './instrumentation';
 
-import axios from 'axios';
 import { App } from './app';
 import { env } from './config/env';
 import { createLogger } from '@anticapture/observability';
@@ -10,15 +9,10 @@ const logger = createLogger('logic-system');
 const app = new App(
   env.TRIGGER_INTERVAL,
   env.PROPOSAL_STATUS,
-  axios.create({
-    baseURL: env.ANTICAPTURE_GRAPHQL_ENDPOINT,
-    headers: {
-      ...(env.BLOCKFUL_API_TOKEN && {
-        Authorization: `Bearer ${env.BLOCKFUL_API_TOKEN}`,
-      }),
-    },
-  }),
+  env.ANTICAPTURE_API_URL,
   env.RABBITMQ_URL,
+  undefined,
+  env.BLOCKFUL_API_TOKEN ? { Authorization: `Bearer ${env.BLOCKFUL_API_TOKEN}` } : undefined,
 );
 
 app.start().catch((err) => {

@@ -58,7 +58,7 @@ tests/                        # Jest tests (separate from src/)
 
 | Variable | Required | Description |
 |----------|----------|-------------|
-| `ANTICAPTURE_GRAPHQL_ENDPOINT` | Yes | AntiCapture GraphQL API URL |
+| `ANTICAPTURE_API_URL` | Yes | AntiCapture GraphQL API URL |
 | `RABBITMQ_URL` | Yes | RabbitMQ connection string |
 | `TRIGGER_INTERVAL` | No | Polling interval in ms (default: 30000) |
 | `PROPOSAL_STATUS` | No | Proposal status filter (default: ACTIVE) |

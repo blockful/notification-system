@@ -77,7 +77,7 @@ src/
 | `TELEGRAM_BOT_TOKEN` | Yes | Telegram BotFather token |
 | `SLACK_SIGNING_SECRET` | Yes | Slack app signing secret |
 | `TOKEN_ENCRYPTION_KEY` | Yes | 64-char hex for workspace token decryption |
-| `ANTICAPTURE_GRAPHQL_ENDPOINT` | Yes | GraphQL API endpoint |
+| `ANTICAPTURE_API_URL` | Yes | GraphQL API endpoint |
 | `SUBSCRIPTION_SERVER_URL` | Yes | Subscription Server base URL |
 | `RABBITMQ_URL` | Yes | RabbitMQ connection string |
 | `PORT` | No | Slack HTTP receiver port (default: 3002) |

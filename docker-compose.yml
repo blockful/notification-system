@@ -68,7 +68,7 @@ services:
       - "3003:3003"
     environment:
       TELEGRAM_BOT_TOKEN: ${TELEGRAM_BOT_TOKEN}
-      ANTICAPTURE_GRAPHQL_ENDPOINT: ${ANTICAPTURE_GRAPHQL_ENDPOINT}
+      ANTICAPTURE_API_URL: ${ANTICAPTURE_API_URL}
       BLOCKFUL_API_TOKEN: ${BLOCKFUL_API_TOKEN:-}
       SLACK_SIGNING_SECRET: ${SLACK_SIGNING_SECRET}
       SLACK_CHANNEL_ID: ${SLACK_CHANNEL_ID:-}
@@ -92,7 +92,7 @@ services:
       dockerfile: apps/dispatcher/Dockerfile
     container_name: dispatcher
     environment:
-      ANTICAPTURE_GRAPHQL_ENDPOINT: ${ANTICAPTURE_GRAPHQL_ENDPOINT}
+      ANTICAPTURE_API_URL: ${ANTICAPTURE_API_URL}
       BLOCKFUL_API_TOKEN: ${BLOCKFUL_API_TOKEN:-}
       RABBITMQ_URL: amqp://admin:admin@rabbitmq:5672
       SUBSCRIPTION_SERVER_URL: http://subscription-server:3003
@@ -112,7 +112,7 @@ services:
       dockerfile: apps/logic-system/Dockerfile
     container_name: logic-system
     environment:
-      ANTICAPTURE_GRAPHQL_ENDPOINT: ${ANTICAPTURE_GRAPHQL_ENDPOINT}
+      ANTICAPTURE_API_URL: ${ANTICAPTURE_API_URL}
       BLOCKFUL_API_TOKEN: ${BLOCKFUL_API_TOKEN:-}
       RABBITMQ_URL: amqp://admin:admin@rabbitmq:5672
       TRIGGER_INTERVAL: 10000

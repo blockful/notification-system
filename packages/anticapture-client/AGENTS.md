@@ -7,7 +7,7 @@ Shared GraphQL client for querying the AntiCapture governance API. Provides type
 ```bash
 pnpm client codegen
 # or with custom endpoint:
-ANTICAPTURE_GRAPHQL_ENDPOINT="https://..." pnpm client codegen
+ANTICAPTURE_API_URL="https://..." pnpm client codegen
 ```
 
 **Config**: `codegen.yaml` - uses `client-preset` with `@graphql-typed-document-node/core`.

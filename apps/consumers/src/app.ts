@@ -1,4 +1,3 @@
-import { AxiosInstance } from 'axios';
 import { TelegramBotService } from './services/bot/telegram-bot.service';
 import { SlackBotService } from './services/bot/slack-bot.service';
 import { WebhookService } from './services/webhook/webhook.service';
@@ -34,15 +33,19 @@ export class App {
 
   constructor(
     subscriptionServerUrl: string,
-    httpClient: AxiosInstance,
+    anticaptureBaseURL: string,
     rabbitmqUrl: string,
     ensResolver: EnsResolverService,
     telegramClient: TelegramClientInterface,
     slackClient: SlackClientInterface,
-    webhookPort: number
+    webhookPort: number,
+    anticaptureHeaders?: Record<string, string>
   ) {
     const subscriptionApi = wrapWithTracing(new SubscriptionAPIService(subscriptionServerUrl, logger));
-    const anticaptureClient = wrapWithTracing(new AnticaptureClient(httpClient));
+    const anticaptureClient = wrapWithTracing(new AnticaptureClient({
+      baseURL: anticaptureBaseURL,
+      defaultHeaders: anticaptureHeaders,
+    }));
     const explorerService = new ExplorerService();
 
     // Telegram services

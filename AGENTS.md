@@ -38,7 +38,7 @@ NODE_ENV=test pnpm --filter @notification-system/integrated-tests test
 pnpm consumer check-types
 pnpm logic-system lint
 
-# GraphQL code generation (requires ANTICAPTURE_GRAPHQL_ENDPOINT)
+# GraphQL code generation (requires ANTICAPTURE_API_URL)
 pnpm client codegen
 ```
 
@@ -123,7 +123,7 @@ Required `.env` variables:
 ```
 DATABASE_URL=postgresql://user:pass@localhost/dbname
 RABBITMQ_URL=amqp://localhost
-ANTICAPTURE_GRAPHQL_ENDPOINT=https://...
+ANTICAPTURE_API_URL=https://...
 TELEGRAM_BOT_TOKEN=...
 SLACK_SIGNING_SECRET=...
 TOKEN_ENCRYPTION_KEY=...  # 64-char hex for AES-256-CBC
@@ -250,7 +250,7 @@ VALUES (
 - `state = 'closed'` (not `'active'`)
 - `end` = recent past (within last 24h so trigger cursor picks it up)
 
-**Gateway note:** If the production gateway returns a GraphQL error for DAOs with `null` in non-nullable fields (e.g. `supportOffchainData`), `getDAOs()` may return an empty list and skip all offchain queries. To avoid this during local testing, run the API gateway locally pointing only to the ENS API and set `ANTICAPTURE_GRAPHQL_ENDPOINT=http://host.docker.internal:4000/graphql` in `.env`.
+**Gateway note:** If the production gateway returns a GraphQL error for DAOs with `null` in non-nullable fields (e.g. `supportOffchainData`), `getDAOs()` may return an empty list and skip all offchain queries. To avoid this during local testing, run the API gateway locally pointing only to the ENS API and set `ANTICAPTURE_API_URL=http://host.docker.internal:4000/graphql` in `.env`.
 
 ### New Offchain Proposal Insert (Snapshot)
 ```sql

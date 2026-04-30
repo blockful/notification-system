@@ -63,7 +63,7 @@ src/
 |----------|----------|-------------|
 | `SUBSCRIPTION_SERVER_URL` | Yes | Base URL for Subscription Server API |
 | `RABBITMQ_URL` | Yes | RabbitMQ connection string |
-| `ANTICAPTURE_GRAPHQL_ENDPOINT` | Yes | AntiCapture GraphQL endpoint |
+| `ANTICAPTURE_API_URL` | Yes | AntiCapture GraphQL endpoint |
 
 ## Testing
 

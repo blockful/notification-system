@@ -28,10 +28,9 @@ export class App {
   private isCreated = false;
 
   constructor(
-    private subscriptionServerUrl: string, 
+    private subscriptionServerUrl: string,
     private rabbitmqUrl: string,
-    private anticaptureGraphqlEndpoint: string,
-    private anticaptureHttpClient?: any,
+    private anticaptureBaseURL: string,
     private blockfulApiToken?: string
   ) {}
 
@@ -46,17 +45,12 @@ export class App {
     });
     const subscriptionClient = wrapWithTracing(new SubscriptionClient(subscriptionAxiosClient));
     
-    // Setup AnticaptureClient - use provided client or create new one
-    const anticaptureAxiosClient = this.anticaptureHttpClient || axios.create({
-      baseURL: this.anticaptureGraphqlEndpoint,
-      headers: {
-        'Content-Type': 'application/json',
-        ...(this.blockfulApiToken && {
-          Authorization: `Bearer ${this.blockfulApiToken}`,
-        }),
-      },
-    });
-    const anticaptureClient = wrapWithTracing(new AnticaptureClient(anticaptureAxiosClient));
+    const anticaptureClient = wrapWithTracing(new AnticaptureClient({
+      baseURL: this.anticaptureBaseURL,
+      defaultHeaders: this.blockfulApiToken
+        ? { Authorization: `Bearer ${this.blockfulApiToken}` }
+        : undefined,
+    }));
     
     this.rabbitmqConnection = new RabbitMQConnection(this.rabbitmqUrl);
     await this.rabbitmqConnection.connect();

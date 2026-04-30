@@ -15,7 +15,6 @@ import { OffchainVotesRepository } from './repositories/offchain-votes.repositor
 import { RabbitMQDispatcherService } from './api-clients/rabbitmq-dispatcher.service';
 import { AnticaptureClient, QueryInput_Proposals_Status_Items } from '@notification-system/anticapture-client';
 import { RabbitMQConnection, RabbitMQPublisher } from '@notification-system/rabbitmq-client';
-import { AxiosInstance } from 'axios';
 import { createLogger, wrapWithTracing } from '@anticapture/observability';
 
 const logger = createLogger('logic-system');
@@ -40,13 +39,17 @@ export class App {
   constructor(
     triggerInterval: number,
     proposalStatus: QueryInput_Proposals_Status_Items,
-    anticaptureHttpClient: AxiosInstance,
+    anticaptureBaseURL: string,
     rabbitmqUrl: string,
-    initialTimestamp?: string
+    initialTimestamp?: string,
+    anticaptureHeaders?: Record<string, string>
   ) {
     this.proposalStatus = proposalStatus;
-    
-    const anticaptureClient = wrapWithTracing(new AnticaptureClient(anticaptureHttpClient));
+
+    const anticaptureClient = wrapWithTracing(new AnticaptureClient({
+      baseURL: anticaptureBaseURL,
+      defaultHeaders: anticaptureHeaders,
+    }));
     const proposalRepository = wrapWithTracing(new ProposalRepository(anticaptureClient));
     const offchainProposalRepository = wrapWithTracing(new OffchainProposalRepository(anticaptureClient));
     const votingPowerRepository = wrapWithTracing(new VotingPowerRepository(anticaptureClient));
