@@ -8,4 +8,5 @@ COPY . .
 RUN pnpm install
 RUN pnpm build
 
+EXPOSE 3004
 ENTRYPOINT ["pnpm", "dispatcher", "start"]

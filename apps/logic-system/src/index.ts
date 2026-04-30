@@ -19,6 +19,7 @@ const app = new App(
     },
   }),
   env.RABBITMQ_URL,
+  env.PORT,
 );
 
 app.start().catch((err) => {

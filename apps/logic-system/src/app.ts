@@ -17,6 +17,8 @@ import { AnticaptureClient, QueryInput_Proposals_Status_Items } from '@notificat
 import { RabbitMQConnection, RabbitMQPublisher } from '@notification-system/rabbitmq-client';
 import { AxiosInstance } from 'axios';
 import { createLogger, wrapWithTracing } from '@anticapture/observability';
+import { type FastifyInstance } from 'fastify';
+import { startServer } from './server';
 
 const logger = createLogger('logic-system');
 
@@ -35,6 +37,7 @@ export class App {
   private proposalStatus: QueryInput_Proposals_Status_Items;
   private rabbitMQConnection!: RabbitMQConnection;
   private rabbitMQPublisher!: RabbitMQPublisher;
+  private server!: FastifyInstance;
   private initPromise: Promise<void>;
 
   constructor(
@@ -42,6 +45,7 @@ export class App {
     proposalStatus: QueryInput_Proposals_Status_Items,
     anticaptureHttpClient: AxiosInstance,
     rabbitmqUrl: string,
+    private port: number,
     initialTimestamp?: string
   ) {
     this.proposalStatus = proposalStatus;
@@ -157,6 +161,7 @@ export class App {
 
   async start(): Promise<void> {
     await this.initPromise;
+    this.server = await startServer(this.port);
     this.trigger.start({ status: this.proposalStatus });
     this.offchainProposalTrigger.start({ status: ['active', 'pending'] });
     this.offchainProposalFinishedTrigger.start();
@@ -221,6 +226,10 @@ export class App {
   }
 
   async stop(): Promise<void> {
+    if (this.server) {
+      await this.server.close();
+    }
+
     await this.trigger.stop();
     await this.offchainProposalTrigger.stop();
     await this.offchainProposalFinishedTrigger.stop();

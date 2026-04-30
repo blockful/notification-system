@@ -11,6 +11,7 @@ const app = new App(
   config.subscriptionServerUrl,
   config.rabbitmqUrl,
   config.anticaptureGraphqlEndpoint,
+  config.port,
   undefined,
   config.blockfulApiToken
 );
