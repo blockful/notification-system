@@ -130,8 +130,68 @@ describe('getEventThreshold', () => {
   });
 });
 
-// TODO: Migrate in Task 4
-describe.skip('listProposals', () => {});
+describe('listProposals', () => {
+  describe('per-DAO', () => {
+    it('returns empty array for empty response', async () => {
+      server.use(http.get(`${TEST_BASE_URL}/uniswap/proposals`, () =>
+        HttpResponse.json({ items: [], totalCount: 0 })
+      ));
+      const client = createTestClient();
+      expect(await client.listProposals({}, 'uniswap')).toEqual([]);
+    });
+
+    it('attaches daoId to each proposal', async () => {
+      server.use(http.get(`${TEST_BASE_URL}/uniswap/proposals`, () =>
+        HttpResponse.json({ items: [{ id: 'p1', description: 'Proposal 1', title: null, timestamp: 100 }], totalCount: 1 })
+      ));
+      const client = createTestClient();
+      const result = await client.listProposals({}, 'uniswap');
+      expect(result[0]?.id).toBe('p1');
+      expect(result[0]?.daoId).toBe('uniswap');
+    });
+
+    it('returns empty array on error', async () => {
+      server.use(http.get(`${TEST_BASE_URL}/uniswap/proposals`, () => new HttpResponse(null, { status: 500 })));
+      const client = createTestClient();
+      expect(await client.listProposals({}, 'uniswap')).toEqual([]);
+    });
+  });
+
+  describe('multi-DAO fan-out', () => {
+    it('continues when one DAO fails', async () => {
+      server.use(
+        http.get(`${TEST_BASE_URL}/daos`, () => HttpResponse.json(daosResponse([
+          { id: 'dao1' }, { id: 'dao2' }, { id: 'dao3' }
+        ]))),
+        http.get(`${TEST_BASE_URL}/dao1/proposals`, () =>
+          HttpResponse.json({ items: [{ id: 'p1', description: 'P1', title: null, timestamp: 200 }], totalCount: 1 })),
+        http.get(`${TEST_BASE_URL}/dao2/proposals`, () => new HttpResponse(null, { status: 500 })),
+        http.get(`${TEST_BASE_URL}/dao3/proposals`, () =>
+          HttpResponse.json({ items: [{ id: 'p3', description: 'P3', title: null, timestamp: 300 }], totalCount: 1 })),
+      );
+      const client = createTestClient();
+      const result = await client.listProposals();
+      const ids = result.map((p: any) => p.id);
+      expect(ids).toContain('p1');
+      expect(ids).toContain('p3');
+      expect(ids).not.toContain(undefined);
+    });
+
+    it('sorts globally by timestamp DESC', async () => {
+      server.use(
+        http.get(`${TEST_BASE_URL}/daos`, () => HttpResponse.json(daosResponse([
+          { id: 'dao1' }, { id: 'dao2' }, { id: 'dao3' }
+        ]))),
+        http.get(`${TEST_BASE_URL}/dao1/proposals`, () => HttpResponse.json({ items: [{ id: 'old', timestamp: 1000, description: '', title: null }], totalCount: 1 })),
+        http.get(`${TEST_BASE_URL}/dao2/proposals`, () => HttpResponse.json({ items: [{ id: 'newest', timestamp: 3000, description: '', title: null }], totalCount: 1 })),
+        http.get(`${TEST_BASE_URL}/dao3/proposals`, () => HttpResponse.json({ items: [{ id: 'middle', timestamp: 2000, description: '', title: null }], totalCount: 1 })),
+      );
+      const client = createTestClient();
+      const result = await client.listProposals();
+      expect(result.map((p: any) => p.id)).toEqual(['newest', 'middle', 'old']);
+    });
+  });
+});
 
 // TODO: Migrate in Task 5
 describe.skip('listVotingPowerHistory', () => {});

@@ -1,6 +1,7 @@
 import {
   getDaos,
   proposal,
+  proposals,
   getEventRelevanceThreshold,
   votes,
   proposalNonVoters,
@@ -17,6 +18,7 @@ import type {
   OffchainVoteItem,
   ProcessedVotingPowerHistory,
 } from './schemas';
+import { processProposals } from './schemas';
 
 export interface AnticaptureClientConfig {
   baseURL: string;
@@ -99,7 +101,38 @@ export class AnticaptureClient {
     return null;
   }
 
-  async listProposals(..._args: any[]): Promise<any[]> { throw new Error('not migrated yet'); }
+  async listProposals(variables?: any, daoId?: string): Promise<any[]> {
+    if (daoId) {
+      try {
+        // SDK dao param is a string-literal enum; DAO IDs come from runtime /daos response, so we cast
+        const res = await this.call(() => proposals(daoId as any, this.toChecksum(variables ?? {}), this.sdkConfig));
+        return this.toLowercase(processProposals({ proposals: res }, daoId) ?? []);
+      } catch (err) {
+        console.warn(`[AnticaptureClient] Error querying proposals for DAO ${daoId}: ${err instanceof Error ? err.message : err}`);
+        return [];
+      }
+    }
+
+    const allDaos = await this.getDAOs();
+    const all: any[] = [];
+    for (const dao of allDaos) {
+      try {
+        // SDK dao param is a string-literal enum; DAO IDs come from runtime /daos response, so we cast
+        const res = await this.call(() => proposals(dao.id as any, this.toChecksum(variables ?? {}), this.sdkConfig));
+        const processed = processProposals({ proposals: res }, dao.id);
+        if (processed?.length) all.push(...processed);
+      } catch (err) {
+        console.warn(`[AnticaptureClient] Skipping ${dao.id} due to API error: ${err instanceof Error ? err.message : err}`);
+      }
+    }
+
+    if (variables?.fromEndDate) {
+      all.sort((a: any, b: any) => (b?.endTimestamp ?? 0) - (a?.endTimestamp ?? 0));
+    } else {
+      all.sort((a: any, b: any) => (b?.timestamp ?? 0) - (a?.timestamp ?? 0));
+    }
+    return this.toLowercase(all);
+  }
   async listVotingPowerHistory(..._args: any[]): Promise<ProcessedVotingPowerHistory[]> { throw new Error('not migrated yet'); }
 
   async listVotes(daoId: string, variables?: any): Promise<any[]> {
