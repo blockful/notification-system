@@ -1,4 +1,12 @@
-import { getDaos } from '@anticapture/client';
+import {
+  getDaos,
+  proposal,
+  getEventRelevanceThreshold,
+  votes,
+  proposalNonVoters,
+  offchainProposalNonVoters,
+  votesOffchain,
+} from '@anticapture/client';
 import type { RequestConfig } from '@anticapture/client';
 import { getAddress, isAddress } from 'viem';
 import { withRetryAndTimeout } from './with-retry-and-timeout';
@@ -74,15 +82,85 @@ export class AnticaptureClient {
     }
   }
 
-  async getProposalById(_id: string): Promise<any | null> { throw new Error('not migrated yet'); }
+  async getProposalById(id: string): Promise<any | null> {
+    const allDaos = await this.getDAOs();
+    for (const dao of allDaos) {
+      try {
+        const res = await this.call(() => proposal(dao.id as any, id, this.sdkConfig));
+        if (res) return this.toLowercase(res);
+      } catch (err: any) {
+        // 404 means this DAO doesn't have the proposal — continue to next
+        if (err?.status === 404 || err?.response?.status === 404) continue;
+        // other errors: log and continue
+        console.warn(`[AnticaptureClient] Error fetching proposal ${id} from DAO ${dao.id}:`, err instanceof Error ? err.message : err);
+      }
+    }
+    return null;
+  }
+
   async listProposals(..._args: any[]): Promise<any[]> { throw new Error('not migrated yet'); }
   async listVotingPowerHistory(..._args: any[]): Promise<ProcessedVotingPowerHistory[]> { throw new Error('not migrated yet'); }
-  async listVotes(_daoId: string, ..._args: any[]): Promise<any[]> { throw new Error('not migrated yet'); }
-  async getProposalNonVoters(..._args: any[]): Promise<any[]> { throw new Error('not migrated yet'); }
-  async getOffchainProposalNonVoters(..._args: any[]): Promise<any[]> { throw new Error('not migrated yet'); }
+
+  async listVotes(daoId: string, variables?: any): Promise<any[]> {
+    try {
+      const res = await this.call(() => votes(daoId as any, this.toChecksum(variables ?? {}), this.sdkConfig));
+      return this.toLowercase(res?.items ?? []);
+    } catch (err) {
+      console.warn(`[AnticaptureClient] Error fetching votes for DAO ${daoId}:`, err instanceof Error ? err.message : err);
+      return [];
+    }
+  }
+
+  async getProposalNonVoters(proposalId: string, daoId: string, addresses?: string[]): Promise<any[]> {
+    try {
+      const params = addresses?.length ? { addresses } : {};
+      const res = await this.call(() => proposalNonVoters(daoId as any, proposalId, this.toChecksum(params), this.sdkConfig));
+      return this.toLowercase(res?.items ?? []);
+    } catch (err) {
+      console.warn(`[AnticaptureClient] Error fetching non-voters for proposal ${proposalId}:`, err instanceof Error ? err.message : err);
+      return [];
+    }
+  }
+
+  async getOffchainProposalNonVoters(proposalId: string, addresses?: string[]): Promise<{ voter: string; votingPower?: string }[]> {
+    const allDaos = await this.getDAOs();
+    const offchainDaos = allDaos.filter(d => d.supportOffchainData);
+    const params = addresses?.length ? { addresses } : {};
+    for (const dao of offchainDaos) {
+      try {
+        const res = await this.call(() => offchainProposalNonVoters(dao.id as any, proposalId, this.toChecksum(params), this.sdkConfig));
+        if (res?.items?.length >= 0) return this.toLowercase(res.items);
+      } catch (err: any) {
+        if (err?.status === 404 || err?.response?.status === 404) continue;
+        console.warn(`[AnticaptureClient] Error fetching offchain non-voters for proposal ${proposalId} from DAO ${dao.id}:`, err instanceof Error ? err.message : err);
+      }
+    }
+    return [];
+  }
+
   async listRecentVotesFromAllDaos(..._args: any[]): Promise<VoteWithDaoId[]> { throw new Error('not migrated yet'); }
-  async getEventThreshold(_daoId: string, _type: FeedEventType, _relevance: FeedRelevance): Promise<string | null> { throw new Error('not migrated yet'); }
+
+  async getEventThreshold(daoId: string, type: FeedEventType, relevance: FeedRelevance): Promise<string | null> {
+    try {
+      const res = await this.call(() => getEventRelevanceThreshold(daoId as any, { type, relevance }, this.sdkConfig));
+      return res?.threshold ?? null;
+    } catch (err) {
+      console.warn(`[AnticaptureClient] Error fetching threshold for ${daoId}/${type}:`, err instanceof Error ? err.message : err);
+      return null;
+    }
+  }
+
   async listOffchainProposals(..._args: any[]): Promise<(OffchainProposalItem & { daoId: string })[]> { throw new Error('not migrated yet'); }
-  async listOffchainVotes(_daoId: string, ..._args: any[]): Promise<OffchainVoteItem[]> { throw new Error('not migrated yet'); }
+
+  async listOffchainVotes(daoId: string, variables?: any): Promise<OffchainVoteItem[]> {
+    try {
+      const res = await this.call(() => votesOffchain(daoId as any, this.toChecksum(variables ?? {}), this.sdkConfig));
+      return this.toLowercase(res?.items ?? []);
+    } catch (err) {
+      console.warn(`[AnticaptureClient] Error fetching offchain votes for DAO ${daoId}:`, err instanceof Error ? err.message : err);
+      return [];
+    }
+  }
+
   async listRecentOffchainVotesFromAllDaos(..._args: any[]): Promise<OffchainVoteWithDaoId[]> { throw new Error('not migrated yet'); }
 }

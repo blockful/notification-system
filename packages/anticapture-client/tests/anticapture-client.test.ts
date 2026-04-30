@@ -1,6 +1,7 @@
 import { describe, it, expect, beforeAll, afterAll, afterEach } from '@jest/globals';
 import { http, HttpResponse } from 'msw';
 import { startServer, createTestClient, daosResponse, TEST_BASE_URL } from './test-helpers';
+import { FeedEventType, FeedRelevance } from '../src/schemas';
 
 const server = startServer();
 beforeAll(() => server.listen({ onUnhandledRequest: 'error' }));
@@ -35,14 +36,202 @@ describe('getDAOs', () => {
   });
 });
 
-// TODO: Migrate in Task 3
-describe.skip('getProposalById', () => {});
+describe('getProposalById', () => {
+  it('returns proposal from first matching DAO', async () => {
+    server.use(
+      http.get(`${TEST_BASE_URL}/daos`, () => HttpResponse.json(
+        daosResponse([
+          { id: 'ens', votingDelay: '0', chainId: 1, supportOffchainData: false, alreadySupportCalldataReview: false },
+        ])
+      )),
+      http.get(`${TEST_BASE_URL}/ens/proposals/prop-1`, () =>
+        HttpResponse.json({ id: 'prop-1', description: 'Test proposal', title: 'Test' })
+      ),
+    );
+    const client = createTestClient();
+    const result = await client.getProposalById('prop-1');
+    expect(result).not.toBeNull();
+    expect(result.id).toBe('prop-1');
+  });
 
-// TODO: Migrate in Task 3
-describe.skip('getEventThreshold', () => {});
+  it('skips DAO on 404 and continues to next', async () => {
+    server.use(
+      http.get(`${TEST_BASE_URL}/daos`, () => HttpResponse.json(
+        daosResponse([
+          { id: 'uniswap', votingDelay: '0', chainId: 1, supportOffchainData: false, alreadySupportCalldataReview: false },
+          { id: 'ens', votingDelay: '0', chainId: 1, supportOffchainData: false, alreadySupportCalldataReview: false },
+        ])
+      )),
+      http.get(`${TEST_BASE_URL}/uniswap/proposals/prop-2`, () => new HttpResponse(null, { status: 404 })),
+      http.get(`${TEST_BASE_URL}/ens/proposals/prop-2`, () =>
+        HttpResponse.json({ id: 'prop-2', description: 'Found in ENS', title: 'ENS Proposal' })
+      ),
+    );
+    const client = createTestClient();
+    const result = await client.getProposalById('prop-2');
+    expect(result).not.toBeNull();
+    expect(result.id).toBe('prop-2');
+  });
+
+  it('returns null when no DAO has the proposal', async () => {
+    server.use(
+      http.get(`${TEST_BASE_URL}/daos`, () => HttpResponse.json(
+        daosResponse([
+          { id: 'ens', votingDelay: '0', chainId: 1, supportOffchainData: false, alreadySupportCalldataReview: false },
+        ])
+      )),
+      http.get(`${TEST_BASE_URL}/ens/proposals/missing-prop`, () => new HttpResponse(null, { status: 404 })),
+    );
+    const client = createTestClient();
+    const result = await client.getProposalById('missing-prop');
+    expect(result).toBeNull();
+  });
+
+  it('returns null when DAO list is empty', async () => {
+    server.use(http.get(`${TEST_BASE_URL}/daos`, () => HttpResponse.json(daosResponse([]))));
+    const client = createTestClient();
+    expect(await client.getProposalById('any-prop')).toBeNull();
+  });
+});
+
+describe('getEventThreshold', () => {
+  it('returns threshold string', async () => {
+    server.use(http.get(`${TEST_BASE_URL}/ens/event-relevance/threshold`, () =>
+      HttpResponse.json({ threshold: '40000000000000000000000' })
+    ));
+    const client = createTestClient();
+    const result = await client.getEventThreshold('ens', FeedEventType.Delegation, FeedRelevance.High);
+    expect(result).toBe('40000000000000000000000');
+  });
+
+  it('returns null on error', async () => {
+    server.use(http.get(`${TEST_BASE_URL}/ens/event-relevance/threshold`, () => new HttpResponse(null, { status: 500 })));
+    const client = createTestClient();
+    expect(await client.getEventThreshold('ens', FeedEventType.Vote, FeedRelevance.High)).toBeNull();
+  });
+});
 
 // TODO: Migrate in Task 4
 describe.skip('listProposals', () => {});
 
 // TODO: Migrate in Task 5
 describe.skip('listVotingPowerHistory', () => {});
+
+describe('listVotes', () => {
+  it('returns votes for a DAO', async () => {
+    server.use(http.get(`${TEST_BASE_URL}/ens/votes`, () =>
+      HttpResponse.json({
+        items: [{ transactionHash: '0xabc', proposalId: 'p1', voterAddress: '0x1', votingPower: '100', timestamp: 1000 }],
+        totalCount: 1,
+      })
+    ));
+    const client = createTestClient();
+    const result = await client.listVotes('ens');
+    expect(result).toHaveLength(1);
+    expect(result[0].proposalId).toBe('p1');
+  });
+
+  it('returns empty array on error', async () => {
+    server.use(http.get(`${TEST_BASE_URL}/ens/votes`, () => new HttpResponse(null, { status: 500 })));
+    const client = createTestClient();
+    expect(await client.listVotes('ens')).toEqual([]);
+  });
+});
+
+describe('getProposalNonVoters', () => {
+  it('returns non-voters list', async () => {
+    server.use(http.get(`${TEST_BASE_URL}/ens/proposals/p1/non-voters`, () =>
+      HttpResponse.json({ items: [{ voter: '0xabc' }], totalCount: 1 })
+    ));
+    const client = createTestClient();
+    const result = await client.getProposalNonVoters('p1', 'ens');
+    expect(result).toEqual([{ voter: '0xabc' }]);
+  });
+
+  it('returns empty array on error', async () => {
+    server.use(http.get(`${TEST_BASE_URL}/ens/proposals/p1/non-voters`, () => new HttpResponse(null, { status: 500 })));
+    const client = createTestClient();
+    expect(await client.getProposalNonVoters('p1', 'ens')).toEqual([]);
+  });
+});
+
+describe('getOffchainProposalNonVoters', () => {
+  it('returns offchain non-voters from offchain-enabled DAO', async () => {
+    server.use(
+      http.get(`${TEST_BASE_URL}/daos`, () => HttpResponse.json(
+        daosResponse([
+          { id: 'ens', votingDelay: '0', chainId: 1, supportOffchainData: true, alreadySupportCalldataReview: false },
+        ])
+      )),
+      http.get(`${TEST_BASE_URL}/ens/offchain/proposals/sp-1/non-voters`, () =>
+        HttpResponse.json({ items: [{ voter: '0xdef', votingPower: '500' }], totalCount: 1 })
+      ),
+    );
+    const client = createTestClient();
+    const result = await client.getOffchainProposalNonVoters('sp-1');
+    expect(result).toEqual([{ voter: '0xdef', votingPower: '500' }]);
+  });
+
+  it('skips DAO on 404 and continues to next', async () => {
+    server.use(
+      http.get(`${TEST_BASE_URL}/daos`, () => HttpResponse.json(
+        daosResponse([
+          { id: 'uniswap', votingDelay: '0', chainId: 1, supportOffchainData: true, alreadySupportCalldataReview: false },
+          { id: 'ens', votingDelay: '0', chainId: 1, supportOffchainData: true, alreadySupportCalldataReview: false },
+        ])
+      )),
+      http.get(`${TEST_BASE_URL}/uniswap/offchain/proposals/sp-2/non-voters`, () => new HttpResponse(null, { status: 404 })),
+      http.get(`${TEST_BASE_URL}/ens/offchain/proposals/sp-2/non-voters`, () =>
+        HttpResponse.json({ items: [{ voter: '0x123' }], totalCount: 1 })
+      ),
+    );
+    const client = createTestClient();
+    const result = await client.getOffchainProposalNonVoters('sp-2');
+    expect(result).toEqual([{ voter: '0x123' }]);
+  });
+
+  it('returns empty array when no offchain-enabled DAOs', async () => {
+    server.use(
+      http.get(`${TEST_BASE_URL}/daos`, () => HttpResponse.json(
+        daosResponse([
+          { id: 'ens', votingDelay: '0', chainId: 1, supportOffchainData: false, alreadySupportCalldataReview: false },
+        ])
+      )),
+    );
+    const client = createTestClient();
+    expect(await client.getOffchainProposalNonVoters('sp-3')).toEqual([]);
+  });
+
+  it('returns empty array when all DAOs return 404', async () => {
+    server.use(
+      http.get(`${TEST_BASE_URL}/daos`, () => HttpResponse.json(
+        daosResponse([
+          { id: 'ens', votingDelay: '0', chainId: 1, supportOffchainData: true, alreadySupportCalldataReview: false },
+        ])
+      )),
+      http.get(`${TEST_BASE_URL}/ens/offchain/proposals/missing/non-voters`, () => new HttpResponse(null, { status: 404 })),
+    );
+    const client = createTestClient();
+    expect(await client.getOffchainProposalNonVoters('missing')).toEqual([]);
+  });
+});
+
+describe('listOffchainVotes', () => {
+  it('returns offchain votes for a DAO', async () => {
+    server.use(http.get(`${TEST_BASE_URL}/ens/offchain/votes`, () =>
+      HttpResponse.json({
+        items: [{ voter: '0x1', created: 1000, proposalId: 'sp1', proposalTitle: 'Title' }],
+        totalCount: 1,
+      })
+    ));
+    const client = createTestClient();
+    const result = await client.listOffchainVotes('ens');
+    expect(result).toHaveLength(1);
+  });
+
+  it('returns empty array on error', async () => {
+    server.use(http.get(`${TEST_BASE_URL}/ens/offchain/votes`, () => new HttpResponse(null, { status: 500 })));
+    const client = createTestClient();
+    expect(await client.listOffchainVotes('ens')).toEqual([]);
+  });
+});
