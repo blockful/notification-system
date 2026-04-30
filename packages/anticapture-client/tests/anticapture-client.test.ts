@@ -193,8 +193,71 @@ describe('listProposals', () => {
   });
 });
 
-// TODO: Migrate in Task 5
-describe.skip('listVotingPowerHistory', () => {});
+function sampleHistoricalVP(accountId: string, timestamp: string) {
+  return {
+    accountId,
+    timestamp,
+    address: `0x${accountId}`,
+    votingPower: '1000',
+    delta: '500',
+    daoId: 'dao1',
+    transactionHash: '0xtxhash',
+    logIndex: 0,
+    delegation: null,
+    transfer: null,
+  };
+}
+
+describe('listVotingPowerHistory', () => {
+  describe('per-DAO', () => {
+    it('returns empty array for empty response', async () => {
+      server.use(http.get(`${TEST_BASE_URL}/ens/voting-powers/historical`, () =>
+        HttpResponse.json({ items: [], totalCount: 0 })
+      ));
+      const client = createTestClient();
+      expect(await client.listVotingPowerHistory({}, 'ens')).toEqual([]);
+    });
+
+    it('returns empty array on error', async () => {
+      server.use(http.get(`${TEST_BASE_URL}/ens/voting-powers/historical`, () => new HttpResponse(null, { status: 500 })));
+      const client = createTestClient();
+      expect(await client.listVotingPowerHistory({}, 'ens')).toEqual([]);
+    });
+  });
+
+  describe('multi-DAO fan-out', () => {
+    it('skips failed DAOs and processes valid ones', async () => {
+      server.use(
+        http.get(`${TEST_BASE_URL}/daos`, () => HttpResponse.json(daosResponse([
+          { id: 'dao1', chainId: 1 }, { id: 'dao2', chainId: 1 }, { id: 'dao3', chainId: 1 }
+        ]))),
+        http.get(`${TEST_BASE_URL}/dao1/voting-powers/historical`, () =>
+          HttpResponse.json({ items: [sampleHistoricalVP('acc1', '100')], totalCount: 1 })),
+        http.get(`${TEST_BASE_URL}/dao2/voting-powers/historical`, () => new HttpResponse(null, { status: 500 })),
+        http.get(`${TEST_BASE_URL}/dao3/voting-powers/historical`, () =>
+          HttpResponse.json({ items: [sampleHistoricalVP('acc2', '200')], totalCount: 1 })),
+      );
+      const client = createTestClient();
+      const result = await client.listVotingPowerHistory();
+      expect(result).toHaveLength(2);
+      // sorted ASC by timestamp
+      expect(result[0]?.accountId).toBe('acc1');
+      expect(result[1]?.accountId).toBe('acc2');
+    });
+
+    it('returns empty array when all DAOs fail', async () => {
+      server.use(
+        http.get(`${TEST_BASE_URL}/daos`, () => HttpResponse.json(daosResponse([
+          { id: 'dao1' }, { id: 'dao2' }
+        ]))),
+        http.get(`${TEST_BASE_URL}/dao1/voting-powers/historical`, () => new HttpResponse(null, { status: 500 })),
+        http.get(`${TEST_BASE_URL}/dao2/voting-powers/historical`, () => new HttpResponse(null, { status: 500 })),
+      );
+      const client = createTestClient();
+      expect(await client.listVotingPowerHistory()).toEqual([]);
+    });
+  });
+});
 
 describe('listVotes', () => {
   it('returns votes for a DAO', async () => {

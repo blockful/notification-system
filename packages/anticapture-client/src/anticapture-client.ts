@@ -7,6 +7,7 @@ import {
   proposalNonVoters,
   offchainProposalNonVoters,
   votesOffchain,
+  historicalVotingPower,
 } from '@anticapture/client';
 import type { RequestConfig } from '@anticapture/client';
 import { getAddress, isAddress } from 'viem';
@@ -18,7 +19,7 @@ import type {
   OffchainVoteItem,
   ProcessedVotingPowerHistory,
 } from './schemas';
-import { processProposals } from './schemas';
+import { processProposals, processVotingPowerHistory } from './schemas';
 
 export interface AnticaptureClientConfig {
   baseURL: string;
@@ -133,7 +134,33 @@ export class AnticaptureClient {
     }
     return this.toLowercase(all);
   }
-  async listVotingPowerHistory(..._args: any[]): Promise<ProcessedVotingPowerHistory[]> { throw new Error('not migrated yet'); }
+  async listVotingPowerHistory(variables?: any, daoId?: string): Promise<ProcessedVotingPowerHistory[]> {
+    if (daoId) {
+      try {
+        const res = await this.call(() => historicalVotingPower(daoId as any, this.toChecksum(variables ?? {}), this.sdkConfig));
+        return this.toLowercase(processVotingPowerHistory({ historicalVotingPower: res }, daoId));
+      } catch (err) {
+        console.warn(`[AnticaptureClient] Error querying voting power history for DAO ${daoId}: ${err instanceof Error ? err.message : err}`);
+        return [];
+      }
+    }
+
+    const allDaos = await this.getDAOs();
+    const promises = allDaos.map(async (dao) => {
+      try {
+        const res = await this.call(() => historicalVotingPower(dao.id as any, this.toChecksum(variables ?? {}), this.sdkConfig));
+        return processVotingPowerHistory({ historicalVotingPower: res }, dao.id, dao.chainId);
+      } catch (err) {
+        console.warn(`[AnticaptureClient] Skipping ${dao.id} due to API error: ${err instanceof Error ? err.message : err}`);
+        return [];
+      }
+    });
+
+    const results = await Promise.all(promises);
+    return this.toLowercase(
+      results.flat().sort((a, b) => parseInt(a.timestamp) - parseInt(b.timestamp))
+    );
+  }
 
   async listVotes(daoId: string, variables?: any): Promise<any[]> {
     try {
