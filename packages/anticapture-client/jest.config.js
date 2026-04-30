@@ -4,7 +4,7 @@ module.exports = {
   roots: ['<rootDir>/tests'],
   testMatch: ['**/*.test.ts'],
   transformIgnorePatterns: [
-    '/node_modules/.pnpm/(?!(msw|@mswjs|until-async|@bundled-es-modules)[@+])',
+    '/node_modules/.pnpm/(?!(msw|@mswjs|until-async|@bundled-es-modules|@anticapture\\+client)[@+])',
   ],
   transform: {
     '^.+\\.tsx?$': 'ts-jest',
