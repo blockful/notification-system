@@ -86,6 +86,7 @@ export class AnticaptureClient {
     const allDaos = await this.getDAOs();
     for (const dao of allDaos) {
       try {
+        // SDK dao param is a string-literal enum; DAO IDs come from runtime /daos response, so we cast
         const res = await this.call(() => proposal(dao.id as any, id, this.sdkConfig));
         if (res) return this.toLowercase(res);
       } catch (err: any) {
@@ -103,6 +104,7 @@ export class AnticaptureClient {
 
   async listVotes(daoId: string, variables?: any): Promise<any[]> {
     try {
+      // SDK dao param is a string-literal enum; DAO IDs come from runtime /daos response, so we cast
       const res = await this.call(() => votes(daoId as any, this.toChecksum(variables ?? {}), this.sdkConfig));
       return this.toLowercase(res?.items ?? []);
     } catch (err) {
@@ -114,6 +116,7 @@ export class AnticaptureClient {
   async getProposalNonVoters(proposalId: string, daoId: string, addresses?: string[]): Promise<any[]> {
     try {
       const params = addresses?.length ? { addresses } : {};
+      // SDK dao param is a string-literal enum; DAO IDs come from runtime /daos response, so we cast
       const res = await this.call(() => proposalNonVoters(daoId as any, proposalId, this.toChecksum(params), this.sdkConfig));
       return this.toLowercase(res?.items ?? []);
     } catch (err) {
@@ -128,8 +131,9 @@ export class AnticaptureClient {
     const params = addresses?.length ? { addresses } : {};
     for (const dao of offchainDaos) {
       try {
+        // SDK dao param is a string-literal enum; DAO IDs come from runtime /daos response, so we cast
         const res = await this.call(() => offchainProposalNonVoters(dao.id as any, proposalId, this.toChecksum(params), this.sdkConfig));
-        if (res?.items?.length >= 0) return this.toLowercase(res.items);
+        if (res?.items != null) return this.toLowercase(res.items);
       } catch (err: any) {
         if (err?.status === 404 || err?.response?.status === 404) continue;
         console.warn(`[AnticaptureClient] Error fetching offchain non-voters for proposal ${proposalId} from DAO ${dao.id}:`, err instanceof Error ? err.message : err);
@@ -142,6 +146,7 @@ export class AnticaptureClient {
 
   async getEventThreshold(daoId: string, type: FeedEventType, relevance: FeedRelevance): Promise<string | null> {
     try {
+      // SDK dao param is a string-literal enum; DAO IDs come from runtime /daos response, so we cast
       const res = await this.call(() => getEventRelevanceThreshold(daoId as any, { type, relevance }, this.sdkConfig));
       return res?.threshold ?? null;
     } catch (err) {
@@ -154,6 +159,7 @@ export class AnticaptureClient {
 
   async listOffchainVotes(daoId: string, variables?: any): Promise<OffchainVoteItem[]> {
     try {
+      // SDK dao param is a string-literal enum; DAO IDs come from runtime /daos response, so we cast
       const res = await this.call(() => votesOffchain(daoId as any, this.toChecksum(variables ?? {}), this.sdkConfig));
       return this.toLowercase(res?.items ?? []);
     } catch (err) {

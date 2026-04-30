@@ -92,6 +92,25 @@ describe('getProposalById', () => {
     const client = createTestClient();
     expect(await client.getProposalById('any-prop')).toBeNull();
   });
+
+  it('skips DAO on non-404 server error and continues to next DAO', async () => {
+    server.use(
+      http.get(`${TEST_BASE_URL}/daos`, () => HttpResponse.json(
+        daosResponse([
+          { id: 'uniswap', votingDelay: '0', chainId: 1, supportOffchainData: false, alreadySupportCalldataReview: false },
+          { id: 'ens', votingDelay: '0', chainId: 1, supportOffchainData: false, alreadySupportCalldataReview: false },
+        ])
+      )),
+      http.get(`${TEST_BASE_URL}/uniswap/proposals/prop-500`, () => new HttpResponse(null, { status: 500 })),
+      http.get(`${TEST_BASE_URL}/ens/proposals/prop-500`, () =>
+        HttpResponse.json({ id: 'prop-500', description: 'Found in ENS', title: 'ENS Proposal' })
+      ),
+    );
+    const client = createTestClient();
+    const result = await client.getProposalById('prop-500');
+    expect(result).not.toBeNull();
+    expect(result.id).toBe('prop-500');
+  });
 });
 
 describe('getEventThreshold', () => {
@@ -213,6 +232,19 @@ describe('getOffchainProposalNonVoters', () => {
     );
     const client = createTestClient();
     expect(await client.getOffchainProposalNonVoters('missing')).toEqual([]);
+  });
+
+  it('returns empty array on 500 from all offchain DAOs', async () => {
+    server.use(
+      http.get(`${TEST_BASE_URL}/daos`, () => HttpResponse.json(
+        daosResponse([
+          { id: 'ens', votingDelay: '0', chainId: 1, supportOffchainData: true, alreadySupportCalldataReview: false },
+        ])
+      )),
+      http.get(`${TEST_BASE_URL}/ens/offchain/proposals/sp-error/non-voters`, () => new HttpResponse(null, { status: 500 })),
+    );
+    const client = createTestClient();
+    expect(await client.getOffchainProposalNonVoters('sp-error')).toEqual([]);
   });
 });
 
