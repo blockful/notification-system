@@ -134,3 +134,113 @@ Tracing via `wrapWithTracing(new AnticaptureClient(...))` continues to work unch
 - **Address normalization removal**: requires verifying that the REST API normalizes addresses end-to-end. Tracked separately.
 - **Wrapper removal / repos absorbing logic**: revisit only if the wrapper turns out to add no value after this migration.
 - **Static DAO enum vs runtime `daos()`**: revisit only if the runtime call becomes a measurable cost.
+
+## SDK Surface (verified 2026-04-30)
+
+### Functions
+
+| Wrapper method | SDK function | Exact import |
+|---|---|---|
+| getDAOs() | getDaos() | `import { getDaos } from '@anticapture/client'` |
+| getProposalById(id) | proposal(dao, id) | `import { proposal } from '@anticapture/client'` |
+| listProposals(vars?, daoId?) | proposals(dao, params?) | `import { proposals } from '@anticapture/client'` |
+| listVotingPowerHistory(vars?, daoId?) | historicalVotingPower(dao, params?) | `import { historicalVotingPower } from '@anticapture/client'` |
+| listVotes(daoId, vars?) | votes(dao, params?) | `import { votes } from '@anticapture/client'` |
+| getProposalNonVoters(proposalId, daoId, addresses?) | proposalNonVoters(dao, id, params?) | `import { proposalNonVoters } from '@anticapture/client'` |
+| getOffchainProposalNonVoters(proposalId, addresses?) | offchainProposalNonVoters(dao, id, params?) | `import { offchainProposalNonVoters } from '@anticapture/client'` |
+| getEventThreshold(daoId, type, relevance) | getEventRelevanceThreshold(dao, params) | `import { getEventRelevanceThreshold } from '@anticapture/client'` |
+| listOffchainProposals(vars?, daoId?) | offchainProposals(dao, params?) | `import { offchainProposals } from '@anticapture/client'` |
+| listOffchainVotes(daoId, vars?) | votesOffchain(dao, params?) | `import { votesOffchain } from '@anticapture/client'` |
+
+Notes:
+- `getDaos()` takes no path param (returns all DAOs globally) — replaces fan-out loop seed.
+- `proposal(dao, id)` returns `OnchainProposal` directly (not wrapped in `{ proposal: ... }`).
+- All per-DAO functions take `dao` as first positional path param, not as a header.
+- The DAO header (`anticapture-dao-id`) used in GraphQL is replaced by the path-param `dao` in REST.
+
+### Client configuration shape
+
+There is **no `setClientConfig` function**. The SDK exports a `client` function and each API function accepts an optional `config` object with a `client` override.
+
+To set `baseURL` and default headers, pass them per-call in the `config` argument:
+
+```ts
+// Exact type exported from '@anticapture/client':
+type RequestConfig<TData = unknown> = {
+  url?: string;
+  method?: HttpMethod;
+  params?: unknown;
+  data?: TData | FormData;
+  responseType?: 'arraybuffer' | 'blob' | 'document' | 'json' | 'text' | 'stream';
+  signal?: AbortSignal;
+  headers?: [string, string][] | Record<string, string>;
+  baseURL?: string;
+};
+
+// Per-function config parameter (each function exposes this):
+config?: Partial<RequestConfig> & { client?: Client }
+
+// Client type:
+type Client = <TData, TError, TVariables>(config: RequestConfig<TVariables>) => Promise<ResponseConfig<TData>>;
+```
+
+**Migration approach for baseURL and custom headers:** The wrapper constructor will create a bound `client` closure that injects `baseURL` and `headers` (e.g., `x-client-source: notification-system`) into every call via the `config.client` override slot. This replaces the current axios-instance approach.
+
+### Enums and types
+
+| Caller import today (from `@notification-system/anticapture-client`) | SDK export (from `@anticapture/client`) | Values | Strategy |
+|---|---|---|---|
+| `OrderDirection` | `OrderDirection` | `"asc"` \| `"desc"` (lowercase) | **Breaking change**: GraphQL used uppercase `ASC`/`DESC`; SDK uses lowercase `asc`/`desc`. Re-export with alias, update internal usages. |
+| `QueryInput_Votes_OrderBy` | `votesQueryParamsOrderByEnum` / `VotesQueryParamsOrderByEnumKey` | `"timestamp"` \| `"votingPower"` | Alias in index.ts as `QueryInput_Votes_OrderBy = { Timestamp: 'timestamp', VotingPower: 'votingPower' }` |
+| `QueryInput_VotesOffchain_OrderBy` | `votesOffchainQueryParamsOrderByEnum` / `VotesOffchainQueryParamsOrderByEnumKey` | `"timestamp"` \| `"votingPower"` | Same alias pattern |
+| `QueryInput_Proposals_Status_Items` | `onchainProposalStatusListEnum` / `OnchainProposalStatusListEnumKey` | `"PENDING"` \| `"ACTIVE"` \| `"CANCELED"` \| ... \| `"NO_QUORUM"` (uppercase) | Values match GraphQL enum values. Re-export alias. |
+| `QueryInput_HistoricalVotingPower_OrderBy` | `historicalVotingPowerQueryParamsOrderByEnum` | `"timestamp"` \| `"delta"` | Alias in index.ts |
+| `FeedEventType` | `FeedEventType` | `"VOTE"` \| `"PROPOSAL"` \| `"DELEGATION"` \| `"TRANSFER"` \| `"PROPOSAL_EXTENDED"` | Values match — re-export directly |
+| `FeedRelevance` | `FeedRelevance` | `"HIGH"` \| `"MEDIUM"` \| `"LOW"` | Values match — re-export directly |
+| `OnchainProposal` | `OnchainProposal` | Full proposal shape with `id`, `status`, `timestamp`, etc. | Re-export type directly |
+| `OffchainProposal` | `OffchainProposal` | Full offchain shape — **richer than current**: adds `spaceId`, `author`, `body`, `type`, `flagged`, `scores`, `choices`, `network`, `snapshot`, `strategies`, `updated` | Superset of `OffchainProposalItem`; callers only use subset. Current `OffchainProposalItem` type will be a local alias/pick. |
+| `GetProposalByIdQuery['proposal']` | `OnchainProposal` | Same shape | Update internal type ref |
+| `ListProposalsQueryVariables` | `ProposalsQueryParams` | Different field names (`fromDate` vs `fromDate` ✓, `status: OnchainProposalStatusList` vs array) | Replace at usage sites inside wrapper |
+| `VoteWithDaoId` | Local type (derived from `OnchainVote & { daoId: string }`) | `OnchainVote` has same fields: `voterAddress`, `transactionHash`, `proposalId`, `support?`, `votingPower`, `reason?`, `timestamp`, `proposalTitle?` | Keep local type, derive from `OnchainVote` |
+| `OffchainVoteWithDaoId` | Local type (derived from `OffchainVote & { daoId: string }`) | `OffchainVote` fields: `voter`, `proposalId`, `choice?`, `vp`, `reason`, `created`, `proposalTitle?` — **different from current `OffchainVoteItem`** (`proposalTitle` was missing, `vp` type is `number\|null` not `number\|null\|undefined`) | Update internal type; `OffchainVoteItem` re-derived from `OffchainVote` |
+
+### Key type shape differences (REST vs GraphQL responses)
+
+| Field | GraphQL today | REST SDK | Impact |
+|---|---|---|---|
+| `OffchainProposalItem.link` | present | `OffchainProposal.link` present | No change |
+| `OffchainProposalItem.discussion` | present | `OffchainProposal.discussion` present | No change |
+| `OffchainVoteItem.proposalTitle` | present | `OffchainVote.proposalTitle: string \| null` | Minor: was optional, now `null`-able |
+| `OffchainVoteItem.vp` | `number \| null \| undefined` | `number \| null` | Minor: undefined → null coercion |
+| `Voter.voter` | `voter: string` | `voter: string` | No change |
+| `Voter.votingPower` | not present in `ProposalNonVoter` (only `voter`) | `Voter.votingPower: string` — **SDK returns more fields** | Additive; existing callers only use `voter` |
+| `HistoricalVotingPower.accountId` | present | present | No change |
+| `HistoricalVotingPower.daoId` | present | present | No change |
+| `HistoricalVotingPower.delegation` | `{ from, to, value, previousDelegate }` | `HistoricalVotingPowerDelegation` — need to verify field names match | Verify in Task 5 |
+| `OrderDirection.Asc/Desc` (enum) | `"ASC"` / `"DESC"` | `"asc"` / `"desc"` | **Breaking in wrapper internals** — update usages inside wrapper |
+
+### Differences from spec assumptions
+
+1. **No `setClientConfig`**: The spec assumed a `setClientConfig(baseURL, defaultHeaders)` call. The SDK has no such global function. Instead, each function accepts `config.client` as a per-call override. The migration approach is: create a bound client closure in the wrapper constructor and pass it on every SDK call.
+
+2. **`daos()` vs `getDaos()`**: The spec's placeholder used `daos()`. The actual SDK function is `getDaos()`. The per-DAO `getDao(dao)` function also exists for single-DAO retrieval.
+
+3. **`OrderDirection` is lowercase**: GraphQL codegen produced uppercase (`ASC`, `DESC`). SDK uses lowercase (`asc`, `desc`). This requires updating the 4 internal usages inside `anticapture-client.ts`.
+
+4. **`OffchainProposal` is richer than `OffchainProposalItem`**: The REST model has many additional fields (`spaceId`, `author`, `body`, `flagged`, `scores`, `choices`, `strategies`, etc.). This is additive and non-breaking.
+
+5. **`proposalNonVoters` returns `Voter` not just `{ voter: string }`**: The REST response includes `votingPower`, `lastVoteTimestamp`, `votingPowerVariation` in addition to `voter`. Additive — current callers only access `.voter`.
+
+6. **`getEventRelevanceThreshold` takes positional `dao` param + `params` object**: Current GraphQL takes `{ type, relevance }` as variables. SDK takes `dao` as path param and `{ type, relevance }` as query params. Wrapper maps this correctly.
+
+7. **DEFAULT_BASE_URL is `/api/gateful`**: The SDK's default base URL is a relative path. The wrapper must always pass the absolute `baseURL` via the `config` parameter on every call.
+
+### integrated-tests decision
+
+Decision: **Skip affected integrated-tests in this PR with TODO comments**. Rationale: `apps/integrated-tests/src/mocks/graphql-mock-setup.ts` uses MSW to intercept GraphQL requests. After this migration those interceptors will no longer fire (the SDK uses `fetch` + REST, not axios + GraphQL). Migrating the mocks to MSW `http.*` handlers targeting the REST endpoints is out of scope for this PR (per the Non-goals section). The 3 affected test files (`graphql-mock-setup.ts`, `test-cleanup.ts`, and the fixtures/factories that import from it) will be annotated with `// TODO: update for REST SDK — see MSW migration PR`.
+
+Files to annotate:
+- `apps/integrated-tests/src/mocks/graphql-mock-setup.ts`
+- `apps/integrated-tests/src/helpers/utilities/test-cleanup.ts`
+- `apps/integrated-tests/src/fixtures/factories/voting-power-factory.ts`
+- `apps/integrated-tests/src/setup/services/apps.ts`
