@@ -4,6 +4,6 @@ dockerfilePath = "apps/subscription-server/Dockerfile"
 
 [deploy]
 healthcheckPath = "/health"
-healthcheckTimeout = 30
+healthcheckTimeout = 300
 restartPolicyType = "ALWAYS"
 restartPolicyMaxRetries = 3
