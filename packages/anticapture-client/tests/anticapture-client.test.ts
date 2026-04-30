@@ -390,3 +390,71 @@ describe('listOffchainVotes', () => {
     expect(await client.listOffchainVotes('ens')).toEqual([]);
   });
 });
+
+describe('listRecentVotesFromAllDaos', () => {
+  it('aggregates votes from all DAOs sorted ASC by timestamp', async () => {
+    server.use(
+      http.get(`${TEST_BASE_URL}/daos`, () => HttpResponse.json(daosResponse([
+        { id: 'dao1' }, { id: 'dao2' }
+      ]))),
+      http.get(`${TEST_BASE_URL}/dao1/votes`, () =>
+        HttpResponse.json({ items: [{ transactionHash: '0x1', proposalId: 'p1', voterAddress: '0xaaa', votingPower: '100', timestamp: 2000 }], totalCount: 1 })),
+      http.get(`${TEST_BASE_URL}/dao2/votes`, () =>
+        HttpResponse.json({ items: [{ transactionHash: '0x2', proposalId: 'p2', voterAddress: '0xbbb', votingPower: '200', timestamp: 1000 }], totalCount: 1 })),
+    );
+    const client = createTestClient();
+    const result = await client.listRecentVotesFromAllDaos('900');
+    expect(result).toHaveLength(2);
+    expect(result[0]?.timestamp).toBe(1000); // sorted ASC
+    expect(result[1]?.timestamp).toBe(2000);
+    expect(result[0]?.daoId).toBe('dao2');
+    expect(result[1]?.daoId).toBe('dao1');
+  });
+
+  it('skips DAOs that fail and returns results from others', async () => {
+    server.use(
+      http.get(`${TEST_BASE_URL}/daos`, () => HttpResponse.json(daosResponse([
+        { id: 'dao1' }, { id: 'dao2' }
+      ]))),
+      http.get(`${TEST_BASE_URL}/dao1/votes`, () => new HttpResponse(null, { status: 500 })),
+      http.get(`${TEST_BASE_URL}/dao2/votes`, () =>
+        HttpResponse.json({ items: [{ transactionHash: '0x2', proposalId: 'p2', voterAddress: '0xbbb', votingPower: '200', timestamp: 1000 }], totalCount: 1 })),
+    );
+    const client = createTestClient();
+    const result = await client.listRecentVotesFromAllDaos('900');
+    expect(result).toHaveLength(1);
+    expect(result[0]?.daoId).toBe('dao2');
+  });
+});
+
+describe('listRecentOffchainVotesFromAllDaos', () => {
+  it('only queries DAOs with supportOffchainData: true', async () => {
+    server.use(
+      http.get(`${TEST_BASE_URL}/daos`, () => HttpResponse.json(daosResponse([
+        { id: 'dao1', supportOffchainData: true },
+        { id: 'dao2', supportOffchainData: false },
+        { id: 'dao3', supportOffchainData: true },
+      ]))),
+      http.get(`${TEST_BASE_URL}/dao1/offchain/votes`, () =>
+        HttpResponse.json({ items: [{ voter: '0xaaa', created: 2000, proposalId: 'sp1', proposalTitle: 'T1' }], totalCount: 1 })),
+      // dao2 is filtered out — no handler needed
+      http.get(`${TEST_BASE_URL}/dao3/offchain/votes`, () =>
+        HttpResponse.json({ items: [{ voter: '0xbbb', created: 1000, proposalId: 'sp2', proposalTitle: 'T2' }], totalCount: 1 })),
+    );
+    const client = createTestClient();
+    const result = await client.listRecentOffchainVotesFromAllDaos(900);
+    expect(result).toHaveLength(2);
+    expect(result[0]?.created).toBe(1000); // sorted ASC
+    expect(result[1]?.created).toBe(2000);
+  });
+
+  it('returns empty array when no DAOs support offchain data', async () => {
+    server.use(
+      http.get(`${TEST_BASE_URL}/daos`, () => HttpResponse.json(daosResponse([
+        { id: 'dao1', supportOffchainData: false }
+      ]))),
+    );
+    const client = createTestClient();
+    expect(await client.listRecentOffchainVotesFromAllDaos(900)).toEqual([]);
+  });
+});

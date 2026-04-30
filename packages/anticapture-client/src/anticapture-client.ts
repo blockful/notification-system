@@ -202,7 +202,21 @@ export class AnticaptureClient {
     return [];
   }
 
-  async listRecentVotesFromAllDaos(..._args: any[]): Promise<VoteWithDaoId[]> { throw new Error('not migrated yet'); }
+  async listRecentVotesFromAllDaos(timestampGt: string, limit: number = 100): Promise<VoteWithDaoId[]> {
+    const daos = await this.getDAOs();
+    const voteArrays = await Promise.all(
+      daos.map(async (dao) => {
+        const vs = await this.listVotes(dao.id, {
+          fromDate: parseInt(timestampGt),
+          limit,
+          orderBy: 'timestamp',
+          orderDirection: 'asc',
+        });
+        return vs.map(v => ({ ...v, daoId: dao.id }));
+      })
+    );
+    return voteArrays.flat().sort((a, b) => (a.timestamp ?? 0) - (b.timestamp ?? 0));
+  }
 
   async getEventThreshold(daoId: string, type: FeedEventType, relevance: FeedRelevance): Promise<string | null> {
     try {
@@ -228,5 +242,21 @@ export class AnticaptureClient {
     }
   }
 
-  async listRecentOffchainVotesFromAllDaos(..._args: any[]): Promise<OffchainVoteWithDaoId[]> { throw new Error('not migrated yet'); }
+  async listRecentOffchainVotesFromAllDaos(fromDate: number, limit: number = 100): Promise<OffchainVoteWithDaoId[]> {
+    const daos = await this.getDAOs();
+    const voteArrays = await Promise.all(
+      daos
+        .filter(dao => dao.supportOffchainData)
+        .map(async (dao) => {
+          const vs = await this.listOffchainVotes(dao.id, {
+            fromDate,
+            limit,
+            orderBy: 'timestamp',
+            orderDirection: 'asc',
+          });
+          return vs.map(v => ({ ...v, daoId: dao.id }));
+        })
+    );
+    return voteArrays.flat().sort((a, b) => (a.created ?? 0) - (b.created ?? 0));
+  }
 }
