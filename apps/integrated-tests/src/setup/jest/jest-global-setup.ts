@@ -13,7 +13,7 @@ declare global {
  */
 export default async function globalSetup() {
   const container = await new RabbitMQContainer()
-    .withStartupTimeout(30000)
+    .withStartupTimeout(60000)
     .start();
   
   let amqpUrl = container.getAmqpUrl();
