@@ -4,13 +4,17 @@
 
 import { env } from './env';
 
-// Generate random port to avoid conflicts in parallel tests
+// Generate random ports to avoid conflicts in parallel tests
 const randomPort = 14000 + Math.floor(Math.random() * 1000);
+const randomDispatcherPort = 15000 + Math.floor(Math.random() * 1000);
+const randomLogicSystemPort = 16000 + Math.floor(Math.random() * 1000);
 
 export const serviceConfig = {
-  // Service ports 
+  // Service ports
   ports: {
     subscriptionServer: randomPort,
+    dispatcher: randomDispatcherPort,
+    logicSystem: randomLogicSystemPort,
   },
   
   // Service URLs 
