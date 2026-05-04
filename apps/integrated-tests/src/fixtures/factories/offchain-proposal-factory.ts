@@ -11,6 +11,7 @@ export interface OffchainProposalData {
   state: string;
   created: number;
   end: number;
+  start?: number; // actual voting start time (falls back to created if absent)
 }
 
 /**

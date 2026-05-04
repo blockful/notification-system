@@ -1,8 +1,9 @@
-import { QueryInput_Proposals_IncludeOptimisticProposals as boolEnum } from '@notification-system/anticapture-client/dist/gql/graphql';
 import { ProposalDataSource, ProposalOnChain, ProposalOrNull, ListProposalsOptions } from '../interfaces/proposal.interface';
-import { AnticaptureClient, ListProposalsQueryVariables } from '@notification-system/anticapture-client';
+import { VotingReminderDataSource, VotingReminderProposal } from '../interfaces/voting-reminder.interface';
+import { AnticaptureClient, ListProposalsQueryVariables, OrderDirection, QueryInput_Proposals_Status_Items } from '@notification-system/anticapture-client';
+import { mapOnchainToReminderProposal } from '../mappers/proposal-reminder.mapper';
 
-export class ProposalRepository implements ProposalDataSource {
+export class ProposalRepository implements ProposalDataSource, VotingReminderDataSource {
   private anticaptureClient: AnticaptureClient;
 
   constructor(anticaptureClient: AnticaptureClient) {
@@ -10,17 +11,19 @@ export class ProposalRepository implements ProposalDataSource {
   }
 
   async getById(id: string): Promise<ProposalOrNull> {
-    return await this.anticaptureClient.getProposalById(id);
+    const result = await this.anticaptureClient.getProposalById(id);
+    if (!result || result.__typename !== 'OnchainProposal') return null;
+    return result as ProposalOnChain;
   }
 
   async listAll(options?: ListProposalsOptions, limit: number = 100): Promise<ProposalOnChain[]> {
     const variables: ListProposalsQueryVariables = {};
-    
-    // Status filtering 
+
+    // Status filtering
     if (options?.status) {
       variables.status = options.status;
     }
-    
+
     // Date filtering
     if (options?.fromDate) {
       variables.fromDate = options.fromDate;
@@ -30,32 +33,41 @@ export class ProposalRepository implements ProposalDataSource {
       variables.fromEndDate = options.fromEndDate;
     }
 
-    // Optimistic proposal filtering
+    // Optimistic proposal filtering - now a plain boolean
     if (options?.includeOptimisticProposals !== undefined) {
-      variables.includeOptimisticProposals = options.includeOptimisticProposals ? boolEnum.True : boolEnum.False;
+      variables.includeOptimisticProposals = options.includeOptimisticProposals;
     }
 
     // Pagination
     if (options?.limit) {
       variables.limit = Math.min(options.limit, limit);
-    } 
-    
+    }
+
     if (options?.skip) {
       variables.skip = options.skip;
     }
-    
-    // Ordering - enum requires cast
-    if (options?.orderDirection === 'asc') {
-      variables.orderDirection = 'asc' as any;
-    } else if (options?.orderDirection === 'desc') {
-      variables.orderDirection = 'desc' as any;
+
+    // Ordering
+    if (options?.orderDirection) {
+      variables.orderDirection = options.orderDirection;
     }
-    
+
     const daoId = options?.daoId;
     const result = await this.anticaptureClient.listProposals(variables, daoId);
-    
+
     // Filter out null values and ensure we return ProposalOnChain[]
     return (result || []).filter(proposal => proposal !== null) as ProposalOnChain[];
   }
 
-} 
+  async listActiveForReminder(): Promise<VotingReminderProposal[]> {
+    const proposals = await this.listAll({
+      status: QueryInput_Proposals_Status_Items.Active,
+      includeOptimisticProposals: false,
+    });
+
+    return proposals
+      .filter(p => p.timestamp != null && p.endTimestamp != null)
+      .map(mapOnchainToReminderProposal);
+  }
+
+}

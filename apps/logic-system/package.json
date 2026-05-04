@@ -30,15 +30,19 @@
     "jest-mock": "^29.7.0",
     "ts-jest": "^29.1.0",
     "ts-node": "10.9.1",
-    "typescript": "^4.9.5",
+    "typescript": "^5.8.3",
     "viem": "^2.34.0"
   },
   "dependencies": {
+    "@anticapture/observability": "^1.0.0",
     "@notification-system/anticapture-client": "workspace:*",
     "@notification-system/messages": "workspace:*",
     "@notification-system/rabbitmq-client": "workspace:*",
+    "@opentelemetry/api": "^1.9.0",
     "axios": "^1.6.7",
     "dotenv": "^16.3.1",
+    "fastify": "^5.3.2",
+    "fastify-type-provider-zod": "^4.0.2",
     "zod": "^3.22.4"
   }
 }

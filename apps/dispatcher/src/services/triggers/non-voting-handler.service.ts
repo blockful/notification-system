@@ -3,8 +3,9 @@ import { DispatcherMessage, MessageProcessingResult } from '../../interfaces/dis
 import { ISubscriptionClient } from '../../interfaces/subscription-client.interface';
 import { NotificationClientFactory } from '../notification/notification-factory.service';
 import { ProposalFinishedNotification } from '../../interfaces/notification-client.interface';
-import { AnticaptureClient, QueryInput_Proposals_OrderDirection } from '@notification-system/anticapture-client';
+import { AnticaptureClient, OrderDirection, QueryInput_Proposals_Status_Items } from '@notification-system/anticapture-client';
 import { BatchNotificationService } from '../batch-notification.service';
+import { createLogger, type Logger, wrapWithTracing } from '@anticapture/observability';
 import { FormattingService } from '../formatting.service';
 import { ValidationService } from '../validation.service';
 import { nonVotingMessages, replacePlaceholders, buildButtons, NotificationTypeId } from '@notification-system/messages';
@@ -22,10 +23,11 @@ export class NonVotingHandler extends BaseTriggerHandler<ProposalFinishedNotific
   constructor(
     subscriptionClient: ISubscriptionClient,
     notificationFactory: NotificationClientFactory,
-    anticaptureClient: AnticaptureClient
+    anticaptureClient: AnticaptureClient,
+    logger: Logger = createLogger('dispatcher'),
   ) {
-    super(subscriptionClient, notificationFactory, anticaptureClient);
-    this.batchNotificationService = new BatchNotificationService(subscriptionClient, notificationFactory);
+    super(subscriptionClient, notificationFactory, anticaptureClient, logger);
+    this.batchNotificationService = wrapWithTracing(new BatchNotificationService(subscriptionClient, notificationFactory, logger));
   }
 
   async handleMessage(message: DispatcherMessage<ProposalFinishedNotification>): Promise<MessageProcessingResult> {
@@ -35,7 +37,10 @@ export class NonVotingHandler extends BaseTriggerHandler<ProposalFinishedNotific
       try {
         await this.processNonVotingAddresses(proposal);
       } catch (error) {
-        console.error(`Error processing non-voting addresses for proposal ${proposal.id}:`, error);
+        this.logger.error(
+          { err: error, proposalId: proposal.id, event: 'non_voting.process_failed' },
+          'error processing non-voting addresses for proposal',
+        );
         // Continue processing other proposals even if one fails
       }
     }
@@ -161,9 +166,9 @@ export class NonVotingHandler extends BaseTriggerHandler<ProposalFinishedNotific
     currentEndTimestamp: number
   ): Promise<any[]> {
     const proposals = await this.anticaptureClient!.listProposals({
-      status: ['EXECUTED', 'SUCCEEDED', 'DEFEATED', 'EXPIRED', 'CANCELED'],
+      status: [QueryInput_Proposals_Status_Items.Executed, QueryInput_Proposals_Status_Items.Succeeded, QueryInput_Proposals_Status_Items.Defeated, QueryInput_Proposals_Status_Items.Expired, QueryInput_Proposals_Status_Items.Canceled],
       limit: NonVotingHandler.PROPOSALS_TO_CHECK * NonVotingHandler.FETCH_MARGIN_MULTIPLIER,
-      orderDirection: QueryInput_Proposals_OrderDirection.Desc
+      orderDirection: OrderDirection.Desc
     }, daoId);
 
     // If proposals is undefined or empty, return empty array
@@ -174,13 +179,13 @@ export class NonVotingHandler extends BaseTriggerHandler<ProposalFinishedNotific
     // Sort by endTimestamp (most recent first)
     const sortedByEndTime = proposals.sort((a, b) => {
       if (!a || !b) return 0;
-      return parseInt(b.endTimestamp) - parseInt(a.endTimestamp);
+      return (b.endTimestamp ?? 0) - (a.endTimestamp ?? 0);
     });
     
     // Filter proposals that ended up to the current moment (includes current)
     // and get the most recent PROPOSALS_TO_CHECK proposals
     return sortedByEndTime
-      .filter(p => p && parseInt(p.endTimestamp) <= currentEndTimestamp)
+      .filter(p => p && (p.endTimestamp ?? 0) <= currentEndTimestamp)
       .slice(0, NonVotingHandler.PROPOSALS_TO_CHECK);
   }
 }

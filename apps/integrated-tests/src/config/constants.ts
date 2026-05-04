@@ -47,7 +47,7 @@ export const testConstants = {
   daoIds: {
     uniswap: 'UNISWAP',
     ens: 'ENS',
-    votingPowerTest: 'test-dao-voting-power',
+    votingPowerTest: 'test_dao_voting_power',
     caseTest: 'TEST_DAO',
     temporalTest1: 'TEMPORAL_DAO_1',
     temporalTest2: 'TEMPORAL_DAO_2',

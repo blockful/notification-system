@@ -10,13 +10,13 @@ import type {
   ListProposalsQuery,
   ListProposalsQueryVariables,
   ListHistoricalVotingPowerQueryVariables,
-  ListVotesQuery,
   ListVotesQueryVariables,
   ProposalNonVotersQueryVariables,
   ListOffchainProposalsQueryVariables,
   ListOffchainVotesQueryVariables,
 } from './gql/graphql';
-import { GetDaOsDocument, GetProposalByIdDocument, ListProposalsDocument, ListHistoricalVotingPowerDocument, ListVotesDocument, ProposalNonVotersDocument, GetEventRelevanceThresholdDocument, QueryInput_Votes_OrderBy, QueryInput_Votes_OrderDirection, QueryInput_VotesOffchain_OrderBy, QueryInput_VotesOffchain_OrderDirection, ListOffchainProposalsDocument, ListOffchainVotesDocument } from './gql/graphql';
+import { GetDaOsDocument, GetProposalByIdDocument, ListProposalsDocument, ListHistoricalVotingPowerDocument, ListVotesDocument, ProposalNonVotersDocument, GetEventRelevanceThresholdDocument, QueryInput_Votes_OrderBy, OrderDirection, QueryInput_VotesOffchain_OrderBy, ListOffchainProposalsDocument, ListOffchainVotesDocument, OffchainProposalNonVotersDocument } from './gql/graphql';
+import type { OffchainProposalNonVotersQueryVariables } from './gql/graphql';
 import {
   SafeDaosResponseSchema,
   SafeProposalByIdResponseSchema,
@@ -26,6 +26,7 @@ import {
   SafeProposalNonVotersResponseSchema,
   SafeOffchainProposalsResponseSchema,
   SafeOffchainVotesResponseSchema,
+  SafeOffchainProposalNonVotersResponseSchema,
   processProposals,
   processVotingPowerHistory,
   ProcessedVotingPowerHistory,
@@ -37,7 +38,7 @@ import {
 type ProposalItems = NonNullable<ListProposalsQuery['proposals']>['items'];
 type VotingPowerHistoryItems = ProcessedVotingPowerHistory[];
 type ProposalNonVoter = z.infer<typeof SafeProposalNonVotersResponseSchema>['proposalNonVoters']['items'][0];
-type VoteItem = NonNullable<NonNullable<ListVotesQuery['votes']>['items'][0]>;
+type VoteItem = z.infer<typeof SafeVotesResponseSchema>['votes']['items'][0];
 export type VoteWithDaoId = VoteItem & { daoId: string };
 export type OffchainVoteWithDaoId = OffchainVoteItem & { daoId: string };
 
@@ -205,9 +206,9 @@ export class AnticaptureClient {
 
       // Sort globally by timestamp desc (most recent first)
       if (variables?.fromEndDate) {
-        allProposals.sort((a, b) => parseInt(b?.endTimestamp || '0') - parseInt(a?.endTimestamp || '0'));
+        allProposals.sort((a, b) => (b?.endTimestamp ?? 0) - (a?.endTimestamp ?? 0));
       } else {
-        allProposals.sort((a, b) => parseInt(b?.timestamp || '0') - parseInt(a?.timestamp || '0') || 0);
+        allProposals.sort((a, b) => (b?.timestamp ?? 0) - (a?.timestamp ?? 0));
       }
 
       return allProposals;
@@ -270,7 +271,7 @@ export class AnticaptureClient {
         variables,
         daoId
       );
-      return validated.votes.items.filter(item => item !== null) as VoteItem[];
+      return validated.votes.items;
     } catch (error) {
       console.warn(`Error fetching votes for DAO ${daoId}:`, error);
       return [];
@@ -311,6 +312,36 @@ export class AnticaptureClient {
   }
 
   /**
+   * Fetches addresses that haven't voted on a specific offchain (Snapshot) proposal
+   * @param proposalId The Snapshot proposal ID to check
+   * @param addresses Optional array of addresses to filter by
+   * @returns List of non-voters
+   */
+  async getOffchainProposalNonVoters(
+    proposalId: string,
+    addresses?: string[],
+  ): Promise<{ voter: string; votingPower?: string }[]> {
+    try {
+      const variables: OffchainProposalNonVotersQueryVariables = {
+        id: proposalId,
+        ...(addresses && { addresses }),
+        orderDirection: OrderDirection.Desc,
+      };
+
+      const validated = await this.query(
+        OffchainProposalNonVotersDocument,
+        SafeOffchainProposalNonVotersResponseSchema,
+        variables,
+      );
+
+      return validated.offchainProposalNonVoters.items;
+    } catch (error) {
+      console.warn(`Error fetching offchain non-voters for proposal ${proposalId}:`, error);
+      return [];
+    }
+  }
+
+  /**
    * List recent votes from all DAOs since a given timestamp
    * @param timestampGt Fetch votes with timestamp greater than this value (unix timestamp as string)
    * @param limit Maximum number of votes to fetch per DAO (default: 100)
@@ -327,7 +358,7 @@ export class AnticaptureClient {
           fromDate: parseInt(timestampGt),
           limit,
           orderBy: QueryInput_Votes_OrderBy.Timestamp,
-          orderDirection: QueryInput_Votes_OrderDirection.Asc
+          orderDirection: OrderDirection.Asc
         });
         // Add daoId to each vote
         return votes.map(vote => ({
@@ -460,7 +491,7 @@ export class AnticaptureClient {
             fromDate,
             limit,
             orderBy: QueryInput_VotesOffchain_OrderBy.Timestamp,
-            orderDirection: QueryInput_VotesOffchain_OrderDirection.Asc
+            orderDirection: OrderDirection.Asc
           });
           return votes.map(vote => ({
             ...vote,

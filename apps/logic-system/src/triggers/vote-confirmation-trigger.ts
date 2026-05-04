@@ -3,16 +3,18 @@ import { VotesRepository } from '../repositories/votes.repository';
 import { DispatcherService, DispatcherMessage } from '../interfaces/dispatcher.interface';
 import { VoteWithDaoId } from '@notification-system/anticapture-client';
 import { NotificationTypeId } from '@notification-system/messages';
+import { createLogger, type Logger } from '@anticapture/observability';
 
 export class VoteConfirmationTrigger extends Trigger<VoteWithDaoId, void> {
   private lastProcessedTimestamp: string;
-  
+
   constructor(
     private readonly dispatcherService: DispatcherService,
     private readonly votesRepository: VotesRepository,
-    interval: number
+    interval: number,
+    logger: Logger = createLogger('logic-system'),
   ) {
-    super('VoteConfirmationTrigger', interval);
+    super('VoteConfirmationTrigger', interval, logger);
     // Initialize with current timestamp
     this.lastProcessedTimestamp = Math.floor(Date.now() / 1000).toString();
   }
@@ -20,10 +22,13 @@ export class VoteConfirmationTrigger extends Trigger<VoteWithDaoId, void> {
   protected async fetchData(): Promise<VoteWithDaoId[]> {
     try {
       const votes = await this.votesRepository.listRecentVotes(this.lastProcessedTimestamp);
-      console.log(`[VoteConfirmationTrigger] Fetched ${votes.length} new votes since timestamp ${this.lastProcessedTimestamp}`);
+      this.logger.info(
+        { count: votes.length, sinceTimestamp: this.lastProcessedTimestamp, event: 'votes.fetched' },
+        'fetched new votes',
+      );
       return votes;
     } catch (error) {
-      console.error('[VoteConfirmationTrigger] Error fetching votes:', error);
+      this.logger.error({ err: error, event: 'votes.fetch_failed' }, 'error fetching votes');
       return [];
     }
   }
@@ -49,14 +54,17 @@ export class VoteConfirmationTrigger extends Trigger<VoteWithDaoId, void> {
     };
 
     await this.dispatcherService.sendMessage(message);
-    console.log(`[VoteConfirmationTrigger] Sent ${data.length} votes to dispatcher`);
+    this.logger.info({ count: data.length, event: 'votes.dispatched' }, 'sent votes to dispatcher');
 
     // Update timestamp to the last processed vote
     const lastVote = data[data.length - 1];
     if (lastVote && lastVote.timestamp) {
       // Add 1 second to avoid reprocessing the same vote
       this.lastProcessedTimestamp = String(lastVote.timestamp + 1);
-      console.log(`[VoteConfirmationTrigger] Updated last processed timestamp to ${this.lastProcessedTimestamp}`);
+      this.logger.debug(
+        { lastProcessedTimestamp: this.lastProcessedTimestamp, event: 'cursor.advanced' },
+        'updated last processed timestamp',
+      );
     }
   }
 
@@ -66,7 +74,10 @@ export class VoteConfirmationTrigger extends Trigger<VoteWithDaoId, void> {
    */
   public reset(timestamp?: string): void {
     this.lastProcessedTimestamp = timestamp || Math.floor(Date.now() / 1000).toString();
-    console.log(`[VoteConfirmationTrigger] Reset timestamp to ${this.lastProcessedTimestamp}`);
+    this.logger.info(
+      { lastProcessedTimestamp: this.lastProcessedTimestamp, event: 'cursor.reset' },
+      'reset timestamp',
+    );
   }
 
   /**

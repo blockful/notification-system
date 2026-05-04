@@ -51,7 +51,7 @@ describe('Address Normalization - Integration Test', () => {
         transactionHash: '0xabcdef1234567890abcdef1234567890abcdef1234567890abcdef1234567890',
         proposalId: 'prop-checksum-test',
         voterAddress: voterAddressChecksum,
-        support: 1, // FOR
+        support: '1', // FOR
         votingPower: '1000000000000000000000', // 1000 tokens
         timestamp: eventTimestamp,
         reason: 'Testing checksum normalization!',

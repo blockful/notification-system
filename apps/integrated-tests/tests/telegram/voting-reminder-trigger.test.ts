@@ -330,8 +330,8 @@ describe('Voting Reminder Integration Tests', () => {
       const eventIds = relevantNotifs.map(n => n.event_id);
       expect(eventIds).toEqual(
         expect.arrayContaining([
-          expect.stringContaining('30-reminder'),
-          expect.stringContaining('60-reminder')
+          expect.stringContaining('30-voting-reminder'),
+          expect.stringContaining('60-voting-reminder')
         ])
       );
     });

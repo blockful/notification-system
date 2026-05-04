@@ -1,8 +1,8 @@
 import { z } from 'zod';
 
 export {
-  QueryInput_GetEventRelevanceThreshold_Type as FeedEventType,
-  QueryInput_GetEventRelevanceThreshold_Relevance as FeedRelevance,
+  FeedEventType,
+  FeedRelevance,
 } from './gql/graphql';
 
 // Schema with built-in transformation and fallbacks
@@ -86,11 +86,11 @@ export const SafeVotesResponseSchema = z.object({
       transactionHash: z.string(),
       proposalId: z.string(),
       voterAddress: z.string(),
-      support: z.number(),
+      support: z.string().nullable().optional(),
       votingPower: z.string(),
       timestamp: z.number(),
       reason: z.string().nullable().optional(),
-      proposalTitle: z.string(),
+      proposalTitle: z.string().nullable().optional(),
     }).nullable()),
     totalCount: z.number(),
   }).nullable(),
@@ -127,6 +127,27 @@ export const SafeProposalNonVotersResponseSchema = z.object({
   };
 });
 
+export const SafeOffchainProposalNonVotersResponseSchema = z.object({
+  offchainProposalNonVoters: z.object({
+    items: z.array(z.object({
+      voter: z.string(),
+      votingPower: z.string().optional()
+    }).nullable()),
+    totalCount: z.number().optional()
+  }).nullable()
+}).transform((data) => {
+  if (!data.offchainProposalNonVoters) {
+    console.warn('OffchainProposalNonVotersResponse has null offchainProposalNonVoters:', data);
+    return { offchainProposalNonVoters: { items: [], totalCount: 0 } };
+  }
+  return {
+    offchainProposalNonVoters: {
+      ...data.offchainProposalNonVoters,
+      items: data.offchainProposalNonVoters.items.filter((item): item is { voter: string; votingPower?: string } => item !== null)
+    }
+  };
+});
+
 export const EventThresholdResponseSchema = z.object({
   getEventRelevanceThreshold: z.object({
     threshold: z.string()
@@ -141,6 +162,7 @@ export const OffchainProposalItemSchema = z.object({
   state: z.string(),
   created: z.number(),
   end: z.number(),
+  start: z.number().optional(),
 });
 
 export type OffchainProposalItem = z.infer<typeof OffchainProposalItemSchema>;

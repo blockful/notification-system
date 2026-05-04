@@ -14,6 +14,7 @@ import { SlackDAOService } from '../dao/slack-dao.service';
 import { SlackWalletService } from '../wallet/slack-wallet.service';
 import { SlackSettingsService } from '../settings/slack-settings.service';
 import { SlackCommandContext } from '../../interfaces/slack-context.interface';
+import { createLogger, type Logger } from '@anticapture/observability';
 
 export class SlackBotService implements BotServiceInterface {
   private slackClient: SlackClientInterface;
@@ -21,19 +22,22 @@ export class SlackBotService implements BotServiceInterface {
   private daoService?: SlackDAOService;
   private walletService?: SlackWalletService;
   private settingsService?: SlackSettingsService;
+  private readonly logger: Logger;
 
   constructor(
     slackClient: SlackClientInterface,
     ensResolver: EnsResolverService,
     daoService?: SlackDAOService,
     walletService?: SlackWalletService,
-    settingsService?: SlackSettingsService
+    settingsService?: SlackSettingsService,
+    logger: Logger = createLogger('consumers'),
   ) {
     this.slackClient = slackClient;
     this.ensResolver = ensResolver;
     this.daoService = daoService;
     this.walletService = walletService;
     this.settingsService = settingsService;
+    this.logger = logger.child({ component: 'SlackBotService' });
 
     this.setupCommands();
   }
@@ -195,7 +199,7 @@ export class SlackBotService implements BotServiceInterface {
         }
       }
     } catch (error) {
-      console.error('Error handling app_home_opened:', error);
+      this.logger.error({ err: error, event: 'slack.app_home_opened_failed' }, 'error handling app_home_opened');
     }
   }
 

@@ -54,6 +54,16 @@ Participate in governance!`,
     return 'default';
   },
 
+  getTemplate(key: string): string {
+    const templates: Record<string, string> = {
+      urgent: this.urgent,
+      midPeriod: this.midPeriod,
+      early: this.early,
+      default: this.default,
+    };
+    return templates[key] ?? this.default;
+  },
+
   headers: {
     urgent: '🚨 URGENT Voting Reminder - {{daoId}}',
     midPeriod: '⏰ Mid-Period Voting Reminder - {{daoId}}',

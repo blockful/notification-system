@@ -1,4 +1,4 @@
-query GetEventRelevanceThreshold($relevance: queryInput_getEventRelevanceThreshold_relevance!, $type: queryInput_getEventRelevanceThreshold_type!) {
+query GetEventRelevanceThreshold($relevance: FeedRelevance!, $type: FeedEventType!) {
     getEventRelevanceThreshold(relevance: $relevance, type: $type) {
       threshold
     }

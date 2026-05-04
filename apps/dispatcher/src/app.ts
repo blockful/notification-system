@@ -13,20 +13,28 @@ import { NonVotingHandler } from './services/triggers/non-voting-handler.service
 import { VoteConfirmationTriggerHandler } from './services/triggers/vote-confirmation-trigger.service';
 import { OffchainVoteCastTriggerHandler } from './services/triggers/offchain-vote-cast-trigger.service';
 import { VotingReminderTriggerHandler } from './services/triggers/voting-reminder-trigger.service';
+import { NonVotersSource } from './interfaces/voting-reminder.interface';
 import { RabbitMQConnection, RabbitMQPublisher } from '@notification-system/rabbitmq-client';
 import { AnticaptureClient } from '@notification-system/anticapture-client';
-import { NotificationTypeId } from '@notification-system/messages';
+import { NotificationTypeId, votingReminderMessages, offchainVotingReminderMessages } from '@notification-system/messages';
+import { createLogger, wrapWithTracing } from '@anticapture/observability';
+import { type FastifyInstance } from 'fastify';
+import { startServer } from './server';
+
+const logger = createLogger('dispatcher');
 
 export class App {
   private rabbitMQConsumerService!: RabbitMQConsumerService;
   private rabbitmqConnection!: RabbitMQConnection;
   private publisher!: RabbitMQPublisher;
+  private server!: FastifyInstance;
   private isCreated = false;
 
   constructor(
-    private subscriptionServerUrl: string, 
+    private subscriptionServerUrl: string,
     private rabbitmqUrl: string,
     private anticaptureGraphqlEndpoint: string,
+    private port: number,
     private anticaptureHttpClient?: any,
     private blockfulApiToken?: string
   ) {}
@@ -40,7 +48,7 @@ export class App {
         'Content-Type': 'application/json',
       },
     });
-    const subscriptionClient = new SubscriptionClient(subscriptionAxiosClient);
+    const subscriptionClient = wrapWithTracing(new SubscriptionClient(subscriptionAxiosClient));
     
     // Setup AnticaptureClient - use provided client or create new one
     const anticaptureAxiosClient = this.anticaptureHttpClient || axios.create({
@@ -52,90 +60,108 @@ export class App {
         }),
       },
     });
-    const anticaptureClient = new AnticaptureClient(anticaptureAxiosClient);
+    const anticaptureClient = wrapWithTracing(new AnticaptureClient(anticaptureAxiosClient));
     
     this.rabbitmqConnection = new RabbitMQConnection(this.rabbitmqUrl);
     await this.rabbitmqConnection.connect();
     this.publisher = await RabbitMQPublisher.create(this.rabbitmqConnection);
     const notificationFactory = new NotificationClientFactory();
-    notificationFactory.addClient('telegram', new RabbitMQNotificationService(this.publisher));
-    notificationFactory.addClient('slack', new RabbitMQNotificationService(this.publisher));
-    notificationFactory.addClient('webhook', new RabbitMQNotificationService(this.publisher));
-    const triggerProcessorService = new TriggerProcessorService();
+    notificationFactory.addClient('telegram', wrapWithTracing(new RabbitMQNotificationService(this.publisher)));
+    notificationFactory.addClient('slack', wrapWithTracing(new RabbitMQNotificationService(this.publisher)));
+    notificationFactory.addClient('webhook', wrapWithTracing(new RabbitMQNotificationService(this.publisher)));
+    const triggerProcessorService = wrapWithTracing(new TriggerProcessorService(logger));
 
     triggerProcessorService.addHandler(
       NotificationTypeId.NewProposal,
-      new NewProposalTriggerHandler(subscriptionClient, notificationFactory, anticaptureClient)
+      wrapWithTracing(new NewProposalTriggerHandler(subscriptionClient, notificationFactory, anticaptureClient))
     );
 
     triggerProcessorService.addHandler(
       NotificationTypeId.NewOffchainProposal,
-      new NewOffchainProposalTriggerHandler(subscriptionClient, notificationFactory)
+      wrapWithTracing(new NewOffchainProposalTriggerHandler(subscriptionClient, notificationFactory))
     );
 
     triggerProcessorService.addHandler(
       NotificationTypeId.OffchainProposalFinished,
-      new OffchainProposalFinishedTriggerHandler(subscriptionClient, notificationFactory)
+      wrapWithTracing(new OffchainProposalFinishedTriggerHandler(subscriptionClient, notificationFactory))
     );
 
     triggerProcessorService.addHandler(
       NotificationTypeId.VotingPowerChanged,
-      new VotingPowerTriggerHandler(subscriptionClient, notificationFactory)
+      wrapWithTracing(new VotingPowerTriggerHandler(subscriptionClient, notificationFactory))
     );
 
     triggerProcessorService.addHandler(
       NotificationTypeId.ProposalFinished,
-      new ProposalFinishedTriggerHandler(subscriptionClient, notificationFactory)
+      wrapWithTracing(new ProposalFinishedTriggerHandler(subscriptionClient, notificationFactory))
     );
 
     // Add second handler for proposal-finished to process non-voting addresses
     triggerProcessorService.addHandler(
       NotificationTypeId.ProposalFinished,
-      new NonVotingHandler(subscriptionClient, notificationFactory, anticaptureClient)
+      wrapWithTracing(new NonVotingHandler(subscriptionClient, notificationFactory, anticaptureClient, logger))
     );
 
     triggerProcessorService.addHandler(
       NotificationTypeId.VoteConfirmation,
-      new VoteConfirmationTriggerHandler(subscriptionClient, notificationFactory, anticaptureClient)
+      wrapWithTracing(new VoteConfirmationTriggerHandler(subscriptionClient, notificationFactory, anticaptureClient, logger))
     );
 
     triggerProcessorService.addHandler(
       NotificationTypeId.OffchainVoteCast,
-      new OffchainVoteCastTriggerHandler(subscriptionClient, notificationFactory)
+      wrapWithTracing(new OffchainVoteCastTriggerHandler(subscriptionClient, notificationFactory, logger))
     );
+
+    const onchainNonVotersSource: NonVotersSource = {
+      getNonVoters: (id, daoId, addrs) => anticaptureClient.getProposalNonVoters(id, daoId, addrs)
+    };
+
+    const offchainNonVotersSource: NonVotersSource = {
+      getNonVoters: (id, _daoId, addrs) => anticaptureClient.getOffchainProposalNonVoters(id, addrs)
+    };
 
     triggerProcessorService.addHandler(
       NotificationTypeId.VotingReminder30,
-      new VotingReminderTriggerHandler(subscriptionClient, notificationFactory, anticaptureClient)
+      wrapWithTracing(new VotingReminderTriggerHandler(subscriptionClient, notificationFactory, anticaptureClient, onchainNonVotersSource, votingReminderMessages, 'voting-reminder', logger))
     );
     triggerProcessorService.addHandler(
       NotificationTypeId.VotingReminder60,
-      new VotingReminderTriggerHandler(subscriptionClient, notificationFactory, anticaptureClient)
+      wrapWithTracing(new VotingReminderTriggerHandler(subscriptionClient, notificationFactory, anticaptureClient, onchainNonVotersSource, votingReminderMessages, 'voting-reminder', logger))
     );
     triggerProcessorService.addHandler(
       NotificationTypeId.VotingReminder90,
-      new VotingReminderTriggerHandler(subscriptionClient, notificationFactory, anticaptureClient)
+      wrapWithTracing(new VotingReminderTriggerHandler(subscriptionClient, notificationFactory, anticaptureClient, onchainNonVotersSource, votingReminderMessages, 'voting-reminder', logger))
     );
 
-    this.rabbitMQConsumerService = new RabbitMQConsumerService(this.rabbitmqUrl, triggerProcessorService);
+    triggerProcessorService.addHandler(
+      NotificationTypeId.OffchainVotingReminder75,
+      wrapWithTracing(new VotingReminderTriggerHandler(subscriptionClient, notificationFactory, anticaptureClient, offchainNonVotersSource, offchainVotingReminderMessages, 'offchain-voting-reminder', logger))
+    );
+
+    this.rabbitMQConsumerService = wrapWithTracing(new RabbitMQConsumerService(this.rabbitmqUrl, triggerProcessorService));
     this.isCreated = true;
   }
 
   async start(): Promise<void> {
     await this.setupServices();
+    this.server = await startServer(this.port);
     await this.rabbitMQConsumerService?.start();
-    console.log('Dispatcher service running!');
+    logger.info('dispatcher service running');
   }
 
   async stop(): Promise<void> {
+    if (this.server) {
+      await this.server.close();
+    }
+
     if (this.rabbitMQConsumerService) {
       await this.rabbitMQConsumerService.stop();
     }
-    
+
     if (this.publisher) {
       await this.publisher.close();
     }
-    
+
     if (this.rabbitmqConnection) {
       await this.rabbitmqConnection.close();
     }

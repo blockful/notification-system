@@ -1,12 +1,18 @@
 import fastify, { FastifyInstance } from 'fastify';
-import { validatorCompiler, serializerCompiler } from 'fastify-type-provider-zod';
+import { validatorCompiler, serializerCompiler, ZodTypeProvider } from 'fastify-type-provider-zod';
 import fastifyCors from '@fastify/cors';
+import { z } from 'zod';
 import { WebhookController } from './webhook.controller';
+import { createLogger, type Logger } from '@anticapture/observability';
 
 export class WebhookServer {
   private server: FastifyInstance;
+  private readonly logger: Logger;
 
-  constructor(private webhookController: WebhookController) {
+  constructor(
+    private webhookController: WebhookController,
+    logger: Logger = createLogger('consumers'),
+  ) {
     this.server = fastify();
 
     this.server.setValidatorCompiler(validatorCompiler);
@@ -14,11 +20,18 @@ export class WebhookServer {
     this.server.register(fastifyCors, { origin: '*' });
 
     this.server.register((app) => this.webhookController.register(app));
+    this.server.withTypeProvider<ZodTypeProvider>().get('/health', {
+      schema: {
+        tags: ['health'],
+        response: { 200: z.object({ status: z.string(), timestamp: z.string() }) },
+      },
+    }, () => ({ status: 'ok', timestamp: new Date().toISOString() }));
+    this.logger = logger.child({ component: 'WebhookServer' });
   }
 
   async start(port: number): Promise<void> {
     await this.server.listen({ port, host: '0.0.0.0' });
-    console.log(`Webhook HTTP server running on port ${port}`);
+    this.logger.info({ port, event: 'webhook_server.started' }, 'webhook HTTP server running');
   }
 
   async stop(): Promise<void> {

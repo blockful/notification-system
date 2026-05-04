@@ -4,7 +4,7 @@ export interface VoteData {
   proposalId: string;
   voterAddress: string;
   daoId: string;
-  support: number;
+  support: string;
   reason?: string | null;
   timestamp: number;
   transactionHash: string;
@@ -34,7 +34,7 @@ export class VoteFactory {
       proposalId,
       voterAddress,
       daoId,
-      support: 1,
+      support: '1',
       timestamp: Math.floor(Date.now() / 1000),
       transactionHash: `0x${uuidv4().replace(/-/g, '')}${uuidv4().replace(/-/g, '').substring(0, 8)}`,
       votingPower: '1000000000000000000',

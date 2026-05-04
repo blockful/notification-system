@@ -172,10 +172,10 @@ class AnticaptureClient {
             }
             // Sort globally by timestamp desc (most recent first)
             if (variables?.fromEndDate) {
-                allProposals.sort((a, b) => parseInt(b?.endTimestamp || '0') - parseInt(a?.endTimestamp || '0'));
+                allProposals.sort((a, b) => (b?.endTimestamp ?? 0) - (a?.endTimestamp ?? 0));
             }
             else {
-                allProposals.sort((a, b) => parseInt(b?.timestamp || '0') - parseInt(a?.timestamp || '0') || 0);
+                allProposals.sort((a, b) => (b?.timestamp ?? 0) - (a?.timestamp ?? 0));
             }
             return allProposals;
         }
@@ -228,7 +228,7 @@ class AnticaptureClient {
     async listVotes(daoId, variables) {
         try {
             const validated = await this.query(graphql_2.ListVotesDocument, schemas_1.SafeVotesResponseSchema, variables, daoId);
-            return validated.votes.items.filter(item => item !== null);
+            return validated.votes.items;
         }
         catch (error) {
             console.warn(`Error fetching votes for DAO ${daoId}:`, error);
@@ -258,6 +258,27 @@ class AnticaptureClient {
         }
     }
     /**
+     * Fetches addresses that haven't voted on a specific offchain (Snapshot) proposal
+     * @param proposalId The Snapshot proposal ID to check
+     * @param addresses Optional array of addresses to filter by
+     * @returns List of non-voters
+     */
+    async getOffchainProposalNonVoters(proposalId, addresses) {
+        try {
+            const variables = {
+                id: proposalId,
+                ...(addresses && { addresses }),
+                orderDirection: graphql_2.OrderDirection.Desc,
+            };
+            const validated = await this.query(graphql_2.OffchainProposalNonVotersDocument, schemas_1.SafeOffchainProposalNonVotersResponseSchema, variables);
+            return validated.offchainProposalNonVoters.items;
+        }
+        catch (error) {
+            console.warn(`Error fetching offchain non-voters for proposal ${proposalId}:`, error);
+            return [];
+        }
+    }
+    /**
      * List recent votes from all DAOs since a given timestamp
      * @param timestampGt Fetch votes with timestamp greater than this value (unix timestamp as string)
      * @param limit Maximum number of votes to fetch per DAO (default: 100)
@@ -273,7 +294,7 @@ class AnticaptureClient {
                     fromDate: parseInt(timestampGt),
                     limit,
                     orderBy: graphql_2.QueryInput_Votes_OrderBy.Timestamp,
-                    orderDirection: graphql_2.QueryInput_Votes_OrderDirection.Asc
+                    orderDirection: graphql_2.OrderDirection.Asc
                 });
                 // Add daoId to each vote
                 return votes.map(vote => ({
@@ -380,7 +401,7 @@ class AnticaptureClient {
                     fromDate,
                     limit,
                     orderBy: graphql_2.QueryInput_VotesOffchain_OrderBy.Timestamp,
-                    orderDirection: graphql_2.QueryInput_VotesOffchain_OrderDirection.Asc
+                    orderDirection: graphql_2.OrderDirection.Asc
                 });
                 return votes.map(vote => ({
                     ...vote,

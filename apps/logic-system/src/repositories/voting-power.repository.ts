@@ -3,7 +3,7 @@ import {
   ListHistoricalVotingPowerQueryVariables,
   ProcessedVotingPowerHistory,
   QueryInput_HistoricalVotingPower_OrderBy,
-  QueryInput_HistoricalVotingPower_OrderDirection
+  OrderDirection
 } from '@notification-system/anticapture-client';
 
 export class VotingPowerRepository {
@@ -17,9 +17,9 @@ export class VotingPowerRepository {
     const variables: ListHistoricalVotingPowerQueryVariables = {
       // Always order by timestamp ascending for chronological processing
       orderBy: QueryInput_HistoricalVotingPower_OrderBy.Timestamp,
-      orderDirection: QueryInput_HistoricalVotingPower_OrderDirection.Asc,
+      orderDirection: OrderDirection.Asc,
       limit: 100,
-      fromDate: timestampGt
+      fromDate: parseInt(timestampGt, 10)
     };
 
     return await this.anticaptureClient.listVotingPowerHistory(variables);

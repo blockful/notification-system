@@ -4,6 +4,7 @@ import { TriggerHandler } from "../../interfaces/base-trigger.interface";
 import { ISubscriptionClient, User } from "../../interfaces/subscription-client.interface";
 import { NotificationClientFactory } from "../notification/notification-factory.service";
 import { AnticaptureClient } from '@notification-system/anticapture-client';
+import { createLogger, type Logger } from '@anticapture/observability';
 
 /**
  * Base class for trigger handlers
@@ -12,6 +13,8 @@ import { AnticaptureClient } from '@notification-system/anticapture-client';
  */
 export abstract class BaseTriggerHandler<T = any> implements TriggerHandler<T> {
   private daoCache: Map<string, { chainId: number; alreadySupportCalldataReview: boolean; supportOffchainData: boolean }> = new Map();
+
+  protected readonly logger: Logger;
 
   /**
    * Creates a new instance of the BaseTriggerHandler
@@ -22,8 +25,11 @@ export abstract class BaseTriggerHandler<T = any> implements TriggerHandler<T> {
   constructor(
     protected readonly subscriptionClient: ISubscriptionClient,
     protected readonly notificationFactory: NotificationClientFactory,
-    protected readonly anticaptureClient?: AnticaptureClient
-  ) {}
+    protected readonly anticaptureClient?: AnticaptureClient,
+    logger: Logger = createLogger('dispatcher'),
+  ) {
+    this.logger = logger.child({ component: this.constructor.name });
+  }
 
   /**
    * Handle a trigger message

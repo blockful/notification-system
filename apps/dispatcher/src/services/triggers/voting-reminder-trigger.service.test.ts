@@ -8,13 +8,15 @@ import { ISubscriptionClient } from '../../interfaces/subscription-client.interf
 import { NotificationClientFactory } from '../notification/notification-factory.service';
 import { AnticaptureClient } from '@notification-system/anticapture-client';
 import { FormattingService } from '../formatting.service';
-import { NotificationTypeId } from '@notification-system/messages';
+import { NotificationTypeId, votingReminderMessages } from '@notification-system/messages';
+import { NonVotersSource, VotingReminderMessageSet } from '../../interfaces/voting-reminder.interface';
 
 describe('VotingReminderTriggerHandler', () => {
   let handler: VotingReminderTriggerHandler;
   let mockSubscriptionClient: jest.Mocked<ISubscriptionClient>;
   let mockNotificationFactory: jest.Mocked<NotificationClientFactory>;
   let mockAnticaptureClient: jest.Mocked<AnticaptureClient>;
+  let mockNonVotersSource: jest.Mocked<NonVotersSource>;
 
   const mockUser = {
     id: 'user-123',
@@ -50,14 +52,19 @@ describe('VotingReminderTriggerHandler', () => {
       })
     } as any;
 
-    mockAnticaptureClient = {
-      getProposalNonVoters: jest.fn()
-    } as any;
+    mockAnticaptureClient = {} as any;
+
+    mockNonVotersSource = {
+      getNonVoters: jest.fn()
+    } as jest.Mocked<NonVotersSource>;
 
     handler = new VotingReminderTriggerHandler(
       mockSubscriptionClient,
       mockNotificationFactory,
-      mockAnticaptureClient
+      mockAnticaptureClient,
+      mockNonVotersSource,
+      votingReminderMessages,
+      'voting-reminder'
     );
 
     // Mock Date.now for consistent time calculations
@@ -89,8 +96,8 @@ describe('VotingReminderTriggerHandler', () => {
 
       // Setup mocks
       mockSubscriptionClient.getFollowedAddresses.mockResolvedValue(['0x123', '0x456']);
-      mockAnticaptureClient.getProposalNonVoters.mockResolvedValue([
-        {voter: '0x456'}  // Only 0x456 hasn't voted
+      mockNonVotersSource.getNonVoters.mockResolvedValue([
+        { voter: '0x456' }  // Only 0x456 hasn't voted
       ]);
       mockSubscriptionClient.getWalletOwnersBatch.mockResolvedValue({
         '0x456': [mockUser] // Only 0x456 (non-voter) has users
@@ -105,7 +112,7 @@ describe('VotingReminderTriggerHandler', () => {
 
       expect(result.messageId).toMatch(/voting-reminder-/);
       expect(mockSubscriptionClient.getFollowedAddresses).toHaveBeenCalledWith('test-dao');
-      expect(mockAnticaptureClient.getProposalNonVoters).toHaveBeenCalledWith(
+      expect(mockNonVotersSource.getNonVoters).toHaveBeenCalledWith(
         'proposal-123',
         'test-dao',
         ['0x123', '0x456']
@@ -124,7 +131,7 @@ describe('VotingReminderTriggerHandler', () => {
       const result = await handler.handleMessage(message);
 
       expect(result.messageId).toMatch(/voting-reminder-/);
-      expect(mockAnticaptureClient.getProposalNonVoters).not.toHaveBeenCalled();
+      expect(mockNonVotersSource.getNonVoters).not.toHaveBeenCalled();
     });
 
     it('should skip when all users have already voted', async () => {
@@ -134,7 +141,7 @@ describe('VotingReminderTriggerHandler', () => {
       };
 
       mockSubscriptionClient.getFollowedAddresses.mockResolvedValue(['0x123']);
-      mockAnticaptureClient.getProposalNonVoters.mockResolvedValue([]); // Empty array - all have voted
+      mockNonVotersSource.getNonVoters.mockResolvedValue([]); // Empty array - all have voted
 
       const result = await handler.handleMessage(message);
 
@@ -149,8 +156,8 @@ describe('VotingReminderTriggerHandler', () => {
       };
 
       mockSubscriptionClient.getFollowedAddresses.mockResolvedValue(['0x456']);
-      mockAnticaptureClient.getProposalNonVoters.mockResolvedValue([
-        {voter: '0x456'}
+      mockNonVotersSource.getNonVoters.mockResolvedValue([
+        { voter: '0x456' }
       ]);
       mockSubscriptionClient.getWalletOwnersBatch.mockResolvedValue({
         '0x456': [mockUser]
@@ -195,7 +202,7 @@ describe('VotingReminderTriggerHandler', () => {
       };
 
       const message = (handler as any).createReminderMessage(eventWithoutTitle);
-      
+
       expect(message).toContain('Proposal: "Update governance parameters. This proposal aims to improve the system."');
     });
 
@@ -207,7 +214,7 @@ describe('VotingReminderTriggerHandler', () => {
       };
 
       const message = (handler as any).createReminderMessage(eventWithLongDescription);
-      
+
       expect(message).toContain('Proposal: "This is a very long description that exceeds the maximum length for a title and..."');
     });
   });
@@ -217,14 +224,14 @@ describe('VotingReminderTriggerHandler', () => {
       // Mock current time to be 1500000 (middle of proposal period)
       const endTimestamp = 2000000;
       const remaining = FormattingService.calculateTimeRemaining(endTimestamp);
-      
+
       expect(remaining).toContain('day'); // Should show days remaining
     });
 
     it('should handle proposals that have ended', () => {
       const endTimestamp = 1000000; // Before current time (1500000)
       const remaining = FormattingService.calculateTimeRemaining(endTimestamp);
-      
+
       expect(remaining).toBe('Proposal has ended');
     });
 
@@ -232,7 +239,7 @@ describe('VotingReminderTriggerHandler', () => {
       jest.spyOn(Date, 'now').mockReturnValue(1990000 * 1000); // Close to end
       const endTimestamp = 2000000;
       const remaining = FormattingService.calculateTimeRemaining(endTimestamp);
-      
+
       expect(remaining).toMatch(/hour/);
     });
 
@@ -240,7 +247,7 @@ describe('VotingReminderTriggerHandler', () => {
       jest.spyOn(Date, 'now').mockReturnValue(1999000 * 1000); // Very close to end
       const endTimestamp = 2000000;
       const remaining = FormattingService.calculateTimeRemaining(endTimestamp);
-      
+
       expect(remaining).toMatch(/minute/);
     });
   });
@@ -249,7 +256,7 @@ describe('VotingReminderTriggerHandler', () => {
     it('should continue processing other events when one fails', async () => {
       const failingEvent = { ...mockVotingReminderEvent, id: 'failing-proposal' };
       const successfulEvent = { ...mockVotingReminderEvent, id: 'successful-proposal' };
-      
+
       const message: DispatcherMessage = {
         triggerId: NotificationTypeId.VotingReminder90,
         events: [failingEvent, successfulEvent]
@@ -260,8 +267,8 @@ describe('VotingReminderTriggerHandler', () => {
         .mockRejectedValueOnce(new Error('Network error'))
         .mockResolvedValueOnce(['0x456']);
 
-      mockAnticaptureClient.getProposalNonVoters.mockResolvedValue([
-        {voter: '0x456'}
+      mockNonVotersSource.getNonVoters.mockResolvedValue([
+        { voter: '0x456' }
       ]);
       mockSubscriptionClient.getWalletOwnersBatch.mockResolvedValue({
         '0x456': [mockUser]

@@ -1,6 +1,6 @@
 query ProposalNonVoters(
   $id: String!
-  $addresses: JSON
+  $addresses: [String]
 ) {
   proposalNonVoters(
     id: $id

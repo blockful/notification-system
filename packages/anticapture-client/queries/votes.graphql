@@ -1,12 +1,12 @@
 query ListVotes(
-  $voterAddressIn: JSON
-  $fromDate: Float
-  $toDate: Float
-  $limit: Float
-  $skip: NonNegativeInt
+  $voterAddressIn: [String]
+  $fromDate: Int
+  $toDate: Int
+  $limit: Int
+  $skip: Int
   $orderBy: queryInput_votes_orderBy
-  $orderDirection: queryInput_votes_orderDirection
-  $support: Float
+  $orderDirection: OrderDirection
+  $support: String
 ) {
   votes(
     voterAddressIn: $voterAddressIn

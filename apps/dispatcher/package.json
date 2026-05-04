@@ -18,12 +18,16 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "@anticapture/observability": "^1.0.0",
     "@jest/globals": "^29.7.0",
     "@notification-system/anticapture-client": "workspace:*",
     "@notification-system/messages": "workspace:*",
     "@notification-system/rabbitmq-client": "workspace:*",
+    "@opentelemetry/api": "^1.9.0",
     "axios": "^1.9.0",
     "dotenv": "^16.5.0",
+    "fastify": "^5.3.2",
+    "fastify-type-provider-zod": "^4.0.2",
     "viem": "^2.34.0",
     "zod": "^3.24.3"
   },

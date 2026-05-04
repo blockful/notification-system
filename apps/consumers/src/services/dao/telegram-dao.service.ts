@@ -57,7 +57,7 @@ export class TelegramDAOService extends BaseDAOService {
         reply_markup: keyboard
       });
     } catch (error) {
-      console.error('Error loading DAOs:', error);
+      this.logger.error({ err: error, event: 'dao.load_failed' }, 'error loading DAOs');
       await ctx.reply(uiMessages.errors.loadingDaos);
     }
   }
@@ -80,7 +80,7 @@ export class TelegramDAOService extends BaseDAOService {
       const daoList = this.formatDAOListWithBullets(userPreferences);
       await ctx.reply(`${telegramMessages.dao.listHeader}\n\n${daoList}`, { parse_mode: 'HTML' });
     } catch (error) {
-      console.error('Error listing subscriptions:', error);
+      this.logger.error({ err: error, event: 'dao.list_subscriptions_failed' }, 'error listing subscriptions');
       await ctx.reply(uiMessages.errors.loadingSubscriptions);
     }
   }
@@ -126,7 +126,7 @@ export class TelegramDAOService extends BaseDAOService {
       // Clear session
       ctx.session.daoSelections = new Set<string>();
     } catch (error) {
-      console.error('Error updating subscriptions:', error);
+      this.logger.error({ err: error, event: 'dao.update_failed' }, 'error updating subscriptions');
       await ctx.reply(uiMessages.errors.updateSubscriptionsFailed);
     }
   }
@@ -153,7 +153,7 @@ export class TelegramDAOService extends BaseDAOService {
       const keyboard = this.buildInlineKeyboard(daos, ctx.session.daoSelections);
       await ctx.editMessageReplyMarkup(keyboard);
     } catch (error) {
-      console.error('Error updating keyboard:', error);
+      this.logger.error({ err: error, event: 'dao.keyboard_update_failed' }, 'error updating keyboard');
     }
   }
 

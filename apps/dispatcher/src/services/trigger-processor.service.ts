@@ -1,5 +1,6 @@
 import { DispatcherMessage, MessageProcessingResult } from "../interfaces/dispatcher-message.interface";
 import { TriggerHandler } from "../interfaces/base-trigger.interface";
+import { createLogger, type Logger } from '@anticapture/observability';
 
 /**
  * Service responsible for processing messages for specific triggers
@@ -7,9 +8,11 @@ import { TriggerHandler } from "../interfaces/base-trigger.interface";
  */
 export class TriggerProcessorService {
   private triggerHandlers: Map<string, TriggerHandler<any>[]>;
-  
-  constructor() {
+  private readonly logger: Logger;
+
+  constructor(logger: Logger = createLogger('dispatcher')) {
     this.triggerHandlers = new Map();
+    this.logger = logger.child({ component: 'TriggerProcessorService' });
   }
 
   /**
@@ -36,7 +39,10 @@ export class TriggerProcessorService {
     
     // If no handlers found, return early
     if (!handlers || handlers.length === 0) {
-      console.log(`No handler registered for trigger: ${message.triggerId}`);
+      this.logger.warn(
+        { triggerId: message.triggerId, event: 'trigger.no_handler' },
+        'no handler registered for trigger',
+      );
       return {
         messageId: `unhandled-${message.triggerId}-${Date.now()}`,
         timestamp: new Date().toISOString()
@@ -55,7 +61,15 @@ export class TriggerProcessorService {
     if (failedResults.length > 0) {
       const errors = failedResults
         .map((result) => (result as PromiseRejectedResult).reason);
-      console.error(`${failedResults.length} handler(s) failed for trigger ${message.triggerId}. Errors:`, errors.map(e => e.message).join(', '));
+      this.logger.error(
+        {
+          triggerId: message.triggerId,
+          failedCount: failedResults.length,
+          errors: errors.map(e => e?.message ?? String(e)),
+          event: 'trigger.handler_failures',
+        },
+        'one or more handlers failed for trigger',
+      );
     }
 
     const successfulResults = results

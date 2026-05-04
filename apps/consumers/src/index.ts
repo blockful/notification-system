@@ -8,8 +8,13 @@
  * platforms (Telegram, Slack, and any registered webhook endpoint).
  */
 
+import './instrumentation';
+
 import axios from 'axios';
 import { App } from './app';
+import { createLogger, wrapWithTracing } from '@anticapture/observability';
+
+const logger = createLogger('consumers');
 import { loadConfig } from './config/env';
 import { EnsResolverService } from './services/ens-resolver.service';
 import { TelegramClient } from './clients/telegram.client';
@@ -18,18 +23,19 @@ import { SlackClient } from './clients/slack.client';
 const config = loadConfig();
 
 // Create ENS resolver
-const ensResolver = new EnsResolverService(config.rpcUrl);
+const ensResolver = wrapWithTracing(new EnsResolverService(config.rpcUrl, logger));
 
 // Create Telegram client for production
-const telegramClient = new TelegramClient(config.telegramBotToken);
+const telegramClient = wrapWithTracing(new TelegramClient(config.telegramBotToken, undefined, logger));
 
 // Create Slack client
-const slackClient = new SlackClient(
+const slackClient = wrapWithTracing(new SlackClient(
   config.slackSigningSecret,
   config.subscriptionServerUrl,
   config.tokenEncryptionKey,
-  config.port
-);
+  config.port,
+  logger,
+));
 
 // Create and start the application
 const app = new App(
@@ -50,5 +56,10 @@ const app = new App(
 );
 
 (async () => {
-  await app.start();
+  try {
+    await app.start();
+  } catch (err) {
+    logger.error({ err }, 'consumers failed to start');
+    process.exit(1);
+  }
 })();

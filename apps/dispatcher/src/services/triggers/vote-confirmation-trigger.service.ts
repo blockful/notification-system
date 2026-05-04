@@ -5,6 +5,7 @@ import { ISubscriptionClient } from '../../interfaces/subscription-client.interf
 import { AnticaptureClient, VoteWithDaoId } from '@notification-system/anticapture-client';
 import { formatTokenAmount } from '../../lib/number-formatter';
 import { voteConfirmationMessages, replacePlaceholders, buildButtons, NotificationTypeId } from '@notification-system/messages';
+import { createLogger, type Logger } from '@anticapture/observability';
 
 interface UserVoteCombination {
   user: any;
@@ -24,16 +25,17 @@ export class VoteConfirmationTriggerHandler extends BaseTriggerHandler<VoteWithD
   constructor(
     protected readonly subscriptionClient: ISubscriptionClient,
     protected readonly notificationFactory: NotificationClientFactory,
-    anticaptureClient: AnticaptureClient
+    anticaptureClient: AnticaptureClient,
+    logger: Logger = createLogger('dispatcher'),
   ) {
-    super(subscriptionClient, notificationFactory, anticaptureClient);
+    super(subscriptionClient, notificationFactory, anticaptureClient, logger);
   }
 
   async handleMessage(message: DispatcherMessage<VoteWithDaoId>): Promise<MessageProcessingResult> {
     const events = message.events;
     
     if (!events || events.length === 0) {
-      console.log('[VoteConfirmationHandler] No vote events to process');
+      this.logger.debug({ event: 'vote_confirmation.no_events' }, 'no vote events to process');
       return { 
         messageId: `vote-confirmation-empty-${Date.now()}`,
         timestamp: new Date().toISOString()
@@ -50,7 +52,10 @@ export class VoteConfirmationTriggerHandler extends BaseTriggerHandler<VoteWithD
     // Process all combinations
     const processedCount = await this.processUserVoteCombinations(userVoteCombinations);
 
-    console.log(`[VoteConfirmationHandler] Processing complete - Sent: ${processedCount.sent}, Skipped: ${processedCount.skipped}, Failed: ${processedCount.failed}`);
+    this.logger.info(
+      { sent: processedCount.sent, skipped: processedCount.skipped, failed: processedCount.failed, event: 'vote_confirmation.processed' },
+      'processing complete',
+    );
     
     return { 
       messageId: `vote-confirmation-${Date.now()}`,
@@ -82,7 +87,10 @@ export class VoteConfirmationTriggerHandler extends BaseTriggerHandler<VoteWithD
         const result = await this.processUserVote(user, vote);
         processedCount[result]++;
       } catch (error) {
-        console.error(`[VoteConfirmationHandler] Error processing vote for user ${user.id}:`, error);
+        this.logger.error(
+          { err: error, userId: user.id, event: 'vote_confirmation.process_failed' },
+          'error processing vote for user',
+        );
         processedCount.failed++;
       }
     }
@@ -101,20 +109,26 @@ export class VoteConfirmationTriggerHandler extends BaseTriggerHandler<VoteWithD
     const isSubscribed = subscribers.some(sub => sub.id === user.id);
     
     if (!isSubscribed) {
-      console.log(`[VoteConfirmationHandler] User ${user.id} not subscribed to DAO ${vote.daoId}`);
+      this.logger.debug(
+        { userId: user.id, daoId: vote.daoId, event: 'vote_confirmation.user_not_subscribed' },
+        'user not subscribed to DAO',
+      );
       return 'skipped';
     }
 
     // Check deduplication
     const notifications = await this.subscriptionClient.shouldSend([user], eventId, vote.daoId);
     if (notifications.length === 0) {
-      console.log(`[VoteConfirmationHandler] Notification already sent for vote ${vote.transactionHash}`);
+      this.logger.debug(
+        { txHash: vote.transactionHash, event: 'vote_confirmation.already_sent' },
+        'notification already sent for vote',
+      );
       return 'skipped';
     }
 
     // Send notification
     await this.sendVoteNotification(user, vote, eventId);
-    console.log(`[VoteConfirmationHandler] Sent vote notification to user ${user.id}`);
+    this.logger.info({ userId: user.id, event: 'vote_confirmation.sent' }, 'sent vote notification to user');
     
     return 'sent';
   }

@@ -9,14 +9,16 @@ import { SubscriptionAPIService } from '../subscription-api.service';
 import { EnsResolverService } from '../ens-resolver.service';
 import { ContextWithSession } from '../../interfaces/bot.interface';
 import { uiMessages } from '@notification-system/messages';
+import { createLogger, type Logger } from '@anticapture/observability';
 
 export class TelegramWalletService extends BaseWalletService {
 
   constructor(
     subscriptionApi: SubscriptionAPIService,
-    ensResolver: EnsResolverService
+    ensResolver: EnsResolverService,
+    logger: Logger = createLogger('consumers'),
   ) {
-    super(subscriptionApi, ensResolver);
+    super(subscriptionApi, ensResolver, logger, 'telegram-wallet');
   }
 
   private ensureSession(ctx: ContextWithSession): void {
@@ -64,7 +66,7 @@ export class TelegramWalletService extends BaseWalletService {
 
       await ctx.reply(message, { reply_markup: keyboard });
     } catch (error) {
-      console.error('Error loading wallets:', error);
+      this.logger.error({ err: error, event: 'wallet.load_failed' }, 'error loading wallets');
       await ctx.reply(uiMessages.errors.loadingWallets);
     }
   }
@@ -116,7 +118,7 @@ export class TelegramWalletService extends BaseWalletService {
 
       await ctx.reply(uiMessages.wallet.removeConfirmation, { reply_markup: keyboard });
     } catch (error) {
-      console.error('Error loading wallets for removal:', error);
+      this.logger.error({ err: error, event: 'wallet.load_for_removal_failed' }, 'error loading wallets for removal');
       await ctx.reply(uiMessages.errors.loadingWallets);
     }
   }
@@ -155,7 +157,7 @@ export class TelegramWalletService extends BaseWalletService {
       ctx.session.walletAction = undefined;
 
     } catch (error) {
-      console.error('Error adding wallet:', error);
+      this.logger.error({ err: error, event: 'wallet.add_failed' }, 'error adding wallet');
       await ctx.reply(uiMessages.errors.generic);
     }
   }
@@ -202,7 +204,7 @@ export class TelegramWalletService extends BaseWalletService {
 
       await ctx.editMessageReplyMarkup(keyboard);
     } catch (error) {
-      console.error('Error toggling wallet selection:', error);
+      this.logger.error({ err: error, event: 'wallet.toggle_failed' }, 'error toggling wallet selection');
       await ctx.answerCbQuery(uiMessages.errors.updateFailed);
     }
   }
@@ -241,7 +243,7 @@ export class TelegramWalletService extends BaseWalletService {
       ctx.session.walletAction = undefined;
 
     } catch (error) {
-      console.error('Error removing wallets:', error);
+      this.logger.error({ err: error, event: 'wallet.remove_failed' }, 'error removing wallets');
       await ctx.reply(uiMessages.errors.generic);
     }
   }
