@@ -54,6 +54,8 @@ export type TestApps = {
 const TEST_CONFIG = {
   ports: {
     subscriptionServer: serviceConfig.ports.subscriptionServer,
+    dispatcher: serviceConfig.ports.dispatcher,
+    logicSystem: serviceConfig.ports.logicSystem,
   },
   urls: {
     subscriptionServer: `http://127.0.0.1:${serviceConfig.ports.subscriptionServer}`,
@@ -205,9 +207,10 @@ const startDispatcher = async (
   mockHttpClient: any
 ): Promise<DispatcherApp> => {
   const dispatcherApp = new DispatcherApp(
-    TEST_CONFIG.urls.subscriptionServer, 
+    TEST_CONFIG.urls.subscriptionServer,
     rabbitmqUrl,
     TEST_CONFIG.urls.mockGraphQL,
+    TEST_CONFIG.ports.dispatcher,
     mockHttpClient
   );
   await dispatcherApp.start();
@@ -231,6 +234,7 @@ const startLogicSystem = async (
     QueryInput_Proposals_Status_Items.Active,
     mockHttpClient,
     rabbitmqUrl,
+    TEST_CONFIG.ports.logicSystem,
     oneYearAgo
   );
   await logicSystemApp.start();
