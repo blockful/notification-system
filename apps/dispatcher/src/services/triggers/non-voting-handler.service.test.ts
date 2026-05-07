@@ -210,10 +210,12 @@ describe('NonVotingHandler', () => {
           'nonVoterAddress': TestAddresses.ADDRESS_LONG
         },
         buttons: [
-          {
-            text: 'Check previous votes',
-            url: `https://anticapture.com/ENS/holders-and-delegates?tab=delegates&drawerAddress=${TestAddresses.ADDRESS_LONG}`
-          }
+          [
+            {
+              text: 'Check previous votes',
+              url: `https://anticapture.com/ENS/holders-and-delegates?tab=delegates&drawerAddress=${TestAddresses.ADDRESS_LONG}`
+            }
+          ]
         ]
       }
     });

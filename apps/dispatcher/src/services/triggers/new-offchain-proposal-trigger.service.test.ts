@@ -128,7 +128,7 @@ describe('NewOffchainProposalTriggerHandler', () => {
 
       await handler.handleMessage(message);
 
-      const buttons = notificationClient.sentPayloads[0].metadata?.buttons;
+      const buttons = notificationClient.sentPayloads[0].metadata?.buttons?.flat();
       expect(buttons).toBeDefined();
       expect(buttons[0].text).toBe('Cast your vote');
       expect(buttons[0].url).toBe('https://snapshot.org/#/test-dao/proposal/snap-1');
@@ -147,7 +147,7 @@ describe('NewOffchainProposalTriggerHandler', () => {
 
       await handler.handleMessage(message);
 
-      const buttons = notificationClient.sentPayloads[0].metadata?.buttons;
+      const buttons = notificationClient.sentPayloads[0].metadata?.buttons?.flat();
       expect(buttons).toHaveLength(2);
       expect(buttons[1].text).toBe('View Discussion');
       expect(buttons[1].url).toBe('https://forum.example.com/123');
@@ -166,7 +166,7 @@ describe('NewOffchainProposalTriggerHandler', () => {
 
       await handler.handleMessage(message);
 
-      const buttons = notificationClient.sentPayloads[0].metadata?.buttons;
+      const buttons = notificationClient.sentPayloads[0].metadata?.buttons?.flat();
       expect(buttons).toHaveLength(1);
     });
 

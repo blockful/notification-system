@@ -160,7 +160,7 @@ describe('NewProposalTriggerHandler', () => {
       await handler.handleMessage(mockMessage);
 
       const call = mockNotificationClient.sendNotification.mock.calls[0][0];
-      const buttons = call.metadata?.buttons;
+      const buttons = call.metadata?.buttons?.flat();
       expect(buttons).toBeDefined();
       expect(buttons.some((b: any) => b.text.includes('Request a call-data review'))).toBe(true);
     });
@@ -178,7 +178,7 @@ describe('NewProposalTriggerHandler', () => {
       await handler.handleMessage(mockMessage);
 
       const call = mockNotificationClient.sendNotification.mock.calls[0][0];
-      const buttons = call.metadata?.buttons;
+      const buttons = call.metadata?.buttons?.flat();
       expect(buttons).toBeDefined();
       expect(buttons.some((b: any) => b.text.includes('Request a call-data review'))).toBe(false);
     });
