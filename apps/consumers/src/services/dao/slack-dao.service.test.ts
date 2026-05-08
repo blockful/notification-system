@@ -1,35 +1,48 @@
+import { describe, it, expect, vi, beforeEach, beforeAll, afterEach, afterAll } from 'vitest';
+import { setupServer } from 'msw/node';
+import { http, HttpResponse } from 'msw';
 import { SlackDAOService } from './slack-dao.service';
-import { SubscriptionAPIService } from '../subscription-api.service';
-import { AnticaptureClient } from '@notification-system/anticapture-client';
+import { ISubscriptionAPI, SubscriptionAPIService, UserSubscriptionResponse } from '../subscription-api.service';
+import type { DAOSource } from './base-dao.service';
+import type { SlackDAORequest } from './slack-dao.service';
+
+const TEST_API_URL = 'http://test-api';
+
+class SimpleAnticaptureClient implements DAOSource {
+  async getDAOs() {
+    return [
+      { id: 'UNI', chainId: 1, blockTime: 12, votingDelay: '0', alreadySupportCalldataReview: false, supportOffchainData: false },
+      { id: 'ENS', chainId: 1, blockTime: 12, votingDelay: '0', alreadySupportCalldataReview: false, supportOffchainData: false },
+    ];
+  }
+}
+
+class SimpleSubscriptionAPI implements ISubscriptionAPI {
+  public getUserPreferencesCalls: Array<{ channelUserId: string | number; channel: string; availableDAOs: string[] }> = [];
+
+  async getUserPreferences(channelUserId: string | number, channel: string, availableDAOs: string[]): Promise<string[]> {
+    this.getUserPreferencesCalls.push({ channelUserId, channel, availableDAOs });
+    return [];
+  }
+
+  async saveUserPreference(): Promise<UserSubscriptionResponse> {
+    return {} as UserSubscriptionResponse;
+  }
+}
+
+const server = setupServer();
+
+beforeAll(() => server.listen({ onUnhandledRequest: 'error' }));
+afterEach(() => server.resetHandlers());
+afterAll(() => server.close());
 
 describe('SlackDAOService - User ID Validation', () => {
   let slackDAOService: SlackDAOService;
-  let subscriptionApiMock: jest.Mocked<SubscriptionAPIService>;
-  let anticaptureClientMock: jest.Mocked<AnticaptureClient>;
-  let subscriptionApi: SubscriptionAPIService;
-  let axiosPostMock: jest.Mock;
-  
-  beforeEach(() => {
-    // Create mocks
-    subscriptionApiMock = {
-      saveUserPreference: jest.fn(),
-      getUserPreferences: jest.fn(),
-      userExists: jest.fn(),
-      getUserWallets: jest.fn(),
-      addUserWallet: jest.fn(),
-      removeUserWallet: jest.fn(),
-    } as any;
+  let subscriptionApi: SimpleSubscriptionAPI;
 
-    anticaptureClientMock = {
-      getDAOs: jest.fn().mockResolvedValue([
-        { id: 'UNI', name: 'Uniswap' },
-        { id: 'ENS', name: 'ENS' },
-      ]),
-    } as any;
-    subscriptionApi = new SubscriptionAPIService('http://test-api');
-    axiosPostMock = jest.fn().mockResolvedValue({ data: {} });
-    (subscriptionApi as any).client.post = axiosPostMock;
-    slackDAOService = new SlackDAOService(anticaptureClientMock, subscriptionApiMock);
+  beforeEach(() => {
+    subscriptionApi = new SimpleSubscriptionAPI();
+    slackDAOService = new SlackDAOService(new SimpleAnticaptureClient(), subscriptionApi);
   });
 
   describe('User ID handling', () => {
@@ -37,39 +50,43 @@ describe('SlackDAOService - User ID Validation', () => {
       const alphanumericIds = ['U024BE7LH', 'W012A3CDE', 'U9Z8Y7X6W'];
 
       for (const channelId of alphanumericIds) {
-        subscriptionApiMock.getUserPreferences.mockResolvedValue([]);
-
-        const context: any = {
+        const context: SlackDAORequest = {
           body: { channel_id: channelId, team_id: 'T_WORKSPACE' },
-          session: { daoSelections: new Set() },
-          ack: jest.fn(),
-          respond: jest.fn(),
+          session: { daoSelections: new Set<string>() },
+          ack: vi.fn(),
+          respond: vi.fn(),
         };
 
-        await slackDAOService.initialize(context, 'subscribe');
-
-        // Verify getUserPreferences was called with the workspace:channel format
-        expect(subscriptionApiMock.getUserPreferences).toHaveBeenCalledWith(
-          `T_WORKSPACE:${channelId}`,
-          'slack',
-          expect.any(Array)
-        );
+        await slackDAOService.initialize(context);
       }
+
+      expect(subscriptionApi.getUserPreferencesCalls.map(c => c.channelUserId)).toEqual([
+        'T_WORKSPACE:U024BE7LH',
+        'T_WORKSPACE:W012A3CDE',
+        'T_WORKSPACE:U9Z8Y7X6W',
+      ]);
+      expect(subscriptionApi.getUserPreferencesCalls.every(c => c.channel === 'slack')).toBe(true);
     });
 
-    it('should accept valid Telegram user IDs', async () => {
-      const telegramIds = [123456789, 987654321];
+    it('should serialize numeric Telegram user IDs as strings in API calls', async () => {
+      const captured: unknown[] = [];
+      server.use(
+        http.post(`${TEST_API_URL}/subscriptions/UNI`, async ({ request }) => {
+          captured.push(await request.json());
+          return HttpResponse.json({});
+        }),
+      );
 
-      for (const userId of telegramIds) {
-        await subscriptionApi.saveUserPreference('UNI', userId, 'telegram', true);
+      const realApi = new SubscriptionAPIService(TEST_API_URL);
 
-        expect(axiosPostMock).toHaveBeenCalledWith(
-          '/subscriptions/UNI',
-          expect.objectContaining({
-            channel_user_id: userId.toString(),
-          })
-        );
+      for (const userId of [123456789, 987654321]) {
+        await realApi.saveUserPreference('UNI', userId, 'telegram', true);
       }
+
+      expect(captured).toEqual([
+        { channel: 'telegram', channel_user_id: '123456789', is_active: true },
+        { channel: 'telegram', channel_user_id: '987654321', is_active: true },
+      ]);
     });
   });
 });

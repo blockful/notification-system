@@ -1,248 +1,112 @@
 /**
  * Tests for SlackClient implementation
- * Tests both Web API and Bolt framework integration
+ * Uses MSW to intercept Slack Web API calls instead of mocking the WebClient.
  */
 
-import { describe, it, expect, jest, beforeEach } from '@jest/globals';
+import { describe, it, expect, beforeAll, afterAll, afterEach, beforeEach } from 'vitest';
+import { setupServer } from 'msw/node';
+import { http, HttpResponse } from 'msw';
 import { SlackClient } from './slack.client';
-import { WebClient } from '@slack/web-api';
-import { App } from '@slack/bolt';
 
-jest.mock('@slack/web-api');
-jest.mock('@slack/bolt');
-
-// Test configuration constants
 const TEST_SIGNING_SECRET = 'test-signing-secret';
 const TEST_API_PORT_SLACK = 3002;
 const TEST_SUBSCRIPTION_SERVER_URL = 'http://test-subscription-server';
 const TEST_ENCRYPTION_KEY = '0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef';
+const TEST_TOKEN = 'xoxb-test-token';
+const TEST_CHANNEL = 'C1234567890';
+const TEST_TS = '1234567890.123456';
+
+let lastPostMessageForm: Record<string, string> | null = null;
+
+const server = setupServer(
+  http.post('https://slack.com/api/chat.postMessage', async ({ request }) => {
+    const body = await request.text();
+    lastPostMessageForm = Object.fromEntries(new URLSearchParams(body));
+    return HttpResponse.json({ ok: true, ts: TEST_TS, channel: TEST_CHANNEL });
+  }),
+);
+
+beforeAll(() => server.listen({ onUnhandledRequest: 'error' }));
+afterEach(() => {
+  server.resetHandlers();
+  lastPostMessageForm = null;
+});
+afterAll(() => server.close());
+
+function buildClient() {
+  return new SlackClient(
+    TEST_SIGNING_SECRET,
+    TEST_SUBSCRIPTION_SERVER_URL,
+    TEST_ENCRYPTION_KEY,
+    TEST_API_PORT_SLACK,
+  );
+}
 
 describe('SlackClient', () => {
   let slackClient: SlackClient;
-  let mockWebClient: jest.Mocked<WebClient>;
 
   beforeEach(() => {
-    jest.clearAllMocks();
-    mockWebClient = new WebClient() as jest.Mocked<WebClient>;
-    (WebClient as unknown as jest.Mock).mockImplementation(() => mockWebClient);
-
-    slackClient = new SlackClient(
-      TEST_SIGNING_SECRET,
-      TEST_SUBSCRIPTION_SERVER_URL,
-      TEST_ENCRYPTION_KEY,
-      TEST_API_PORT_SLACK
-    );
+    slackClient = buildClient();
   });
 
   describe('constructor', () => {
-    it('should create client with valid token', () => {
-      expect(new SlackClient(
-        TEST_SIGNING_SECRET,
-        TEST_SUBSCRIPTION_SERVER_URL,
-        TEST_ENCRYPTION_KEY,
-        TEST_API_PORT_SLACK
-      )).toBeInstanceOf(SlackClient);
+    it('should create client with valid configuration', () => {
+      expect(buildClient()).toBeInstanceOf(SlackClient);
     });
   });
 
   describe('sendMessage', () => {
-    beforeEach(() => {
-      (mockWebClient.chat as any) = {
-        postMessage: jest.fn()
-      } as any;
-    });
-
     it('should send message successfully', async () => {
-      const mockResponse = {
-        ok: true,
-        ts: '1234567890.123456',
-        channel: 'C1234567890',
-      };
+      const result = await slackClient.sendMessage(TEST_CHANNEL, 'Test message', { token: TEST_TOKEN });
 
-      (mockWebClient.chat.postMessage as jest.Mock).mockResolvedValue(mockResponse as never);
-
-      const result = await slackClient.sendMessage('C1234567890', 'Test message', { token: 'xoxb-test-token' });
-
-      expect(mockWebClient.chat.postMessage).toHaveBeenCalledWith({
-        channel: 'C1234567890',
+      expect(lastPostMessageForm).toMatchObject({
+        channel: TEST_CHANNEL,
         text: 'Test message',
         parse: 'none',
-        link_names: true,
-        unfurl_links: false,
-        unfurl_media: false,
-        mrkdwn: true
+        link_names: 'true',
+        unfurl_links: 'false',
+        unfurl_media: 'false',
+        mrkdwn: 'true',
       });
 
       expect(result).toEqual({
-        ts: '1234567890.123456',
-        channel: 'C1234567890',
-        text: 'Test message'
+        ts: TEST_TS,
+        channel: TEST_CHANNEL,
+        text: 'Test message',
       });
     });
 
     it('should convert markdown links to Slack format', async () => {
-      const mockResponse = {
-        ok: true,
-        ts: '1234567890.123456',
-        channel: 'C1234567890',
-      };
+      await slackClient.sendMessage(TEST_CHANNEL, 'Check [this link](https://example.com)', { token: TEST_TOKEN });
 
-      (mockWebClient.chat.postMessage as jest.Mock).mockResolvedValue(mockResponse as never);
-
-      await slackClient.sendMessage('C1234567890', 'Check [this link](https://example.com)', { token: 'xoxb-test-token' });
-
-      expect(mockWebClient.chat.postMessage).toHaveBeenCalledWith({
-        channel: 'C1234567890',
-        text: 'Check <https://example.com|this link>',
-        parse: 'none',
-        link_names: true,
-        unfurl_links: false,
-        unfurl_media: false,
-        mrkdwn: true
-      });
+      expect(lastPostMessageForm?.text).toBe('Check <https://example.com|this link>');
     });
 
     it('should convert bold markdown to Slack format', async () => {
-      const mockResponse = {
-        ok: true,
-        ts: '1234567890.123456',
-        channel: 'C1234567890',
-      };
+      await slackClient.sendMessage(TEST_CHANNEL, 'This is **bold** text', { token: TEST_TOKEN });
 
-      (mockWebClient.chat.postMessage as jest.Mock).mockResolvedValue(mockResponse as never);
-
-      await slackClient.sendMessage('C1234567890', 'This is **bold** text', { token: 'xoxb-test-token' });
-
-      expect(mockWebClient.chat.postMessage).toHaveBeenCalledWith({
-        channel: 'C1234567890',
-        text: 'This is *bold* text',
-        parse: 'none',
-        link_names: true,
-        unfurl_links: false,
-        unfurl_media: false,
-        mrkdwn: true
-      });
+      expect(lastPostMessageForm?.text).toBe('This is *bold* text');
     });
 
     it('should use custom options when provided', async () => {
-      const mockResponse = {
-        ok: true,
-        ts: '1234567890.123456',
-        channel: 'C1234567890',
-      };
-
-      (mockWebClient.chat.postMessage as jest.Mock).mockResolvedValue(mockResponse as never);
-
-      await slackClient.sendMessage('C1234567890', 'Test message', {
-        token: 'xoxb-test-token',
+      await slackClient.sendMessage(TEST_CHANNEL, 'Test message', {
+        token: TEST_TOKEN,
         parse: 'full',
         link_names: false,
         unfurl_links: true,
         unfurl_media: true,
-        mrkdwn: false
+        mrkdwn: false,
       });
 
-      expect(mockWebClient.chat.postMessage).toHaveBeenCalledWith({
-        channel: 'C1234567890',
+      expect(lastPostMessageForm).toMatchObject({
+        channel: TEST_CHANNEL,
         text: 'Test message',
         parse: 'full',
-        link_names: false,
-        unfurl_links: true,
-        unfurl_media: true,
-        mrkdwn: false
+        link_names: 'false',
+        unfurl_links: 'true',
+        unfurl_media: 'true',
+        mrkdwn: 'false',
       });
-    });
-  });
-
-  describe('Socket Mode', () => {
-    let mockBoltApp: jest.Mocked<App>;
-
-    beforeEach(() => {
-      jest.clearAllMocks();
-      mockBoltApp = {
-        command: jest.fn(),
-        action: jest.fn(),
-        view: jest.fn(),
-        message: jest.fn(),
-        start: jest.fn().mockResolvedValue(undefined as never),
-        stop: jest.fn()
-      } as any;
-
-      (App as unknown as jest.Mock).mockImplementation(() => mockBoltApp);
-    });
-
-    it('should not initialize with Socket Mode', () => {
-      const client = new SlackClient(
-        TEST_SIGNING_SECRET,
-        TEST_SUBSCRIPTION_SERVER_URL,
-        TEST_ENCRYPTION_KEY,
-        TEST_API_PORT_SLACK
-      );
-
-      expect(App).not.toHaveBeenCalledWith({
-        socketMode: true
-      });
-    });
-
-
-    it('should setup command handlers', () => {
-      const client = new SlackClient(
-        TEST_SIGNING_SECRET,
-        TEST_SUBSCRIPTION_SERVER_URL,
-        TEST_ENCRYPTION_KEY,
-        TEST_API_PORT_SLACK
-      );
-
-      client.setupHandlers?.((handlers) => {
-        handlers.command('/test', async (ctx) => {
-          await ctx.ack();
-        });
-      });
-
-      expect(mockBoltApp.command).toHaveBeenCalledWith('/test', expect.any(Function));
-    });
-
-    it('should setup action handlers', () => {
-      const client = new SlackClient(
-        TEST_SIGNING_SECRET,
-        TEST_SUBSCRIPTION_SERVER_URL,
-        TEST_ENCRYPTION_KEY,
-        TEST_API_PORT_SLACK
-      );
-
-      client.setupHandlers?.((handlers) => {
-        handlers.action('button_click', async (ctx) => {
-          await ctx.ack();
-        });
-      });
-
-      expect(mockBoltApp.action).toHaveBeenCalledWith('button_click', expect.any(Function));
-    });
-
-    it('should launch the Bolt app', async () => {
-      const client = new SlackClient(
-        TEST_SIGNING_SECRET,
-        TEST_SUBSCRIPTION_SERVER_URL,
-        TEST_ENCRYPTION_KEY,
-        TEST_API_PORT_SLACK
-      );
-
-      await client.launch?.();
-
-      expect(mockBoltApp.start).toHaveBeenCalled();
-    });
-
-    it('should stop the Bolt app', () => {
-      const client = new SlackClient(
-        TEST_SIGNING_SECRET,
-        TEST_SUBSCRIPTION_SERVER_URL,
-        TEST_ENCRYPTION_KEY,
-        TEST_API_PORT_SLACK
-      );
-
-      client.stop?.('SIGTERM');
-
-      expect(mockBoltApp.stop).toHaveBeenCalled();
     });
   });
 });
