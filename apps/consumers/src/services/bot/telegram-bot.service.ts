@@ -9,7 +9,7 @@ import { telegramMessages, uiMessages, ExplorerService, appendUtmParams } from '
 import { TelegramDAOService } from '../dao/telegram-dao.service';
 import { TelegramWalletService } from '../wallet/telegram-wallet.service';
 import { TelegramSettingsService } from '../settings/telegram-settings.service';
-import { EnsResolverService } from '../ens-resolver.service';
+import { IEnsResolver } from '../ens-resolver.service';
 import { ContextWithSession, MatchedContext } from '../../interfaces/bot.interface';
 import { NotificationPayload } from '../../interfaces/notification.interface';
 import { TelegramClientInterface } from '../../interfaces/telegram-client.interface';
@@ -21,7 +21,7 @@ export class TelegramBotService implements BotServiceInterface {
   private walletService: TelegramWalletService;
   private settingsService: TelegramSettingsService;
   private explorerService: ExplorerService;
-  private ensResolver: EnsResolverService;
+  private ensResolver: IEnsResolver;
 
   constructor(
     telegramClient: TelegramClientInterface,
@@ -29,7 +29,7 @@ export class TelegramBotService implements BotServiceInterface {
     walletService: TelegramWalletService,
     settingsService: TelegramSettingsService,
     explorerService: ExplorerService,
-    ensResolver: EnsResolverService
+    ensResolver: IEnsResolver
   ) {
     this.telegramClient = telegramClient;
     this.daoService = daoService;

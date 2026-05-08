@@ -7,7 +7,7 @@
 import type { Option } from '@slack/web-api';
 import { BaseWalletService } from './base-wallet.service';
 import { SubscriptionAPIService } from '../subscription-api.service';
-import { EnsResolverService } from '../ens-resolver.service';
+import { IEnsResolver } from '../ens-resolver.service';
 import {
   SlackCommandContext,
   SlackActionContext,
@@ -26,7 +26,7 @@ export class SlackWalletService extends BaseWalletService {
 
   constructor(
     subscriptionApi: SubscriptionAPIService,
-    ensResolver: EnsResolverService,
+    ensResolver: IEnsResolver,
     logger: Logger = createLogger('consumers'),
   ) {
     super(subscriptionApi, ensResolver, logger, 'slack-wallet');
