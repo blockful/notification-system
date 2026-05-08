@@ -13,7 +13,37 @@ export type OffchainVoteWithDaoId = {
     daoId: string;
     [key: string]: any;
 };
-export declare class AnticaptureClient {
+export type DaoInfo = {
+    id: string;
+    blockTime: number;
+    votingDelay: string;
+    chainId: number;
+    alreadySupportCalldataReview: boolean;
+    supportOffchainData: boolean;
+};
+/**
+ * Public surface of AnticaptureClient — used for dependency injection and mocking.
+ */
+export interface IAnticaptureClient {
+    getDAOs(): Promise<Array<DaoInfo>>;
+    getProposalById(id: string): Promise<any | null>;
+    listProposals(variables?: any, daoId?: string): Promise<any[]>;
+    listVotingPowerHistory(variables?: any, daoId?: string): Promise<ProcessedVotingPowerHistory[]>;
+    listVotes(daoId: string, variables?: any): Promise<any[]>;
+    getProposalNonVoters(proposalId: string, daoId: string, addresses?: string[]): Promise<any[]>;
+    getOffchainProposalNonVoters(proposalId: string, addresses?: string[]): Promise<{
+        voter: string;
+        votingPower?: string;
+    }[]>;
+    listRecentVotesFromAllDaos(timestampGt: string, limit?: number): Promise<VoteWithDaoId[]>;
+    getEventThreshold(daoId: string, type: FeedEventType, relevance: FeedRelevance): Promise<string | null>;
+    listOffchainProposals(variables?: any, daoId?: string): Promise<(OffchainProposalItem & {
+        daoId: string;
+    })[]>;
+    listOffchainVotes(daoId: string, variables?: any): Promise<OffchainVoteItem[]>;
+    listRecentOffchainVotesFromAllDaos(fromDate: number, limit?: number): Promise<OffchainVoteWithDaoId[]>;
+}
+export declare class AnticaptureClient implements IAnticaptureClient {
     private readonly retries;
     private readonly timeoutMs;
     private readonly sdkConfig;

@@ -1,6 +1,6 @@
 import type { OnchainProposal } from '@anticapture/client';
 export { AnticaptureClient } from './anticapture-client';
-export type { AnticaptureClientConfig, VoteWithDaoId, OffchainVoteWithDaoId } from './anticapture-client';
+export type { AnticaptureClientConfig, VoteWithDaoId, OffchainVoteWithDaoId, IAnticaptureClient, DaoInfo } from './anticapture-client';
 export { FeedEventType, FeedRelevance } from './schemas';
 export type { ProcessedVotingPowerHistory, OffchainProposalItem, OffchainVoteItem } from './schemas';
 export declare enum OrderDirection {
