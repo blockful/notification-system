@@ -4,8 +4,8 @@
  */
 
 import { Trigger } from './base-trigger';
-import { VotingPowerRepository } from '../repositories/voting-power.repository';
-import { ThresholdRepository } from '../repositories/threshold.repository';
+import { IVotingPowerRepository } from '../repositories/voting-power.repository';
+import { IThresholdRepository } from '../repositories/threshold.repository';
 import { DispatcherService, DispatcherMessage } from '../interfaces/dispatcher.interface';
 import { ProcessedVotingPowerHistory, FeedEventType } from '@notification-system/anticapture-client';
 import { NotificationTypeId } from '@notification-system/messages';
@@ -13,12 +13,12 @@ import { NotificationTypeId } from '@notification-system/messages';
 const triggerId = NotificationTypeId.VotingPowerChanged;
 
 export class VotingPowerChangedTrigger extends Trigger<ProcessedVotingPowerHistory, void> {
-  private lastProcessedTimestamp: string = Math.floor(Date.now() / 1000).toString();
+  protected lastProcessedTimestamp: string = Math.floor(Date.now() / 1000).toString();
 
   constructor(
     private readonly dispatcherService: DispatcherService,
-    private readonly votingPowerRepository: VotingPowerRepository,
-    private readonly thresholdRepository: ThresholdRepository,
+    private readonly votingPowerRepository: IVotingPowerRepository,
+    private readonly thresholdRepository: IThresholdRepository,
     interval: number
   ) {
     super(triggerId, interval);

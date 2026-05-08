@@ -6,7 +6,11 @@ import {
   OrderDirection
 } from '@notification-system/anticapture-client';
 
-export class VotingPowerRepository {
+export interface IVotingPowerRepository {
+  listVotingPowerHistory(timestampGt: string): Promise<ProcessedVotingPowerHistory[]>;
+}
+
+export class VotingPowerRepository implements IVotingPowerRepository {
   private anticaptureClient: AnticaptureClient;
 
   constructor(anticaptureClient: AnticaptureClient) {
