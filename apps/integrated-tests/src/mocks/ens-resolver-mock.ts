@@ -1,13 +1,13 @@
 /**
  * Mock ENS Resolver Service for Integration Tests
- * 
- * This mock implementation provides synchronous responses to avoid
- * async operations that continue after test teardown.
- * It simulates the behavior of the real ENS resolver without making
- * actual network calls.
+ *
+ * Implements IEnsResolver synchronously to avoid async operations that
+ * continue after test teardown. No real network calls.
  */
 
-export class MockEnsResolverService {
+import type { IEnsResolver } from '@notification-system/consumer/dist/services/ens-resolver.service';
+
+export class MockEnsResolverService implements IEnsResolver {
   /**
    * Mock implementation of ENS name to address resolution
    * Always returns null to simulate ENS name not found

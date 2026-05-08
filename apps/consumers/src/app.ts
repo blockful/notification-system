@@ -10,7 +10,7 @@ import { TelegramDAOService } from './services/dao/telegram-dao.service';
 import { TelegramWalletService } from './services/wallet/telegram-wallet.service';
 import { TelegramSettingsService } from './services/settings/telegram-settings.service';
 import { ExplorerService } from '@notification-system/messages';
-import { EnsResolverService } from './services/ens-resolver.service';
+import { IEnsResolver } from './services/ens-resolver.service';
 import { AnticaptureClient } from '@notification-system/anticapture-client';
 import { SubscriptionAPIService } from './services/subscription-api.service';
 import { RabbitMQNotificationConsumerService } from './services/rabbitmq-notification-consumer.service';
@@ -35,7 +35,7 @@ export class App {
     subscriptionServerUrl: string,
     anticaptureBaseURL: string,
     rabbitmqUrl: string,
-    ensResolver: EnsResolverService,
+    ensResolver: IEnsResolver,
     telegramClient: TelegramClientInterface,
     slackClient: SlackClientInterface,
     webhookPort: number,
