@@ -1,8 +1,6 @@
 import { Trigger } from './base-trigger';
-import { ProposalRepository } from '../repositories/proposal.repository';
-import { RabbitMQDispatcherService } from '../api-clients/rabbitmq-dispatcher.service';
-import { DispatcherMessage } from '../interfaces/dispatcher.interface';
-import { ProposalOnChain, ProposalFinishedNotification } from '../interfaces/proposal.interface';
+import { DispatcherService, DispatcherMessage } from '../interfaces/dispatcher.interface';
+import { ProposalDataSource, ProposalOnChain, ProposalFinishedNotification } from '../interfaces/proposal.interface';
 import { NotificationTypeId } from '@notification-system/messages';
 import { OrderDirection, QueryInput_Proposals_Status_Items } from '@notification-system/anticapture-client';
 
@@ -17,11 +15,11 @@ export class ProposalFinishedTrigger extends Trigger<ProposalOnChain, void> {
     QueryInput_Proposals_Status_Items.Expired,
     QueryInput_Proposals_Status_Items.Canceled,
   ];
-  private endTimestampCursor: number;
+  protected endTimestampCursor: number;
 
   constructor(
-    private readonly proposalRepository: ProposalRepository,
-    private readonly rabbitMQDispatcherService: RabbitMQDispatcherService,
+    private readonly proposalRepository: ProposalDataSource,
+    private readonly rabbitMQDispatcherService: DispatcherService,
     interval: number,
     initialTimestamp?: string
   ) {
