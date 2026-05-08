@@ -1,8 +1,8 @@
 import { BaseTriggerHandler } from './base-trigger.service';
 import { DispatcherMessage, MessageProcessingResult } from '../../interfaces/dispatcher-message.interface';
-import { NotificationClientFactory } from '../notification/notification-factory.service';
+import { INotificationClientFactory } from '../notification/notification-factory.service';
 import { ISubscriptionClient } from '../../interfaces/subscription-client.interface';
-import { AnticaptureClient, VoteWithDaoId } from '@notification-system/anticapture-client';
+import { IAnticaptureClient, VoteWithDaoId } from '@notification-system/anticapture-client';
 import { formatTokenAmount } from '../../lib/number-formatter';
 import { voteConfirmationMessages, replacePlaceholders, buildButtons, NotificationTypeId } from '@notification-system/messages';
 import { createLogger, type Logger } from '@anticapture/observability';
@@ -24,8 +24,8 @@ type ProcessingStatus = 'sent' | 'skipped';
 export class VoteConfirmationTriggerHandler extends BaseTriggerHandler<VoteWithDaoId> {
   constructor(
     protected readonly subscriptionClient: ISubscriptionClient,
-    protected readonly notificationFactory: NotificationClientFactory,
-    anticaptureClient: AnticaptureClient,
+    protected readonly notificationFactory: INotificationClientFactory,
+    anticaptureClient: IAnticaptureClient,
     logger: Logger = createLogger('dispatcher'),
   ) {
     super(subscriptionClient, notificationFactory, anticaptureClient, logger);

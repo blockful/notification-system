@@ -2,8 +2,8 @@ import type { NotificationTypeId } from '@notification-system/messages';
 import { DispatcherMessage, MessageProcessingResult } from "../../interfaces/dispatcher-message.interface";
 import { TriggerHandler } from "../../interfaces/base-trigger.interface";
 import { ISubscriptionClient, User } from "../../interfaces/subscription-client.interface";
-import { NotificationClientFactory } from "../notification/notification-factory.service";
-import { AnticaptureClient } from '@notification-system/anticapture-client';
+import { INotificationClientFactory } from "../notification/notification-factory.service";
+import { IAnticaptureClient } from '@notification-system/anticapture-client';
 import { createLogger, type Logger } from '@anticapture/observability';
 
 /**
@@ -24,8 +24,8 @@ export abstract class BaseTriggerHandler<T = any> implements TriggerHandler<T> {
    */
   constructor(
     protected readonly subscriptionClient: ISubscriptionClient,
-    protected readonly notificationFactory: NotificationClientFactory,
-    protected readonly anticaptureClient?: AnticaptureClient,
+    protected readonly notificationFactory: INotificationClientFactory,
+    protected readonly anticaptureClient?: IAnticaptureClient,
     logger: Logger = createLogger('dispatcher'),
   ) {
     this.logger = logger.child({ component: this.constructor.name });

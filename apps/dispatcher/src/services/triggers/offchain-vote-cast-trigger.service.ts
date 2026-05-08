@@ -1,6 +1,6 @@
 import { BaseTriggerHandler } from './base-trigger.service';
 import { DispatcherMessage, MessageProcessingResult } from '../../interfaces/dispatcher-message.interface';
-import { NotificationClientFactory } from '../notification/notification-factory.service';
+import { INotificationClientFactory } from '../notification/notification-factory.service';
 import { ISubscriptionClient } from '../../interfaces/subscription-client.interface';
 import { OffchainVoteWithDaoId } from '@notification-system/anticapture-client';
 import { offchainVoteCastMessages, replacePlaceholders, NotificationTypeId } from '@notification-system/messages';
@@ -22,7 +22,7 @@ type ProcessingStatus = 'sent' | 'skipped';
 export class OffchainVoteCastTriggerHandler extends BaseTriggerHandler<OffchainVoteWithDaoId> {
   constructor(
     protected readonly subscriptionClient: ISubscriptionClient,
-    protected readonly notificationFactory: NotificationClientFactory,
+    protected readonly notificationFactory: INotificationClientFactory,
     logger: Logger = createLogger('dispatcher'),
   ) {
     super(subscriptionClient, notificationFactory, undefined, logger);
