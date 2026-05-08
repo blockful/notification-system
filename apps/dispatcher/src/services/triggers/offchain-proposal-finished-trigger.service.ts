@@ -1,6 +1,6 @@
 import { DispatcherMessage, MessageProcessingResult } from "../../interfaces/dispatcher-message.interface";
 import { ISubscriptionClient } from "../../interfaces/subscription-client.interface";
-import { NotificationClientFactory } from "../notification/notification-factory.service";
+import { INotificationClientFactory } from "../notification/notification-factory.service";
 import { BaseTriggerHandler } from "./base-trigger.service";
 import { offchainProposalFinishedMessages, replacePlaceholders, buildButtons, NotificationTypeId } from '@notification-system/messages';
 
@@ -10,7 +10,7 @@ import { offchainProposalFinishedMessages, replacePlaceholders, buildButtons, No
 export class OffchainProposalFinishedTriggerHandler extends BaseTriggerHandler {
   constructor(
     subscriptionClient: ISubscriptionClient,
-    notificationFactory: NotificationClientFactory,
+    notificationFactory: INotificationClientFactory,
   ) {
     super(subscriptionClient, notificationFactory);
   }

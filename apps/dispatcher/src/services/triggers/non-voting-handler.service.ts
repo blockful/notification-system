@@ -1,9 +1,9 @@
 import { BaseTriggerHandler } from './base-trigger.service';
 import { DispatcherMessage, MessageProcessingResult } from '../../interfaces/dispatcher-message.interface';
 import { ISubscriptionClient } from '../../interfaces/subscription-client.interface';
-import { NotificationClientFactory } from '../notification/notification-factory.service';
+import { INotificationClientFactory } from '../notification/notification-factory.service';
 import { ProposalFinishedNotification } from '../../interfaces/notification-client.interface';
-import { AnticaptureClient, OrderDirection, QueryInput_Proposals_Status_Items } from '@notification-system/anticapture-client';
+import { IAnticaptureClient, OrderDirection, QueryInput_Proposals_Status_Items } from '@notification-system/anticapture-client';
 import { BatchNotificationService } from '../batch-notification.service';
 import { createLogger, type Logger, wrapWithTracing } from '@anticapture/observability';
 import { FormattingService } from '../formatting.service';
@@ -22,8 +22,8 @@ export class NonVotingHandler extends BaseTriggerHandler<ProposalFinishedNotific
   
   constructor(
     subscriptionClient: ISubscriptionClient,
-    notificationFactory: NotificationClientFactory,
-    anticaptureClient: AnticaptureClient,
+    notificationFactory: INotificationClientFactory,
+    anticaptureClient: IAnticaptureClient,
     logger: Logger = createLogger('dispatcher'),
   ) {
     super(subscriptionClient, notificationFactory, anticaptureClient, logger);

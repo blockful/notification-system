@@ -1,10 +1,10 @@
 import { DispatcherMessage, MessageProcessingResult } from "../../interfaces/dispatcher-message.interface";
 import { ISubscriptionClient } from "../../interfaces/subscription-client.interface";
-import { NotificationClientFactory } from "../notification/notification-factory.service";
+import { INotificationClientFactory } from "../notification/notification-factory.service";
 import { BaseTriggerHandler } from "./base-trigger.service";
 import { FormattingService } from "../formatting.service";
 import { newProposalMessages, replacePlaceholders, buildButtons, NotificationTypeId } from '@notification-system/messages';
-import { AnticaptureClient } from '@notification-system/anticapture-client';
+import { IAnticaptureClient } from '@notification-system/anticapture-client';
 import crypto from 'crypto';
 
 /**
@@ -19,8 +19,8 @@ export class NewProposalTriggerHandler extends BaseTriggerHandler {
    */
   constructor(
     subscriptionClient: ISubscriptionClient,
-    notificationFactory: NotificationClientFactory,
-    anticaptureClient: AnticaptureClient
+    notificationFactory: INotificationClientFactory,
+    anticaptureClient: IAnticaptureClient
   ) {
     super(subscriptionClient, notificationFactory, anticaptureClient);
   }

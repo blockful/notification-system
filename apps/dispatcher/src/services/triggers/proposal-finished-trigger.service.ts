@@ -1,7 +1,7 @@
 import { BaseTriggerHandler } from './base-trigger.service';
 import { DispatcherMessage, MessageProcessingResult } from '../../interfaces/dispatcher-message.interface';
 import { ISubscriptionClient } from '../../interfaces/subscription-client.interface';
-import { NotificationClientFactory } from '../notification/notification-factory.service';
+import { INotificationClientFactory } from '../notification/notification-factory.service';
 import { ProposalFinishedNotification } from '../../interfaces/notification-client.interface';
 import { formatTokenAmount } from '../../lib/number-formatter';
 import { FormattingService } from '../formatting.service';
@@ -13,7 +13,7 @@ import { proposalFinishedMessages, replacePlaceholders, NotificationTypeId } fro
 export class ProposalFinishedTriggerHandler extends BaseTriggerHandler<ProposalFinishedNotification> {
   constructor(
     subscriptionClient: ISubscriptionClient,
-    notificationFactory: NotificationClientFactory
+    notificationFactory: INotificationClientFactory
   ) {
     super(subscriptionClient, notificationFactory);
   }
