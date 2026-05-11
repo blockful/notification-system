@@ -78,7 +78,7 @@ export declare class AnticaptureClient {
      * @param addresses Optional array of addresses to filter by
      * @returns List of non-voters
      */
-    getOffchainProposalNonVoters(proposalId: string, addresses?: string[]): Promise<{
+    getOffchainProposalNonVoters(proposalId: string, daoId: string, addresses?: string[]): Promise<{
         voter: string;
         votingPower?: string;
     }[]>;
