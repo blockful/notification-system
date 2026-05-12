@@ -10,7 +10,7 @@ import {
   SlackSendMessageOptions,
   SlackMessage
 } from '@notification-system/consumer/src/interfaces/slack-client.interface';
-import { jest } from '@jest/globals';
+import type { Mock } from 'vitest';
 import { env } from '../config/env';
 
 /**
@@ -18,7 +18,7 @@ import { env } from '../config/env';
  * Used for integration testing with controllable behavior
  */
 export class SlackTestClient implements SlackClientInterface {
-  private mockSendMessage: jest.Mock;
+  private mockSendMessage: Mock;
   private isRealMode: boolean;
 
   /**
@@ -26,7 +26,7 @@ export class SlackTestClient implements SlackClientInterface {
    * @param mockSendMessage Jest mock function for assertions
    * @param realBotToken Optional real bot token (presence enables real mode)
    */
-  constructor(mockSendMessage: jest.Mock, private realBotToken?: string) {
+  constructor(mockSendMessage: Mock, private realBotToken?: string) {
     this.mockSendMessage = mockSendMessage;
     this.isRealMode = !!realBotToken;
   }
@@ -144,7 +144,7 @@ export class SlackTestClient implements SlackClientInterface {
    * Gets the mock function for test assertions
    * @returns The jest mock function
    */
-  getMock(): jest.Mock {
+  getMock(): Mock {
     return this.mockSendMessage;
   }
 }

@@ -1,4 +1,4 @@
-import { jest } from '@jest/globals';
+import type { Mock } from 'vitest';
 import { waitFor, waitForCondition } from '../utilities/wait-for';
 import { timeouts } from '../../config';
 
@@ -30,7 +30,7 @@ export class TelegramTestHelper {
    * @notice Creates a new Telegram test helper
    * @param mockSendMessage Jest mock of the Telegram sendMessage function
    */
-  constructor(private mockSendMessage: jest.Mock) {}
+  constructor(private mockSendMessage: Mock) {}
 
   /**
    * @notice Waits for a message matching the given predicate

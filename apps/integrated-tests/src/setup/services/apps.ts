@@ -21,10 +21,11 @@ import { waitFor } from '../../helpers/utilities/wait-for';
 import { MockEnsResolverService } from '../../mocks/ens-resolver-mock';
 import { TelegramTestClient } from '../../test-clients/telegram-test.client';
 import { SlackTestClient } from '../../test-clients/slack-test.client';
-import { jest } from '@jest/globals';
 import { mockTelegramSendMessage } from '../../mocks/telegram-mock-setup';
 import { mockSlackSendMessage } from '../../mocks/slack-mock-setup';
+import { MOCK_ANTICAPTURE_URL } from '../../mocks/msw-server';
 import { QueryInput_Proposals_Status_Items } from '@notification-system/anticapture-client';
+import type { Mock } from 'vitest';
 
 /**
  * @notice Type definition for test applications container
@@ -42,9 +43,9 @@ export type TestApps = {
   /** RabbitMQ test setup instance */
   rabbitmqSetup: RabbitMQTestSetup;
   /** Mock sendMessage function for Telegram testing */
-  mockTelegramSendMessage?: jest.Mock;
+  mockTelegramSendMessage?: Mock;
   /** Mock sendMessage function for Slack testing */
-  mockSlackSendMessage?: jest.Mock;
+  mockSlackSendMessage?: Mock;
 };
 
 /**
@@ -164,25 +165,15 @@ const startSubscriptionServer = async (db: Knex): Promise<SubscriptionServerApp>
   return subscriptionServerApp;
 };
 
-/**
- * @notice Starts the consumer application
- * @dev Initializes and starts the consumer with dependencies
- * @param mockHttpClient Mocked HTTP client
- * @param rabbitmqUrl RabbitMQ connection URL
- * @param telegramClient Telegram client instance
- * @param slackClient Slack client instance
- * @return Started consumer application instance
- */
 const startConsumer = async (
-  mockHttpClient: any,
   rabbitmqUrl: string,
   telegramClient: any,
   slackClient: any
 ): Promise<ConsumerApp> => {
-  const mockEnsResolver = new MockEnsResolverService() as any;
+  const mockEnsResolver = new MockEnsResolverService();
   const consumerApp = new ConsumerApp(
     TEST_CONFIG.urls.subscriptionServer,
-    mockHttpClient,
+    MOCK_ANTICAPTURE_URL,
     rabbitmqUrl,
     mockEnsResolver,
     telegramClient,
@@ -193,43 +184,26 @@ const startConsumer = async (
   return consumerApp;
 };
 
-/**
- * @notice Starts the dispatcher application
- * @dev Initializes and starts the dispatcher with dependencies
- * @param rabbitmqUrl RabbitMQ connection URL
- * @param mockHttpClient Mocked HTTP client
- * @return Started dispatcher application instance
- */
 const startDispatcher = async (
   rabbitmqUrl: string,
-  mockHttpClient: any
 ): Promise<DispatcherApp> => {
   const dispatcherApp = new DispatcherApp(
-    TEST_CONFIG.urls.subscriptionServer, 
+    TEST_CONFIG.urls.subscriptionServer,
     rabbitmqUrl,
-    TEST_CONFIG.urls.mockGraphQL,
-    mockHttpClient
+    MOCK_ANTICAPTURE_URL,
   );
   await dispatcherApp.start();
   return dispatcherApp;
 };
 
-/**
- * @notice Starts the logic system application
- * @dev Initializes and starts the logic system with dependencies
- * @param mockHttpClient Mocked HTTP client
- * @param rabbitmqUrl RabbitMQ connection URL
- * @return Started logic system application instance
- */
 const startLogicSystem = async (
-  mockHttpClient: any,
   rabbitmqUrl: string
 ): Promise<LogicSystemApp> => {
   const oneYearAgo = Math.floor((Date.now() - 365 * 24 * 60 * 60 * 1000) / 1000).toString();
   const logicSystemApp = new LogicSystemApp(
     TEST_CONFIG.logicSystem.interval,
     QueryInput_Proposals_Status_Items.Active,
-    mockHttpClient,
+    MOCK_ANTICAPTURE_URL,
     rabbitmqUrl,
     oneYearAgo
   );
@@ -262,16 +236,16 @@ const waitForAppsReady = async (apps: Omit<TestApps, 'rabbitmqSetup' | 'mockSend
  * @param mockHttpClient Mocked HTTP client for external API calls
  * @return Promise resolving to TestApps object containing service references
  */
-export const startTestApps = async (db: Knex, mockHttpClient: any): Promise<TestApps> => {
+export const startTestApps = async (db: Knex): Promise<TestApps> => {
   // Setup infrastructure
   const { rabbitmqSetup, rabbitmqUrl } = await setupRabbitMQ();
   const { telegramClient, mockTelegramSendMessage } = createTelegramClient();
   const { slackClient, mockSlackSendMessage } = createSlackClient();
   // Start all services
   const subscriptionServerApp = await startSubscriptionServer(db);
-  const consumerApp = await startConsumer(mockHttpClient, rabbitmqUrl, telegramClient, slackClient);
-  const dispatcherApp = await startDispatcher(rabbitmqUrl, mockHttpClient);
-  const logicSystemApp = await startLogicSystem(mockHttpClient, rabbitmqUrl);
+  const consumerApp = await startConsumer(rabbitmqUrl, telegramClient, slackClient);
+  const dispatcherApp = await startDispatcher(rabbitmqUrl);
+  const logicSystemApp = await startLogicSystem(rabbitmqUrl);
   // Wait for all apps to be ready
   await waitForAppsReady({
     consumerApp,

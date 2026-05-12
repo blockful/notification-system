@@ -4,7 +4,7 @@
  * Similar to TelegramTestHelper but adapted for Slack's API structure
  */
 
-import { jest } from '@jest/globals';
+import type { Mock } from 'vitest';
 import { waitFor, waitForCondition } from '../utilities/wait-for';
 import { timeouts } from '../../config';
 import { SlackTestClient } from '../../test-clients/slack-test.client';
@@ -38,7 +38,7 @@ export class SlackTestHelper {
    * @param slackClient Optional SlackTestClient for real mode history access
    */
   constructor(
-    private mockSendMessage: jest.Mock,
+    private mockSendMessage: Mock,
     slackClient?: SlackTestClient
   ) {
     this.slackClient = slackClient;
