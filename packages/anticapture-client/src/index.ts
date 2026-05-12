@@ -1,29 +1,23 @@
 export { AnticaptureClient } from './anticapture-client';
+export type { AnticaptureClientConfig, VoteWithDaoId, OffchainVoteWithDaoId, DaoInfo } from './anticapture-client';
 
-// Export Vote types
-export type { VoteWithDaoId, OffchainVoteWithDaoId } from './anticapture-client';
-
-// Export GraphQL types for apps to use
-export type {
-  GetDaOsQuery,
-  GetProposalByIdQuery,
-  GetProposalByIdQueryVariables,
-  ListProposalsQuery,
-  ListProposalsQueryVariables,
-  ListVotesQuery,
-  ListVotesQueryVariables,
-  ListHistoricalVotingPowerQuery,
-  ListHistoricalVotingPowerQueryVariables
-} from './gql/graphql';
-
-// Export GraphQL enums
-export {
-  OrderDirection,
-  QueryInput_HistoricalVotingPower_OrderBy,
-  QueryInput_Votes_OrderBy,
-  QueryInput_VotesOffchain_OrderBy,
-  QueryInput_Proposals_Status_Items,
-} from './gql/graphql';
-
-export { FeedEventType, FeedRelevance } from './schemas';
 export type { ProcessedVotingPowerHistory, OffchainProposalItem, OffchainVoteItem } from './schemas';
+
+export {
+  orderDirectionEnum,
+  feedEventTypeEnum,
+  feedRelevanceEnum,
+  onchainProposalStatusListEnum,
+  historicalVotingPowerQueryParamsOrderByEnum,
+} from '@anticapture/client';
+
+export type {
+  OrderDirection,
+  FeedEventType,
+  FeedRelevance,
+  OnchainProposalStatusListEnumKey,
+  HistoricalVotingPowerQueryParamsOrderByEnumKey,
+  ProposalsQueryParams,
+  HistoricalVotingPowerQueryParams,
+  OnchainProposal,
+} from '@anticapture/client';

@@ -1,150 +1,148 @@
-import { describe, it, expect, afterEach, beforeAll, afterAll } from '@jest/globals';
-import { AnticaptureClient } from '../src/anticapture-client';
-import { setupServer } from 'msw/node';
+import { describe, it, expect, beforeAll, afterAll, afterEach } from 'vitest';
 import { http, HttpResponse } from 'msw';
+import { startServer, createTestClient, daosResponse, TEST_BASE_URL } from './test-helpers';
 
-const TEST_API_URL = 'http://test-api';
+const server = startServer();
+beforeAll(() => server.listen({ onUnhandledRequest: 'error' }));
+afterEach(() => server.resetHandlers());
+afterAll(() => server.close());
 
-interface OffchainProposalStub {
-  id: string;
-  title: string;
-  discussion: string;
-  link: string;
-  state: string;
-  created: number;
-  end: number;
+function offchainProposalsResponse(items: Array<{ id: string; title: string; created: number; end?: number }>) {
+  return {
+    items: items.map(p => ({
+      id: p.id,
+      title: p.title,
+      discussion: '',
+      link: '',
+      state: 'active',
+      created: p.created,
+      end: p.end ?? p.created + 86400,
+    })),
+    totalCount: items.length,
+  };
 }
 
-interface GraphQLScenario {
-  daos: Array<{ id: string; votingDelay?: string; chainId?: number; supportOffchainData?: boolean }>;
-  proposals?: Record<string, OffchainProposalStub[]>;
-  errors?: Record<string, string>;
-}
-
-function handleGraphQL(scenario: GraphQLScenario) {
-  return http.post(TEST_API_URL, async ({ request }) => {
-    const body = await request.json() as { query: string };
-
-    if (body.query.includes('daos')) {
-      return HttpResponse.json({
-        data: {
-          daos: {
-            items: scenario.daos.map(d => ({
-              id: d.id,
-              votingDelay: d.votingDelay ?? '0',
-              chainId: d.chainId ?? 1,
-              supportOffchainData: d.supportOffchainData ?? true,
-            })),
-          },
-        },
-      });
-    }
-
-    const daoId = request.headers.get('anticapture-dao-id');
-
-    if (daoId && scenario.errors?.[daoId]) {
-      return HttpResponse.json({
-        data: null,
-        errors: [{ message: scenario.errors[daoId] }],
-      });
-    }
-
-    const items = (daoId && scenario.proposals?.[daoId]) || [];
-    return HttpResponse.json({
-      data: {
-        offchainProposals: { items, totalCount: items.length },
-      },
-    });
-  });
-}
-
-// TODO: Migrate in Task 7 — listOffchainProposals not yet migrated to @anticapture/client
-describe.skip('listOffchainProposals', () => {
-  const server = setupServer();
-
-  beforeAll(() => server.listen({ onUnhandledRequest: 'bypass' }));
-  afterEach(() => server.resetHandlers());
-  afterAll(() => server.close());
-
-  function createRealClient() {
-    return new AnticaptureClient({ baseURL: TEST_API_URL, maxRetries: 0, timeoutMs: 5000 });
-  }
-
+describe('listOffchainProposals', () => {
   it('returns empty array when no DAOs exist', async () => {
-    server.use(handleGraphQL({ daos: [] }));
+    server.use(http.get(`${TEST_BASE_URL}/daos`, () => HttpResponse.json(daosResponse([]))));
+    const client = createTestClient();
+    expect(await client.listOffchainProposals()).toEqual([]);
+  });
 
-    const client = createRealClient();
-    const result = await client.listOffchainProposals();
-
-    expect(result).toEqual([]);
+  it('returns empty array when no DAOs support offchain data', async () => {
+    server.use(
+      http.get(`${TEST_BASE_URL}/daos`, () => HttpResponse.json(
+        daosResponse([{ id: 'uniswap', supportOffchainData: false }])
+      )),
+    );
+    const client = createTestClient();
+    expect(await client.listOffchainProposals()).toEqual([]);
   });
 
   it('returns proposals with daoId attached', async () => {
-    server.use(handleGraphQL({
-      daos: [{ id: 'ENS' }],
-      proposals: {
-        ENS: [{ id: 'snap-1', title: 'Test Proposal', discussion: 'https://forum.example.com', link: 'https://snapshot.org/snap-1', state: 'active', created: 1700000000, end: 1700086400 }],
-      },
-    }));
-
-    const client = createRealClient();
+    server.use(
+      http.get(`${TEST_BASE_URL}/daos`, () => HttpResponse.json(
+        daosResponse([{ id: 'ens', supportOffchainData: true }])
+      )),
+      http.get(`${TEST_BASE_URL}/ens/offchain/proposals`, () =>
+        HttpResponse.json(offchainProposalsResponse([
+          { id: 'snap-1', title: 'Test Proposal', created: 1700000000 },
+        ]))
+      ),
+    );
+    const client = createTestClient();
     const result = await client.listOffchainProposals();
-
     expect(result).toHaveLength(1);
-    expect(result[0]).toMatchObject({ id: 'snap-1', daoId: 'ENS' });
+    expect(result[0]).toMatchObject({ id: 'snap-1', daoId: 'ens' });
   });
 
-  it('aggregates proposals from multiple DAOs', async () => {
-    server.use(handleGraphQL({
-      daos: [{ id: 'DAO_A' }, { id: 'DAO_B' }],
-      proposals: {
-        DAO_A: [{ id: 'snap-a', title: 'From A', discussion: '', link: '', state: 'active', created: 1700000100, end: 1700086500 }],
-        DAO_B: [{ id: 'snap-b', title: 'From B', discussion: '', link: '', state: 'pending', created: 1700000200, end: 1700086600 }],
-      },
-    }));
-
-    const client = createRealClient();
+  it('aggregates proposals from multiple DAOs sorted DESC by created', async () => {
+    server.use(
+      http.get(`${TEST_BASE_URL}/daos`, () => HttpResponse.json(
+        daosResponse([
+          { id: 'dao_a', supportOffchainData: true },
+          { id: 'dao_b', supportOffchainData: true },
+        ])
+      )),
+      http.get(`${TEST_BASE_URL}/dao_a/offchain/proposals`, () =>
+        HttpResponse.json(offchainProposalsResponse([
+          { id: 'snap-a', title: 'From A', created: 1700000100 },
+        ]))
+      ),
+      http.get(`${TEST_BASE_URL}/dao_b/offchain/proposals`, () =>
+        HttpResponse.json(offchainProposalsResponse([
+          { id: 'snap-b', title: 'From B', created: 1700000200 },
+        ]))
+      ),
+    );
+    const client = createTestClient();
     const result = await client.listOffchainProposals();
-
     expect(result).toHaveLength(2);
-    expect(result.map(p => p.id)).toEqual(['snap-b', 'snap-a']);
+    expect(result.map(p => p.id)).toEqual(['snap-b', 'snap-a']); // sorted DESC by created
   });
 
-  it('skips DAOs with supportOffchainData false', async () => {
-    server.use(handleGraphQL({
-      daos: [
-        { id: 'ONCHAIN_ONLY', supportOffchainData: false },
-        { id: 'OFFCHAIN_DAO', supportOffchainData: true },
-      ],
-      proposals: {
-        ONCHAIN_ONLY: [{ id: 'snap-should-not-appear', title: 'Should not appear', discussion: '', link: '', state: 'active', created: 1700000000, end: 1700086400 }],
-        OFFCHAIN_DAO: [{ id: 'snap-ok', title: 'OK', discussion: '', link: '', state: 'active', created: 1700000100, end: 1700086500 }],
-      },
-    }));
-
-    const client = createRealClient();
+  it('skips DAOs without supportOffchainData and queries only offchain-enabled ones', async () => {
+    server.use(
+      http.get(`${TEST_BASE_URL}/daos`, () => HttpResponse.json(
+        daosResponse([
+          { id: 'onchain_only', supportOffchainData: false },
+          { id: 'offchain_dao', supportOffchainData: true },
+        ])
+      )),
+      http.get(`${TEST_BASE_URL}/offchain_dao/offchain/proposals`, () =>
+        HttpResponse.json(offchainProposalsResponse([
+          { id: 'snap-ok', title: 'OK', created: 1700000100 },
+        ]))
+      ),
+    );
+    const client = createTestClient();
     const result = await client.listOffchainProposals();
-
     expect(result).toHaveLength(1);
     expect(result[0].id).toBe('snap-ok');
-    expect(result[0].daoId).toBe('OFFCHAIN_DAO');
+    expect(result[0].daoId).toBe('offchain_dao');
   });
 
   it('skips DAO on API error and continues with others', async () => {
-    server.use(handleGraphQL({
-      daos: [{ id: 'OK_DAO' }, { id: 'BAD_DAO' }],
-      proposals: {
-        OK_DAO: [{ id: 'snap-ok', title: 'OK', discussion: '', link: '', state: 'active', created: 1700000000, end: 1700086400 }],
-      },
-      errors: {
-        BAD_DAO: 'API exploded',
-      },
-    }));
-
-    const client = createRealClient();
+    server.use(
+      http.get(`${TEST_BASE_URL}/daos`, () => HttpResponse.json(
+        daosResponse([
+          { id: 'ok_dao', supportOffchainData: true },
+          { id: 'bad_dao', supportOffchainData: true },
+        ])
+      )),
+      http.get(`${TEST_BASE_URL}/ok_dao/offchain/proposals`, () =>
+        HttpResponse.json(offchainProposalsResponse([
+          { id: 'snap-ok', title: 'OK', created: 1700000000 },
+        ]))
+      ),
+      http.get(`${TEST_BASE_URL}/bad_dao/offchain/proposals`, () => new HttpResponse(null, { status: 500 })),
+    );
+    const client = createTestClient();
     const result = await client.listOffchainProposals();
-
     expect(result).toHaveLength(1);
     expect(result[0].id).toBe('snap-ok');
+  });
+
+  it('returns proposals filtered by daoId when daoId is provided', async () => {
+    server.use(
+      http.get(`${TEST_BASE_URL}/ens/offchain/proposals`, () =>
+        HttpResponse.json(offchainProposalsResponse([
+          { id: 'snap-per-dao', title: 'Per DAO', created: 1700000000 },
+        ]))
+      ),
+    );
+    const client = createTestClient();
+    const result = await client.listOffchainProposals({}, 'ens');
+    expect(result).toHaveLength(1);
+    expect(result[0].id).toBe('snap-per-dao');
+    expect(result[0].daoId).toBe('ens');
+  });
+
+  it('returns empty array on error when daoId is provided', async () => {
+    server.use(
+      http.get(`${TEST_BASE_URL}/ens/offchain/proposals`, () => new HttpResponse(null, { status: 500 })),
+    );
+    const client = createTestClient();
+    expect(await client.listOffchainProposals({}, 'ens')).toEqual([]);
   });
 });

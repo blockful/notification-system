@@ -1,19 +1,5 @@
 import type { HistoricalVotingPower, OffchainProposal, OffchainVote } from '@anticapture/client';
 
-export enum FeedEventType {
-  Delegation = 'DELEGATION',
-  Proposal = 'PROPOSAL',
-  ProposalExtended = 'PROPOSAL_EXTENDED',
-  Transfer = 'TRANSFER',
-  Vote = 'VOTE',
-}
-
-export enum FeedRelevance {
-  High = 'HIGH',
-  Low = 'LOW',
-  Medium = 'MEDIUM',
-}
-
 export type OffchainProposalItem = OffchainProposal;
 export type OffchainVoteItem = OffchainVote;
 

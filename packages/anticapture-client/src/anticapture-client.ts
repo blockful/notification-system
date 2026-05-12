@@ -6,15 +6,14 @@ import {
   votes,
   proposalNonVoters,
   offchainProposalNonVoters,
+  offchainProposals,
   votesOffchain,
   historicalVotingPower,
 } from '@anticapture/client';
-import type { RequestConfig } from '@anticapture/client';
+import type { FeedEventType, FeedRelevance, RequestConfig } from '@anticapture/client';
 import { getAddress, isAddress } from 'viem';
 import { withRetryAndTimeout } from './with-retry-and-timeout';
 import type {
-  FeedEventType,
-  FeedRelevance,
   OffchainProposalItem,
   OffchainVoteItem,
   ProcessedVotingPowerHistory,
@@ -30,6 +29,8 @@ export interface AnticaptureClientConfig {
 
 export type VoteWithDaoId = { daoId: string; [key: string]: any };
 export type OffchainVoteWithDaoId = { daoId: string; [key: string]: any };
+
+export type DaoInfo = { id: string; blockTime: number; votingDelay: string; chainId: number; alreadySupportCalldataReview: boolean; supportOffchainData: boolean };
 
 export class AnticaptureClient {
   private readonly retries: number;
@@ -229,7 +230,33 @@ export class AnticaptureClient {
     }
   }
 
-  async listOffchainProposals(..._args: any[]): Promise<(OffchainProposalItem & { daoId: string })[]> { throw new Error('not migrated yet'); }
+  async listOffchainProposals(variables?: any, daoId?: string): Promise<(OffchainProposalItem & { daoId: string })[]> {
+    if (daoId) {
+      try {
+        const res = await this.call(() => offchainProposals(daoId as any, this.toChecksum(variables ?? {}), this.sdkConfig));
+        const items = (res?.items ?? []).map((i: any) => ({ ...i, daoId }));
+        return this.toLowercase(items);
+      } catch (err) {
+        console.warn(`[AnticaptureClient] Error querying offchain proposals for DAO ${daoId}: ${err instanceof Error ? err.message : err}`);
+        return [];
+      }
+    }
+
+    const allDaos = await this.getDAOs();
+    const all: (OffchainProposalItem & { daoId: string })[] = [];
+    for (const dao of allDaos) {
+      if (!dao.supportOffchainData) continue;
+      try {
+        const res = await this.call(() => offchainProposals(dao.id as any, this.toChecksum(variables ?? {}), this.sdkConfig));
+        const items = (res?.items ?? []).map((i: any) => ({ ...i, daoId: dao.id }));
+        if (items.length) all.push(...items);
+      } catch (err) {
+        console.warn(`[AnticaptureClient] Skipping offchain proposals for ${dao.id}: ${err instanceof Error ? err.message : err}`);
+      }
+    }
+    all.sort((a, b) => (b.created ?? 0) - (a.created ?? 0));
+    return this.toLowercase(all);
+  }
 
   async listOffchainVotes(daoId: string, variables?: any): Promise<OffchainVoteItem[]> {
     try {
