@@ -76,6 +76,7 @@ services:
       RABBITMQ_URL: amqp://admin:admin@rabbitmq:5672
       TOKEN_ENCRYPTION_KEY: ${TOKEN_ENCRYPTION_KEY}
       API_PORT_SLACK: 3002
+      RPC_URL: ${RPC_URL:-https://ethereum-rpc.publicnode.com}
     depends_on:
       subscription-server:
         condition: service_started

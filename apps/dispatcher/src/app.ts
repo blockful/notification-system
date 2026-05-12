@@ -117,7 +117,7 @@ export class App {
     };
 
     const offchainNonVotersSource: NonVotersSource = {
-      getNonVoters: (id, _daoId, addrs) => anticaptureClient.getOffchainProposalNonVoters(id, addrs)
+      getNonVoters: (id, daoId, addrs) => anticaptureClient.getOffchainProposalNonVoters(id, daoId, addrs)
     };
 
     triggerProcessorService.addHandler(
@@ -134,7 +134,7 @@ export class App {
     );
 
     triggerProcessorService.addHandler(
-      NotificationTypeId.OffchainVotingReminder75,
+      NotificationTypeId.OffchainVotingReminder50,
       wrapWithTracing(new VotingReminderTriggerHandler(subscriptionClient, notificationFactory, anticaptureClient, offchainNonVotersSource, offchainVotingReminderMessages, 'offchain-voting-reminder', logger))
     );
 
