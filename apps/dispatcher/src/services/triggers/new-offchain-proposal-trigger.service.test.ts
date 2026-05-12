@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach } from '@jest/globals';
+import { describe, it, expect, beforeEach } from 'vitest';
 import { NewOffchainProposalTriggerHandler } from './new-offchain-proposal-trigger.service';
 import { ISubscriptionClient, User, Notification } from '../../interfaces/subscription-client.interface';
 import { NotificationClientFactory } from '../notification/notification-factory.service';
@@ -80,7 +80,9 @@ describe('NewOffchainProposalTriggerHandler', () => {
       await handler.handleMessage(message);
 
       expect(notificationClient.sentPayloads).toHaveLength(1);
-      expect(notificationClient.sentPayloads[0].message).toContain("Grant Program");
+      expect(notificationClient.sentPayloads[0].message).toBe(
+        '📋 New Snapshot proposal in test-dao: "Grant Program"'
+      );
     });
 
     it('should use "Untitled Proposal" when title is empty', async () => {
@@ -96,7 +98,9 @@ describe('NewOffchainProposalTriggerHandler', () => {
 
       await handler.handleMessage(message);
 
-      expect(notificationClient.sentPayloads[0].message).toContain('Untitled Proposal');
+      expect(notificationClient.sentPayloads[0].message).toBe(
+        '📋 New Snapshot proposal in test-dao: "Untitled Proposal"'
+      );
     });
 
     it('should set correct eventId as offchain-{proposalId}', async () => {
@@ -129,9 +133,9 @@ describe('NewOffchainProposalTriggerHandler', () => {
       await handler.handleMessage(message);
 
       const buttons = notificationClient.sentPayloads[0].metadata?.buttons;
-      expect(buttons).toBeDefined();
-      expect(buttons[0].text).toBe('Cast your vote');
-      expect(buttons[0].url).toBe('https://snapshot.org/#/test-dao/proposal/snap-1');
+      expect(buttons).toEqual([
+        { text: 'Cast your vote', url: 'https://snapshot.org/#/test-dao/proposal/snap-1' },
+      ]);
     });
 
     it('should include "View Discussion" button when discussion URL is provided', async () => {
@@ -148,9 +152,10 @@ describe('NewOffchainProposalTriggerHandler', () => {
       await handler.handleMessage(message);
 
       const buttons = notificationClient.sentPayloads[0].metadata?.buttons;
-      expect(buttons).toHaveLength(2);
-      expect(buttons[1].text).toBe('View Discussion');
-      expect(buttons[1].url).toBe('https://forum.example.com/123');
+      expect(buttons).toEqual([
+        { text: 'Cast your vote', url: 'https://snapshot.org/#/test-dao/proposal/snap-1' },
+        { text: 'View Discussion', url: 'https://forum.example.com/123' },
+      ]);
     });
 
     it('should omit "View Discussion" button when discussion is empty', async () => {
@@ -167,7 +172,9 @@ describe('NewOffchainProposalTriggerHandler', () => {
       await handler.handleMessage(message);
 
       const buttons = notificationClient.sentPayloads[0].metadata?.buttons;
-      expect(buttons).toHaveLength(1);
+      expect(buttons).toEqual([
+        { text: 'Cast your vote', url: 'https://snapshot.org/#/test-dao/proposal/snap-1' },
+      ]);
     });
 
     it('should process multiple proposals and notify all subscribers', async () => {
