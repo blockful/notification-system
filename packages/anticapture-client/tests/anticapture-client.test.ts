@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeAll, afterAll, afterEach } from '@jest/globals';
+import { describe, it, expect, beforeAll, afterAll, afterEach } from 'vitest';
 import { http, HttpResponse } from 'msw';
 import { startServer, createTestClient, daosResponse, TEST_BASE_URL } from './test-helpers';
 import { FeedEventType, FeedRelevance } from '../src/schemas';

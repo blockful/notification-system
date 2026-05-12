@@ -51,13 +51,15 @@ describe('ExplorerService', () => {
 
     it('should handle undefined chainId gracefully', () => {
       const hash = '0x1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef';
-      const result = explorerService.getTransactionLink(undefined as any, hash);
+      // @ts-expect-error - testing runtime behavior with invalid chainId
+      const result = explorerService.getTransactionLink(undefined, hash);
       expect(result).toBe('');
     });
 
     it('should handle null chainId gracefully', () => {
       const hash = '0x1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef';
-      const result = explorerService.getTransactionLink(null as any, hash);
+      // @ts-expect-error - testing runtime behavior with invalid chainId
+      const result = explorerService.getTransactionLink(null, hash);
       expect(result).toBe('');
     });
   });
