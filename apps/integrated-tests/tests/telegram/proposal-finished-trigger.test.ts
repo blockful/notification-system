@@ -1,13 +1,14 @@
-import { describe, test, expect, beforeEach, jest } from '@jest/globals';
+import { describe, test, expect, beforeEach, beforeAll } from 'vitest';
+import { proposalsHandler } from '@anticapture/client/msw';
 import { db, TestApps } from '../../src/setup';
-import { HttpClientMockSetup, GraphQLMockSetup } from '../../src/mocks';
+import { server } from '../../src/mocks/msw-server';
 import { UserFactory, ProposalFactory } from '../../src/fixtures';
 import { TelegramTestHelper, DatabaseTestHelper, TestCleanup } from '../../src/helpers';
 import { testConstants, timeouts } from '../../src/config';
 
 describe('Proposal Finished Trigger - Integration Test', () => {
   let apps: TestApps;
-  let httpMockSetup: HttpClientMockSetup;
+
   let telegramHelper: TelegramTestHelper;
   let dbHelper: DatabaseTestHelper;
 
@@ -37,7 +38,7 @@ describe('Proposal Finished Trigger - Integration Test', () => {
 
   beforeAll(async () => {
     apps = TestCleanup.getGlobalApps();
-    httpMockSetup = TestCleanup.getGlobalHttpMockSetup();
+
     telegramHelper = new TelegramTestHelper(global.mockTelegramSendMessage);
     dbHelper = new DatabaseTestHelper(db);
   });
@@ -64,8 +65,7 @@ describe('Proposal Finished Trigger - Integration Test', () => {
     // Create a proposal that has already finished
     const proposal = createFinishedProposal(testDaoId, 'finishing-proposal-1');
     
-    // Setup mock to return the finished proposal
-    GraphQLMockSetup.setupMock(httpMockSetup.getMockClient(), [proposal], []);
+    server.use(proposalsHandler({ items: [proposal], totalCount: 1 }));
 
     // Wait for the notification to be sent
     const message = await telegramHelper.waitForMessage(
@@ -105,8 +105,7 @@ describe('Proposal Finished Trigger - Integration Test', () => {
       description: '# Future Proposal\n\nThis proposal will not finish during the test.'
     });
 
-    // Setup mock
-    GraphQLMockSetup.setupMock(httpMockSetup.getMockClient(), [futureProposal], []);
+    server.use(proposalsHandler({ items: [futureProposal], totalCount: 1 }));
 
     // Ensure no messages are sent
     await telegramHelper.waitForNoMessages(timeouts.notification.processing);
@@ -138,8 +137,7 @@ describe('Proposal Finished Trigger - Integration Test', () => {
       createFinishedProposal(testDaoId, 'finished-3', new Date(baseTime.getTime() + 2000))
     ];
 
-    // Setup mock
-    GraphQLMockSetup.setupMock(httpMockSetup.getMockClient(), proposals, []);
+    server.use(proposalsHandler({ items: proposals, totalCount: proposals.length }));
 
     // Wait for all 3 messages
     await telegramHelper.waitForMessageCount(3, { 
@@ -192,8 +190,7 @@ describe('Proposal Finished Trigger - Integration Test', () => {
       description: '# Old Proposal\n\nThis finished before user subscribed.'
     });
 
-    // Setup mock
-    GraphQLMockSetup.setupMock(httpMockSetup.getMockClient(), [oldProposal], []);
+    server.use(proposalsHandler({ items: [oldProposal], totalCount: 1 }));
 
     // Ensure no messages are sent
     await telegramHelper.waitForNoMessages(timeouts.notification.processing);
@@ -231,8 +228,7 @@ describe('Proposal Finished Trigger - Integration Test', () => {
     const dao1Proposal = createFinishedProposal(dao1Id, 'dao1-finished', baseTime);
     const dao2Proposal = createFinishedProposal(dao2Id, 'dao2-finished', new Date(baseTime.getTime() + 1000)); // 1 second later
 
-    // Setup mock
-    GraphQLMockSetup.setupMock(httpMockSetup.getMockClient(), [dao1Proposal, dao2Proposal], []);
+    server.use(proposalsHandler({ items: [dao1Proposal, dao2Proposal], totalCount: 2 }));
 
     // Wait for 2 messages (one for each DAO)
     await telegramHelper.waitForMessageCount(2, { 

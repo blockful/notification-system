@@ -4,9 +4,10 @@
  * Supports both mock and real Slack delivery modes
  */
 
-import { describe, test, expect, beforeAll, afterEach } from '@jest/globals';
+import { describe, test, expect, beforeAll, afterEach } from 'vitest';
+import { historicalVotingPowerHandler } from '@anticapture/client/msw';
 import { db, TestApps } from '../../src/setup';
-import { HttpClientMockSetup, GraphQLMockSetup } from '../../src/mocks';
+import { server } from '../../src/mocks/msw-server';
 import { UserFactory, VotingPowerFactory, WorkspaceFactory } from '../../src/fixtures';
 import { SlackTestHelper, DatabaseTestHelper, TestCleanup } from '../../src/helpers';
 import { SlackTestClient } from '../../src/test-clients/slack-test.client';
@@ -15,7 +16,7 @@ import { env } from '../../src/config/env';
 
 describe('Slack Delegation Change Notifications - Integration Test', () => {
   let apps: TestApps;
-  let httpMockSetup: HttpClientMockSetup;
+
   let slackHelper: SlackTestHelper;
   let slackClient: SlackTestClient;
   let dbHelper: DatabaseTestHelper;
@@ -25,7 +26,7 @@ describe('Slack Delegation Change Notifications - Integration Test', () => {
 
   beforeAll(async () => {
     apps = TestCleanup.getGlobalApps();
-    httpMockSetup = TestCleanup.getGlobalHttpMockSetup();
+
 
     // Create Slack client and helper
     slackClient = new SlackTestClient(global.mockSlackSendMessage);
@@ -73,13 +74,7 @@ describe('Slack Delegation Change Notifications - Integration Test', () => {
       }
     );
 
-    // Setup GraphQL mock to return voting power data
-    GraphQLMockSetup.setupMock(
-      httpMockSetup.getMockClient(),
-      [],
-      [delegationEvent],
-      { [testDaoId]: 1 }
-    );
+    server.use(historicalVotingPowerHandler({ items: [delegationEvent], totalCount: 1 }));
 
     // Wait for delegation confirmation notification
     const delegatorMessage = await slackHelper.waitForMessage(
@@ -155,12 +150,7 @@ describe('Slack Delegation Change Notifications - Integration Test', () => {
       }
     );
 
-    GraphQLMockSetup.setupMock(
-      httpMockSetup.getMockClient(),
-      [],
-      [undelegationEvent],
-      { [testDaoId]: 1 }
-    );
+    server.use(historicalVotingPowerHandler({ items: [undelegationEvent], totalCount: 1 }));
 
     // Wait for undelegation confirmation notification
     const delegatorMessage = await slackHelper.waitForMessage(
@@ -238,13 +228,7 @@ describe('Slack Delegation Change Notifications - Integration Test', () => {
       }
     );
 
-    // Setup GraphQL mock
-    GraphQLMockSetup.setupMock(
-      httpMockSetup.getMockClient(),
-      [],
-      [delegationEvent],
-      { [testDaoId]: 1 }
-    );
+    server.use(historicalVotingPowerHandler({ items: [delegationEvent], totalCount: 1 }));
 
     // Wait for both notifications
     const messages = await slackHelper.waitForMessageCount(

@@ -1,6 +1,7 @@
-import { describe, test, expect, beforeAll, beforeEach } from '@jest/globals';
+import { describe, test, expect, beforeAll, beforeEach } from 'vitest';
+import { offchainProposalsHandler } from '@anticapture/client/msw';
 import { db, TestApps } from '../../src/setup';
-import { HttpClientMockSetup, GraphQLMockSetup } from '../../src/mocks';
+import { server } from '../../src/mocks/msw-server';
 import { UserFactory, OffchainProposalFactory, WorkspaceFactory } from '../../src/fixtures';
 import { SlackTestHelper, DatabaseTestHelper, TestCleanup } from '../../src/helpers';
 import { SlackTestClient } from '../../src/test-clients/slack-test.client';
@@ -9,7 +10,7 @@ import { env } from '../../src/config/env';
 
 describe('Slack Offchain Proposal Finished Trigger - Integration Test', () => {
   let apps: TestApps;
-  let httpMockSetup: HttpClientMockSetup;
+
   let slackHelper: SlackTestHelper;
   let slackClient: SlackTestClient;
   let dbHelper: DatabaseTestHelper;
@@ -30,7 +31,7 @@ describe('Slack Offchain Proposal Finished Trigger - Integration Test', () => {
 
   beforeAll(async () => {
     apps = TestCleanup.getGlobalApps();
-    httpMockSetup = TestCleanup.getGlobalHttpMockSetup();
+
 
     slackClient = new SlackTestClient(global.mockSlackSendMessage);
     slackHelper = new SlackTestHelper(global.mockSlackSendMessage, slackClient);
@@ -60,14 +61,7 @@ describe('Slack Offchain Proposal Finished Trigger - Integration Test', () => {
 
     const proposal = createFinishedOffchainProposal(testDaoId, proposalId);
 
-    GraphQLMockSetup.setupMock(
-      httpMockSetup.getMockClient(),
-      [],
-      [],
-      {},
-      [],
-      [proposal],
-    );
+    server.use(offchainProposalsHandler({ items: [proposal], totalCount: 1 }));
 
     const message = await slackHelper.waitForMessage(
       msg => msg.text.includes('has ended') &&
@@ -109,14 +103,7 @@ describe('Slack Offchain Proposal Finished Trigger - Integration Test', () => {
       createFinishedOffchainProposal(testDaoId, 'snap-fin-slack-3', { end: now - 8 }),
     ];
 
-    GraphQLMockSetup.setupMock(
-      httpMockSetup.getMockClient(),
-      [],
-      [],
-      {},
-      [],
-      proposals,
-    );
+    server.use(offchainProposalsHandler({ items: proposals, totalCount: proposals.length }));
 
     await slackHelper.waitForMessageCount(3, {
       timeout: timeouts.notification.delivery,
@@ -154,14 +141,7 @@ describe('Slack Offchain Proposal Finished Trigger - Integration Test', () => {
 
     const proposal = createFinishedOffchainProposal(testDaoId, 'snap-nosub-slack-1');
 
-    GraphQLMockSetup.setupMock(
-      httpMockSetup.getMockClient(),
-      [],
-      [],
-      {},
-      [],
-      [proposal],
-    );
+    server.use(offchainProposalsHandler({ items: [proposal], totalCount: 1 }));
 
     const messagePromise = slackHelper.waitForMessage(
       msg => msg.text.includes('Snapshot proposal') && msg.text.includes('has ended') && msg.channel === channelId,

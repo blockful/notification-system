@@ -4,9 +4,10 @@
  * Supports both mock and real Slack delivery modes
  */
 
-import { describe, test, expect, beforeEach, beforeAll } from '@jest/globals';
+import { describe, test, expect, beforeEach, beforeAll } from 'vitest';
+import { proposalsHandler } from '@anticapture/client/msw';
 import { db, TestApps } from '../../src/setup';
-import { HttpClientMockSetup, GraphQLMockSetup } from '../../src/mocks';
+import { server } from '../../src/mocks/msw-server';
 import { UserFactory, ProposalFactory, WorkspaceFactory } from '../../src/fixtures';
 import { SlackTestHelper, DatabaseTestHelper, TestCleanup } from '../../src/helpers';
 import { SlackTestClient } from '../../src/test-clients/slack-test.client';
@@ -15,7 +16,7 @@ import { env } from '../../src/config/env';
 
 describe('Slack New Proposal - Integration Test', () => {
   let apps: TestApps;
-  let httpMockSetup: HttpClientMockSetup;
+
   let slackHelper: SlackTestHelper;
   let slackClient: SlackTestClient;
   let dbHelper: DatabaseTestHelper;
@@ -26,7 +27,7 @@ describe('Slack New Proposal - Integration Test', () => {
 
   beforeAll(async () => {
     apps = TestCleanup.getGlobalApps();
-    httpMockSetup = TestCleanup.getGlobalHttpMockSetup();
+
 
     // Create Slack client and helper
     slackClient = new SlackTestClient(global.mockSlackSendMessage);
@@ -70,8 +71,7 @@ describe('Slack New Proposal - Integration Test', () => {
       endTimestamp: Math.floor((Date.now() + 7 * 24 * 60 * 60 * 1000) / 1000).toString()
     });
 
-    // Setup GraphQL mock to return the proposal
-    GraphQLMockSetup.setupMock(httpMockSetup.getMockClient(), [proposal], [], {}, []);
+    server.use(proposalsHandler({ items: [proposal], totalCount: 1 }));
 
     // Wait for Slack notification
     const message = await slackHelper.waitForMessage(
@@ -138,8 +138,7 @@ describe('Slack New Proposal - Integration Test', () => {
       endTimestamp: Math.floor((Date.now() + 7 * 24 * 60 * 60 * 1000) / 1000).toString()
     });
 
-    // Setup GraphQL mock
-    GraphQLMockSetup.setupMock(httpMockSetup.getMockClient(), [proposal], [], {}, []);
+    server.use(proposalsHandler({ items: [proposal], totalCount: 1 }));
 
     // Wait for Slack notification
     const message = await slackHelper.waitForMessage(
@@ -190,8 +189,7 @@ describe('Slack New Proposal - Integration Test', () => {
       endBlock: 200000
     });
 
-    // Setup GraphQL mock
-    GraphQLMockSetup.setupMock(httpMockSetup.getMockClient(), [proposal], [], {}, []);
+    server.use(proposalsHandler({ items: [proposal], totalCount: 1 }));
 
     // Wait for both notifications
     const messages = await slackHelper.waitForMessageCount(
@@ -244,8 +242,7 @@ describe('Slack New Proposal - Integration Test', () => {
       timestamp: futureTimestamp.toString()
     });
 
-    // Setup GraphQL mock
-    GraphQLMockSetup.setupMock(httpMockSetup.getMockClient(), [proposal], [], {}, []);
+    server.use(proposalsHandler({ items: [proposal], totalCount: 1 }));
 
     // Wait for Slack notification
     const slackMessage = await slackHelper.waitForMessage(

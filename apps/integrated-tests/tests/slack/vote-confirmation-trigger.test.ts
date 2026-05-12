@@ -4,9 +4,10 @@
  * Supports both mock and real Slack delivery modes
  */
 
-import { describe, test, expect, beforeAll, afterEach } from '@jest/globals';
+import { describe, test, expect, beforeAll, afterEach } from 'vitest';
+import { votesHandler } from '@anticapture/client/msw';
 import { db, TestApps } from '../../src/setup';
-import { HttpClientMockSetup, GraphQLMockSetup } from '../../src/mocks';
+import { server } from '../../src/mocks/msw-server';
 import { UserFactory, WorkspaceFactory } from '../../src/fixtures';
 import { SlackTestHelper, DatabaseTestHelper, TestCleanup } from '../../src/helpers';
 import { SlackTestClient } from '../../src/test-clients/slack-test.client';
@@ -15,7 +16,7 @@ import { env } from '../../src/config/env';
 
 describe('Slack Vote Confirmation Trigger - Integration Test', () => {
   let apps: TestApps;
-  let httpMockSetup: HttpClientMockSetup;
+
   let slackHelper: SlackTestHelper;
   let slackClient: SlackTestClient;
   let dbHelper: DatabaseTestHelper;
@@ -43,7 +44,7 @@ describe('Slack Vote Confirmation Trigger - Integration Test', () => {
 
   beforeAll(async () => {
     apps = TestCleanup.getGlobalApps();
-    httpMockSetup = TestCleanup.getGlobalHttpMockSetup();
+
 
     // Create Slack client and helper
     slackClient = new SlackTestClient(global.mockSlackSendMessage);
@@ -83,14 +84,7 @@ describe('Slack Vote Confirmation Trigger - Integration Test', () => {
       }
     ];
 
-    // Setup GraphQL mock
-    GraphQLMockSetup.setupMock(
-      httpMockSetup.getMockClient(),
-      [], // No proposals needed
-      [], // No voting power events
-      { [testDaoId]: 1 }, // Map daoId to chainId
-      voteEvents // Add votes to mock
-    );
+    server.use(votesHandler({ items: voteEvents, totalCount: voteEvents.length }));
 
     // Wait for notification
     const message = await slackHelper.waitForMessage(
@@ -149,13 +143,7 @@ describe('Slack Vote Confirmation Trigger - Integration Test', () => {
       }
     ];
 
-    GraphQLMockSetup.setupMock(
-      httpMockSetup.getMockClient(),
-      [],
-      [],
-      { [testDaoId]: 1 },
-      voteEvents
-    );
+    server.use(votesHandler({ items: voteEvents, totalCount: voteEvents.length }));
 
     const message = await slackHelper.waitForMessage(
       msg => msg.text.includes('just voted on') &&
@@ -207,13 +195,7 @@ describe('Slack Vote Confirmation Trigger - Integration Test', () => {
       }
     ];
 
-    GraphQLMockSetup.setupMock(
-      httpMockSetup.getMockClient(),
-      [],
-      [],
-      { [testDaoId]: 1 },
-      voteEvents
-    );
+    server.use(votesHandler({ items: voteEvents, totalCount: voteEvents.length }));
 
     const message = await slackHelper.waitForMessage(
       msg => msg.text.includes('just voted on') &&
@@ -264,13 +246,7 @@ describe('Slack Vote Confirmation Trigger - Integration Test', () => {
       }
     ];
 
-    GraphQLMockSetup.setupMock(
-      httpMockSetup.getMockClient(),
-      [],
-      [],
-      { [testDaoId]: 1 },
-      voteEvents
-    );
+    server.use(votesHandler({ items: voteEvents, totalCount: voteEvents.length }));
 
     // Wait for first notification
     const firstMessage = await slackHelper.waitForMessage(
@@ -348,13 +324,7 @@ describe('Slack Vote Confirmation Trigger - Integration Test', () => {
       }
     ];
 
-    GraphQLMockSetup.setupMock(
-      httpMockSetup.getMockClient(),
-      [],
-      [],
-      { [testDaoId]: 1 },
-      voteEvents
-    );
+    server.use(votesHandler({ items: voteEvents, totalCount: voteEvents.length }));
 
     // Wait for all three notifications
     await slackHelper.waitForMessageCount(
@@ -415,13 +385,7 @@ describe('Slack Vote Confirmation Trigger - Integration Test', () => {
       }
     ];
 
-    GraphQLMockSetup.setupMock(
-      httpMockSetup.getMockClient(),
-      [],
-      [],
-      { [testDaoId]: 1 },
-      voteEvents
-    );
+    server.use(votesHandler({ items: voteEvents, totalCount: voteEvents.length }));
 
     // Ensure no messages are sent
     await slackHelper.waitForNoMessages(timeouts.wait.short);

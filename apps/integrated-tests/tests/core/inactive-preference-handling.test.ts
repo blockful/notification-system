@@ -1,19 +1,20 @@
-import { describe, test, expect, beforeEach, jest } from '@jest/globals';
+import { describe, test, expect, beforeEach, beforeAll } from 'vitest';
+import { proposalsHandler } from '@anticapture/client/msw';
 import { db, TestApps } from '../../src/setup';
-import { HttpClientMockSetup, GraphQLMockSetup } from '../../src/mocks';
+import { server } from '../../src/mocks/msw-server';
 import { UserFactory, ProposalFactory } from '../../src/fixtures';
 import { TelegramTestHelper, DatabaseTestHelper, TestCleanup } from '../../src/helpers';
 import { testConstants, timeouts } from '../../src/config';
 
 describe('Inactive Preference Handling - Integration Test', () => {
   let apps: TestApps;
-  let httpMockSetup: HttpClientMockSetup;
+
   let telegramHelper: TelegramTestHelper;
   let dbHelper: DatabaseTestHelper;
 
   beforeAll(async () => {
     apps = TestCleanup.getGlobalApps();
-    httpMockSetup = TestCleanup.getGlobalHttpMockSetup();
+
     telegramHelper = new TelegramTestHelper(global.mockTelegramSendMessage);
     dbHelper = new DatabaseTestHelper(db);
   });
@@ -38,7 +39,7 @@ describe('Inactive Preference Handling - Integration Test', () => {
     
     // Setup proposals for both DAOs
     const proposals = ProposalFactory.createProposalsForMultipleDaos([testConstants.daoIds.uniswap, testConstants.daoIds.ens], 'inactive-test');
-    GraphQLMockSetup.setupMock(httpMockSetup.getMockClient(), proposals);
+    server.use(proposalsHandler({ items: proposals, totalCount: proposals.length }));
     
     // Wait for exactly 1 message (only active user should be notified)
     await telegramHelper.waitForMessageCount(1, { timeout: timeouts.notification.delivery });

@@ -4,9 +4,10 @@
  * Verifies delegation, transfer, and other voting power events
  */
 
-import { describe, test, expect, beforeEach, beforeAll } from '@jest/globals';
+import { describe, test, expect, beforeEach, beforeAll } from 'vitest';
+import { historicalVotingPowerHandler } from '@anticapture/client/msw';
 import { db, TestApps } from '../../src/setup';
-import { HttpClientMockSetup, GraphQLMockSetup } from '../../src/mocks';
+import { server } from '../../src/mocks/msw-server';
 import { UserFactory, VotingPowerFactory, WorkspaceFactory } from '../../src/fixtures';
 import { SlackTestHelper, DatabaseTestHelper, TestCleanup } from '../../src/helpers';
 import { SlackTestClient } from '../../src/test-clients/slack-test.client';
@@ -15,7 +16,7 @@ import { env } from '../../src/config/env';
 
 describe('Slack Voting Power Trigger - Integration Test', () => {
   let apps: TestApps;
-  let httpMockSetup: HttpClientMockSetup;
+
   let slackHelper: SlackTestHelper;
   let slackClient: SlackTestClient;
   let dbHelper: DatabaseTestHelper;
@@ -43,7 +44,7 @@ describe('Slack Voting Power Trigger - Integration Test', () => {
 
   beforeAll(async () => {
     apps = TestCleanup.getGlobalApps();
-    httpMockSetup = TestCleanup.getGlobalHttpMockSetup();
+
 
     // Create Slack client and helper
     slackClient = new SlackTestClient(global.mockSlackSendMessage);
@@ -84,13 +85,7 @@ describe('Slack Voting Power Trigger - Integration Test', () => {
       )
     ];
 
-    // Setup GraphQL mock to return voting power data
-    GraphQLMockSetup.setupMock(
-      httpMockSetup.getMockClient(),
-      [], // No proposals needed
-      votingPowerEvents,
-      { [TEST_DAO_ID]: 1 } // Map testDaoId to Ethereum mainnet
-    );
+    server.use(historicalVotingPowerHandler({ items: votingPowerEvents, totalCount: votingPowerEvents.length }));
 
     // Wait for the voting power notification to be sent
     const message = await slackHelper.waitForMessage(
@@ -157,13 +152,7 @@ describe('Slack Voting Power Trigger - Integration Test', () => {
       }
     );
 
-    // Setup GraphQL mock
-    GraphQLMockSetup.setupMock(
-      httpMockSetup.getMockClient(),
-      [],
-      [delegationEvent],
-      { [TEST_DAO_ID]: 1 }
-    );
+    server.use(historicalVotingPowerHandler({ items: [delegationEvent], totalCount: 1 }));
 
     // Wait for delegation notification
     const message = await slackHelper.waitForMessage(
@@ -212,13 +201,7 @@ describe('Slack Voting Power Trigger - Integration Test', () => {
       }
     );
 
-    // Setup GraphQL mock
-    GraphQLMockSetup.setupMock(
-      httpMockSetup.getMockClient(),
-      [],
-      [transferEvent],
-      { [TEST_DAO_ID]: 1 }
-    );
+    server.use(historicalVotingPowerHandler({ items: [transferEvent], totalCount: 1 }));
 
     // Wait for transfer notification
     const message = await slackHelper.waitForMessage(
@@ -286,13 +269,7 @@ describe('Slack Voting Power Trigger - Integration Test', () => {
       )
     ];
 
-    // Setup GraphQL mock
-    GraphQLMockSetup.setupMock(
-      httpMockSetup.getMockClient(),
-      [],
-      events,
-      { [TEST_DAO_ID]: 1 }
-    );
+    server.use(historicalVotingPowerHandler({ items: events, totalCount: events.length }));
 
     // Wait for multiple messages
     const messages = await slackHelper.waitForMessageCount(
@@ -330,8 +307,11 @@ describe('Slack Voting Power Trigger - Integration Test', () => {
     const timestamp = (Math.floor(Date.now() / 1000) + 10).toString();
     const events = [
       // Event for DAO1 - should trigger notification
+      // delegator3 (brantly.eth) is used to avoid self-delegation: delegator1 (vitalik.eth)
+      // has the same address as p1 (userAddress), which toLowercase() would normalize to equal,
+      // causing the dispatcher to treat it as a self-delegation and skip notifications.
       VotingPowerFactory.createDelegationEvent(
-        testConstants.eventActors.delegator1,
+        testConstants.eventActors.delegator3,
         userAddress,
         testConstants.votingPower.default,
         DAO1,
@@ -347,13 +327,7 @@ describe('Slack Voting Power Trigger - Integration Test', () => {
       )
     ];
 
-    // Setup GraphQL mock
-    GraphQLMockSetup.setupMock(
-      httpMockSetup.getMockClient(),
-      [],
-      events,
-      { [DAO1]: 1, [DAO2]: 1 }
-    );
+    server.use(historicalVotingPowerHandler({ items: events, totalCount: events.length }));
 
     // Wait for notification (should only receive one)
     const message = await slackHelper.waitForMessage(
@@ -414,13 +388,7 @@ describe('Slack Voting Power Trigger - Integration Test', () => {
       }
     );
 
-    // Setup GraphQL mock
-    GraphQLMockSetup.setupMock(
-      httpMockSetup.getMockClient(),
-      [],
-      [event],
-      { [TEST_DAO_ID]: 1 }
-    );
+    server.use(historicalVotingPowerHandler({ items: [event], totalCount: 1 }));
 
     // Wait for formatted message
     const message = await slackHelper.waitForMessage(

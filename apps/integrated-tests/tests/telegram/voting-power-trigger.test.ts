@@ -1,19 +1,20 @@
-import { describe, test, expect, beforeEach, beforeAll, jest } from '@jest/globals';
+import { describe, test, expect, beforeEach, beforeAll } from 'vitest';
+import { historicalVotingPowerHandler } from '@anticapture/client/msw';
 import { db, TestApps } from '../../src/setup';
-import { HttpClientMockSetup, GraphQLMockSetup } from '../../src/mocks';
+import { server } from '../../src/mocks/msw-server';
 import { UserFactory, VotingPowerFactory } from '../../src/fixtures';
 import { TelegramTestHelper, DatabaseTestHelper, TestCleanup } from '../../src/helpers';
 import { testConstants, timeouts } from '../../src/config';
 
 describe('Voting Power Trigger - Integration Test', () => {
   let apps: TestApps;
-  let httpMockSetup: HttpClientMockSetup;
+
   let telegramHelper: TelegramTestHelper;
   let dbHelper: DatabaseTestHelper;
 
   beforeAll(async () => {
     apps = TestCleanup.getGlobalApps();
-    httpMockSetup = TestCleanup.getGlobalHttpMockSetup();
+
     telegramHelper = new TelegramTestHelper(global.mockTelegramSendMessage);
     dbHelper = new DatabaseTestHelper(db);
   });
@@ -60,13 +61,7 @@ describe('Voting Power Trigger - Integration Test', () => {
       )
     ];
 
-    // Setup GraphQL mock to return voting power data (includes DAOs)
-    GraphQLMockSetup.setupMock(
-      httpMockSetup.getMockClient(),
-      [], // No proposals needed
-      votingPowerEvents,
-      { [testDaoId]: 1 } // Map testDaoId to Ethereum mainnet
-    );
+    server.use(historicalVotingPowerHandler({ items: votingPowerEvents, totalCount: votingPowerEvents.length }));
 
     // Wait for the voting power notification to be sent
     const message = await telegramHelper.waitForMessage(

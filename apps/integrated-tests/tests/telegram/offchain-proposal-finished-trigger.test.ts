@@ -1,13 +1,14 @@
-import { describe, test, expect, beforeEach, beforeAll } from '@jest/globals';
+import { describe, test, expect, beforeEach, beforeAll } from 'vitest';
+import { offchainProposalsHandler } from '@anticapture/client/msw';
 import { db, TestApps } from '../../src/setup';
-import { HttpClientMockSetup, GraphQLMockSetup } from '../../src/mocks';
+import { server } from '../../src/mocks/msw-server';
 import { UserFactory, OffchainProposalFactory } from '../../src/fixtures';
 import { TelegramTestHelper, DatabaseTestHelper, TestCleanup } from '../../src/helpers';
 import { testConstants, timeouts } from '../../src/config';
 
 describe('Offchain Proposal Finished Trigger - Integration Test', () => {
   let apps: TestApps;
-  let httpMockSetup: HttpClientMockSetup;
+
   let telegramHelper: TelegramTestHelper;
   let dbHelper: DatabaseTestHelper;
 
@@ -27,7 +28,7 @@ describe('Offchain Proposal Finished Trigger - Integration Test', () => {
 
   beforeAll(async () => {
     apps = TestCleanup.getGlobalApps();
-    httpMockSetup = TestCleanup.getGlobalHttpMockSetup();
+
     telegramHelper = new TelegramTestHelper(global.mockTelegramSendMessage);
     dbHelper = new DatabaseTestHelper(db);
   });
@@ -51,14 +52,7 @@ describe('Offchain Proposal Finished Trigger - Integration Test', () => {
 
     const proposal = createFinishedOffchainProposal(testDaoId, proposalId);
 
-    GraphQLMockSetup.setupMock(
-      httpMockSetup.getMockClient(),
-      [],
-      [],
-      {},
-      [],
-      [proposal],
-    );
+    server.use(offchainProposalsHandler({ items: [proposal], totalCount: 1 }));
 
     const message = await telegramHelper.waitForMessage(
       msg => msg.text.includes('has ended') && msg.text.includes('Snapshot proposal'),
@@ -85,14 +79,7 @@ describe('Offchain Proposal Finished Trigger - Integration Test', () => {
       title: '',
     });
 
-    GraphQLMockSetup.setupMock(
-      httpMockSetup.getMockClient(),
-      [],
-      [],
-      {},
-      [],
-      [proposal],
-    );
+    server.use(offchainProposalsHandler({ items: [proposal], totalCount: 1 }));
 
     const message = await telegramHelper.waitForMessage(
       msg => msg.text.includes('A Snapshot proposal has ended'),
@@ -122,14 +109,7 @@ describe('Offchain Proposal Finished Trigger - Integration Test', () => {
       createFinishedOffchainProposal(testDaoId, 'snap-fin-3', { end: now - 8 }),
     ];
 
-    GraphQLMockSetup.setupMock(
-      httpMockSetup.getMockClient(),
-      [],
-      [],
-      {},
-      [],
-      proposals,
-    );
+    server.use(offchainProposalsHandler({ items: proposals, totalCount: proposals.length }));
 
     await telegramHelper.waitForMessageCount(3, {
       timeout: timeouts.notification.delivery,
@@ -164,14 +144,7 @@ describe('Offchain Proposal Finished Trigger - Integration Test', () => {
 
     const proposal = createFinishedOffchainProposal(testDaoId, 'snap-nosub-1');
 
-    GraphQLMockSetup.setupMock(
-      httpMockSetup.getMockClient(),
-      [],
-      [],
-      {},
-      [],
-      [proposal],
-    );
+    server.use(offchainProposalsHandler({ items: [proposal], totalCount: 1 }));
 
     const messagePromise = telegramHelper.waitForMessage(
       msg => msg.text.includes('Snapshot proposal') && msg.text.includes('has ended'),

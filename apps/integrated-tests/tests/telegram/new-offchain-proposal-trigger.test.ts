@@ -1,13 +1,14 @@
-import { describe, test, expect, beforeEach, beforeAll } from '@jest/globals';
+import { describe, test, expect, beforeEach, beforeAll } from 'vitest';
+import { offchainProposalsHandler } from '@anticapture/client/msw';
 import { db, TestApps } from '../../src/setup';
-import { HttpClientMockSetup, GraphQLMockSetup } from '../../src/mocks';
+import { server } from '../../src/mocks/msw-server';
 import { UserFactory, OffchainProposalFactory } from '../../src/fixtures';
 import { TelegramTestHelper, DatabaseTestHelper, TestCleanup } from '../../src/helpers';
 import { testConstants, timeouts } from '../../src/config';
 
 describe('New Offchain Proposal Trigger - Integration Test', () => {
   let apps: TestApps;
-  let httpMockSetup: HttpClientMockSetup;
+
   let telegramHelper: TelegramTestHelper;
   let dbHelper: DatabaseTestHelper;
 
@@ -15,7 +16,7 @@ describe('New Offchain Proposal Trigger - Integration Test', () => {
 
   beforeAll(async () => {
     apps = TestCleanup.getGlobalApps();
-    httpMockSetup = TestCleanup.getGlobalHttpMockSetup();
+
     telegramHelper = new TelegramTestHelper(global.mockTelegramSendMessage);
     dbHelper = new DatabaseTestHelper(db);
   });
@@ -40,14 +41,7 @@ describe('New Offchain Proposal Trigger - Integration Test', () => {
       title: 'Community Treasury Allocation',
     });
 
-    GraphQLMockSetup.setupMock(
-      httpMockSetup.getMockClient(),
-      [],
-      [],
-      {},
-      [],
-      [proposal],
-    );
+    server.use(offchainProposalsHandler({ items: [proposal], totalCount: 1 }));
 
     const message = await telegramHelper.waitForMessage(
       msg => msg.text.includes('New Snapshot proposal') && msg.text.includes(proposal.title),
@@ -79,14 +73,7 @@ describe('New Offchain Proposal Trigger - Integration Test', () => {
       discussion: discussionUrl,
     });
 
-    GraphQLMockSetup.setupMock(
-      httpMockSetup.getMockClient(),
-      [],
-      [],
-      {},
-      [],
-      [proposal],
-    );
+    server.use(offchainProposalsHandler({ items: [proposal], totalCount: 1 }));
 
     const message = await telegramHelper.waitForMessage(
       msg => msg.text.includes('Proposal With Discussion'),
@@ -118,14 +105,7 @@ describe('New Offchain Proposal Trigger - Integration Test', () => {
       title: 'Proposal For Other DAO',
     });
 
-    GraphQLMockSetup.setupMock(
-      httpMockSetup.getMockClient(),
-      [],
-      [],
-      {},
-      [],
-      [proposal],
-    );
+    server.use(offchainProposalsHandler({ items: [proposal], totalCount: 1 }));
 
     const messagePromise = telegramHelper.waitForMessage(
       msg => msg.text.includes('Proposal For Other DAO'),
@@ -151,14 +131,7 @@ describe('New Offchain Proposal Trigger - Integration Test', () => {
       title: 'Duplicate Prevention Proposal',
     });
 
-    GraphQLMockSetup.setupMock(
-      httpMockSetup.getMockClient(),
-      [],
-      [],
-      {},
-      [],
-      [proposal],
-    );
+    server.use(offchainProposalsHandler({ items: [proposal], totalCount: 1 }));
 
     const firstMessage = await telegramHelper.waitForMessage(
       msg => msg.text.includes('Duplicate Prevention Proposal'),

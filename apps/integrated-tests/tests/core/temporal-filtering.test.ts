@@ -1,19 +1,20 @@
-import { describe, test, expect, beforeEach, jest } from '@jest/globals';
+import { describe, test, expect, beforeEach, beforeAll } from 'vitest';
+import { proposalsHandler } from '@anticapture/client/msw';
 import { db, TestApps } from '../../src/setup';
-import { HttpClientMockSetup, GraphQLMockSetup } from '../../src/mocks';
+import { server } from '../../src/mocks/msw-server';
 import { UserFactory, ProposalFactory } from '../../src/fixtures';
 import { TelegramTestHelper, DatabaseTestHelper, TestCleanup } from '../../src/helpers';
 import { testConstants, timeouts } from '../../src/config';
 
 describe('Temporal Filtering - Integration Test', () => {
   let apps: TestApps;
-  let httpMockSetup: HttpClientMockSetup;
+
   let telegramHelper: TelegramTestHelper;
   let dbHelper: DatabaseTestHelper;
 
   beforeAll(async () => {
     apps = TestCleanup.getGlobalApps();
-    httpMockSetup = TestCleanup.getGlobalHttpMockSetup();
+
     telegramHelper = new TelegramTestHelper(global.mockTelegramSendMessage);
     dbHelper = new DatabaseTestHelper(db);
   });
@@ -45,7 +46,7 @@ describe('Temporal Filtering - Integration Test', () => {
       subscriptionTime.toISOString()
     );
 
-    GraphQLMockSetup.setupMock(httpMockSetup.getMockClient(), [oldProposal]);
+    server.use(proposalsHandler({ items: [oldProposal], totalCount: 1 }));
     
     // Ensure no messages are sent for old proposals
     await telegramHelper.waitForNoMessages(timeouts.notification.processing);
@@ -74,7 +75,7 @@ describe('Temporal Filtering - Integration Test', () => {
       status: 'ACTIVE'
     });
 
-    GraphQLMockSetup.setupMock(httpMockSetup.getMockClient(), [newProposal]);
+    server.use(proposalsHandler({ items: [newProposal], totalCount: 1 }));
     
     // Wait for the notification to be sent
     const message = await telegramHelper.waitForUserMessage(testConstants.profiles.p7.chatId, {
@@ -116,7 +117,7 @@ describe('Temporal Filtering - Integration Test', () => {
     await UserFactory.updateUserPreference(testUser.user.id, testDaoId, true, new Date('2024-01-01T14:00:00Z').toISOString());
     
 
-    GraphQLMockSetup.setupMock(httpMockSetup.getMockClient(), [inactiveProposal]);
+    server.use(proposalsHandler({ items: [inactiveProposal], totalCount: 1 }));
     
     // Ensure no notification is sent for proposals created during inactive period
     await telegramHelper.waitForNoMessages(timeouts.notification.delivery, { fromUser: testConstants.profiles.p8.chatId });

@@ -1,19 +1,20 @@
-import { describe, test, expect, beforeEach, jest } from '@jest/globals';
+import { describe, test, expect, beforeEach, beforeAll } from 'vitest';
+import { proposalsHandler } from '@anticapture/client/msw';
 import { db, TestApps } from '../../src/setup';
-import { HttpClientMockSetup, GraphQLMockSetup } from '../../src/mocks';
+import { server } from '../../src/mocks/msw-server';
 import { UserFactory, ProposalFactory } from '../../src/fixtures';
 import { TelegramTestHelper, DatabaseTestHelper, TestCleanup } from '../../src/helpers';
 import { testConstants, timeouts } from '../../src/config';
 
 describe('Multi-DAO Notification Flow - Integration Test', () => {
   let apps: TestApps;
-  let httpMockSetup: HttpClientMockSetup;
+
   let telegramHelper: TelegramTestHelper;
   let dbHelper: DatabaseTestHelper;
 
   beforeAll(async () => {
     apps = TestCleanup.getGlobalApps();
-    httpMockSetup = TestCleanup.getGlobalHttpMockSetup();
+
     telegramHelper = new TelegramTestHelper(global.mockTelegramSendMessage);
     dbHelper = new DatabaseTestHelper(db);
   });
@@ -37,7 +38,7 @@ describe('Multi-DAO Notification Flow - Integration Test', () => {
     
     // Setup mock to return active proposals from both DAOs
     const proposals = ProposalFactory.createProposalsForMultipleDaos([testConstants.daoIds.uniswap, testConstants.daoIds.ens], 'multi-proposal');
-    GraphQLMockSetup.setupMock(httpMockSetup.getMockClient(), proposals);
+    server.use(proposalsHandler({ items: proposals, totalCount: proposals.length }));
     
     // Wait for all expected messages
     await telegramHelper.waitForMessageCount(4, { timeout: timeouts.notification.delivery });
@@ -78,7 +79,7 @@ describe('Multi-DAO Notification Flow - Integration Test', () => {
     
     // Setup multiple UNI proposals simultaneously
     const multipleUniProposals = ProposalFactory.createMultipleProposals(testConstants.daoIds.uniswap, 3, 'uni-multi');
-    GraphQLMockSetup.setupMock(httpMockSetup.getMockClient(), multipleUniProposals);
+    server.use(proposalsHandler({ items: multipleUniProposals, totalCount: multipleUniProposals.length }));
     
     // Wait for all 6 messages (3 proposals × 2 UNI followers)
     await telegramHelper.waitForMessageCount(6);

@@ -3,9 +3,10 @@
  * Tests that Snapshot proposal notifications are correctly delivered via Slack
  */
 
-import { describe, test, expect, beforeEach, beforeAll } from '@jest/globals';
+import { describe, test, expect, beforeEach, beforeAll } from 'vitest';
+import { offchainProposalsHandler } from '@anticapture/client/msw';
 import { db, TestApps } from '../../src/setup';
-import { HttpClientMockSetup, GraphQLMockSetup } from '../../src/mocks';
+import { server } from '../../src/mocks/msw-server';
 import { UserFactory, OffchainProposalFactory, WorkspaceFactory } from '../../src/fixtures';
 import { SlackTestHelper, DatabaseTestHelper, TestCleanup } from '../../src/helpers';
 import { SlackTestClient } from '../../src/test-clients/slack-test.client';
@@ -13,7 +14,7 @@ import { testConstants, timeouts } from '../../src/config';
 
 describe('Slack New Offchain Proposal - Integration Test', () => {
   let apps: TestApps;
-  let httpMockSetup: HttpClientMockSetup;
+
   let slackHelper: SlackTestHelper;
   let slackClient: SlackTestClient;
   let dbHelper: DatabaseTestHelper;
@@ -22,7 +23,7 @@ describe('Slack New Offchain Proposal - Integration Test', () => {
 
   beforeAll(async () => {
     apps = TestCleanup.getGlobalApps();
-    httpMockSetup = TestCleanup.getGlobalHttpMockSetup();
+
 
     slackClient = new SlackTestClient(global.mockSlackSendMessage);
     slackHelper = new SlackTestHelper(global.mockSlackSendMessage, slackClient);
@@ -52,14 +53,7 @@ describe('Slack New Offchain Proposal - Integration Test', () => {
       title: 'Slack Snapshot Proposal',
     });
 
-    GraphQLMockSetup.setupMock(
-      httpMockSetup.getMockClient(),
-      [],
-      [],
-      {},
-      [],
-      [proposal],
-    );
+    server.use(offchainProposalsHandler({ items: [proposal], totalCount: 1 }));
 
     const message = await slackHelper.waitForMessage(
       msg =>
@@ -115,14 +109,7 @@ describe('Slack New Offchain Proposal - Integration Test', () => {
       title: 'Multi-User Offchain Proposal',
     });
 
-    GraphQLMockSetup.setupMock(
-      httpMockSetup.getMockClient(),
-      [],
-      [],
-      {},
-      [],
-      [proposal],
-    );
+    server.use(offchainProposalsHandler({ items: [proposal], totalCount: 1 }));
 
     const messages = await slackHelper.waitForMessageCount(2, {
       timeout: timeouts.notification.delivery,

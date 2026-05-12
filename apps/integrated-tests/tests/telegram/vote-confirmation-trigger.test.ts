@@ -1,19 +1,20 @@
-import { describe, test, expect, beforeEach, jest, beforeAll } from '@jest/globals';
+import { describe, test, expect, beforeEach, beforeAll } from 'vitest';
+import { votesHandler } from '@anticapture/client/msw';
 import { db, TestApps } from '../../src/setup';
-import { HttpClientMockSetup, GraphQLMockSetup } from '../../src/mocks';
+import { server } from '../../src/mocks/msw-server';
 import { UserFactory, VoteFactory } from '../../src/fixtures';
 import { TelegramTestHelper, DatabaseTestHelper, TestCleanup } from '../../src/helpers';
 import { testConstants, timeouts } from '../../src/config';
 
 describe('Vote Confirmation Trigger - Integration Test', () => {
   let apps: TestApps;
-  let httpMockSetup: HttpClientMockSetup;
+
   let telegramHelper: TelegramTestHelper;
   let dbHelper: DatabaseTestHelper;
 
   beforeAll(async () => {
     apps = TestCleanup.getGlobalApps();
-    httpMockSetup = TestCleanup.getGlobalHttpMockSetup();
+
     telegramHelper = new TelegramTestHelper(global.mockTelegramSendMessage);
     dbHelper = new DatabaseTestHelper(db);
   });
@@ -60,14 +61,7 @@ describe('Vote Confirmation Trigger - Integration Test', () => {
       }
     ];
 
-    // Setup GraphQL mock
-    GraphQLMockSetup.setupMock(
-      httpMockSetup.getMockClient(),
-      [], // No proposals needed
-      [], // No voting power events
-      { [testDaoId]: 1 }, // Map daoId to chainId
-      voteEvents // Add votes to mock
-    );
+    server.use(votesHandler({ items: voteEvents, totalCount: voteEvents.length }));
 
     // Wait for notification
     const message = await telegramHelper.waitForMessage(
@@ -118,14 +112,8 @@ describe('Vote Confirmation Trigger - Integration Test', () => {
       }
     ];
     
-    GraphQLMockSetup.setupMock(
-      httpMockSetup.getMockClient(),
-      [],
-      [],
-      { [testDaoId]: 1 },
-      voteEvents
-    );
-    
+    server.use(votesHandler({ items: voteEvents, totalCount: voteEvents.length }));
+
     const message = await telegramHelper.waitForMessage(
       msg => msg.text.includes('just voted on'),
       { timeout: timeouts.notification.delivery }
@@ -173,14 +161,8 @@ describe('Vote Confirmation Trigger - Integration Test', () => {
       }
     ];
     
-    GraphQLMockSetup.setupMock(
-      httpMockSetup.getMockClient(),
-      [],
-      [],
-      { [testDaoId]: 1 },
-      voteEvents
-    );
-    
+    server.use(votesHandler({ items: voteEvents, totalCount: voteEvents.length }));
+
     const message = await telegramHelper.waitForMessage(
       msg => msg.text.includes('just voted on'),
       { timeout: timeouts.notification.delivery }
@@ -227,14 +209,8 @@ describe('Vote Confirmation Trigger - Integration Test', () => {
       }
     ];
     
-    GraphQLMockSetup.setupMock(
-      httpMockSetup.getMockClient(),
-      [],
-      [],
-      { [testDaoId]: 1 },
-      voteEvents
-    );
-    
+    server.use(votesHandler({ items: voteEvents, totalCount: voteEvents.length }));
+
     // Wait for first notification
     const firstMessage = await telegramHelper.waitForMessage(
       msg => msg.text.includes('just voted on'),
@@ -312,14 +288,8 @@ describe('Vote Confirmation Trigger - Integration Test', () => {
       }
     ];
     
-    GraphQLMockSetup.setupMock(
-      httpMockSetup.getMockClient(),
-      [],
-      [],
-      { [testDaoId]: 1 },
-      voteEvents
-    );
-    
+    server.use(votesHandler({ items: voteEvents, totalCount: voteEvents.length }));
+
     // Wait for all three notifications
     const messages = await Promise.all([
       telegramHelper.waitForMessage(
@@ -374,14 +344,8 @@ describe('Vote Confirmation Trigger - Integration Test', () => {
       }
     ];
     
-    GraphQLMockSetup.setupMock(
-      httpMockSetup.getMockClient(),
-      [],
-      [],
-      { [testDaoId]: 1 },
-      voteEvents
-    );
-    
+    server.use(votesHandler({ items: voteEvents, totalCount: voteEvents.length }));
+
     // Verify no notification is sent
     const messagePromise = telegramHelper.waitForMessage(
       msg => msg.text.includes('just voted on'),
