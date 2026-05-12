@@ -1,9 +1,8 @@
-import { describe, it, expect } from '@jest/globals';
+import { describe, it, expect } from 'vitest';
 import { VoteConfirmationTriggerHandler } from './vote-confirmation-trigger.service';
-import { NotificationClientFactory } from '../notification/notification-factory.service';
-import { AnticaptureClient } from '@notification-system/anticapture-client';
 import { NotificationPayload } from '../../interfaces/notification-client.interface';
 import { NotificationTypeId } from '@notification-system/messages';
+import { makeAnticaptureClient, makeDao } from './helpers/test-doubles';
 
 function createHandler() {
   const sentNotifications: NotificationPayload[] = [];
@@ -26,12 +25,13 @@ function createHandler() {
       getFollowedAddresses: async () => []
     },
     {
+      addClient: () => {},
       getClient: () => ({ sendNotification: async (n: NotificationPayload) => { sentNotifications.push(n); } }),
       supportsChannel: () => true
-    } as unknown as NotificationClientFactory,
-    {
-      getDAOs: async () => [{ id: 'test-dao', chainId: 1, blockTime: 12, votingDelay: '0', supportOffchainData: false }]
-    } as AnticaptureClient
+    },
+    makeAnticaptureClient({
+      getDAOs: async () => [makeDao({ votingDelay: '0' })],
+    })
   );
 
   return { handler, sentNotifications };

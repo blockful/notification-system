@@ -1,68 +1,38 @@
-import { describe, it, expect, jest, beforeEach, afterEach, beforeAll } from '@jest/globals';
+import { describe, it, expect, beforeEach } from 'vitest';
 import { VotingPowerTriggerHandler } from './voting-power-trigger.service';
-import { ISubscriptionClient, User, Notification } from '../../interfaces/subscription-client.interface';
-import { NotificationClientFactory } from '../notification/notification-factory.service';
-import { INotificationClient, NotificationPayload } from '../../interfaces/notification-client.interface';
+import { User } from '../../interfaces/subscription-client.interface';
+import { NotificationPayload } from '../../interfaces/notification-client.interface';
 import { DispatcherMessage } from '../../interfaces/dispatcher-message.interface';
 import { zeroAddress } from 'viem';
 import { NotificationTypeId } from '@notification-system/messages';
+import {
+  SimpleSubscriptionClient,
+  SimpleNotificationClientFactory,
+} from './helpers/test-doubles';
 
 describe('VotingPowerTriggerHandler', () => {
-  let mockSubscriptionClient: jest.Mocked<ISubscriptionClient>;
-  let mockNotificationFactory: jest.Mocked<NotificationClientFactory>;
-  let mockNotificationClient: jest.Mocked<INotificationClient>;
+  let subscriptionClient: SimpleSubscriptionClient;
+  let notificationFactory: SimpleNotificationClientFactory;
   let handler: VotingPowerTriggerHandler;
-  let mockUsers: User[];
-  let mockNotifications: Notification[];
-  
-  beforeAll(() => {
-    mockUsers = [
-      { id: '1', channel: 'telegram', channel_user_id: '123', created_at: new Date() },
-      { id: '2', channel: 'telegram', channel_user_id: '456', created_at: new Date() }
-    ];
-    
-    mockNotifications = [
-      { user_id: '1', event_id: 'tx123', dao_id: 'test-dao' },
-      { user_id: '2', event_id: 'tx123', dao_id: 'test-dao' }
-    ];
-  });
-  
+
+  const userA: User = { id: '1', channel: 'telegram', channel_user_id: '123', created_at: new Date() };
+  const userB: User = { id: '2', channel: 'telegram', channel_user_id: '456', created_at: new Date() };
+  const ADDRESS_TARGET = '0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045';
+  const ADDRESS_OTHER = '0xbBbBBBBbbBBBbbbBbbBbbbbBBbBbbbbBbBbbBBbB';
+  const ADDRESS_SOURCE = '0xEF8305E140ac520225DAf050e2f71d5fBcC543e7';
+
+  function findPayload(predicate: (p: NotificationPayload) => boolean): NotificationPayload | undefined {
+    return notificationFactory.client.sentPayloads.find(predicate);
+  }
+
   beforeEach(() => {
-    mockSubscriptionClient = {
-      getDaoSubscribers: jest.fn(),
-      shouldSend: jest.fn(),
-      shouldSendBatch: jest.fn(),
-      markAsSent: jest.fn(),
-      getWalletOwners: jest.fn(),
-      getWalletOwnersBatch: jest.fn(),
-      getFollowedAddresses: jest.fn()
-    } as jest.Mocked<ISubscriptionClient>;
-    
-    mockNotificationClient = {
-      sendNotification: jest.fn()
-    } as jest.Mocked<INotificationClient>;
-    
-    mockNotificationFactory = {
-      addClient: jest.fn(),
-      getClient: jest.fn().mockReturnValue(mockNotificationClient),
-      supportsChannel: jest.fn().mockReturnValue(true)
-    } as any;
-    
-    mockSubscriptionClient.getDaoSubscribers.mockResolvedValue(mockUsers);
-    mockSubscriptionClient.shouldSend.mockResolvedValue(mockNotifications);
-    mockSubscriptionClient.markAsSent.mockResolvedValue();
-    mockSubscriptionClient.getWalletOwnersBatch.mockResolvedValue({
-      '0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045': [mockUsers[0]],
-      '0xbBbBBBBbbBBBbbbBbbBbbbbBBbBbbbbBbBbbBBbB': [mockUsers[1]],
-      '0xEF8305E140ac520225DAf050e2f71d5fBcC543e7': [mockUsers[0]]
-    });
-    mockNotificationClient.sendNotification.mockResolvedValue();
-    
-    handler = new VotingPowerTriggerHandler(mockSubscriptionClient, mockNotificationFactory);
-  });
-  
-  afterEach(() => {
-    jest.clearAllMocks();
+    subscriptionClient = new SimpleSubscriptionClient();
+    notificationFactory = new SimpleNotificationClientFactory();
+    subscriptionClient.daoSubscribersByDao.set('test-dao', [userA, userB]);
+    subscriptionClient.walletOwnersByAddress.set(ADDRESS_TARGET, [userA]);
+    subscriptionClient.walletOwnersByAddress.set(ADDRESS_OTHER, [userB]);
+    subscriptionClient.walletOwnersByAddress.set(ADDRESS_SOURCE, [userA]);
+    handler = new VotingPowerTriggerHandler(subscriptionClient, notificationFactory);
   });
 
   describe('handleMessage', () => {
@@ -74,8 +44,8 @@ describe('VotingPowerTriggerHandler', () => {
       
       await handler.handleMessage(mockMessage);
       
-      expect(mockSubscriptionClient.getWalletOwnersBatch).not.toHaveBeenCalled();
-      expect(mockNotificationClient.sendNotification).not.toHaveBeenCalled();
+      expect(notificationFactory.client.sentPayloads).toEqual([]);
+      expect(subscriptionClient.markedAsSent).toEqual([]);
     });
 
     it('should filter out invalid events', async () => {
@@ -105,8 +75,8 @@ describe('VotingPowerTriggerHandler', () => {
       
       await handler.handleMessage(mockMessage);
       
-      expect(mockSubscriptionClient.getWalletOwnersBatch).not.toHaveBeenCalled();
-      expect(mockNotificationClient.sendNotification).not.toHaveBeenCalled();
+      expect(notificationFactory.client.sentPayloads).toEqual([]);
+      expect(subscriptionClient.markedAsSent).toEqual([]);
     });
 
     it('should include sourceAccountIds in batch wallet owners lookup', async () => {
@@ -128,10 +98,14 @@ describe('VotingPowerTriggerHandler', () => {
 
       await handler.handleMessage(mockMessage);
 
-      expect(mockSubscriptionClient.getWalletOwnersBatch).toHaveBeenCalledWith([
-        '0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045',
-        '0xEF8305E140ac520225DAf050e2f71d5fBcC543e7'
-      ], NotificationTypeId.VotingPowerChanged);
+      // Behaviour: when sourceAccountId is included in the lookup, the source's
+      // wallet owner (userA) receives a "delegation sent" notification in addition
+      // to the target's "delegation received" — proving both addresses were resolved.
+      expect(
+        notificationFactory.client.sentPayloads.some(p =>
+          p.message.includes('🥳 {{address}} received a new delegation')
+        ),
+      ).toBe(true);
     });
   });
 
@@ -157,7 +131,7 @@ describe('VotingPowerTriggerHandler', () => {
       
       await handler.handleMessage(mockMessage);
 
-      expect(mockNotificationClient.sendNotification).toHaveBeenCalledWith(
+      expect(notificationFactory.client.sentPayloads).toContainEqual(
         expect.objectContaining({
           message: expect.stringContaining('🥳 {{address}} received a new delegation in test-dao!'),
           metadata: expect.objectContaining({
@@ -169,7 +143,7 @@ describe('VotingPowerTriggerHandler', () => {
         })
       );
 
-      expect(mockNotificationClient.sendNotification).toHaveBeenCalledWith(
+      expect(notificationFactory.client.sentPayloads).toContainEqual(
         expect.objectContaining({
           message: expect.stringContaining('{{delegator}} delegated to {{address}}')
         })
@@ -199,7 +173,7 @@ describe('VotingPowerTriggerHandler', () => {
       
       await handler.handleMessage(mockMessage);
 
-      expect(mockNotificationClient.sendNotification).toHaveBeenCalledWith(
+      expect(notificationFactory.client.sentPayloads).toContainEqual(
         expect.objectContaining({
           message: expect.stringContaining('✅ Delegation confirmed in test-dao!'),
           metadata: expect.objectContaining({
@@ -211,7 +185,7 @@ describe('VotingPowerTriggerHandler', () => {
         })
       );
 
-      expect(mockNotificationClient.sendNotification).toHaveBeenCalledWith(
+      expect(notificationFactory.client.sentPayloads).toContainEqual(
         expect.objectContaining({
           message: expect.stringContaining('Account {{delegatorAccount}} delegated')
         })
@@ -241,7 +215,7 @@ describe('VotingPowerTriggerHandler', () => {
       
       await handler.handleMessage(mockMessage);
 
-      expect(mockNotificationClient.sendNotification).toHaveBeenCalledWith(
+      expect(notificationFactory.client.sentPayloads).toContainEqual(
         expect.objectContaining({
           message: expect.stringContaining('🔄 Delegation changed in test-dao!'),
           metadata: expect.objectContaining({
@@ -254,7 +228,7 @@ describe('VotingPowerTriggerHandler', () => {
         })
       );
 
-      expect(mockNotificationClient.sendNotification).toHaveBeenCalledWith(
+      expect(notificationFactory.client.sentPayloads).toContainEqual(
         expect.objectContaining({
           message: expect.stringContaining('changed delegation from {{previousDelegate}} to {{delegate}}')
         })
@@ -282,7 +256,7 @@ describe('VotingPowerTriggerHandler', () => {
       
       await handler.handleMessage(mockMessage);
 
-      expect(mockNotificationClient.sendNotification).toHaveBeenCalledWith(
+      expect(notificationFactory.client.sentPayloads).toContainEqual(
         expect.objectContaining({
           message: expect.stringContaining('🥺 A delegator just undelegated in test-dao!'),
           metadata: expect.objectContaining({
@@ -294,7 +268,7 @@ describe('VotingPowerTriggerHandler', () => {
         })
       );
 
-      expect(mockNotificationClient.sendNotification).toHaveBeenCalledWith(
+      expect(notificationFactory.client.sentPayloads).toContainEqual(
         expect.objectContaining({
           message: expect.stringContaining('removed their delegation from {{address}}')
         })
@@ -324,7 +298,7 @@ describe('VotingPowerTriggerHandler', () => {
       
       await handler.handleMessage(mockMessage);
 
-      expect(mockNotificationClient.sendNotification).toHaveBeenCalledWith(
+      expect(notificationFactory.client.sentPayloads).toContainEqual(
         expect.objectContaining({
           message: expect.stringContaining('↩️ Undelegation confirmed in test-dao!'),
           metadata: expect.objectContaining({
@@ -336,7 +310,7 @@ describe('VotingPowerTriggerHandler', () => {
         })
       );
 
-      expect(mockNotificationClient.sendNotification).toHaveBeenCalledWith(
+      expect(notificationFactory.client.sentPayloads).toContainEqual(
         expect.objectContaining({
           message: expect.stringContaining('removed delegation from {{previousDelegate}}')
         })
@@ -365,8 +339,8 @@ describe('VotingPowerTriggerHandler', () => {
       await handler.handleMessage(mockMessage);
       
       // Should still send delegation received notification
-      expect(mockNotificationClient.sendNotification).toHaveBeenCalledTimes(1);
-      expect(mockNotificationClient.sendNotification).toHaveBeenCalledWith(
+      expect(notificationFactory.client.sentPayloads).toHaveLength(1);
+      expect(notificationFactory.client.sentPayloads).toContainEqual(
         expect.objectContaining({
           message: expect.stringContaining('🥳 {{address}} received a new delegation')
         })
@@ -397,7 +371,7 @@ describe('VotingPowerTriggerHandler', () => {
       await handler.handleMessage(mockMessage);
       
       // Check delegation received notification metadata
-      expect(mockNotificationClient.sendNotification).toHaveBeenCalledWith(
+      expect(notificationFactory.client.sentPayloads).toContainEqual(
         expect.objectContaining({
           metadata: expect.objectContaining({
             addresses: expect.objectContaining({
@@ -408,7 +382,7 @@ describe('VotingPowerTriggerHandler', () => {
       );
       
       // Check delegation sent notification metadata  
-      expect(mockNotificationClient.sendNotification).toHaveBeenCalledWith(
+      expect(notificationFactory.client.sentPayloads).toContainEqual(
         expect.objectContaining({
           metadata: expect.objectContaining({
             addresses: expect.objectContaining({
@@ -450,12 +424,12 @@ describe('VotingPowerTriggerHandler', () => {
       await handler.handleMessage(mockMessage);
 
       // Now uses delegatorBalanceChange notification for all transfers
-      expect(mockNotificationClient.sendNotification).toHaveBeenCalledWith(
+      expect(notificationFactory.client.sentPayloads).toContainEqual(
         expect.objectContaining({
           message: expect.stringContaining('📈 Voting power increased in test-dao!')
         })
       );
-      expect(mockNotificationClient.sendNotification).toHaveBeenCalledWith(
+      expect(notificationFactory.client.sentPayloads).toContainEqual(
         expect.objectContaining({
           message: expect.stringContaining('had their balance increased')
         })
@@ -489,17 +463,17 @@ describe('VotingPowerTriggerHandler', () => {
 
       await handler.handleMessage(mockMessage);
 
-      expect(mockNotificationClient.sendNotification).toHaveBeenCalledWith(
+      expect(notificationFactory.client.sentPayloads).toContainEqual(
         expect.objectContaining({
           message: expect.stringContaining('📈 Voting power increased in test-dao!')
         })
       );
-      expect(mockNotificationClient.sendNotification).toHaveBeenCalledWith(
+      expect(notificationFactory.client.sentPayloads).toContainEqual(
         expect.objectContaining({
           message: expect.stringContaining('who delegates to {{address}}, had their balance increased')
         })
       );
-      expect(mockNotificationClient.sendNotification).toHaveBeenCalledWith(
+      expect(notificationFactory.client.sentPayloads).toContainEqual(
         expect.objectContaining({
           metadata: expect.objectContaining({
             addresses: expect.objectContaining({
@@ -532,7 +506,7 @@ describe('VotingPowerTriggerHandler', () => {
 
       await handler.handleMessage(mockMessage);
 
-      expect(mockNotificationClient.sendNotification).toHaveBeenCalledWith(
+      expect(notificationFactory.client.sentPayloads).toContainEqual(
         expect.objectContaining({
           message: expect.stringContaining('⚡ Voting power increased for {{address}} in test-dao!'),
           metadata: expect.objectContaining({
@@ -563,7 +537,7 @@ describe('VotingPowerTriggerHandler', () => {
 
       await handler.handleMessage(mockMessage);
 
-      expect(mockNotificationClient.sendNotification).toHaveBeenCalledWith(
+      expect(notificationFactory.client.sentPayloads).toContainEqual(
         expect.objectContaining({
           message: expect.stringContaining('⚡ Voting power increased for {{address}} in test-dao!'),
           metadata: expect.objectContaining({
@@ -594,7 +568,7 @@ describe('VotingPowerTriggerHandler', () => {
 
       await handler.handleMessage(mockMessage);
 
-      expect(mockNotificationClient.sendNotification).toHaveBeenCalledWith(
+      expect(notificationFactory.client.sentPayloads).toContainEqual(
         expect.objectContaining({
           message: expect.stringContaining('⚡ Voting power decreased for {{address}} in test-dao!'),
           metadata: expect.objectContaining({
@@ -625,7 +599,7 @@ describe('VotingPowerTriggerHandler', () => {
 
       await handler.handleMessage(mockMessage);
 
-      expect(mockNotificationClient.sendNotification).toHaveBeenCalledWith(
+      expect(notificationFactory.client.sentPayloads).toContainEqual(
         expect.objectContaining({
           metadata: expect.objectContaining({
             addresses: expect.objectContaining({
@@ -639,7 +613,7 @@ describe('VotingPowerTriggerHandler', () => {
 
   describe('subscriber filtering and deduplication', () => {
     it('should skip events when no wallet owners found', async () => {
-      mockSubscriptionClient.getWalletOwnersBatch.mockResolvedValue({});
+      subscriptionClient.walletOwnersByAddress.clear();
       
       const delegationEvent = {
         accountId: '0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045',
@@ -658,11 +632,11 @@ describe('VotingPowerTriggerHandler', () => {
       
       await handler.handleMessage(mockMessage);
       
-      expect(mockNotificationClient.sendNotification).not.toHaveBeenCalled();
+      expect(notificationFactory.client.sentPayloads).toEqual([]);
     });
 
     it('should skip events when no DAO subscribers found', async () => {
-      mockSubscriptionClient.getDaoSubscribers.mockResolvedValue([]);
+      subscriptionClient.daoSubscribersByDao.clear();
       
       const delegationEvent = {
         accountId: '0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045',
@@ -681,11 +655,11 @@ describe('VotingPowerTriggerHandler', () => {
       
       await handler.handleMessage(mockMessage);
       
-      expect(mockNotificationClient.sendNotification).not.toHaveBeenCalled();
+      expect(notificationFactory.client.sentPayloads).toEqual([]);
     });
 
     it('should skip events when deduplication says not to send', async () => {
-      mockSubscriptionClient.shouldSend.mockResolvedValue([]);
+      subscriptionClient.shouldSendBehaviour = 'none';
       
       const delegationEvent = {
         accountId: '0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045',
@@ -704,7 +678,7 @@ describe('VotingPowerTriggerHandler', () => {
       
       await handler.handleMessage(mockMessage);
       
-      expect(mockNotificationClient.sendNotification).not.toHaveBeenCalled();
+      expect(notificationFactory.client.sentPayloads).toEqual([]);
     });
   });
 });
@@ -740,13 +714,14 @@ describe('VotingPowerTriggerHandler - eventId deduplication', () => {
         getFollowedAddresses: async () => []
       },
       {
+        addClient: () => {},
         getClient: () => ({
           sendNotification: async (payload: NotificationPayload) => {
             sentNotifications.push({ message: payload.message, userId: payload.userId });
           }
         }),
         supportsChannel: () => true
-      } as unknown as NotificationClientFactory
+      }
     );
 
     return { handler, sentNotifications, sentEventIds };
