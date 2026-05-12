@@ -33,7 +33,7 @@ export class App {
   private votingReminderTrigger30!: VotingReminderTrigger;
   private votingReminderTrigger60!: VotingReminderTrigger;
   private votingReminderTrigger90!: VotingReminderTrigger;
-  private offchainVotingReminderTrigger75!: VotingReminderTrigger;
+  private offchainVotingReminderTrigger50!: VotingReminderTrigger;
   private proposalStatus: QueryInput_Proposals_Status_Items;
   private rabbitMQConnection!: RabbitMQConnection;
   private rabbitMQPublisher!: RabbitMQPublisher;
@@ -149,13 +149,13 @@ export class App {
       90, // 90% threshold
     );
 
-    this.offchainVotingReminderTrigger75 = new VotingReminderTrigger(
+    this.offchainVotingReminderTrigger50 = new VotingReminderTrigger(
       dispatcherService,
       offchainProposalRepository,
       triggerInterval,
-      75, // 75% threshold
+      50, // 50% threshold
       5,  // default window size
-      'offchain-voting-reminder' // prefix → produces ID 'offchain-voting-reminder-75'
+      'offchain-voting-reminder' // prefix → produces ID 'offchain-voting-reminder-50'
     );
   }
 
@@ -174,7 +174,7 @@ export class App {
     this.votingReminderTrigger30.start();
     this.votingReminderTrigger60.start();
     this.votingReminderTrigger90.start();
-    this.offchainVotingReminderTrigger75.start();
+    this.offchainVotingReminderTrigger50.start();
     
     logger.info('logic-system running');
   }
@@ -219,9 +219,9 @@ export class App {
       this.votingReminderTrigger90.stop();
       this.votingReminderTrigger90.start();
     }
-    if (this.offchainVotingReminderTrigger75) {
-      this.offchainVotingReminderTrigger75.stop();
-      this.offchainVotingReminderTrigger75.start();
+    if (this.offchainVotingReminderTrigger50) {
+      this.offchainVotingReminderTrigger50.stop();
+      this.offchainVotingReminderTrigger50.start();
     }
   }
 
@@ -240,7 +240,7 @@ export class App {
     await this.votingReminderTrigger30.stop();
     await this.votingReminderTrigger60.stop();
     await this.votingReminderTrigger90.stop();
-    await this.offchainVotingReminderTrigger75.stop();
+    await this.offchainVotingReminderTrigger50.stop();
     if (this.rabbitMQPublisher) {
       await this.rabbitMQPublisher.close();
     }

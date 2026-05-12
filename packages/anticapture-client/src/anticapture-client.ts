@@ -319,6 +319,7 @@ export class AnticaptureClient {
    */
   async getOffchainProposalNonVoters(
     proposalId: string,
+    daoId: string,
     addresses?: string[],
   ): Promise<{ voter: string; votingPower?: string }[]> {
     try {
@@ -332,6 +333,7 @@ export class AnticaptureClient {
         OffchainProposalNonVotersDocument,
         SafeOffchainProposalNonVotersResponseSchema,
         variables,
+        daoId,
       );
 
       return validated.offchainProposalNonVoters.items;

@@ -263,14 +263,14 @@ class AnticaptureClient {
      * @param addresses Optional array of addresses to filter by
      * @returns List of non-voters
      */
-    async getOffchainProposalNonVoters(proposalId, addresses) {
+    async getOffchainProposalNonVoters(proposalId, daoId, addresses) {
         try {
             const variables = {
                 id: proposalId,
                 ...(addresses && { addresses }),
                 orderDirection: graphql_2.OrderDirection.Desc,
             };
-            const validated = await this.query(graphql_2.OffchainProposalNonVotersDocument, schemas_1.SafeOffchainProposalNonVotersResponseSchema, variables);
+            const validated = await this.query(graphql_2.OffchainProposalNonVotersDocument, schemas_1.SafeOffchainProposalNonVotersResponseSchema, variables, daoId);
             return validated.offchainProposalNonVoters.items;
         }
         catch (error) {
