@@ -1,10 +1,7 @@
-import type { GetProposalByIdQuery, QueryInput_Proposals_Status_Items, OrderDirection } from '@notification-system/anticapture-client';
+import type { OnchainProposal, OnchainProposalStatusListEnumKey, OrderDirection } from '@notification-system/anticapture-client';
 
-type RawProposal = NonNullable<GetProposalByIdQuery['proposal']>;
-export type ProposalOnChain = Extract<RawProposal, { __typename?: 'OnchainProposal' }>;
+export type ProposalOnChain = OnchainProposal;
 export type ProposalOrNull = ProposalOnChain | null;
-
-export type { QueryInput_Proposals_Status_Items as ProposalStatus };
 
 /**
  * Options for listing proposals (matches new API parameters)
@@ -15,7 +12,7 @@ export interface ListProposalsOptions {
     /** Maximum number of proposals to return */
     limit?: number;
     /** Filter by proposal status */
-    status?: QueryInput_Proposals_Status_Items | QueryInput_Proposals_Status_Items[];
+    status?: OnchainProposalStatusListEnumKey | OnchainProposalStatusListEnumKey[];
     /** Filter by DAO (passed as header, not query param) */
     daoId?: string;
     /** Filter proposals after this date (timestamp in seconds) */

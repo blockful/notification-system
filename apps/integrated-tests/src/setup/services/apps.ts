@@ -24,7 +24,7 @@ import { SlackTestClient } from '../../test-clients/slack-test.client';
 import { mockTelegramSendMessage } from '../../mocks/telegram-mock-setup';
 import { mockSlackSendMessage } from '../../mocks/slack-mock-setup';
 import { MOCK_ANTICAPTURE_URL } from '../../mocks/msw-server';
-import { QueryInput_Proposals_Status_Items } from '@notification-system/anticapture-client';
+import { onchainProposalStatusListEnum } from '@notification-system/anticapture-client';
 import type { Mock } from 'vitest';
 
 /**
@@ -202,7 +202,7 @@ const startLogicSystem = async (
   const oneYearAgo = Math.floor((Date.now() - 365 * 24 * 60 * 60 * 1000) / 1000).toString();
   const logicSystemApp = new LogicSystemApp(
     TEST_CONFIG.logicSystem.interval,
-    QueryInput_Proposals_Status_Items.Active,
+    onchainProposalStatusListEnum.ACTIVE,
     MOCK_ANTICAPTURE_URL,
     rabbitmqUrl,
     oneYearAgo

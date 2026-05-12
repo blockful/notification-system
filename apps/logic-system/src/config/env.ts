@@ -1,6 +1,6 @@
 import dotenv from 'dotenv';
 import { z } from 'zod';
-import { QueryInput_Proposals_Status_Items } from '@notification-system/anticapture-client';
+import { onchainProposalStatusListEnum } from '@notification-system/anticapture-client';
 
 // Load environment variables
 dotenv.config();
@@ -11,7 +11,7 @@ const envSchema = z.object({
   BLOCKFUL_API_TOKEN: z.string().optional(),
   RABBITMQ_URL: z.string().url(),
   TRIGGER_INTERVAL: z.coerce.number().optional().default(60000),
-  PROPOSAL_STATUS: z.nativeEnum(QueryInput_Proposals_Status_Items),
+  PROPOSAL_STATUS: z.nativeEnum(onchainProposalStatusListEnum),
 });
 
 const _env = envSchema.safeParse(process.env);

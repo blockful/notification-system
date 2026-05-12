@@ -2,18 +2,18 @@ import { Trigger } from './base-trigger';
 import { DispatcherService, DispatcherMessage } from '../interfaces/dispatcher.interface';
 import { ProposalDataSource, ProposalOnChain, ProposalFinishedNotification } from '../interfaces/proposal.interface';
 import { NotificationTypeId } from '@notification-system/messages';
-import { OrderDirection, QueryInput_Proposals_Status_Items } from '@notification-system/anticapture-client';
+import { OnchainProposalStatusListEnumKey, onchainProposalStatusListEnum, orderDirectionEnum } from '@notification-system/anticapture-client';
 
 /**
  * Trigger for detecting finished proposals
  */
 export class ProposalFinishedTrigger extends Trigger<ProposalOnChain, void> {
-  private readonly finishedStatuses: QueryInput_Proposals_Status_Items[] = [
-    QueryInput_Proposals_Status_Items.Executed,
-    QueryInput_Proposals_Status_Items.Defeated,
-    QueryInput_Proposals_Status_Items.Succeeded,
-    QueryInput_Proposals_Status_Items.Expired,
-    QueryInput_Proposals_Status_Items.Canceled,
+  private readonly finishedStatuses: OnchainProposalStatusListEnumKey[] = [
+    onchainProposalStatusListEnum.EXECUTED,
+    onchainProposalStatusListEnum.DEFEATED,
+    onchainProposalStatusListEnum.SUCCEEDED,
+    onchainProposalStatusListEnum.EXPIRED,
+    onchainProposalStatusListEnum.CANCELED,
   ];
   protected endTimestampCursor: number;
 
@@ -50,7 +50,7 @@ export class ProposalFinishedTrigger extends Trigger<ProposalOnChain, void> {
     return await this.proposalRepository.listAll({
       status: this.finishedStatuses,
       fromEndDate: this.endTimestampCursor,
-      orderDirection: OrderDirection.Desc,
+      orderDirection: orderDirectionEnum.desc,
       limit: 100
     });
   }

@@ -1,6 +1,6 @@
 import { ProposalDataSource, ProposalOnChain, ProposalOrNull, ListProposalsOptions } from '../interfaces/proposal.interface';
 import { VotingReminderDataSource, VotingReminderProposal } from '../interfaces/voting-reminder.interface';
-import { AnticaptureClient, ListProposalsQueryVariables, OrderDirection, QueryInput_Proposals_Status_Items } from '@notification-system/anticapture-client';
+import { AnticaptureClient, ProposalsQueryParams, onchainProposalStatusListEnum } from '@notification-system/anticapture-client';
 import { mapOnchainToReminderProposal } from '../mappers/proposal-reminder.mapper';
 
 export class ProposalRepository implements ProposalDataSource, VotingReminderDataSource {
@@ -12,12 +12,12 @@ export class ProposalRepository implements ProposalDataSource, VotingReminderDat
 
   async getById(id: string): Promise<ProposalOrNull> {
     const result = await this.anticaptureClient.getProposalById(id);
-    if (!result || result.__typename !== 'OnchainProposal') return null;
+    if (!result) return null;
     return result as ProposalOnChain;
   }
 
   async listAll(options?: ListProposalsOptions, limit: number = 100): Promise<ProposalOnChain[]> {
-    const variables: ListProposalsQueryVariables = {};
+    const variables: ProposalsQueryParams = {};
 
     // Status filtering
     if (options?.status) {
@@ -61,7 +61,7 @@ export class ProposalRepository implements ProposalDataSource, VotingReminderDat
 
   async listActiveForReminder(): Promise<VotingReminderProposal[]> {
     const proposals = await this.listAll({
-      status: QueryInput_Proposals_Status_Items.Active,
+      status: onchainProposalStatusListEnum.ACTIVE,
       includeOptimisticProposals: false,
     });
 

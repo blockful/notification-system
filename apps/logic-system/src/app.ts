@@ -13,7 +13,7 @@ import { ThresholdRepository } from './repositories/threshold.repository';
 import { VotesRepository } from './repositories/votes.repository';
 import { OffchainVotesRepository } from './repositories/offchain-votes.repository';
 import { RabbitMQDispatcherService } from './api-clients/rabbitmq-dispatcher.service';
-import { AnticaptureClient, QueryInput_Proposals_Status_Items } from '@notification-system/anticapture-client';
+import { AnticaptureClient, OnchainProposalStatusListEnumKey } from '@notification-system/anticapture-client';
 import { RabbitMQConnection, RabbitMQPublisher } from '@notification-system/rabbitmq-client';
 import { createLogger, wrapWithTracing } from '@anticapture/observability';
 
@@ -31,14 +31,14 @@ export class App {
   private votingReminderTrigger60!: VotingReminderTrigger;
   private votingReminderTrigger90!: VotingReminderTrigger;
   private offchainVotingReminderTrigger75!: VotingReminderTrigger;
-  private proposalStatus: QueryInput_Proposals_Status_Items;
+  private proposalStatus: OnchainProposalStatusListEnumKey;
   private rabbitMQConnection!: RabbitMQConnection;
   private rabbitMQPublisher!: RabbitMQPublisher;
   private initPromise: Promise<void>;
 
   constructor(
     triggerInterval: number,
-    proposalStatus: QueryInput_Proposals_Status_Items,
+    proposalStatus: OnchainProposalStatusListEnumKey,
     anticaptureBaseURL: string,
     rabbitmqUrl: string,
     initialTimestamp?: string,
