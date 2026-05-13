@@ -4,6 +4,60 @@ on:
   pull_request:
 
 jobs:
+  changeset-check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10.14.0
+      - name: Get pnpm store directory
+        shell: bash
+        run: |
+          echo "STORE_PATH=$(pnpm store path --silent)" >> $GITHUB_ENV
+      - name: Setup pnpm cache
+        uses: actions/cache@v4
+        with:
+          path: ${{ env.STORE_PATH }}
+          key: ${{ runner.os }}-pnpm-store-${{ hashFiles('**/pnpm-lock.yaml') }}
+          restore-keys: |
+            ${{ runner.os }}-pnpm-store-
+      - name: Check whether changeset is required
+        id: changeset-required
+        shell: bash
+        run: |
+          git fetch origin dev:refs/remotes/origin/dev
+          changed_files=$(git diff --name-only origin/dev...HEAD)
+
+          if [ -z "$changed_files" ]; then
+            echo "required=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          requires_changeset=false
+          while IFS= read -r file; do
+            case "$file" in
+              *.md|.github/*|.changeset/config.json)
+                ;;
+              *)
+                requires_changeset=true
+                ;;
+            esac
+          done <<< "$changed_files"
+
+          echo "required=$requires_changeset" >> "$GITHUB_OUTPUT"
+      - name: Install dependencies
+        if: steps.changeset-required.outputs.required == 'true'
+        run: pnpm install --frozen-lockfile
+      - name: Validate changeset
+        if: steps.changeset-required.outputs.required == 'true'
+        run: pnpm changeset status --since=origin/dev
+
   test:
     runs-on: ubuntu-latest
     strategy:
@@ -15,11 +69,11 @@ jobs:
           - consumer
           - subscription-server
     steps:
-      - uses: actions/checkout@v3
-      - uses: actions/setup-node@v3
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
         with:
           node-version: "20"
-      - uses: pnpm/action-setup@v2
+      - uses: pnpm/action-setup@v4
         with:
           version: 10.14.0
       - name: Get pnpm store directory
@@ -27,14 +81,14 @@ jobs:
         run: |
           echo "STORE_PATH=$(pnpm store path --silent)" >> $GITHUB_ENV
       - name: Setup pnpm cache
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         with:
           path: ${{ env.STORE_PATH }}
           key: ${{ runner.os }}-pnpm-store-${{ hashFiles('**/pnpm-lock.yaml') }}
           restore-keys: |
             ${{ runner.os }}-pnpm-store-
       - name: Install dependencies
-        run: pnpm install
+        run: pnpm install --frozen-lockfile
       - name: Build workspace packages
         run: pnpm build
       - name: Test ${{ matrix.package }}

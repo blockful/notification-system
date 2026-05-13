@@ -1,0 +1,20 @@
+name: Release Readiness
+
+on:
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  release-readiness:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Check for unconsumed changesets
+        shell: bash
+        run: |
+          unconsumed=$(find .changeset -maxdepth 1 -name '*.md' ! -name 'README.md' | wc -l | tr -d ' ')
+          if [ "$unconsumed" -gt 0 ]; then
+            echo "::error::Unconsumed changesets found. Merge the open Version Packages PR on dev first, then re-open this PR."
+            exit 1
+          fi

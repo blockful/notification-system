@@ -1,6 +1,7 @@
 {
   "name": "@notification-system/integrated-tests",
   "version": "1.0.0",
+  "private": true,
   "description": "Integration tests for the notification system",
   "main": "index.js",
   "scripts": {

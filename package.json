@@ -10,6 +10,7 @@
     "format": "prettier --write \"**/*.{ts,tsx,md}\"",
     "dev": "docker-compose up --build",
     "test": "turbo run test",
+    "changeset": "changeset",
     "consumer": "pnpm --filter @notification-system/consumer",
     "logic-system": "pnpm --filter @notification-system/logic-system",
     "subscription-server": "pnpm --filter @notification-system/subscription-server",
@@ -19,6 +20,8 @@
     "flow-editor": "pnpm --filter @notification-system/flow-editor"
   },
   "devDependencies": {
+    "@changesets/changelog-github": "^0.7.0",
+    "@changesets/cli": "^2.31.0",
     "@types/pg": "^8.15.5",
     "pg": "^8.16.3",
     "pino-pretty": "^13.1.3",

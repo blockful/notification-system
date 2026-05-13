@@ -1,6 +1,7 @@
 {
   "name": "@notification-system/dispatcher",
   "version": "1.0.0",
+  "private": true,
   "description": "Dispatcher service",
   "main": "dist/app.js",
   "types": "dist/app.d.ts",

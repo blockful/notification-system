@@ -1,0 +1,46 @@
+name: GraphQL Contract Updates
+
+on:
+  pull_request:
+    branches:
+      - dev
+
+jobs:
+  graphql-contract-updates:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Require consumer changesets for GraphQL contract updates
+        shell: bash
+        run: |
+          git fetch origin dev:refs/remotes/origin/dev
+
+          graphql_changed=$(git diff --name-only origin/dev...HEAD \
+            | grep -E '^packages/anticapture-client/(.*\.graphql$|codegen\.yaml$)' || true)
+
+          if [ -z "$graphql_changed" ]; then
+            echo "No GraphQL contract changes detected. Skipping."
+            exit 0
+          fi
+
+          required=(
+            "@notification-system/anticapture-client"
+            "@notification-system/dispatcher"
+            "@notification-system/logic-system"
+            "@notification-system/consumer"
+            "@notification-system/integrated-tests"
+          )
+
+          missing=()
+          for pkg in "${required[@]}"; do
+            if ! grep -lR --include='*.md' --exclude='README.md' -F "\"$pkg\"" .changeset >/dev/null 2>&1; then
+              missing+=("$pkg")
+            fi
+          done
+
+          if [ ${#missing[@]} -gt 0 ]; then
+            echo "::error::GraphQL contract changed in anticapture-client. Missing changesets for: ${missing[*]}"
+            exit 1
+          fi

@@ -1,6 +1,7 @@
 {
   "name": "@notification-system/messages",
   "version": "1.0.0",
+  "private": true,
   "description": "Shared message templates and UI text for the notification system",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",

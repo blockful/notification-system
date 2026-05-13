@@ -1,6 +1,7 @@
 {
   "name": "@notification-system/subscription-server",
   "version": "1.0.0",
+  "private": true,
   "main": "dist/app.js",
   "types": "dist/app.d.ts",
   "files": [
