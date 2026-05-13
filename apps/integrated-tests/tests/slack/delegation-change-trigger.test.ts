@@ -10,7 +10,7 @@ import { db, TestApps } from '../../src/setup';
 import { server } from '../../src/setup/msw-server';
 import { UserFactory, VotingPowerFactory, WorkspaceFactory } from '../../src/fixtures';
 import { SlackTestHelper, DatabaseTestHelper, TestCleanup } from '../../src/helpers';
-import { SlackTestClient } from '../../src/test-clients/slack-test.client';
+import { SimpleSlackClient } from '../../src/test-clients/simple-slack.client';
 import { testConstants, timeouts } from '../../src/config';
 import { env } from '../../src/config/env';
 
@@ -18,7 +18,7 @@ describe('Slack Delegation Change Notifications - Integration Test', () => {
   let apps: TestApps;
 
   let slackHelper: SlackTestHelper;
-  let slackClient: SlackTestClient;
+  let slackClient: SimpleSlackClient;
   let dbHelper: DatabaseTestHelper;
 
   // Test configuration
@@ -29,8 +29,8 @@ describe('Slack Delegation Change Notifications - Integration Test', () => {
 
 
     // Create Slack client and helper
-    slackClient = new SlackTestClient(global.mockSlackSendMessage);
-    slackHelper = new SlackTestHelper(global.mockSlackSendMessage, slackClient);
+    slackClient = global.slackClient;
+    slackHelper = new SlackTestHelper(global.slackClient);
 
     dbHelper = new DatabaseTestHelper(db);
   });

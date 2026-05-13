@@ -19,13 +19,10 @@ import { serviceConfig, timeouts } from '../../config';
 import { env } from '../../config/env';
 import { waitFor } from '../../helpers/utilities/wait-for';
 import type { IEnsResolver } from '@notification-system/consumer/dist/services/ens-resolver.service';
-import { TelegramTestClient } from '../../test-clients/telegram-test.client';
-import { SlackTestClient } from '../../test-clients/slack-test.client';
-import { mockTelegramSendMessage } from '../../mocks/telegram-mock-setup';
-import { mockSlackSendMessage } from '../../mocks/slack-mock-setup';
+import { SimpleTelegramClient } from '../../test-clients/simple-telegram.client';
+import { SimpleSlackClient } from '../../test-clients/simple-slack.client';
 import { MOCK_ANTICAPTURE_URL } from '../msw-server';
 import { onchainProposalStatusListEnum } from '@notification-system/anticapture-client';
-import type { Mock } from 'vitest';
 
 class SimpleEnsResolver implements IEnsResolver {
   private readonly ensNames: Record<string, string> = {
@@ -50,20 +47,13 @@ class SimpleEnsResolver implements IEnsResolver {
  * @dev Contains references to all running test services and their configurations
  */
 export type TestApps = {
-  /** Consumer application instance */
   consumerApp: ConsumerApp;
-  /** Logic system application instance */
   logicSystemApp: LogicSystemApp;
-  /** Dispatcher application instance */
   dispatcherApp: DispatcherApp;
-  /** Subscription server application instance */
   subscriptionServerApp: SubscriptionServerApp;
-  /** RabbitMQ test setup instance */
   rabbitmqSetup: RabbitMQTestSetup;
-  /** Mock sendMessage function for Telegram testing */
-  mockTelegramSendMessage?: Mock;
-  /** Mock sendMessage function for Slack testing */
-  mockSlackSendMessage?: Mock;
+  telegramClient: SimpleTelegramClient;
+  slackClient: SimpleSlackClient;
 };
 
 /**
@@ -101,37 +91,15 @@ const setupRabbitMQ = async (): Promise<{ rabbitmqSetup: RabbitMQTestSetup; rabb
   return { rabbitmqSetup, rabbitmqUrl };
 };
 
-/**
- * @notice Creates and configures Telegram client for testing
- * @dev Returns TestTelegramClient configured for either real or mock mode
- * @return Object containing telegram client and mock send message function
- */
-const createTelegramClient = () => {
-  const mockSendMessage = mockTelegramSendMessage;
-  let telegramClient;
-  
-  if (env.SEND_REAL_TELEGRAM) {
-    // Use TelegramTestClient with real bot token
-    const botToken = env.TELEGRAM_BOT_TOKEN || TEST_CONFIG.telegram.botToken;
-    telegramClient = new TelegramTestClient(mockSendMessage, botToken);
-  } else {
-    // Use TelegramTestClient in mock-only mode
-    telegramClient = new TelegramTestClient(mockSendMessage);
-  }
-  return { telegramClient, mockTelegramSendMessage: mockSendMessage };
+const createTelegramClient = (): SimpleTelegramClient => {
+  const botToken = env.SEND_REAL_TELEGRAM
+    ? (env.TELEGRAM_BOT_TOKEN || TEST_CONFIG.telegram.botToken)
+    : undefined;
+  return new SimpleTelegramClient(botToken);
 };
 
-/**
- * @notice Creates and configures Slack client for testing
- * @dev Returns SlackTestClient configured for either real or mock mode
- * @return Object containing slack client and mock send message function
- */
-const createSlackClient = () => {
-  const mockSendMessage = mockSlackSendMessage;
-  const botToken = env.SLACK_BOT_TOKEN;
-  const slackClient = new SlackTestClient(mockSendMessage, botToken);
-
-  return { slackClient, mockSlackSendMessage: mockSendMessage };
+const createSlackClient = (): SimpleSlackClient => {
+  return new SimpleSlackClient(env.SLACK_BOT_TOKEN);
 };
 
 /**
@@ -234,7 +202,7 @@ const startLogicSystem = async (
  * @dev Verifies that all applications have started successfully
  * @param apps Object containing all application instances
  */
-const waitForAppsReady = async (apps: Omit<TestApps, 'rabbitmqSetup' | 'mockSendMessage'>) => {
+const waitForAppsReady = async (apps: Omit<TestApps, 'rabbitmqSetup' | 'telegramClient' | 'slackClient'>) => {
   await waitFor(
     async () => {
       return apps.consumerApp && apps.logicSystemApp && apps.dispatcherApp && apps.subscriptionServerApp;
@@ -255,30 +223,30 @@ const waitForAppsReady = async (apps: Omit<TestApps, 'rabbitmqSetup' | 'mockSend
  * @return Promise resolving to TestApps object containing service references
  */
 export const startTestApps = async (db: Knex): Promise<TestApps> => {
-  // Setup infrastructure
   const { rabbitmqSetup, rabbitmqUrl } = await setupRabbitMQ();
-  const { telegramClient, mockTelegramSendMessage } = createTelegramClient();
-  const { slackClient, mockSlackSendMessage } = createSlackClient();
-  // Start all services
+  const telegramClient = createTelegramClient();
+  const slackClient = createSlackClient();
+
   const subscriptionServerApp = await startSubscriptionServer(db);
   const consumerApp = await startConsumer(rabbitmqUrl, telegramClient, slackClient);
   const dispatcherApp = await startDispatcher(rabbitmqUrl);
   const logicSystemApp = await startLogicSystem(rabbitmqUrl);
-  // Wait for all apps to be ready
+
   await waitForAppsReady({
     consumerApp,
     logicSystemApp,
     dispatcherApp,
     subscriptionServerApp
   });
+
   return {
     consumerApp,
     logicSystemApp,
     dispatcherApp,
     subscriptionServerApp,
     rabbitmqSetup,
-    mockTelegramSendMessage,
-    mockSlackSendMessage
+    telegramClient,
+    slackClient
   };
 };
 

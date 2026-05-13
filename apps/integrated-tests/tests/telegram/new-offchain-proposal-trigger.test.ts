@@ -17,7 +17,7 @@ describe('New Offchain Proposal Trigger - Integration Test', () => {
   beforeAll(async () => {
     apps = TestCleanup.getGlobalApps();
 
-    telegramHelper = new TelegramTestHelper(global.mockTelegramSendMessage);
+    telegramHelper = new TelegramTestHelper(global.telegramClient);
     dbHelper = new DatabaseTestHelper(db);
   });
 

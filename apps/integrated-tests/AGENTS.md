@@ -49,14 +49,13 @@ src/
 │   ├── database/                   # DatabaseTestHelper (waitForNotificationRecord), DatabaseCleanup
 │   ├── messaging/                  # TelegramTestHelper, SlackTestHelper, EventCollector
 │   └── utilities/                  # TestCleanup, waitFor (async polling)
-├── mocks/                          # Remaining Telegram/Slack vi.fn() mocks (being migrated to Simple* doubles)
 ├── setup/
 │   ├── database/                   # SQLite Knex config + migration runner
 │   ├── vitest/                     # Global setup/teardown + suite hooks
 │   ├── services/                   # App startup logic for all 4 services
 │   ├── msw-server.ts              # MSW setupServer + default kubb handlers + nonVotersResolver helper
 │   └── rabbitmq-setup.ts          # Singleton RabbitMQ container manager
-└── test-clients/                   # Telegram/Slack test client wrappers
+└── test-clients/                   # SimpleTelegramClient / SimpleSlackClient — implements consumer interfaces, records calls in-memory
 ```
 
 ## Typical Test Pattern

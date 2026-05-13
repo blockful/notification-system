@@ -1,26 +1,25 @@
 import { beforeAll, beforeEach, afterAll } from 'vitest';
 import * as fs from 'fs';
 import { server } from '../msw-server';
-import { mockTelegramSendMessage } from '../../mocks/telegram-mock-setup';
-import { mockSlackSendMessage } from '../../mocks/slack-mock-setup';
 import { setupDatabase, db, closeDatabase, startTestApps, stopTestApps, TestApps } from '..';
 import { RabbitMQTestSetup } from '../rabbitmq-setup';
 import { timeouts } from '../../config';
+import type { SimpleTelegramClient } from '../../test-clients/simple-telegram.client';
+import type { SimpleSlackClient } from '../../test-clients/simple-slack.client';
 
 declare global {
   // eslint-disable-next-line no-var
   var testApps: TestApps;
   // eslint-disable-next-line no-var
-  var mockTelegramSendMessage: any;
+  var telegramClient: SimpleTelegramClient;
   // eslint-disable-next-line no-var
-  var mockSlackSendMessage: any;
+  var slackClient: SimpleSlackClient;
 }
 
 beforeAll(async () => {
   // server.listen MUST run before app boot so the in-process apps' fetch
   // calls are intercepted from the very first request.
-  // TODO(spec-2026-05-07): tighten back to 'error' after Phase 1 migration completes
-  server.listen({ onUnhandledRequest: 'warn' });
+  server.listen({ onUnhandledRequest: 'error' });
 
   const tmpFiles = fs.readdirSync('/tmp').filter(f => f.startsWith('test_integration_'));
   for (const file of tmpFiles) {
@@ -41,8 +40,8 @@ beforeAll(async () => {
   await rabbitmqSetup.setup(rabbitmqUrl);
   apps.rabbitmqSetup = rabbitmqSetup;
 
-  global.mockTelegramSendMessage = apps.mockTelegramSendMessage || mockTelegramSendMessage;
-  global.mockSlackSendMessage = apps.mockSlackSendMessage || mockSlackSendMessage;
+  global.telegramClient = apps.telegramClient;
+  global.slackClient = apps.slackClient;
   global.testApps = apps;
 }, timeouts.test.short);
 

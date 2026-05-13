@@ -11,7 +11,7 @@ import { db, TestApps } from '../../src/setup';
 import { server, nonVotersResolver } from '../../src/setup/msw-server';
 import { UserFactory, ProposalFactory, VoteFactory, VoteData, WorkspaceFactory } from '../../src/fixtures';
 import { SlackTestHelper, DatabaseTestHelper, TestCleanup } from '../../src/helpers';
-import { SlackTestClient } from '../../src/test-clients/slack-test.client';
+import { SimpleSlackClient } from '../../src/test-clients/simple-slack.client';
 import { testConstants, timeouts } from '../../src/config';
 import { env } from '../../src/config/env';
 
@@ -25,7 +25,7 @@ describe('Slack Non-Voting Trigger - Integration Test', () => {
   let apps: TestApps;
 
   let slackHelper: SlackTestHelper;
-  let slackClient: SlackTestClient;
+  let slackClient: SimpleSlackClient;
   let dbHelper: DatabaseTestHelper;
 
   // Test addresses
@@ -111,8 +111,8 @@ Consider reaching out to encourage participation!`;
 
 
     // Create Slack client and helper
-    slackClient = new SlackTestClient(global.mockSlackSendMessage);
-    slackHelper = new SlackTestHelper(global.mockSlackSendMessage, slackClient);
+    slackClient = global.slackClient;
+    slackHelper = new SlackTestHelper(global.slackClient);
 
     dbHelper = new DatabaseTestHelper(db);
 
@@ -498,7 +498,7 @@ Consider reaching out to encourage participation!`;
     expect(slackMessage.text).toContain('hasn\'t voted in the last 3 proposals');
 
     // Verify Telegram also received (checking mock calls) - should show firefish.eth
-    const telegramCalls = global.mockTelegramSendMessage.mock.calls;
+    const telegramCalls = global.telegramClient.getCapturedCalls();
     const telegramMessage = telegramCalls.find(([chatId, text]) =>
       text.includes('Non-Voting Alert') &&
       text.includes('firefish.eth') &&

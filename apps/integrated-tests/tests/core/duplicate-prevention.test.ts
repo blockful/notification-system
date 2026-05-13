@@ -28,7 +28,7 @@ describe('Duplicate Prevention - Integration Test', () => {
 
   beforeAll(async () => {
     apps = TestCleanup.getGlobalApps();
-    telegramHelper = new TelegramTestHelper(global.mockTelegramSendMessage);
+    telegramHelper = new TelegramTestHelper(global.telegramClient);
     dbHelper = new DatabaseTestHelper(db);
 
     const now = new Date().toISOString();
@@ -43,7 +43,7 @@ describe('Duplicate Prevention - Integration Test', () => {
   });
 
   test('should not send duplicate notifications on repeated logic system triggers', async () => {
-    global.mockTelegramSendMessage?.mockClear();
+    global.telegramClient.clearCapturedCalls();
 
     const persistentProposal = ProposalFactory.createProposal(uniDaoId, 'persistent-uni-proposal');
     useDaoAndActiveProposal(uniDaoId, persistentProposal);
