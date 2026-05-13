@@ -66,7 +66,6 @@ const TEST_CONFIG = {
   },
   urls: {
     subscriptionServer: `http://127.0.0.1:${serviceConfig.ports.subscriptionServer}`,
-    mockGraphQL: 'http://mocked-endpoint.com/graphql',
   },
   telegram: {
     botToken: serviceConfig.bot.token,
@@ -99,7 +98,8 @@ const createTelegramClient = (): SimpleTelegramClient => {
 };
 
 const createSlackClient = (): SimpleSlackClient => {
-  return new SimpleSlackClient(env.SLACK_BOT_TOKEN);
+  const botToken = env.SEND_REAL_SLACK ? env.SLACK_BOT_TOKEN : undefined;
+  return new SimpleSlackClient(botToken);
 };
 
 /**
@@ -153,8 +153,8 @@ const startSubscriptionServer = async (db: Knex): Promise<SubscriptionServerApp>
 
 const startConsumer = async (
   rabbitmqUrl: string,
-  telegramClient: any,
-  slackClient: any
+  telegramClient: SimpleTelegramClient,
+  slackClient: SimpleSlackClient
 ): Promise<ConsumerApp> => {
   const ensResolver = new SimpleEnsResolver();
   const consumerApp = new ConsumerApp(
@@ -216,10 +216,9 @@ const waitForAppsReady = async (apps: Omit<TestApps, 'rabbitmqSetup' | 'telegram
 };
 
 /**
- * @notice Starts all test applications required for integration tests  
+ * @notice Starts all test applications required for integration tests
  * @dev Sets up RabbitMQ, database, and starts all microservices
  * @param db Database connection instance
- * @param mockHttpClient Mocked HTTP client for external API calls
  * @return Promise resolving to TestApps object containing service references
  */
 export const startTestApps = async (db: Knex): Promise<TestApps> => {

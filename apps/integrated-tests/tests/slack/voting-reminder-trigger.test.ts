@@ -1,7 +1,7 @@
 /**
  * Slack Voting Reminder Trigger - Integration Test
  * Tests that voting reminder notifications are correctly delivered via Slack
- * Supports both mock and real Slack delivery modes
+ * Supports both captured and real Slack delivery modes
  */
 
 import { describe, test, expect, beforeAll, afterEach } from 'vitest';
@@ -145,7 +145,7 @@ describe('Slack Voting Reminder Trigger - Integration Test', () => {
       // Create proposal where 32% of time has elapsed
       const proposal = createActiveProposalWithElapsedTime('proposal-30-voted', 32);
 
-      // Setup mock with user's vote already recorded
+      // Setup MSW handler with user's vote already recorded
       const voteEvents = [VoteFactory.createVote(userAddress, proposal.id, {
         votingPower: '1000000000000000000000'
       })];

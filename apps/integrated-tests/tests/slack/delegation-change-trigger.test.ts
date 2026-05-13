@@ -1,7 +1,7 @@
 /**
  * Slack Delegation Change Notifications - Integration Test
  * Tests that delegation change notifications are correctly delivered via Slack
- * Supports both mock and real Slack delivery modes
+ * Supports both captured and real Slack delivery modes
  */
 
 import { describe, test, expect, beforeAll, afterEach } from 'vitest';

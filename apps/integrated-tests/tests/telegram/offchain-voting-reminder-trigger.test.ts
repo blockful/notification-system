@@ -113,7 +113,7 @@ describe('Offchain Voting Reminder Integration Tests', () => {
       // Create proposal where 77% of time has elapsed
       const proposal = createOffchainProposalWithElapsedTime('offchain-proposal-75-voted', 77);
 
-      // Setup mock with user's offchain vote already recorded
+      // Setup MSW handler with user's offchain vote already recorded
       const offchainVotes = [OffchainVoteFactory.createVote(testUser.address, proposal.id, {
         vp: 1000
       })];

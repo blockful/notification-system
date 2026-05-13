@@ -1,16 +1,16 @@
-import { vi } from 'vitest';
 import { DatabaseCleanup } from '../database/database-cleanup';
 import { db } from '../../setup/database/database-config';
 
 /**
  * Central cleanup helper for beforeEach in tests.
- * Resets vi mocks, MSW handlers (via the test setup), RMQ events, and DB tables.
+ * Resets captured client calls, MSW handlers (via the test setup), RMQ events, and DB tables.
  */
 export class TestCleanup {
   private static dbCleanup = new DatabaseCleanup(db);
 
   static async cleanupBetweenTests(): Promise<void> {
-    vi.clearAllMocks();
+    global.telegramClient?.clearCapturedCalls();
+    global.slackClient?.clearCapturedCalls();
 
     if (global.testApps?.rabbitmqSetup) {
       global.testApps.rabbitmqSetup.clearCollectedEvents();

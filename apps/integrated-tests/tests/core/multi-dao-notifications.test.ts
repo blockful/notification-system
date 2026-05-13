@@ -36,7 +36,7 @@ describe('Multi-DAO Notification Flow - Integration Test', () => {
     // Create second subscription for bothFollower
     await UserFactory.createUserPreference(bothFollower.user.id, ensDaoId, true);
     
-    // Setup mock to return active proposals from both DAOs
+    // Setup MSW handler to return active proposals from both DAOs
     const proposals = ProposalFactory.createProposalsForMultipleDaos([testConstants.daoIds.uniswap, testConstants.daoIds.ens], 'multi-proposal');
     server.use(proposalsHandler({ items: proposals, totalCount: proposals.length }));
     

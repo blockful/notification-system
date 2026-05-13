@@ -1,7 +1,7 @@
 /**
  * Slack Non-Voting Trigger Integration Test
  * Tests that non-voting alerts are correctly delivered via Slack
- * Supports both mock and real Slack delivery modes
+ * Supports both captured and real Slack delivery modes
  */
 
 import { describe, test, expect, beforeEach, beforeAll } from 'vitest';
@@ -298,7 +298,7 @@ Consider reaching out to encourage participation!`;
     // Create 3 finished proposals
     const proposals = createFinishedProposals(testDaoId, 3);
 
-    // Setup mocks
+    // Setup MSW handlers
     useProposalsAndVotes(proposals, []);
 
     // Wait and verify no messages are sent
@@ -497,7 +497,7 @@ Consider reaching out to encourage participation!`;
     expect(slackMessage.text).toContain('firefish.eth');
     expect(slackMessage.text).toContain('hasn\'t voted in the last 3 proposals');
 
-    // Verify Telegram also received (checking mock calls) - should show firefish.eth
+    // Verify Telegram also received (checking captured calls) - should show firefish.eth
     const telegramCalls = global.telegramClient.getCapturedCalls();
     const telegramMessage = telegramCalls.find(([chatId, text]) =>
       text.includes('Non-Voting Alert') &&

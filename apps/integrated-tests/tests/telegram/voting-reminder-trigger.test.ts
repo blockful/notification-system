@@ -107,7 +107,7 @@ describe('Voting Reminder Integration Tests', () => {
       // Create proposal where 32% of time has elapsed
       const proposal = createActiveProposalWithElapsedTime('proposal-30-voted', 32);
       
-      // Setup mock with user's vote already recorded
+      // Setup MSW handler with user's vote already recorded
       const voteEvents = [VoteFactory.createVote(testUser.address, proposal.id, {
         votingPower: '1000000000000000000000'
       })];

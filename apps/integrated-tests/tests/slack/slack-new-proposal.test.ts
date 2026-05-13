@@ -1,7 +1,7 @@
 /**
  * Slack New Proposal Integration Test
  * Tests that new proposal notifications are correctly delivered via Slack
- * Supports both mock and real Slack delivery modes
+ * Supports both captured and real Slack delivery modes
  */
 
 import { describe, test, expect, beforeEach, beforeAll } from 'vitest';
@@ -255,7 +255,7 @@ describe('Slack New Proposal - Integration Test', () => {
     expect(slackMessage.channel).toBe(SLACK_CHANNEL_ID);
     expect(slackMessage.text).toContain(proposal.title);
 
-    // Verify Telegram also received (checking mock calls)
+    // Verify Telegram also received (checking captured calls)
     const telegramCalls = global.telegramClient.getCapturedCalls();
     const telegramMessage = telegramCalls.find(([chatId, text]) =>
       text.includes(proposal.title) &&
