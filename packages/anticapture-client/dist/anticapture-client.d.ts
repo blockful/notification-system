@@ -1,4 +1,5 @@
-import type { FeedEventType, FeedRelevance, OffchainProposalItem, OffchainVoteItem, ProcessedVotingPowerHistory } from './schemas';
+import type { FeedEventType, FeedRelevance } from '@anticapture/client';
+import type { OffchainProposalItem, OffchainVoteItem, ProcessedVotingPowerHistory } from './schemas';
 export interface AnticaptureClientConfig {
     baseURL: string;
     defaultHeaders?: Record<string, string>;

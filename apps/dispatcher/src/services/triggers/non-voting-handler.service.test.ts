@@ -5,7 +5,7 @@ import { IAnticaptureClient } from '@notification-system/anticapture-client';
 import {
   SimpleSubscriptionClient,
   SimpleNotificationClientFactory,
-  noopAnticaptureClient,
+  makeAnticaptureClient,
 } from './helpers/test-doubles';
 import {
   createProposalNotification,
@@ -21,21 +21,25 @@ describe('NonVotingHandler', () => {
   let notificationFactory: SimpleNotificationClientFactory;
   let handler: NonVotingHandler;
 
-  function makeAnticaptureClient(opts: {
+  function makeNonVotingSource(opts: {
     proposals?: ReturnType<typeof createProposal>[];
     nonVotersByProposal?: Map<string, { voter: string }[]>;
     listProposalsThrows?: boolean;
   }): IAnticaptureClient {
-    return {
-      ...noopAnticaptureClient,
+    return makeAnticaptureClient({
       listProposals: async () => {
         if (opts.listProposalsThrows) throw new Error('API Error');
-        return (opts.proposals ?? []) as any;
+        return (opts.proposals ?? []).map(p => ({
+          id: p.id,
+          endTimestamp: p.endTimestamp,
+          title: p.title,
+          description: p.description,
+        }));
       },
       getProposalNonVoters: async (proposalId: string) => {
         return opts.nonVotersByProposal?.get(proposalId) ?? [];
       },
-    };
+    });
   }
 
   beforeEach(() => {
@@ -61,7 +65,7 @@ describe('NonVotingHandler', () => {
     handler = new NonVotingHandler(
       subscriptionClient,
       notificationFactory,
-      makeAnticaptureClient({ proposals: lastProposals, nonVotersByProposal }),
+      makeNonVotingSource({ proposals: lastProposals, nonVotersByProposal }),
     );
 
     await handler.handleMessage(
@@ -96,7 +100,7 @@ describe('NonVotingHandler', () => {
     handler = new NonVotingHandler(
       subscriptionClient,
       notificationFactory,
-      makeAnticaptureClient({ proposals: lastProposals, nonVotersByProposal }),
+      makeNonVotingSource({ proposals: lastProposals, nonVotersByProposal }),
     );
 
     await handler.handleMessage(
@@ -116,7 +120,7 @@ describe('NonVotingHandler', () => {
     handler = new NonVotingHandler(
       subscriptionClient,
       notificationFactory,
-      makeAnticaptureClient({ proposals: lastProposals }),
+      makeNonVotingSource({ proposals: lastProposals }),
     );
 
     await handler.handleMessage(
@@ -135,7 +139,7 @@ describe('NonVotingHandler', () => {
     handler = new NonVotingHandler(
       subscriptionClient,
       notificationFactory,
-      makeAnticaptureClient({ proposals: lastProposals }),
+      makeNonVotingSource({ proposals: lastProposals }),
     );
 
     await handler.handleMessage(
@@ -149,7 +153,7 @@ describe('NonVotingHandler', () => {
     handler = new NonVotingHandler(
       subscriptionClient,
       notificationFactory,
-      makeAnticaptureClient({ listProposalsThrows: true }),
+      makeNonVotingSource({ listProposalsThrows: true }),
     );
 
     const result = await handler.handleMessage(
@@ -181,7 +185,7 @@ describe('NonVotingHandler', () => {
     handler = new NonVotingHandler(
       subscriptionClient,
       notificationFactory,
-      makeAnticaptureClient({ proposals: lastProposals, nonVotersByProposal }),
+      makeNonVotingSource({ proposals: lastProposals, nonVotersByProposal }),
     );
 
     await handler.handleMessage(createDispatcherMessage([createProposalNotification()]));

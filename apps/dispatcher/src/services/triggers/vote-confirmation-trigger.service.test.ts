@@ -2,7 +2,7 @@ import { describe, it, expect } from 'vitest';
 import { VoteConfirmationTriggerHandler } from './vote-confirmation-trigger.service';
 import { NotificationPayload } from '../../interfaces/notification-client.interface';
 import { NotificationTypeId } from '@notification-system/messages';
-import { makeAnticaptureClient, makeDao } from './helpers/test-doubles';
+import { makeDao, makeAnticaptureClient } from './helpers/test-doubles';
 
 function createHandler() {
   const sentNotifications: NotificationPayload[] = [];

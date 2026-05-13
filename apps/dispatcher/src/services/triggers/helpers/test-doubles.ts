@@ -1,7 +1,7 @@
 import { ISubscriptionClient, User, Notification } from '../../../interfaces/subscription-client.interface';
 import { INotificationClientFactory } from '../../notification/notification-factory.service';
 import { INotificationClient, NotificationPayload } from '../../../interfaces/notification-client.interface';
-import { IAnticaptureClient, DaoInfo } from '@notification-system/anticapture-client';
+import { DaoInfo, IAnticaptureClient } from '@notification-system/anticapture-client';
 
 export class SimpleSubscriptionClient implements ISubscriptionClient {
   daoSubscribersByDao = new Map<string, User[]>();

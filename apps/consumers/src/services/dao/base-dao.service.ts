@@ -9,8 +9,6 @@ import { ISubscriptionAPI } from '../subscription-api.service';
 import { getDaoWithEmoji } from '@notification-system/messages';
 import { createLogger, type Logger } from '@anticapture/observability';
 
-export type DAOSource = Pick<IAnticaptureClient, 'getDAOs'>;
-
 export interface DAOSelectionState {
   selections: Set<string>;
   action?: 'subscribe' | 'unsubscribe';
@@ -20,7 +18,7 @@ export abstract class BaseDAOService {
   protected readonly logger: Logger;
 
   constructor(
-    protected readonly anticaptureClient: DAOSource,
+    protected readonly anticaptureClient: IAnticaptureClient,
     protected readonly subscriptionApi: ISubscriptionAPI,
     logger: Logger = createLogger('consumers'),
   ) {

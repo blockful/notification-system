@@ -6,8 +6,8 @@ import { NotificationTypeId } from '@notification-system/messages';
 import {
   SimpleSubscriptionClient,
   SimpleNotificationClientFactory,
-  makeAnticaptureClient,
   makeDao,
+  makeAnticaptureClient,
 } from './helpers/test-doubles';
 
 describe('NewProposalTriggerHandler', () => {
@@ -181,23 +181,12 @@ describe('NewProposalTriggerHandler - cross-DAO eventId deduplication', () => {
         }),
         supportsChannel: () => true
       },
-      {
+      makeAnticaptureClient({
         getDAOs: async () => [
           { id: 'ens.eth', blockTime: 12, votingDelay: '1', chainId: 1, alreadySupportCalldataReview: true, supportOffchainData: true },
           { id: 'uniswap.eth', blockTime: 12, votingDelay: '1', chainId: 1, alreadySupportCalldataReview: false, supportOffchainData: true }
         ],
-        getProposalById: async () => null,
-        listProposals: async () => [],
-        listVotingPowerHistory: async () => [],
-        listVotes: async () => [],
-        getProposalNonVoters: async () => [],
-        getOffchainProposalNonVoters: async () => [],
-        listRecentVotesFromAllDaos: async () => [],
-        getEventThreshold: async () => null,
-        listOffchainProposals: async () => [],
-        listOffchainVotes: async () => [],
-        listRecentOffchainVotesFromAllDaos: async () => []
-      }
+      })
     );
 
     return { handler, sentNotifications, sentCompositeKeys };
