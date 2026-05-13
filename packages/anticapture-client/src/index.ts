@@ -1,6 +1,8 @@
 export { AnticaptureClient } from './anticapture-client';
 export type { AnticaptureClientConfig, VoteWithDaoId, OffchainVoteWithDaoId, DaoInfo, IAnticaptureClient } from './anticapture-client';
 
+export { makeAnticaptureClient, noopAnticaptureClient } from './test-doubles';
+
 export type { ProcessedVotingPowerHistory, OffchainProposalItem, OffchainVoteItem } from './schemas';
 
 export {

@@ -1,8 +1,11 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.historicalVotingPowerQueryParamsOrderByEnum = exports.onchainProposalStatusListEnum = exports.feedRelevanceEnum = exports.feedEventTypeEnum = exports.orderDirectionEnum = exports.AnticaptureClient = void 0;
+exports.historicalVotingPowerQueryParamsOrderByEnum = exports.onchainProposalStatusListEnum = exports.feedRelevanceEnum = exports.feedEventTypeEnum = exports.orderDirectionEnum = exports.noopAnticaptureClient = exports.makeAnticaptureClient = exports.AnticaptureClient = void 0;
 var anticapture_client_1 = require("./anticapture-client");
 Object.defineProperty(exports, "AnticaptureClient", { enumerable: true, get: function () { return anticapture_client_1.AnticaptureClient; } });
+var test_doubles_1 = require("./test-doubles");
+Object.defineProperty(exports, "makeAnticaptureClient", { enumerable: true, get: function () { return test_doubles_1.makeAnticaptureClient; } });
+Object.defineProperty(exports, "noopAnticaptureClient", { enumerable: true, get: function () { return test_doubles_1.noopAnticaptureClient; } });
 var client_1 = require("@anticapture/client");
 Object.defineProperty(exports, "orderDirectionEnum", { enumerable: true, get: function () { return client_1.orderDirectionEnum; } });
 Object.defineProperty(exports, "feedEventTypeEnum", { enumerable: true, get: function () { return client_1.feedEventTypeEnum; } });
