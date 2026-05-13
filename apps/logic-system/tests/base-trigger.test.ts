@@ -1,21 +1,27 @@
-import { describe, it, expect, jest, beforeEach, afterEach } from '@jest/globals';
-import type { MockedFunction } from 'jest-mock';
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
+import type { MockedFunction } from 'vitest';
 import { Trigger } from '../src/triggers/base-trigger';
 
+type TestData = { id: number };
+
 // Mock implementation of Trigger for testing
-class MockTrigger extends Trigger<any> {
-  fetchData: MockedFunction<() => Promise<any[]>>;
+class MockTrigger extends Trigger<TestData> {
+  fetchData: MockedFunction<() => Promise<TestData[]>>;
   process: MockedFunction<() => Promise<void>>;
 
   constructor(id: string = 'test-trigger', interval: number = 1000) {
     super(id, interval);
-    this.fetchData = jest.fn<() => Promise<any[]>>();
-    this.process = jest.fn<() => Promise<void>>();
+    this.fetchData = vi.fn<() => Promise<TestData[]>>();
+    this.process = vi.fn<() => Promise<void>>();
   }
 
-  // Expose private methods for testing
-  getConsecutiveFailures() {
-    return (this as any).consecutiveFailures;
+  // Expose protected fields for testing
+  getConsecutiveFailures(): number {
+    return this.consecutiveFailures;
+  }
+
+  getTimer(): NodeJS.Timeout | null {
+    return this.timer;
   }
 }
 
@@ -24,14 +30,14 @@ describe('BaseTrigger - Retry Logic', () => {
 
   beforeEach(() => {
     trigger = new MockTrigger('test-trigger', 100);
-    jest.useFakeTimers();
+    vi.useFakeTimers();
   });
 
   afterEach(() => {
     trigger.stop();
-    jest.clearAllTimers();
-    jest.useRealTimers();
-    jest.clearAllMocks();
+    vi.clearAllTimers();
+    vi.useRealTimers();
+    vi.clearAllMocks();
   });
 
   describe('Retry with consecutive failures', () => {
@@ -42,7 +48,7 @@ describe('BaseTrigger - Retry Logic', () => {
 
       // Simulate 3 failures
       for (let i = 1; i <= 3; i++) {
-        jest.advanceTimersByTime(100);
+        vi.advanceTimersByTime(100);
         await Promise.resolve();
       }
 
@@ -50,7 +56,7 @@ describe('BaseTrigger - Retry Logic', () => {
       expect(trigger.getConsecutiveFailures()).toBe(3);
 
       // Trigger should still be running (timer not null)
-      expect((trigger as any).timer).not.toBeNull();
+      expect(trigger.getTimer()).not.toBeNull();
     });
   });
 
@@ -69,19 +75,19 @@ describe('BaseTrigger - Retry Logic', () => {
       trigger.start();
 
       // First failure
-      jest.advanceTimersByTime(100);
+      vi.advanceTimersByTime(100);
       await Promise.resolve(); //fetchData
       await Promise.resolve(); //process
       expect(trigger.getConsecutiveFailures()).toBe(1);
 
       // Second failure
-      jest.advanceTimersByTime(100);
+      vi.advanceTimersByTime(100);
       await Promise.resolve(); //fetchData
       await Promise.resolve(); //process
       expect(trigger.getConsecutiveFailures()).toBe(2);
 
       // Third attempt succeeds
-      jest.advanceTimersByTime(100);
+      vi.advanceTimersByTime(100);
       await Promise.resolve(); //fetchData
       await Promise.resolve(); //process
       
@@ -99,7 +105,7 @@ describe('BaseTrigger - Retry Logic', () => {
 
       // Simulate 5 failures
       for (let i = 1; i <= 5; i++) {
-        jest.advanceTimersByTime(100);
+        vi.advanceTimersByTime(100);
         await Promise.resolve(); //fetchData
         await Promise.resolve(); //process
       }
@@ -108,10 +114,10 @@ describe('BaseTrigger - Retry Logic', () => {
       expect(trigger.getConsecutiveFailures()).toBe(5);
       
       // Timer should be null (trigger stopped)
-      expect((trigger as any).timer).toBeNull();
+      expect(trigger.getTimer()).toBeNull();
 
       // Advancing time should not trigger more calls
-      jest.advanceTimersByTime(100);
+      vi.advanceTimersByTime(100);
       await Promise.resolve();
       expect(trigger.fetchData).toHaveBeenCalledTimes(5); // Still 5, no new calls
     });
@@ -123,12 +129,12 @@ describe('BaseTrigger - Retry Logic', () => {
       trigger.process.mockResolvedValue(undefined);
 
       trigger.start();
-      expect((trigger as any).timer).not.toBeNull();
+      expect(trigger.getTimer()).not.toBeNull();
 
       await trigger.stop();
 
       // Should not make any calls after stop
-      jest.advanceTimersByTime(100);
+      vi.advanceTimersByTime(100);
       await Promise.resolve(); //fetchData
       await Promise.resolve(); //process
       expect(trigger.fetchData).not.toHaveBeenCalled();
@@ -143,7 +149,7 @@ describe('BaseTrigger - Retry Logic', () => {
 
       trigger.start();
 
-      jest.advanceTimersByTime(100);
+      vi.advanceTimersByTime(100);
       await Promise.resolve(); //fetchData
       await Promise.resolve(); //process
 
@@ -152,7 +158,7 @@ describe('BaseTrigger - Retry Logic', () => {
       expect(trigger.getConsecutiveFailures()).toBe(1);
       
       // Trigger should still be running
-      expect((trigger as any).timer).not.toBeNull();
+      expect(trigger.getTimer()).not.toBeNull();
     });
   });
 });

@@ -2,10 +2,13 @@
  * Shared test data and helper functions
  */
 
-import { jest } from '@jest/globals';
+import { vi } from 'vitest';
+import type { Mocked } from 'vitest';
 import { zeroAddress } from 'viem';
 import { ProposalDataSource, ProposalOnChain } from '../src/interfaces/proposal.interface';
 import { DispatcherService } from '../src/interfaces/dispatcher.interface';
+import { IVotingPowerRepository } from '../src/repositories/voting-power.repository';
+import { IThresholdRepository } from '../src/repositories/threshold.repository';
 import { ProcessedVotingPowerHistory } from '@notification-system/anticapture-client';
 
 // Common test values
@@ -86,30 +89,30 @@ export const createVotingPowerHistory = (
 /**
  * Creates a mocked DispatcherService
  */
-export const createMockDispatcherService = (): jest.Mocked<DispatcherService> => ({
-  sendMessage: jest.fn()
+export const createMockDispatcherService = (): Mocked<DispatcherService> => ({
+  sendMessage: vi.fn()
 });
 
 /**
  * Creates a mocked ProposalDataSource
  */
-export const createMockProposalDataSource = (): jest.Mocked<ProposalDataSource> => ({
-  getById: jest.fn(),
-  listAll: jest.fn()
+export const createMockProposalDataSource = (): Mocked<ProposalDataSource> => ({
+  getById: vi.fn(),
+  listAll: vi.fn()
 });
 
 /**
  * Creates a mocked VotingPowerRepository
  */
-export const createMockVotingPowerRepository = () => ({
-  listVotingPowerHistory: jest.fn()
+export const createMockVotingPowerRepository = (): Mocked<IVotingPowerRepository> => ({
+  listVotingPowerHistory: vi.fn()
 });
 
 /**
  * Creates a mocked ThresholdRepository
  */
-export const createMockThresholdRepository = () => ({
-  getThreshold: jest.fn<() => Promise<string | null>>()
+export const createMockThresholdRepository = (): Mocked<IThresholdRepository> => ({
+  getThreshold: vi.fn()
 });
 
 // Sample voting power data for tests
