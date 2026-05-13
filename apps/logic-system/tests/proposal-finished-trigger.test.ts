@@ -1,8 +1,8 @@
-import { describe, it, expect, jest, beforeEach } from '@jest/globals';
+import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { ProposalFinishedTrigger } from '../src/triggers/proposal-finished-trigger';
-import { ProposalRepository } from '../src/repositories/proposal.repository';
 import {
   createMockDispatcherService,
+  createMockProposalDataSource,
   createProposal,
   createFinishedProposal,
   createProposalWithMissingFields,
@@ -13,20 +13,17 @@ import { NotificationTypeId } from '@notification-system/messages';
 describe('ProposalFinishedTrigger', () => {
   let trigger: ProposalFinishedTrigger;
   let mockDispatcherService: ReturnType<typeof createMockDispatcherService>;
-  let mockProposalRepository: jest.Mocked<ProposalRepository>;
+  let mockProposalRepository: ReturnType<typeof createMockProposalDataSource>;
 
   beforeEach(() => {
-    jest.clearAllMocks();
-    
+    vi.clearAllMocks();
+
     mockDispatcherService = createMockDispatcherService();
-    mockProposalRepository = {
-      listAll: jest.fn(),
-      getById: jest.fn()
-    } as any;
-    
+    mockProposalRepository = createMockProposalDataSource();
+
     trigger = new ProposalFinishedTrigger(
       mockProposalRepository,
-      mockDispatcherService as any,
+      mockDispatcherService,
       DEFAULT_INTERVAL
     );
   });
@@ -35,8 +32,8 @@ describe('ProposalFinishedTrigger', () => {
     it('should fetch proposals with finished statuses and temporal filter', async () => {
       mockProposalRepository.listAll.mockResolvedValue([]);
       const initialTimestamp = trigger['endTimestampCursor'];
-      
-      await (trigger as any).fetchData();
+
+      await trigger['fetchData']();
       
       expect(mockProposalRepository.listAll).toHaveBeenCalledWith({
         status: ['EXECUTED', 'DEFEATED', 'SUCCEEDED', 'EXPIRED', 'CANCELED'],
@@ -53,8 +50,8 @@ describe('ProposalFinishedTrigger', () => {
       ];
       
       mockProposalRepository.listAll.mockResolvedValue(mockProposals);
-      
-      const result = await (trigger as any).fetchData();
+
+      const result = await trigger['fetchData']();
       
       expect(result).toEqual(mockProposals);
     });
@@ -187,7 +184,7 @@ describe('ProposalFinishedTrigger', () => {
 
         // First execution: process proposal A
         mockProposalRepository.listAll.mockResolvedValueOnce([proposalA]);
-        await (trigger as any).fetchData();
+        await trigger['fetchData']();
         await trigger.process([proposalA]);
 
         // Verify endTimestampCursor was updated to A's endTimestamp + 1
@@ -197,7 +194,7 @@ describe('ProposalFinishedTrigger', () => {
         // Proposal B should be returned because endTimestamp(2100) >= 2001
         // Proposal A (endTimestamp=2000) will NOT be returned (2000 < 2001)
         mockProposalRepository.listAll.mockResolvedValueOnce([proposalB]);
-        const secondFetchResult = await (trigger as any).fetchData();
+        const secondFetchResult = await trigger['fetchData']();
 
         // Verify the query uses fromEndDate=2001 (A's endTimestamp + 1)
         // This ensures A is not fetched again, avoiding duplicates

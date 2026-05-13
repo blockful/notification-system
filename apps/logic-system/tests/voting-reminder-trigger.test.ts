@@ -2,31 +2,31 @@
  * @fileoverview Tests for VotingReminderTrigger
  */
 
-import { describe, it, expect, jest, beforeEach, afterEach } from '@jest/globals';
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
+import type { Mocked } from 'vitest';
 import { VotingReminderTrigger } from '../src/triggers/voting-reminder-trigger';
-import { VotingReminderProposal } from '../src/interfaces/voting-reminder.interface';
+import { VotingReminderProposal, VotingReminderDataSource } from '../src/interfaces/voting-reminder.interface';
 import { DispatcherService } from '../src/interfaces/dispatcher.interface';
-import { MockedFunction } from 'jest-mock';
 import { NotificationTypeId } from '@notification-system/messages';
 
 describe('VotingReminderTrigger', () => {
   let trigger: VotingReminderTrigger;
-  let mockDispatcherService: jest.Mocked<DispatcherService>;
-  let mockDataSource: any;
+  let mockDispatcherService: Mocked<DispatcherService>;
+  let mockDataSource: Mocked<VotingReminderDataSource>;
 
   const baseTime = Math.floor(Date.now() / 1000);
 
   beforeEach(() => {
     mockDispatcherService = {
-      sendMessage: jest.fn().mockResolvedValue(undefined as never) as MockedFunction<DispatcherService['sendMessage']>,
+      sendMessage: vi.fn().mockResolvedValue(undefined),
     };
 
     mockDataSource = {
-      listActiveForReminder: jest.fn().mockResolvedValue([] as never),
+      listActiveForReminder: vi.fn().mockResolvedValue([]),
     };
 
     // Mock Date.now for consistent testing
-    jest.spyOn(Date, 'now').mockReturnValue(baseTime * 1000);
+    vi.spyOn(Date, 'now').mockReturnValue(baseTime * 1000);
 
     trigger = new VotingReminderTrigger(
       mockDispatcherService,
@@ -37,7 +37,7 @@ describe('VotingReminderTrigger', () => {
   });
 
   afterEach(() => {
-    jest.restoreAllMocks();
+    vi.restoreAllMocks();
   });
 
   describe('constructor', () => {
@@ -189,36 +189,17 @@ describe('VotingReminderTrigger', () => {
 
   describe('time calculation', () => {
     it('should calculate time elapsed percentage correctly', () => {
-      const startTime = 1000;
-      const endTime = 2000;
-      const currentTime = 1500;
-
-      // Use reflection to access private method for testing
-      const calculateTime = (trigger as any).calculateTimeElapsedPercentage;
-      const percentage = calculateTime(startTime, endTime, currentTime);
-
+      const percentage = trigger['calculateTimeElapsedPercentage'](1000, 2000, 1500);
       expect(percentage).toBe(50); // 50% elapsed
     });
 
     it('should return 0 for proposals not yet started', () => {
-      const startTime = 2000;
-      const endTime = 3000;
-      const currentTime = 1000;
-
-      const calculateTime = (trigger as any).calculateTimeElapsedPercentage;
-      const percentage = calculateTime(startTime, endTime, currentTime);
-
+      const percentage = trigger['calculateTimeElapsedPercentage'](2000, 3000, 1000);
       expect(percentage).toBe(0);
     });
 
     it('should return 100 for proposals that have ended', () => {
-      const startTime = 1000;
-      const endTime = 2000;
-      const currentTime = 3000;
-
-      const calculateTime = (trigger as any).calculateTimeElapsedPercentage;
-      const percentage = calculateTime(startTime, endTime, currentTime);
-
+      const percentage = trigger['calculateTimeElapsedPercentage'](1000, 2000, 3000);
       expect(percentage).toBe(100);
     });
   });

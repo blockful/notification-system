@@ -3,30 +3,17 @@ import { setupServer } from 'msw/node';
 import { http, HttpResponse } from 'msw';
 import { SlackDAOService } from './slack-dao.service';
 import { ISubscriptionAPI, SubscriptionAPIService, UserSubscriptionResponse } from '../subscription-api.service';
-import type { IAnticaptureClient } from '@notification-system/anticapture-client';
+import { makeAnticaptureClient } from '@notification-system/anticapture-client';
 import type { SlackDAORequest } from './slack-dao.service';
 
 const TEST_API_URL = 'http://test-api';
 
-class SimpleAnticaptureClient implements IAnticaptureClient {
-  async getDAOs() {
-    return [
-      { id: 'UNI', chainId: 1, blockTime: 12, votingDelay: '0', alreadySupportCalldataReview: false, supportOffchainData: false },
-      { id: 'ENS', chainId: 1, blockTime: 12, votingDelay: '0', alreadySupportCalldataReview: false, supportOffchainData: false },
-    ];
-  }
-  async getProposalById() { return null; }
-  async listProposals() { return []; }
-  async listVotingPowerHistory() { return []; }
-  async listVotes() { return []; }
-  async getProposalNonVoters() { return []; }
-  async getOffchainProposalNonVoters() { return []; }
-  async listRecentVotesFromAllDaos() { return []; }
-  async getEventThreshold() { return null; }
-  async listOffchainProposals() { return []; }
-  async listOffchainVotes() { return []; }
-  async listRecentOffchainVotesFromAllDaos() { return []; }
-}
+const anticaptureClient = makeAnticaptureClient({
+  getDAOs: async () => [
+    { id: 'UNI', chainId: 1, blockTime: 12, votingDelay: '0', alreadySupportCalldataReview: false, supportOffchainData: false },
+    { id: 'ENS', chainId: 1, blockTime: 12, votingDelay: '0', alreadySupportCalldataReview: false, supportOffchainData: false },
+  ],
+});
 
 class SimpleSubscriptionAPI implements ISubscriptionAPI {
   public getUserPreferencesCalls: Array<{ channelUserId: string | number; channel: string; availableDAOs: string[] }> = [];
@@ -53,7 +40,7 @@ describe('SlackDAOService - User ID Validation', () => {
 
   beforeEach(() => {
     subscriptionApi = new SimpleSubscriptionAPI();
-    slackDAOService = new SlackDAOService(new SimpleAnticaptureClient(), subscriptionApi);
+    slackDAOService = new SlackDAOService(anticaptureClient, subscriptionApi);
   });
 
   describe('User ID handling', () => {

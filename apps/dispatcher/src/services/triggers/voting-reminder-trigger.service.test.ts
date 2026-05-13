@@ -9,7 +9,7 @@ import { NonVotersSource, VotingReminderEvent } from '../../interfaces/voting-re
 import {
   SimpleSubscriptionClient,
   SimpleNotificationClientFactory,
-  noopAnticaptureClient,
+  makeAnticaptureClient,
 } from './helpers/test-doubles';
 
 class FailingSubscriptionClient extends SimpleSubscriptionClient {
@@ -35,14 +35,8 @@ class SimpleNonVotersSource implements NonVotersSource {
   }
 }
 
-class TestableVotingReminderTriggerHandler extends VotingReminderTriggerHandler {
-  public callCreateReminderMessage(event: VotingReminderEvent): string {
-    return this.createReminderMessage(event);
-  }
-}
-
 describe('VotingReminderTriggerHandler', () => {
-  let handler: TestableVotingReminderTriggerHandler;
+  let handler: VotingReminderTriggerHandler;
   let subscriptionClient: FailingSubscriptionClient;
   let notificationFactory: SimpleNotificationClientFactory;
   let nonVotersSource: SimpleNonVotersSource;
@@ -70,10 +64,10 @@ describe('VotingReminderTriggerHandler', () => {
     notificationFactory = new SimpleNotificationClientFactory();
     nonVotersSource = new SimpleNonVotersSource();
 
-    handler = new TestableVotingReminderTriggerHandler(
+    handler = new VotingReminderTriggerHandler(
       subscriptionClient,
       notificationFactory,
-      noopAnticaptureClient,
+      makeAnticaptureClient({ getDAOs: async () => [] }),
       nonVotersSource,
       votingReminderMessages,
       'voting-reminder',
@@ -195,7 +189,7 @@ describe('VotingReminderTriggerHandler', () => {
     it('should produce the early-reminder template at 30% threshold', () => {
       const event30 = { ...mockVotingReminderEvent, thresholdPercentage: 30, timeElapsedPercentage: 30 };
 
-      const message = handler.callCreateReminderMessage(event30);
+      const message = handler['createReminderMessage'](event30);
 
       expect(message).toBe(buildExpected(
         '🔔 Early Voting Reminder',
@@ -208,7 +202,7 @@ describe('VotingReminderTriggerHandler', () => {
     it('should produce the mid-period template at 60% threshold', () => {
       const event60 = { ...mockVotingReminderEvent, thresholdPercentage: 60, timeElapsedPercentage: 60 };
 
-      const message = handler.callCreateReminderMessage(event60);
+      const message = handler['createReminderMessage'](event60);
 
       expect(message).toBe(buildExpected(
         '⏰ Mid-Period Voting Reminder',
@@ -221,7 +215,7 @@ describe('VotingReminderTriggerHandler', () => {
     it('should produce the urgent template at 90% threshold', () => {
       const event90 = { ...mockVotingReminderEvent, thresholdPercentage: 90, timeElapsedPercentage: 90 };
 
-      const message = handler.callCreateReminderMessage(event90);
+      const message = handler['createReminderMessage'](event90);
 
       expect(message).toBe(buildExpected(
         '🚨 URGENT Voting Reminder',
@@ -238,7 +232,7 @@ describe('VotingReminderTriggerHandler', () => {
         description: 'Update governance parameters. This proposal aims to improve the system.',
       };
 
-      const message = handler.callCreateReminderMessage(eventWithoutTitle);
+      const message = handler['createReminderMessage'](eventWithoutTitle);
 
       expect(message).toBe(buildExpected(
         '🚨 URGENT Voting Reminder',
@@ -255,7 +249,7 @@ describe('VotingReminderTriggerHandler', () => {
         description: 'This is a very long description that exceeds the maximum length for a title and should be truncated appropriately to avoid overwhelming the user with too much text in the notification message',
       };
 
-      const message = handler.callCreateReminderMessage(eventWithLongDescription);
+      const message = handler['createReminderMessage'](eventWithLongDescription);
 
       expect(message).toBe(buildExpected(
         '🚨 URGENT Voting Reminder',

@@ -1,7 +1,9 @@
 import { ISubscriptionClient, User, Notification } from '../../../interfaces/subscription-client.interface';
 import { INotificationClientFactory } from '../../notification/notification-factory.service';
 import { INotificationClient, NotificationPayload } from '../../../interfaces/notification-client.interface';
-import { DaoInfo, IAnticaptureClient } from '@notification-system/anticapture-client';
+import { DaoInfo, makeAnticaptureClient, noopAnticaptureClient } from '@notification-system/anticapture-client';
+
+export { makeAnticaptureClient, noopAnticaptureClient };
 
 export class SimpleSubscriptionClient implements ISubscriptionClient {
   daoSubscribersByDao = new Map<string, User[]>();
@@ -62,25 +64,6 @@ export class SimpleNotificationClientFactory implements INotificationClientFacto
   addClient(): void {}
   getClient(): INotificationClient { return this.client; }
   supportsChannel(): boolean { return true; }
-}
-
-export const noopAnticaptureClient: IAnticaptureClient = {
-  getDAOs: async () => [],
-  getProposalById: async () => null,
-  listProposals: async () => [],
-  listVotingPowerHistory: async () => [],
-  listVotes: async () => [],
-  getProposalNonVoters: async () => [],
-  getOffchainProposalNonVoters: async () => [],
-  listRecentVotesFromAllDaos: async () => [],
-  getEventThreshold: async () => null,
-  listOffchainProposals: async () => [],
-  listOffchainVotes: async () => [],
-  listRecentOffchainVotesFromAllDaos: async () => [],
-};
-
-export function makeAnticaptureClient(overrides: Partial<IAnticaptureClient>): IAnticaptureClient {
-  return { ...noopAnticaptureClient, ...overrides };
 }
 
 export function makeDao(overrides: Partial<DaoInfo> = {}): DaoInfo {
