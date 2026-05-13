@@ -1,13 +1,21 @@
-import { describe, test, expect, beforeEach, beforeAll } from '@jest/globals';
+import { describe, test, expect, beforeEach, beforeAll } from 'vitest';
+import { proposalsHandler, proposalNonVotersHandler } from '@anticapture/client/msw';
+import { onchainProposalStatusListEnum, type OnchainProposal } from '@notification-system/anticapture-client';
 import { db, TestApps } from '../../src/setup';
-import { HttpClientMockSetup, GraphQLMockSetup } from '../../src/mocks';
+import { server, nonVotersResolver } from '../../src/mocks/msw-server';
 import { UserFactory, ProposalFactory, VoteFactory, VoteData } from '../../src/fixtures';
 import { TelegramTestHelper, DatabaseTestHelper, TestCleanup } from '../../src/helpers';
 import { testConstants, timeouts } from '../../src/config';
 
+const useProposalsAndVotes = (proposals: OnchainProposal[], votes: VoteData[]) =>
+  server.use(
+    proposalsHandler({ items: proposals, totalCount: proposals.length }),
+    proposalNonVotersHandler(nonVotersResolver(votes)),
+  );
+
 describe('Non-Voting Trigger - Integration Test', () => {
   let apps: TestApps;
-  let httpMockSetup: HttpClientMockSetup;
+
   let telegramHelper: TelegramTestHelper;
   let dbHelper: DatabaseTestHelper;
 
@@ -32,17 +40,17 @@ describe('Non-Voting Trigger - Integration Test', () => {
       
       return ProposalFactory.createProposal(daoId, proposalId, {
         title: `Proposal ${count - i}`,
-        status: 'EXECUTED',
-        timestamp: Math.floor(proposalCreationTime.getTime() / 1000).toString(),
+        status: onchainProposalStatusListEnum.EXECUTED,
+        timestamp: Math.floor(proposalCreationTime.getTime() / 1000),
         startBlock: startBlock,
         endBlock: endBlock,
-        endTimestamp: Math.floor(proposalEndTime / 1000).toString()
+        endTimestamp: Math.floor(proposalEndTime / 1000)
       });
     });
   };
 
   // Helper to format expected non-voting message
-  const formatNonVotingMessage = (address: string, daoId: string, proposals: any[]) => {
+  const formatNonVotingMessage = (address: string, daoId: string, proposals: Pick<OnchainProposal, 'id' | 'title'>[]) => {
     const shortAddress = `${address.slice(0, 6)}...${address.slice(-4)}`;
     const proposalList = proposals
       .slice(0, 3)
@@ -60,7 +68,7 @@ Consider reaching out to encourage participation!`;
 
   beforeAll(async () => {
     apps = TestCleanup.getGlobalApps();
-    httpMockSetup = TestCleanup.getGlobalHttpMockSetup();
+
     telegramHelper = new TelegramTestHelper(global.mockTelegramSendMessage);
     dbHelper = new DatabaseTestHelper(db);
   });
@@ -86,12 +94,11 @@ Consider reaching out to encourage participation!`;
     
     // Create votes: ADDRESS_ACTIVE voted on all, ADDRESS_PARTIAL on one, ADDRESS_INACTIVE on none
     const votes: VoteData[] = [
-      ...VoteFactory.createVotesForProposals(ADDRESS_ACTIVE, ['proposal-1', 'proposal-2', 'proposal-3'], testDaoId),
-      VoteFactory.createVote(ADDRESS_PARTIAL, 'proposal-2', testDaoId)
+      ...VoteFactory.createVotesForProposals(ADDRESS_ACTIVE, ['proposal-1', 'proposal-2', 'proposal-3']),
+      VoteFactory.createVote(ADDRESS_PARTIAL, 'proposal-2')
     ];
 
-    // Setup mocks
-    GraphQLMockSetup.setupMock(httpMockSetup.getMockClient(), proposals, [], {}, votes);
+    useProposalsAndVotes(proposals, votes);
 
     // Wait for notification - should only be for ADDRESS_INACTIVE (firefish.eth)
     const message = await telegramHelper.waitForMessage(
@@ -125,8 +132,7 @@ Consider reaching out to encourage participation!`;
     // No votes
     const votes: VoteData[] = [];
 
-    // Setup mocks
-    GraphQLMockSetup.setupMock(httpMockSetup.getMockClient(), proposals, [], {}, votes);
+    useProposalsAndVotes(proposals, votes);
 
     // Wait and verify no messages are sent
     await telegramHelper.waitForNoMessages(3000);
@@ -158,8 +164,7 @@ Consider reaching out to encourage participation!`;
     // No votes for ADDRESS_INACTIVE
     const votes: VoteData[] = [];
 
-    // Setup mocks
-    GraphQLMockSetup.setupMock(httpMockSetup.getMockClient(), proposals, [], {}, votes);
+    useProposalsAndVotes(proposals, votes);
 
     // Wait for both notifications
     const messages = await telegramHelper.waitForMessageCount(
@@ -202,13 +207,12 @@ Consider reaching out to encourage participation!`;
     // ADDRESS_PARTIAL voted on 1/3
     // ADDRESS_ZERO_VOTES voted on 0/3
     const votes: VoteData[] = [
-      VoteFactory.createVote(ADDRESS_ACTIVE, 'proposal-1', testDaoId),
-      VoteFactory.createVote(ADDRESS_ACTIVE, 'proposal-3', testDaoId),
-      VoteFactory.createVote(ADDRESS_PARTIAL, 'proposal-2', testDaoId)
+      VoteFactory.createVote(ADDRESS_ACTIVE, 'proposal-1'),
+      VoteFactory.createVote(ADDRESS_ACTIVE, 'proposal-3'),
+      VoteFactory.createVote(ADDRESS_PARTIAL, 'proposal-2')
     ];
 
-    // Setup mocks
-    GraphQLMockSetup.setupMock(httpMockSetup.getMockClient(), proposals, [], {}, votes);
+    useProposalsAndVotes(proposals, votes);
 
     // Should only get notification for ADDRESS_ZERO_VOTES (vitalik.eth)
     const message = await telegramHelper.waitForMessage(
@@ -235,8 +239,7 @@ Consider reaching out to encourage participation!`;
     // Create 3 finished proposals
     const proposals = createFinishedProposals(testDaoId, 3);
     
-    // Setup mocks
-    GraphQLMockSetup.setupMock(httpMockSetup.getMockClient(), proposals, [], {}, []);
+    useProposalsAndVotes(proposals, []);
 
     // Wait and verify no messages are sent
     await telegramHelper.waitForNoMessages(3000);
@@ -271,14 +274,7 @@ Consider reaching out to encourage participation!`;
     // No votes in either DAO
     const votes: VoteData[] = [];
 
-    // Setup mocks with both DAOs' proposals
-    GraphQLMockSetup.setupMock(
-      httpMockSetup.getMockClient(), 
-      [...dao1Proposals, ...dao2Proposals], 
-      [], 
-      {}, 
-      votes
-    );
+    useProposalsAndVotes([...dao1Proposals, ...dao2Proposals], votes);
 
     // Wait for notifications
     const messages = await telegramHelper.waitForMessageCount(
@@ -321,8 +317,7 @@ Consider reaching out to encourage participation!`;
     // No votes
     const votes: VoteData[] = [];
 
-    // Setup mocks
-    GraphQLMockSetup.setupMock(httpMockSetup.getMockClient(), proposals, [], {}, votes);
+    useProposalsAndVotes(proposals, votes);
 
     // Should receive 2 notifications: one for proposal-4 and one for proposal-3
     const messages = await telegramHelper.waitForMessageCount(

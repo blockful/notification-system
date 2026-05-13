@@ -3,17 +3,26 @@
  * Tests the complete flow from Logic System trigger to Dispatcher handler
  */
 
-import { describe, test, expect, beforeEach, beforeAll } from '@jest/globals';
+import { describe, test, expect, beforeEach, beforeAll } from 'vitest';
+import { proposalsHandler, proposalNonVotersHandler, votesHandler } from '@anticapture/client/msw';
+import { onchainProposalStatusListEnum, type OnchainProposal, type OnchainVote } from '@notification-system/anticapture-client';
 import { db, TestApps } from '../../src/setup';
-import { HttpClientMockSetup, GraphQLMockSetup } from '../../src/mocks';
-import { UserFactory, ProposalFactory } from '../../src/fixtures';
+import { server, nonVotersResolver } from '../../src/mocks/msw-server';
+import { UserFactory, ProposalFactory, VoteFactory } from '../../src/fixtures';
 import { TelegramTestHelper, DatabaseTestHelper, TestCleanup } from '../../src/helpers';
 import { testConstants, timeouts } from '../../src/config';
 import { waitForCondition } from '../../src/helpers/utilities/wait-for';
 
+const useProposalsAndVotes = (proposals: OnchainProposal[], votes: OnchainVote[]) =>
+  server.use(
+    proposalsHandler({ items: proposals, totalCount: proposals.length }),
+    votesHandler({ items: votes, totalCount: votes.length }),
+    proposalNonVotersHandler(nonVotersResolver(votes)),
+  );
+
 describe('Voting Reminder Integration Tests', () => {
   let apps: TestApps;
-  let httpMockSetup: HttpClientMockSetup;
+
   let telegramHelper: TelegramTestHelper;
   let dbHelper: DatabaseTestHelper;
 
@@ -36,9 +45,9 @@ describe('Voting Reminder Integration Tests', () => {
     const endTime = startTime + proposalDuration;
 
     return ProposalFactory.createProposal(testDaoId, proposalId, {
-      status: 'ACTIVE',
-      timestamp: startTime.toString(),
-      endTimestamp: endTime.toString(),
+      status: onchainProposalStatusListEnum.ACTIVE,
+      timestamp: startTime,
+      endTimestamp: endTime,
       description: `Test proposal for ${elapsedPercentage}% voting reminder`,
       title: `Proposal ${elapsedPercentage}% Reminder Test`
     });
@@ -46,7 +55,7 @@ describe('Voting Reminder Integration Tests', () => {
 
   beforeAll(async () => {
     apps = TestCleanup.getGlobalApps();
-    httpMockSetup = TestCleanup.getGlobalHttpMockSetup();
+
     telegramHelper = new TelegramTestHelper(global.mockTelegramSendMessage);
     dbHelper = new DatabaseTestHelper(db);
   });
@@ -71,14 +80,7 @@ describe('Voting Reminder Integration Tests', () => {
       // Create proposal where 32% of time has elapsed (triggers 30% reminder, within 30-35% window)
       const proposal = createActiveProposalWithElapsedTime('proposal-30-reminder', 32);
       
-      // Setup mock to return the active proposal
-      GraphQLMockSetup.setupMock(
-        httpMockSetup.getMockClient(), 
-        [proposal], 
-        [], 
-        { [testDaoId]: 1 },
-        [] // Empty votes array - user has NOT voted
-      );
+      useProposalsAndVotes([proposal], []);
 
       // Wait for the notification to be sent
       const message = await telegramHelper.waitForMessage(
@@ -106,22 +108,11 @@ describe('Voting Reminder Integration Tests', () => {
       const proposal = createActiveProposalWithElapsedTime('proposal-30-voted', 32);
       
       // Setup mock with user's vote already recorded
-      const voteEvents = [{
-        daoId: testDaoId,
-        proposalId: proposal.id,
-        voterAddress: testUser.address,
-        support: '1',
-        votingPower: '1000000000000000000000',
-        timestamp: Math.floor(Date.now() / 1000).toString()
-      }];
+      const voteEvents = [VoteFactory.createVote(testUser.address, proposal.id, {
+        votingPower: '1000000000000000000000'
+      })];
       
-      GraphQLMockSetup.setupMock(
-        httpMockSetup.getMockClient(),
-        [proposal],
-        [],
-        { [testDaoId]: 1 },
-        voteEvents // User HAS voted
-      );
+      useProposalsAndVotes([proposal], voteEvents);
 
       // Wait for processing to complete and verify no messages
       await waitForCondition(
@@ -147,14 +138,7 @@ describe('Voting Reminder Integration Tests', () => {
       // Create proposal where 32% of time has elapsed
       const proposal = createActiveProposalWithElapsedTime('proposal-30-duplicate', 32);
       
-      // Setup mock FIRST before inserting deduplication record
-      GraphQLMockSetup.setupMock(
-        httpMockSetup.getMockClient(),
-        [proposal],
-        [],
-        { [testDaoId]: 1 },
-        [] // User has NOT voted
-      );
+      useProposalsAndVotes([proposal], []);
       
       // Wait for initial notification to be sent
       await waitForCondition(
@@ -187,14 +171,7 @@ describe('Voting Reminder Integration Tests', () => {
       // Create proposal where 62% of time has elapsed (triggers 60% reminder, within 60-65% window)
       const proposal = createActiveProposalWithElapsedTime('proposal-60-reminder', 62);
       
-      // Setup mock to return the active proposal
-      GraphQLMockSetup.setupMock(
-        httpMockSetup.getMockClient(),
-        [proposal],
-        [],
-        { [testDaoId]: 1 },
-        [] // User has NOT voted
-      );
+      useProposalsAndVotes([proposal], []);
 
       // Wait for the notification to be sent
       const message = await telegramHelper.waitForMessage(
@@ -221,14 +198,7 @@ describe('Voting Reminder Integration Tests', () => {
       // Create proposal where 92% of time has elapsed (triggers 90% reminder)
       const proposal = createActiveProposalWithElapsedTime('proposal-90-reminder', 92);
       
-      // Setup mock
-      GraphQLMockSetup.setupMock(
-        httpMockSetup.getMockClient(),
-        [proposal],
-        [],
-        { [testDaoId]: 1 },
-        [] // User has NOT voted
-      );
+      useProposalsAndVotes([proposal], []);
 
       // Wait for the notification to be sent
       const message = await telegramHelper.waitForMessage(
@@ -258,20 +228,13 @@ describe('Voting Reminder Integration Tests', () => {
       const endTime = startTime + proposalDuration;
 
       const proposal = ProposalFactory.createProposal(testDaoId, 'proposal-time-calc', {
-        status: 'ACTIVE',
-        timestamp: startTime.toString(),
-        endTimestamp: endTime.toString(),
+        status: onchainProposalStatusListEnum.ACTIVE,
+        timestamp: startTime,
+        endTimestamp: endTime,
         description: 'Test time calculation'
       });
       
-      // Setup mocks
-      GraphQLMockSetup.setupMock(
-        httpMockSetup.getMockClient(),
-        [proposal],
-        [],
-        { [testDaoId]: 1 },
-        []
-      );
+      useProposalsAndVotes([proposal], []);
 
       // Wait for the notification
       const message = await telegramHelper.waitForMessage(
@@ -290,13 +253,7 @@ describe('Voting Reminder Integration Tests', () => {
       
       // First: 30% threshold
       let proposal = createActiveProposalWithElapsedTime(proposalId, 32);
-      GraphQLMockSetup.setupMock(
-        httpMockSetup.getMockClient(),
-        [proposal],
-        [],
-        { [testDaoId]: 1 },
-        []
-      );
+      useProposalsAndVotes([proposal], []);
 
       let message = await telegramHelper.waitForMessage(
         msg => msg.text.includes('Early Voting Reminder'),
@@ -306,13 +263,7 @@ describe('Voting Reminder Integration Tests', () => {
 
       // Second: 60% threshold (proposal time has advanced)
       proposal = createActiveProposalWithElapsedTime(proposalId, 62);
-      GraphQLMockSetup.setupMock(
-        httpMockSetup.getMockClient(),
-        [proposal],
-        [],
-        { [testDaoId]: 1 },
-        []
-      );
+      useProposalsAndVotes([proposal], []);
 
       message = await telegramHelper.waitForMessage(
         msg => msg.text.includes('Mid-Period Voting Reminder'),
@@ -340,17 +291,11 @@ describe('Voting Reminder Integration Tests', () => {
   describe('Edge Cases', () => {
     test('should handle proposals with no title gracefully', async () => {
       const proposal = createActiveProposalWithElapsedTime('proposal-no-title', 32);
-      // Remove title to test extraction from description
-      proposal.title = undefined;
+      // Empty title forces extraction from description
+      proposal.title = '';
       proposal.description = 'Update governance parameters. This proposal aims to improve the system.';
       
-      GraphQLMockSetup.setupMock(
-        httpMockSetup.getMockClient(),
-        [proposal],
-        [],
-        { [testDaoId]: 1 },
-        []
-      );
+      useProposalsAndVotes([proposal], []);
 
       const message = await telegramHelper.waitForMessage(
         msg => msg.text.includes('Voting Reminder'),
@@ -365,13 +310,7 @@ describe('Voting Reminder Integration Tests', () => {
       // Create proposal where only 25% of time has elapsed (below 30% threshold)
       const proposal = createActiveProposalWithElapsedTime('proposal-below-threshold', 25);
       
-      GraphQLMockSetup.setupMock(
-        httpMockSetup.getMockClient(),
-        [proposal],
-        [],
-        { [testDaoId]: 1 },
-        []
-      );
+      useProposalsAndVotes([proposal], []);
 
       // Wait for processing to complete and verify no messages
       await waitForCondition(
@@ -411,13 +350,7 @@ describe('Voting Reminder Integration Tests', () => {
       // Create proposal in original DAO
       const proposal = createActiveProposalWithElapsedTime('proposal-non-subscribed', 32);
       
-      GraphQLMockSetup.setupMock(
-        httpMockSetup.getMockClient(),
-        [proposal],
-        [],
-        { [testDaoId]: 1 },
-        []
-      );
+      useProposalsAndVotes([proposal], []);
 
       // Wait for notification (should only go to subscribed user)
       const message = await telegramHelper.waitForMessage(
