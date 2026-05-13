@@ -84,7 +84,7 @@ describe('New Offchain Proposal Trigger - Integration Test', () => {
     expect(message.chatId).toBe(testUser.chatId);
 
     const buttons = message.reply_markup?.inline_keyboard?.flat() ?? [];
-    const discussionButton = buttons.find((btn: any) => btn.url === discussionUrl);
+    const discussionButton = buttons.find((btn: { url?: string }) => btn.url === discussionUrl);
     expect(discussionButton).toBeDefined();
     expect(discussionButton.text).toBe('View Discussion');
   });

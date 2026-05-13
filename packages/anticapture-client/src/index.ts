@@ -10,6 +10,7 @@ export {
   feedEventTypeEnum,
   feedRelevanceEnum,
   onchainProposalStatusListEnum,
+  offchainProposalStatusListEnum,
   historicalVotingPowerQueryParamsOrderByEnum,
 } from '@anticapture/client';
 
@@ -18,8 +19,15 @@ export type {
   FeedEventType,
   FeedRelevance,
   OnchainProposalStatusListEnumKey,
+  OffchainProposalStatusListEnumKey,
   HistoricalVotingPowerQueryParamsOrderByEnumKey,
   ProposalsQueryParams,
   HistoricalVotingPowerQueryParams,
   OnchainProposal,
+  OnchainVote,
+  OffchainProposal,
+  OffchainVote,
+  Voter,
+  OffchainNonVoter,
+  HistoricalVotingPower,
 } from '@anticapture/client';

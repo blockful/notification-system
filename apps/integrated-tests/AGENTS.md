@@ -61,14 +61,20 @@ src/
 ## Typical Test Pattern
 
 ```typescript
+import { proposalsHandler } from '@anticapture/client/msw';
+import { server } from '../src/mocks/msw-server';
+
 it('should send notification for new proposal', async () => {
   const apps = TestCleanup.getGlobalApps();
 
   // 1. Create test data via factories
   await UserFactory.createWithSubscription({ channel: 'telegram', daoId: 'ENS' });
 
-  // 2. Setup GraphQL responses (stub/fake or mock)
-  GraphQLMockSetup.setupMock(httpMock, [proposal]);
+  // 2. Override the relevant kubb MSW handler with the test's data.
+  //    Defaults in `msw-server.ts` return empty envelopes for every endpoint,
+  //    so tests only need to override what they exercise. The kubb handler
+  //    accepts the full `{ items, totalCount }` envelope shape.
+  server.use(proposalsHandler({ items: [proposal], totalCount: 1 }));
 
   // 3. Wait for notification delivery
   const messages = await TelegramTestHelper.waitForMessage(mockSendMessage);
@@ -76,6 +82,15 @@ it('should send notification for new proposal', async () => {
   // 4. Assert
   expect(messages[0].text).toContain('New governance proposal');
 });
+```
+
+For endpoints that filter on query params (e.g., non-voter lookup that filters by `addresses[]`), pass a resolver instead of a static envelope. Use the shared `nonVotersResolver` helper from `src/mocks/msw-server.ts`:
+
+```typescript
+import { proposalNonVotersHandler } from '@anticapture/client/msw';
+import { server, nonVotersResolver } from '../../src/mocks/msw-server';
+
+server.use(proposalNonVotersHandler(nonVotersResolver(votes)));
 ```
 
 ## Jest Configuration

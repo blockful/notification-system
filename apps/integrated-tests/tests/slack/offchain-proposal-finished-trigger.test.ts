@@ -1,5 +1,6 @@
 import { describe, test, expect, beforeAll, beforeEach } from 'vitest';
 import { offchainProposalsHandler } from '@anticapture/client/msw';
+import { offchainProposalStatusListEnum } from '@notification-system/anticapture-client';
 import { db, TestApps } from '../../src/setup';
 import { server } from '../../src/mocks/msw-server';
 import { UserFactory, OffchainProposalFactory, WorkspaceFactory } from '../../src/fixtures';
@@ -20,7 +21,7 @@ describe('Slack Offchain Proposal Finished Trigger - Integration Test', () => {
   const createFinishedOffchainProposal = (daoId: string, proposalId: string, overrides?: Partial<ReturnType<typeof OffchainProposalFactory.createProposal>>) => {
     const now = Math.floor(Date.now() / 1000);
     return OffchainProposalFactory.createProposal(daoId, proposalId, {
-      state: 'closed',
+      state: offchainProposalStatusListEnum.closed,
       created: now - 7 * 24 * 60 * 60,
       end: now - 10,
       title: `Finished Snapshot Proposal ${proposalId}`,

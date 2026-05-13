@@ -6,6 +6,7 @@
 
 import { describe, test, expect, beforeAll, afterEach } from 'vitest';
 import { proposalsHandler } from '@anticapture/client/msw';
+import { onchainProposalStatusListEnum } from '@notification-system/anticapture-client';
 import { db, TestApps } from '../../src/setup';
 import { server } from '../../src/mocks/msw-server';
 import { UserFactory, ProposalFactory, WorkspaceFactory } from '../../src/fixtures';
@@ -36,11 +37,11 @@ describe('Slack Proposal Finished Trigger - Integration Test', () => {
     const endBlock = startBlock + blocksToRun;
 
     return ProposalFactory.createProposal(daoId, proposalId, {
-      timestamp: Math.floor(proposalCreationTime.getTime() / 1000).toString(),
+      timestamp: Math.floor(proposalCreationTime.getTime() / 1000),
       startBlock: startBlock,
       endBlock: endBlock,
-      endTimestamp: Math.floor(proposalEndTime / 1000).toString(), // Finished 10 seconds ago
-      status: 'EXECUTED',
+      endTimestamp: Math.floor(proposalEndTime / 1000),
+      status: onchainProposalStatusListEnum.EXECUTED,
       description: `# Finished Proposal\n\nThis proposal has ended.`
     });
   };
@@ -136,10 +137,10 @@ describe('Slack Proposal Finished Trigger - Integration Test', () => {
     // Create a proposal that will finish in the future
     const now = Math.floor(Date.now() / 1000);
     const futureProposal = ProposalFactory.createProposal(testDaoId, 'future-proposal-1', {
-      timestamp: (now - 10).toString(), // Created 10 seconds ago
+      timestamp: now - 10,
       startBlock: testConstants.proposalTiming.defaultStartBlock,
-      endBlock: testConstants.proposalTiming.defaultStartBlock + testConstants.proposalTiming.futureProposalBlocks, // Will finish in ~1080 seconds
-      status: 'ACTIVE',
+      endBlock: testConstants.proposalTiming.defaultStartBlock + testConstants.proposalTiming.futureProposalBlocks,
+      status: onchainProposalStatusListEnum.ACTIVE,
       description: '# Future Proposal\n\nThis proposal will not finish during the test.'
     });
 
@@ -235,11 +236,11 @@ describe('Slack Proposal Finished Trigger - Integration Test', () => {
 
     // Create proposal that was created and finished before user subscription
     const oldProposal = ProposalFactory.createProposal(testDaoId, 'old-finished-proposal', {
-      timestamp: Math.floor(proposalCreatedAt.getTime() / 1000).toString(),
-      endTimestamp: Math.floor(proposalCreatedAt.getTime() / 1000 + 3600).toString(), // Ended 1 hour after creation, still before subscription
+      timestamp: Math.floor(proposalCreatedAt.getTime() / 1000),
+      endTimestamp: Math.floor(proposalCreatedAt.getTime() / 1000 + 3600),
       startBlock: testConstants.proposalTiming.defaultStartBlock,
-      endBlock: testConstants.proposalTiming.defaultStartBlock + 1, // Finished quickly (1 block = 12 seconds)
-      status: 'EXECUTED',
+      endBlock: testConstants.proposalTiming.defaultStartBlock + 1,
+      status: onchainProposalStatusListEnum.EXECUTED,
       description: '# Old Proposal\n\nThis finished before user subscribed.'
     });
 
