@@ -1,4 +1,4 @@
-import { describe, it, expect, jest, beforeEach, afterEach } from '@jest/globals';
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { OffchainProposalFinishedTrigger } from '../src/triggers/offchain-proposal-finished-trigger';
 import {
   OffchainProposal,
@@ -71,7 +71,7 @@ describe('OffchainProposalFinishedTrigger', () => {
     });
 
     it('should advance cursor so next fetch uses max end + 1', async () => {
-      jest.useFakeTimers();
+      vi.useFakeTimers();
       const proposals = [
         createClosedOffchainProposal({ id: 'snap-1', end: 1700100200 }),
         createClosedOffchainProposal({ id: 'snap-2', end: 1700100100 }),
@@ -80,7 +80,7 @@ describe('OffchainProposalFinishedTrigger', () => {
       await trigger.process(proposals);
 
       trigger.start();
-      jest.advanceTimersByTime(60000);
+      vi.advanceTimersByTime(60000);
 
       expect(dataSource.callHistory[0]).toEqual({
         status: ['closed'],
@@ -90,7 +90,7 @@ describe('OffchainProposalFinishedTrigger', () => {
       });
 
       await trigger.stop();
-      jest.useRealTimers();
+      vi.useRealTimers();
     });
 
     it('should include all proposals in events array', async () => {
@@ -117,17 +117,17 @@ describe('OffchainProposalFinishedTrigger', () => {
 
   describe('start/stop', () => {
     beforeEach(() => {
-      jest.useFakeTimers();
+      vi.useFakeTimers();
       dataSource.proposals = [createClosedOffchainProposal()];
     });
 
     afterEach(() => {
-      jest.useRealTimers();
+      vi.useRealTimers();
     });
 
     it('should start interval and fetch data with correct options', () => {
       trigger.start();
-      jest.advanceTimersByTime(60000);
+      vi.advanceTimersByTime(60000);
 
       expect(dataSource.callHistory).toEqual([{
         status: ['closed'],
@@ -141,7 +141,7 @@ describe('OffchainProposalFinishedTrigger', () => {
       trigger.start();
       await trigger.stop();
 
-      jest.advanceTimersByTime(120000);
+      vi.advanceTimersByTime(120000);
 
       expect(dataSource.callHistory).toEqual([]);
     });
@@ -149,13 +149,13 @@ describe('OffchainProposalFinishedTrigger', () => {
 
   describe('initialTimestamp & reset', () => {
     it('should use custom initialTimestamp for first fetch', () => {
-      jest.useFakeTimers();
+      vi.useFakeTimers();
       const customTrigger = new OffchainProposalFinishedTrigger(
         dispatcher, dataSource, 60000, '1234567890'
       );
 
       customTrigger.start();
-      jest.advanceTimersByTime(60000);
+      vi.advanceTimersByTime(60000);
 
       expect(dataSource.callHistory[0]).toEqual({
         status: ['closed'],
@@ -165,15 +165,15 @@ describe('OffchainProposalFinishedTrigger', () => {
       });
 
       customTrigger.stop();
-      jest.useRealTimers();
+      vi.useRealTimers();
     });
 
     it('should reset to specific timestamp for next fetch', () => {
-      jest.useFakeTimers();
+      vi.useFakeTimers();
       trigger.reset('9999999999');
 
       trigger.start();
-      jest.advanceTimersByTime(60000);
+      vi.advanceTimersByTime(60000);
 
       expect(dataSource.callHistory[0]).toEqual({
         status: ['closed'],
@@ -183,19 +183,19 @@ describe('OffchainProposalFinishedTrigger', () => {
       });
 
       trigger.stop();
-      jest.useRealTimers();
+      vi.useRealTimers();
     });
 
     it('should reset to 24h ago when no argument', () => {
-      jest.useFakeTimers();
-      jest.setSystemTime(new Date('2025-01-15T12:00:00Z'));
+      vi.useFakeTimers();
+      vi.setSystemTime(new Date('2025-01-15T12:00:00Z'));
 
       trigger.reset();
 
       const expected = Math.floor((Date.now() - 24 * 60 * 60 * 1000) / 1000);
 
       trigger.start();
-      jest.advanceTimersByTime(60000);
+      vi.advanceTimersByTime(60000);
       expect(dataSource.callHistory[0]).toEqual({
         status: ['closed'],
         endDate: expected,
@@ -204,23 +204,23 @@ describe('OffchainProposalFinishedTrigger', () => {
       });
 
       trigger.stop();
-      jest.useRealTimers();
+      vi.useRealTimers();
     });
   });
 
   describe('fetchData via start', () => {
     beforeEach(() => {
-      jest.useFakeTimers();
+      vi.useFakeTimers();
     });
 
     afterEach(async () => {
       await trigger.stop();
-      jest.useRealTimers();
+      vi.useRealTimers();
     });
 
     it('should fetch with status closed and endDate cursor', () => {
       trigger.start();
-      jest.advanceTimersByTime(60000);
+      vi.advanceTimersByTime(60000);
 
       expect(dataSource.callHistory[0]).toEqual({
         status: ['closed'],
@@ -235,7 +235,7 @@ describe('OffchainProposalFinishedTrigger', () => {
       await trigger.process([proposal]);
 
       trigger.start();
-      jest.advanceTimersByTime(60000);
+      vi.advanceTimersByTime(60000);
 
       expect(dataSource.callHistory[0]).toEqual({
         status: ['closed'],
@@ -248,12 +248,12 @@ describe('OffchainProposalFinishedTrigger', () => {
 
   describe('cursor-based deduplication', () => {
     it('should advance cursor so API filters out already-processed proposals', async () => {
-      jest.useFakeTimers();
+      vi.useFakeTimers();
       const proposalA = createClosedOffchainProposal({ id: 'snap-a', end: 1700100000 });
       await trigger.process([proposalA]);
 
       trigger.start();
-      jest.advanceTimersByTime(60000);
+      vi.advanceTimersByTime(60000);
 
       expect(dataSource.callHistory[0]).toEqual({
         status: ['closed'],
@@ -263,7 +263,7 @@ describe('OffchainProposalFinishedTrigger', () => {
       });
 
       await trigger.stop();
-      jest.useRealTimers();
+      vi.useRealTimers();
     });
 
     it('should process new proposals after cursor update', async () => {

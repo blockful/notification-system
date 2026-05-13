@@ -1,5 +1,4 @@
-import { describe, test, expect, jest, beforeEach, afterEach } from '@jest/globals';
-import axios from 'axios';
+import { describe, test, expect, vi, beforeEach, afterEach } from 'vitest';
 import { OffchainVoteCastTrigger } from '../src/triggers/offchain-vote-cast-trigger';
 import { OffchainVotesRepository } from '../src/repositories/offchain-votes.repository';
 import { DispatcherService, DispatcherMessage } from '../src/interfaces/dispatcher.interface';
@@ -16,7 +15,7 @@ class SimpleDispatcherService implements DispatcherService {
 
 class StubOffchainVotesRepository extends OffchainVotesRepository {
   constructor() {
-    super(new AnticaptureClient(axios.create()));
+    super(new AnticaptureClient({ baseURL: 'http://localhost' }));
   }
 
   override async listRecentOffchainVotes(): Promise<OffchainVoteWithDaoId[]> {
@@ -88,15 +87,15 @@ describe('OffchainVoteCastTrigger', () => {
     });
 
     test('should default to current time when no argument', () => {
-      jest.useFakeTimers();
-      jest.setSystemTime(new Date('2025-06-15T12:00:00Z'));
+      vi.useFakeTimers();
+      vi.setSystemTime(new Date('2025-06-15T12:00:00Z'));
 
       trigger.reset();
 
       const expectedTimestamp = Math.floor(new Date('2025-06-15T12:00:00Z').getTime() / 1000);
       expect(trigger.getLastProcessedTimestamp()).toBe(expectedTimestamp);
 
-      jest.useRealTimers();
+      vi.useRealTimers();
     });
   });
 });

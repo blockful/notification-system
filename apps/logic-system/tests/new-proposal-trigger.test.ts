@@ -2,12 +2,12 @@
  * Unit tests for NewProposalTrigger
  */
 
-import { describe, it, expect, jest, beforeEach, afterEach } from '@jest/globals';
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { NewProposalTrigger } from '../src/triggers/new-proposal-trigger';
 import { ProposalOnChain } from '../src/interfaces/proposal.interface';
 import { createProposal, createMockDispatcherService, createMockProposalDataSource } from './mocks';
 import { NotificationTypeId } from '@notification-system/messages';
-import { QueryInput_Proposals_Status_Items } from '@notification-system/anticapture-client';
+import { onchainProposalStatusListEnum } from '@notification-system/anticapture-client';
 
 describe('NewProposalTrigger', () => {
   let mockDispatcherService: ReturnType<typeof createMockDispatcherService>;
@@ -73,13 +73,13 @@ describe('NewProposalTrigger', () => {
   
   describe('start and stop', () => {
     beforeEach(() => {
-      jest.useFakeTimers();
+      vi.useFakeTimers();
       const proposal = createProposal();
       mockProposalDataSource.listAll.mockResolvedValue([proposal]);
     });
     
     afterEach(() => {
-      jest.useRealTimers();
+      vi.useRealTimers();
     });
     
     it('should throw error if status option is not provided', async () => {
@@ -89,8 +89,8 @@ describe('NewProposalTrigger', () => {
 
     it('should start the interval and fetch proposals with status and timestamp filter', () => {
       const initialTimestamp = trigger['timestampCursor'];
-      trigger.start({ status: QueryInput_Proposals_Status_Items.Active });
-      jest.advanceTimersByTime(60000);
+      trigger.start({ status: onchainProposalStatusListEnum.ACTIVE });
+      vi.advanceTimersByTime(60000);
       
       expect(mockProposalDataSource.listAll).toHaveBeenCalledTimes(1);
       expect(mockProposalDataSource.listAll).toHaveBeenCalledWith({ 
@@ -100,12 +100,12 @@ describe('NewProposalTrigger', () => {
     });
     
     it('should stop and restart the interval if start is called twice', () => {
-      const stopSpy = jest.spyOn(trigger, 'stop');
+      const stopSpy = vi.spyOn(trigger, 'stop');
       const initialTimestamp = trigger['timestampCursor'];
-      trigger.start({ status: QueryInput_Proposals_Status_Items.Active });
-      trigger.start({ status: QueryInput_Proposals_Status_Items.Active });
+      trigger.start({ status: onchainProposalStatusListEnum.ACTIVE });
+      trigger.start({ status: onchainProposalStatusListEnum.ACTIVE });
       expect(stopSpy).toHaveBeenCalledTimes(1);
-      jest.advanceTimersByTime(60000);
+      vi.advanceTimersByTime(60000);
       
       expect(mockProposalDataSource.listAll).toHaveBeenCalledWith({ 
         status: 'ACTIVE',
@@ -115,8 +115,8 @@ describe('NewProposalTrigger', () => {
     
     it('should stop the interval when stop is called', () => {
       const initialTimestamp = trigger['timestampCursor'];
-      trigger.start({ status: QueryInput_Proposals_Status_Items.Active });
-      jest.advanceTimersByTime(60000);
+      trigger.start({ status: onchainProposalStatusListEnum.ACTIVE });
+      vi.advanceTimersByTime(60000);
       
       expect(mockProposalDataSource.listAll).toHaveBeenCalledTimes(1);
       expect(mockProposalDataSource.listAll).toHaveBeenCalledWith({ 
@@ -127,7 +127,7 @@ describe('NewProposalTrigger', () => {
       mockProposalDataSource.listAll.mockClear();
       trigger.stop();
       
-      jest.advanceTimersByTime(60000);
+      vi.advanceTimersByTime(60000);
       expect(mockProposalDataSource.listAll).not.toHaveBeenCalled();
     });
   });

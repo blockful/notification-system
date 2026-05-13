@@ -1,4 +1,4 @@
-import { describe, it, expect, jest, beforeEach, afterEach } from '@jest/globals';
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { NewOffchainProposalTrigger } from '../src/triggers/new-offchain-proposal-trigger';
 import {
   OffchainProposal,
@@ -101,17 +101,17 @@ describe('NewOffchainProposalTrigger', () => {
 
   describe('start/stop', () => {
     beforeEach(() => {
-      jest.useFakeTimers();
+      vi.useFakeTimers();
       dataSource.proposals = [createOffchainProposal()];
     });
 
     afterEach(() => {
-      jest.useRealTimers();
+      vi.useRealTimers();
     });
 
     it('should start interval, fetch data, and process it', () => {
       trigger.start({ status: ['active', 'pending'] });
-      jest.advanceTimersByTime(60000);
+      vi.advanceTimersByTime(60000);
 
       expect(dataSource.lastOptions).toBeDefined();
       expect(dataSource.lastOptions!.status).toEqual(['active', 'pending']);
@@ -123,7 +123,7 @@ describe('NewOffchainProposalTrigger', () => {
 
       expect(trigger['timer']).toBeNull();
 
-      jest.advanceTimersByTime(120000);
+      vi.advanceTimersByTime(120000);
       expect(dataSource.lastOptions).toBeUndefined();
     });
   });
@@ -144,15 +144,15 @@ describe('NewOffchainProposalTrigger', () => {
     });
 
     it('should reset to 24h ago when no argument', () => {
-      jest.useFakeTimers();
-      jest.setSystemTime(new Date('2025-01-15T12:00:00Z'));
+      vi.useFakeTimers();
+      vi.setSystemTime(new Date('2025-01-15T12:00:00Z'));
 
       trigger.reset();
 
       const expected = Math.floor((Date.now() - 24 * 60 * 60 * 1000) / 1000);
       expect(trigger['timestampCursor']).toBe(expected);
 
-      jest.useRealTimers();
+      vi.useRealTimers();
     });
   });
 

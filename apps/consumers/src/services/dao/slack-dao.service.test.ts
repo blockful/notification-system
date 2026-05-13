@@ -3,18 +3,29 @@ import { setupServer } from 'msw/node';
 import { http, HttpResponse } from 'msw';
 import { SlackDAOService } from './slack-dao.service';
 import { ISubscriptionAPI, SubscriptionAPIService, UserSubscriptionResponse } from '../subscription-api.service';
-import type { DAOSource } from './base-dao.service';
+import type { IAnticaptureClient } from '@notification-system/anticapture-client';
 import type { SlackDAORequest } from './slack-dao.service';
 
 const TEST_API_URL = 'http://test-api';
 
-class SimpleAnticaptureClient implements DAOSource {
+class SimpleAnticaptureClient implements IAnticaptureClient {
   async getDAOs() {
     return [
       { id: 'UNI', chainId: 1, blockTime: 12, votingDelay: '0', alreadySupportCalldataReview: false, supportOffchainData: false },
       { id: 'ENS', chainId: 1, blockTime: 12, votingDelay: '0', alreadySupportCalldataReview: false, supportOffchainData: false },
     ];
   }
+  async getProposalById() { return null; }
+  async listProposals() { return []; }
+  async listVotingPowerHistory() { return []; }
+  async listVotes() { return []; }
+  async getProposalNonVoters() { return []; }
+  async getOffchainProposalNonVoters() { return []; }
+  async listRecentVotesFromAllDaos() { return []; }
+  async getEventThreshold() { return null; }
+  async listOffchainProposals() { return []; }
+  async listOffchainVotes() { return []; }
+  async listRecentOffchainVotesFromAllDaos() { return []; }
 }
 
 class SimpleSubscriptionAPI implements ISubscriptionAPI {
