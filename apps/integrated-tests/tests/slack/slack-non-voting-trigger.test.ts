@@ -8,7 +8,7 @@ import { describe, test, expect, beforeEach, beforeAll } from 'vitest';
 import { proposalsHandler, proposalNonVotersHandler } from '@anticapture/client/msw';
 import { onchainProposalStatusListEnum, type OnchainProposal } from '@notification-system/anticapture-client';
 import { db, TestApps } from '../../src/setup';
-import { server, nonVotersResolver } from '../../src/mocks/msw-server';
+import { server, nonVotersResolver } from '../../src/setup/msw-server';
 import { UserFactory, ProposalFactory, VoteFactory, VoteData, WorkspaceFactory } from '../../src/fixtures';
 import { SlackTestHelper, DatabaseTestHelper, TestCleanup } from '../../src/helpers';
 import { SlackTestClient } from '../../src/test-clients/slack-test.client';

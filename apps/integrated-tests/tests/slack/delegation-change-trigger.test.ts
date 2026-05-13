@@ -7,7 +7,7 @@
 import { describe, test, expect, beforeAll, afterEach } from 'vitest';
 import { historicalVotingPowerHandler } from '@anticapture/client/msw';
 import { db, TestApps } from '../../src/setup';
-import { server } from '../../src/mocks/msw-server';
+import { server } from '../../src/setup/msw-server';
 import { UserFactory, VotingPowerFactory, WorkspaceFactory } from '../../src/fixtures';
 import { SlackTestHelper, DatabaseTestHelper, TestCleanup } from '../../src/helpers';
 import { SlackTestClient } from '../../src/test-clients/slack-test.client';

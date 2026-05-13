@@ -18,14 +18,32 @@ import { RabbitMQTestSetup } from '../rabbitmq-setup';
 import { serviceConfig, timeouts } from '../../config';
 import { env } from '../../config/env';
 import { waitFor } from '../../helpers/utilities/wait-for';
-import { MockEnsResolverService } from '../../mocks/ens-resolver-mock';
+import type { IEnsResolver } from '@notification-system/consumer/dist/services/ens-resolver.service';
 import { TelegramTestClient } from '../../test-clients/telegram-test.client';
 import { SlackTestClient } from '../../test-clients/slack-test.client';
 import { mockTelegramSendMessage } from '../../mocks/telegram-mock-setup';
 import { mockSlackSendMessage } from '../../mocks/slack-mock-setup';
-import { MOCK_ANTICAPTURE_URL } from '../../mocks/msw-server';
+import { MOCK_ANTICAPTURE_URL } from '../msw-server';
 import { onchainProposalStatusListEnum } from '@notification-system/anticapture-client';
 import type { Mock } from 'vitest';
+
+class SimpleEnsResolver implements IEnsResolver {
+  private readonly ensNames: Record<string, string> = {
+    '0xd8da6bf26964af9d7eed9e03e53415d37aa96045': 'vitalik.eth',
+    '0x225f137127d9067788314bc7fcc1f36746a3c3b5': 'nick.eth',
+    '0x983110309620d911731ac0932219af06091b6744': 'brantly.eth',
+    '0xb8c2c29ee19d8307cb7255e1cd9cbde883a267d5': 'firefish.eth',
+    '0x59a7abcf26ae2990ecbca902a2ea43536a4f56d9': 'theblackbelt.eth',
+  };
+
+  async resolveToAddress(_ensName: string): Promise<string | null> {
+    return null;
+  }
+
+  async resolveDisplayName(address: string): Promise<string> {
+    return this.ensNames[address.toLowerCase()] ?? address;
+  }
+}
 
 /**
  * @notice Type definition for test applications container
@@ -170,12 +188,12 @@ const startConsumer = async (
   telegramClient: any,
   slackClient: any
 ): Promise<ConsumerApp> => {
-  const mockEnsResolver = new MockEnsResolverService();
+  const ensResolver = new SimpleEnsResolver();
   const consumerApp = new ConsumerApp(
     TEST_CONFIG.urls.subscriptionServer,
     MOCK_ANTICAPTURE_URL,
     rabbitmqUrl,
-    mockEnsResolver,
+    ensResolver,
     telegramClient,
     slackClient,
     3003

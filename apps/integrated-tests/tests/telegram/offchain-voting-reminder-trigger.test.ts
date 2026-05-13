@@ -12,7 +12,7 @@ import {
 } from '@anticapture/client/msw';
 import { offchainProposalStatusListEnum, type OffchainProposal, type OffchainVote } from '@notification-system/anticapture-client';
 import { db, TestApps } from '../../src/setup';
-import { server, nonVotersResolver } from '../../src/mocks/msw-server';
+import { server, nonVotersResolver } from '../../src/setup/msw-server';
 import { UserFactory, OffchainProposalFactory, OffchainVoteFactory } from '../../src/fixtures';
 import { TelegramTestHelper, DatabaseTestHelper, TestCleanup } from '../../src/helpers';
 import { testConstants, timeouts } from '../../src/config';

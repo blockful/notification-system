@@ -1,7 +1,7 @@
 import { describe, test, expect, beforeEach, beforeAll } from 'vitest';
 import { historicalVotingPowerHandler } from '@anticapture/client/msw';
 import { db, TestApps } from '../../src/setup';
-import { server } from '../../src/mocks/msw-server';
+import { server } from '../../src/setup/msw-server';
 import { UserFactory, VotingPowerFactory } from '../../src/fixtures';
 import { TelegramTestHelper, DatabaseTestHelper, TestCleanup } from '../../src/helpers';
 import { testConstants, timeouts } from '../../src/config';

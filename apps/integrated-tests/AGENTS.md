@@ -49,11 +49,12 @@ src/
 │   ├── database/                   # DatabaseTestHelper (waitForNotificationRecord), DatabaseCleanup
 │   ├── messaging/                  # TelegramTestHelper, SlackTestHelper, EventCollector
 │   └── utilities/                  # TestCleanup, waitFor (async polling)
-├── mocks/                          # GraphQL/Telegram/Slack/ENS test doubles (prefer stubs/fakes over mocks as we migrate)
+├── mocks/                          # Remaining Telegram/Slack vi.fn() mocks (being migrated to Simple* doubles)
 ├── setup/
 │   ├── database/                   # SQLite Knex config + migration runner
-│   ├── jest/                       # Global setup/teardown + suite hooks
+│   ├── vitest/                     # Global setup/teardown + suite hooks
 │   ├── services/                   # App startup logic for all 4 services
+│   ├── msw-server.ts              # MSW setupServer + default kubb handlers + nonVotersResolver helper
 │   └── rabbitmq-setup.ts          # Singleton RabbitMQ container manager
 └── test-clients/                   # Telegram/Slack test client wrappers
 ```
@@ -62,7 +63,7 @@ src/
 
 ```typescript
 import { proposalsHandler } from '@anticapture/client/msw';
-import { server } from '../src/mocks/msw-server';
+import { server } from '../src/setup/msw-server';
 
 it('should send notification for new proposal', async () => {
   const apps = TestCleanup.getGlobalApps();
@@ -84,11 +85,11 @@ it('should send notification for new proposal', async () => {
 });
 ```
 
-For endpoints that filter on query params (e.g., non-voter lookup that filters by `addresses[]`), pass a resolver instead of a static envelope. Use the shared `nonVotersResolver` helper from `src/mocks/msw-server.ts`:
+For endpoints that filter on query params (e.g., non-voter lookup that filters by `addresses[]`), pass a resolver instead of a static envelope. Use the shared `nonVotersResolver` helper from `src/setup/msw-server.ts`:
 
 ```typescript
 import { proposalNonVotersHandler } from '@anticapture/client/msw';
-import { server, nonVotersResolver } from '../../src/mocks/msw-server';
+import { server, nonVotersResolver } from '../../src/setup/msw-server';
 
 server.use(proposalNonVotersHandler(nonVotersResolver(votes)));
 ```

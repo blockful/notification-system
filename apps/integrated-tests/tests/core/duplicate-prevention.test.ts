@@ -3,7 +3,7 @@ import { proposalsHandler, getDaosHandler, offchainProposalsHandler } from '@ant
 import { HttpResponse } from 'msw';
 import type { OnchainProposal } from '@notification-system/anticapture-client';
 import { db, TestApps } from '../../src/setup';
-import { server } from '../../src/mocks/msw-server';
+import { server } from '../../src/setup/msw-server';
 import { UserFactory, ProposalFactory } from '../../src/fixtures';
 import { TelegramTestHelper, DatabaseTestHelper, TestCleanup } from '../../src/helpers';
 import { testConstants, timeouts } from '../../src/config';
