@@ -25,7 +25,7 @@ queries/                        # GraphQL query definitions (edit these)
 └── proposalNonVoters.graphql
 src/
 ├── anticapture-client.ts       # Main client class (axios + retry)
-├── schemas.ts                  # Zod schemas for response validation + processing
+├── types.ts                    # Shared types (re-exports + ProcessedVotingPowerHistory)
 ├── index.ts                    # Public exports
 └── gql/                        # AUTO-GENERATED - do not edit
     ├── graphql.ts              # Full type definitions

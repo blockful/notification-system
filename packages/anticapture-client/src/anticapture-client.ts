@@ -10,15 +10,45 @@ import {
   votesOffchain,
   historicalVotingPower,
 } from '@anticapture/client';
-import type { FeedEventType, FeedRelevance, RequestConfig } from '@anticapture/client';
+import type { FeedEventType, FeedRelevance, RequestConfig, HistoricalVotingPower } from '@anticapture/client';
 import { getAddress, isAddress } from 'viem';
 import { withRetryAndTimeout } from './with-retry-and-timeout';
 import type {
   OffchainProposalItem,
   OffchainVoteItem,
   ProcessedVotingPowerHistory,
-} from './schemas';
-import { processProposals, processVotingPowerHistory } from './schemas';
+} from './types';
+
+function processProposals(
+  data: { proposals: { items: any[]; totalCount: number } | null },
+  daoId: string
+) {
+  const items = data.proposals?.items ?? [];
+  return items.filter((p): p is NonNullable<typeof p> => p !== null).map(p => ({
+    ...p,
+    daoId,
+  }));
+}
+
+function processVotingPowerHistory(
+  data: { historicalVotingPower: { items: HistoricalVotingPower[] } | null },
+  daoId: string,
+  chainId?: number
+): ProcessedVotingPowerHistory[] {
+  const items = data.historicalVotingPower?.items ?? [];
+  return items
+    .filter(item => item.accountId)
+    .map(item => ({
+      ...item,
+      daoId,
+      changeType: item.delegation ? 'delegation' : item.transfer ? 'transfer' : 'other',
+      sourceAccountId: item.transfer?.from || item.delegation?.from || '',
+      targetAccountId: item.accountId,
+      previousDelegate: item.delegation?.previousDelegate || null,
+      newDelegate: item.delegation?.to || null,
+      ...(chainId !== undefined && { chainId }),
+    }));
+}
 
 export interface AnticaptureClientConfig {
   baseURL: string;
