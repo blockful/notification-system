@@ -6,14 +6,17 @@
 
 import { describe, test, expect, beforeEach, beforeAll } from 'vitest';
 import { proposalsHandler } from '@anticapture/client/msw';
-import { onchainProposalStatusListEnum } from '@notification-system/anticapture-client';
+import { onchainProposalStatusListEnum, type OnchainProposal } from '@notification-system/anticapture-client';
 import { db, TestApps } from '../../src/setup';
-import { server } from '../../src/setup/msw-server';
+import { server, proposalsByDaoResolver, daosFromItems } from '../../src/setup/msw-server';
 import { UserFactory, ProposalFactory, WorkspaceFactory } from '../../src/fixtures';
 import { SlackTestHelper, DatabaseTestHelper, TestCleanup } from '../../src/helpers';
 import { SimpleSlackClient } from '../../src/test-clients/simple-slack.client';
 import { testConstants, timeouts } from '../../src/config';
 import { env } from '../../src/config/env';
+
+const useProposals = (proposals: OnchainProposal[]) =>
+  server.use(daosFromItems(proposals), proposalsHandler(proposalsByDaoResolver(proposals)));
 
 describe('Slack New Proposal - Integration Test', () => {
   let apps: TestApps;
@@ -72,7 +75,7 @@ describe('Slack New Proposal - Integration Test', () => {
       endTimestamp: Math.floor((Date.now() + 7 * 24 * 60 * 60 * 1000) / 1000)
     });
 
-    server.use(proposalsHandler({ items: [proposal], totalCount: 1 }));
+    useProposals([proposal]);
 
     // Wait for Slack notification
     const message = await slackHelper.waitForMessage(
@@ -139,7 +142,7 @@ describe('Slack New Proposal - Integration Test', () => {
       endTimestamp: Math.floor((Date.now() + 7 * 24 * 60 * 60 * 1000) / 1000)
     });
 
-    server.use(proposalsHandler({ items: [proposal], totalCount: 1 }));
+    useProposals([proposal]);
 
     // Wait for Slack notification
     const message = await slackHelper.waitForMessage(
@@ -190,7 +193,7 @@ describe('Slack New Proposal - Integration Test', () => {
       endBlock: 200000
     });
 
-    server.use(proposalsHandler({ items: [proposal], totalCount: 1 }));
+    useProposals([proposal]);
 
     // Wait for both notifications
     const messages = await slackHelper.waitForMessageCount(
@@ -243,7 +246,7 @@ describe('Slack New Proposal - Integration Test', () => {
       timestamp: futureTimestamp
     });
 
-    server.use(proposalsHandler({ items: [proposal], totalCount: 1 }));
+    useProposals([proposal]);
 
     // Wait for Slack notification
     const slackMessage = await slackHelper.waitForMessage(

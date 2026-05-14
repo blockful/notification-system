@@ -21,7 +21,7 @@ export class ProposalRepository implements ProposalDataSource, VotingReminderDat
 
     // Status filtering
     if (options?.status) {
-      variables.status = options.status;
+      variables.status = Array.isArray(options.status) ? options.status : [options.status];
     }
 
     // Date filtering

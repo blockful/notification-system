@@ -1,11 +1,15 @@
 import { describe, test, expect, beforeEach, beforeAll } from 'vitest';
 import { offchainProposalsHandler } from '@anticapture/client/msw';
+import type { OffchainProposal } from '@notification-system/anticapture-client';
 import { db, TestApps } from '../../src/setup';
-import { server } from '../../src/setup/msw-server';
+import { server, offchainProposalsByDaoResolver, daosFromItems } from '../../src/setup/msw-server';
 import { UserFactory, OffchainProposalFactory } from '../../src/fixtures';
 import { TelegramTestHelper, DatabaseTestHelper, TestCleanup } from '../../src/helpers';
 import { testConstants, timeouts } from '../../src/config';
 import { NotificationTypeId } from '@notification-system/messages';
+
+const useOffchainProposals = (proposals: OffchainProposal[]) =>
+  server.use(daosFromItems(proposals), offchainProposalsHandler(offchainProposalsByDaoResolver(proposals)));
 
 describe('Notification Settings Filtering - Integration Test', () => {
   let apps: TestApps;
@@ -52,7 +56,7 @@ describe('Notification Settings Filtering - Integration Test', () => {
       title: 'Opted Out Proposal',
     });
 
-    server.use(offchainProposalsHandler({ items: [proposal], totalCount: 1 }));
+    useOffchainProposals([proposal]);
 
     // Assert: should NOT receive notification (expect timeout)
     const messagePromise = telegramHelper.waitForMessage(
@@ -81,7 +85,7 @@ describe('Notification Settings Filtering - Integration Test', () => {
       title: 'Default Behavior Proposal',
     });
 
-    server.use(offchainProposalsHandler({ items: [proposal], totalCount: 1 }));
+    useOffchainProposals([proposal]);
 
     // Assert: should receive notification (opt-out model: missing row = enabled)
     const message = await telegramHelper.waitForMessage(

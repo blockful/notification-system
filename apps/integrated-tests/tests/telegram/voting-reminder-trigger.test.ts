@@ -7,7 +7,7 @@ import { describe, test, expect, beforeEach, beforeAll } from 'vitest';
 import { proposalsHandler, proposalNonVotersHandler, votesHandler } from '@anticapture/client/msw';
 import { onchainProposalStatusListEnum, type OnchainProposal, type OnchainVote } from '@notification-system/anticapture-client';
 import { db, TestApps } from '../../src/setup';
-import { server, nonVotersResolver } from '../../src/setup/msw-server';
+import { server, nonVotersResolver, proposalsByDaoResolver, daosFromItems } from '../../src/setup/msw-server';
 import { UserFactory, ProposalFactory, VoteFactory } from '../../src/fixtures';
 import { TelegramTestHelper, DatabaseTestHelper, TestCleanup } from '../../src/helpers';
 import { testConstants, timeouts } from '../../src/config';
@@ -15,7 +15,8 @@ import { waitForCondition } from '../../src/helpers/utilities/wait-for';
 
 const useProposalsAndVotes = (proposals: OnchainProposal[], votes: OnchainVote[]) =>
   server.use(
-    proposalsHandler({ items: proposals, totalCount: proposals.length }),
+    daosFromItems(proposals),
+    proposalsHandler(proposalsByDaoResolver(proposals)),
     votesHandler({ items: votes, totalCount: votes.length }),
     proposalNonVotersHandler(nonVotersResolver(votes)),
   );

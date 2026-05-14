@@ -5,12 +5,16 @@
 
 import { describe, test, expect, beforeEach, beforeAll } from 'vitest';
 import { offchainProposalsHandler } from '@anticapture/client/msw';
+import type { OffchainProposal } from '@notification-system/anticapture-client';
 import { db, TestApps } from '../../src/setup';
-import { server } from '../../src/setup/msw-server';
+import { server, offchainProposalsByDaoResolver, daosFromItems } from '../../src/setup/msw-server';
 import { UserFactory, OffchainProposalFactory, WorkspaceFactory } from '../../src/fixtures';
 import { SlackTestHelper, DatabaseTestHelper, TestCleanup } from '../../src/helpers';
 import { SimpleSlackClient } from '../../src/test-clients/simple-slack.client';
 import { testConstants, timeouts } from '../../src/config';
+
+const useOffchainProposals = (proposals: OffchainProposal[]) =>
+  server.use(daosFromItems(proposals), offchainProposalsHandler(offchainProposalsByDaoResolver(proposals)));
 
 describe('Slack New Offchain Proposal - Integration Test', () => {
   let apps: TestApps;
@@ -53,7 +57,7 @@ describe('Slack New Offchain Proposal - Integration Test', () => {
       title: 'Slack Snapshot Proposal',
     });
 
-    server.use(offchainProposalsHandler({ items: [proposal], totalCount: 1 }));
+    useOffchainProposals([proposal]);
 
     const message = await slackHelper.waitForMessage(
       msg =>
@@ -109,7 +113,7 @@ describe('Slack New Offchain Proposal - Integration Test', () => {
       title: 'Multi-User Offchain Proposal',
     });
 
-    server.use(offchainProposalsHandler({ items: [proposal], totalCount: 1 }));
+    useOffchainProposals([proposal]);
 
     const messages = await slackHelper.waitForMessageCount(2, {
       timeout: timeouts.notification.delivery,

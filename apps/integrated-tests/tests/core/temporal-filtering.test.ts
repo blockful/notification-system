@@ -1,11 +1,14 @@
 import { describe, test, expect, beforeEach, beforeAll } from 'vitest';
 import { proposalsHandler } from '@anticapture/client/msw';
-import { onchainProposalStatusListEnum } from '@notification-system/anticapture-client';
+import { onchainProposalStatusListEnum, type OnchainProposal } from '@notification-system/anticapture-client';
 import { db, TestApps } from '../../src/setup';
-import { server } from '../../src/setup/msw-server';
+import { server, proposalsByDaoResolver } from '../../src/setup/msw-server';
 import { UserFactory, ProposalFactory } from '../../src/fixtures';
 import { TelegramTestHelper, DatabaseTestHelper, TestCleanup } from '../../src/helpers';
 import { testConstants, timeouts } from '../../src/config';
+
+const useProposals = (proposals: OnchainProposal[]) =>
+  server.use(proposalsHandler(proposalsByDaoResolver(proposals)));
 
 describe('Temporal Filtering - Integration Test', () => {
   let apps: TestApps;
@@ -47,7 +50,7 @@ describe('Temporal Filtering - Integration Test', () => {
       subscriptionTime.toISOString()
     );
 
-    server.use(proposalsHandler({ items: [oldProposal], totalCount: 1 }));
+    useProposals([oldProposal]);
     
     // Ensure no messages are sent for old proposals
     await telegramHelper.waitForNoMessages(timeouts.notification.processing);
@@ -76,7 +79,7 @@ describe('Temporal Filtering - Integration Test', () => {
       status: onchainProposalStatusListEnum.ACTIVE
     });
 
-    server.use(proposalsHandler({ items: [newProposal], totalCount: 1 }));
+    useProposals([newProposal]);
     
     // Wait for the notification to be sent
     const message = await telegramHelper.waitForUserMessage(testConstants.profiles.p7.chatId, {
@@ -118,7 +121,7 @@ describe('Temporal Filtering - Integration Test', () => {
     await UserFactory.updateUserPreference(testUser.user.id, testDaoId, true, new Date('2024-01-01T14:00:00Z').toISOString());
     
 
-    server.use(proposalsHandler({ items: [inactiveProposal], totalCount: 1 }));
+    useProposals([inactiveProposal]);
     
     // Ensure no notification is sent for proposals created during inactive period
     await telegramHelper.waitForNoMessages(timeouts.notification.delivery, { fromUser: testConstants.profiles.p8.chatId });

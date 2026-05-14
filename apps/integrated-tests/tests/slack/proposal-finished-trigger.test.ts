@@ -6,14 +6,17 @@
 
 import { describe, test, expect, beforeAll, afterEach } from 'vitest';
 import { proposalsHandler } from '@anticapture/client/msw';
-import { onchainProposalStatusListEnum } from '@notification-system/anticapture-client';
+import { onchainProposalStatusListEnum, type OnchainProposal } from '@notification-system/anticapture-client';
 import { db, TestApps } from '../../src/setup';
-import { server } from '../../src/setup/msw-server';
+import { server, proposalsByDaoResolver } from '../../src/setup/msw-server';
 import { UserFactory, ProposalFactory, WorkspaceFactory } from '../../src/fixtures';
 import { SlackTestHelper, DatabaseTestHelper, TestCleanup } from '../../src/helpers';
 import { SimpleSlackClient } from '../../src/test-clients/simple-slack.client';
 import { testConstants, timeouts } from '../../src/config';
 import { env } from '../../src/config/env';
+
+const useProposals = (proposals: OnchainProposal[]) =>
+  server.use(proposalsHandler(proposalsByDaoResolver(proposals)));
 
 describe('Slack Proposal Finished Trigger - Integration Test', () => {
   let apps: TestApps;
@@ -83,7 +86,7 @@ describe('Slack Proposal Finished Trigger - Integration Test', () => {
     // Create a proposal that has already finished
     const proposal = createFinishedProposal(testDaoId, 'finishing-proposal-1');
 
-    server.use(proposalsHandler({ items: [proposal], totalCount: 1 }));
+    useProposals([proposal]);
 
     // Wait for the notification to be sent
     const message = await slackHelper.waitForMessage(
@@ -144,7 +147,7 @@ describe('Slack Proposal Finished Trigger - Integration Test', () => {
       description: '# Future Proposal\n\nThis proposal will not finish during the test.'
     });
 
-    server.use(proposalsHandler({ items: [futureProposal], totalCount: 1 }));
+    useProposals([futureProposal]);
 
     // Ensure no messages are sent
     await slackHelper.waitForNoMessages(timeouts.notification.processing);
@@ -180,7 +183,7 @@ describe('Slack Proposal Finished Trigger - Integration Test', () => {
       createFinishedProposal(testDaoId, 'finished-3', new Date(baseTime.getTime() + 2000))
     ];
 
-    server.use(proposalsHandler({ items: proposals, totalCount: proposals.length }));
+    useProposals(proposals);
 
     // Wait for all 3 messages
     await slackHelper.waitForMessageCount(3, {
@@ -244,7 +247,7 @@ describe('Slack Proposal Finished Trigger - Integration Test', () => {
       description: '# Old Proposal\n\nThis finished before user subscribed.'
     });
 
-    server.use(proposalsHandler({ items: [oldProposal], totalCount: 1 }));
+    useProposals([oldProposal]);
 
     // Ensure no messages are sent
     await slackHelper.waitForNoMessages(timeouts.notification.processing);
@@ -286,7 +289,7 @@ describe('Slack Proposal Finished Trigger - Integration Test', () => {
     const dao1Proposal = createFinishedProposal(dao1Id, 'dao1-finished', baseTime);
     const dao2Proposal = createFinishedProposal(dao2Id, 'dao2-finished', new Date(baseTime.getTime() + 1000)); // 1 second later
 
-    server.use(proposalsHandler({ items: [dao1Proposal, dao2Proposal], totalCount: 2 }));
+    useProposals([dao1Proposal, dao2Proposal]);
 
     // Wait for 2 messages (one for each DAO)
     await slackHelper.waitForMessageCount(2, {

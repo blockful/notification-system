@@ -1,10 +1,14 @@
 import { describe, test, expect, beforeEach, beforeAll } from 'vitest';
 import { offchainProposalsHandler } from '@anticapture/client/msw';
+import type { OffchainProposal } from '@notification-system/anticapture-client';
 import { db, TestApps } from '../../src/setup';
-import { server } from '../../src/setup/msw-server';
+import { server, offchainProposalsByDaoResolver, daosFromItems } from '../../src/setup/msw-server';
 import { UserFactory, OffchainProposalFactory } from '../../src/fixtures';
 import { TelegramTestHelper, DatabaseTestHelper, TestCleanup } from '../../src/helpers';
 import { testConstants, timeouts } from '../../src/config';
+
+const useOffchainProposals = (proposals: OffchainProposal[]) =>
+  server.use(daosFromItems(proposals), offchainProposalsHandler(offchainProposalsByDaoResolver(proposals)));
 
 describe('New Offchain Proposal Trigger - Integration Test', () => {
   let apps: TestApps;
@@ -41,7 +45,7 @@ describe('New Offchain Proposal Trigger - Integration Test', () => {
       title: 'Community Treasury Allocation',
     });
 
-    server.use(offchainProposalsHandler({ items: [proposal], totalCount: 1 }));
+    useOffchainProposals([proposal]);
 
     const message = await telegramHelper.waitForMessage(
       msg => msg.text.includes('New Snapshot proposal') && msg.text.includes(proposal.title),
@@ -73,7 +77,7 @@ describe('New Offchain Proposal Trigger - Integration Test', () => {
       discussion: discussionUrl,
     });
 
-    server.use(offchainProposalsHandler({ items: [proposal], totalCount: 1 }));
+    useOffchainProposals([proposal]);
 
     const message = await telegramHelper.waitForMessage(
       msg => msg.text.includes('Proposal With Discussion'),
@@ -105,7 +109,7 @@ describe('New Offchain Proposal Trigger - Integration Test', () => {
       title: 'Proposal For Other DAO',
     });
 
-    server.use(offchainProposalsHandler({ items: [proposal], totalCount: 1 }));
+    useOffchainProposals([proposal]);
 
     const messagePromise = telegramHelper.waitForMessage(
       msg => msg.text.includes('Proposal For Other DAO'),
@@ -131,7 +135,7 @@ describe('New Offchain Proposal Trigger - Integration Test', () => {
       title: 'Duplicate Prevention Proposal',
     });
 
-    server.use(offchainProposalsHandler({ items: [proposal], totalCount: 1 }));
+    useOffchainProposals([proposal]);
 
     const firstMessage = await telegramHelper.waitForMessage(
       msg => msg.text.includes('Duplicate Prevention Proposal'),

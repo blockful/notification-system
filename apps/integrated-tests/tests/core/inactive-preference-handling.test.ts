@@ -1,10 +1,14 @@
 import { describe, test, expect, beforeEach, beforeAll } from 'vitest';
 import { proposalsHandler } from '@anticapture/client/msw';
+import type { OnchainProposal } from '@notification-system/anticapture-client';
 import { db, TestApps } from '../../src/setup';
-import { server } from '../../src/setup/msw-server';
+import { server, proposalsByDaoResolver } from '../../src/setup/msw-server';
 import { UserFactory, ProposalFactory } from '../../src/fixtures';
 import { TelegramTestHelper, DatabaseTestHelper, TestCleanup } from '../../src/helpers';
 import { testConstants, timeouts } from '../../src/config';
+
+const useProposals = (proposals: OnchainProposal[]) =>
+  server.use(proposalsHandler(proposalsByDaoResolver(proposals)));
 
 describe('Inactive Preference Handling - Integration Test', () => {
   let apps: TestApps;
@@ -39,7 +43,7 @@ describe('Inactive Preference Handling - Integration Test', () => {
     
     // Setup proposals for both DAOs
     const proposals = ProposalFactory.createProposalsForMultipleDaos([testConstants.daoIds.uniswap, testConstants.daoIds.ens], 'inactive-test');
-    server.use(proposalsHandler({ items: proposals, totalCount: proposals.length }));
+    useProposals(proposals);
     
     // Wait for exactly 1 message (only active user should be notified)
     await telegramHelper.waitForMessageCount(1, { timeout: timeouts.notification.delivery });

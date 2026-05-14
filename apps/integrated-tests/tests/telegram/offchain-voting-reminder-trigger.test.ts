@@ -12,7 +12,7 @@ import {
 } from '@anticapture/client/msw';
 import { offchainProposalStatusListEnum, type OffchainProposal, type OffchainVote } from '@notification-system/anticapture-client';
 import { db, TestApps } from '../../src/setup';
-import { server, nonVotersResolver } from '../../src/setup/msw-server';
+import { server, nonVotersResolver, offchainProposalsByDaoResolver, daosFromItems } from '../../src/setup/msw-server';
 import { UserFactory, OffchainProposalFactory, OffchainVoteFactory } from '../../src/fixtures';
 import { TelegramTestHelper, DatabaseTestHelper, TestCleanup } from '../../src/helpers';
 import { testConstants, timeouts } from '../../src/config';
@@ -20,7 +20,8 @@ import { waitForCondition } from '../../src/helpers/utilities/wait-for';
 
 const useOffchainProposalsAndVotes = (proposals: OffchainProposal[], votes: OffchainVote[]) =>
   server.use(
-    offchainProposalsHandler({ items: proposals, totalCount: proposals.length }),
+    daosFromItems(proposals),
+    offchainProposalsHandler(offchainProposalsByDaoResolver(proposals)),
     votesOffchainHandler({ items: votes, totalCount: votes.length }),
     offchainProposalNonVotersHandler(nonVotersResolver(votes)),
   );
