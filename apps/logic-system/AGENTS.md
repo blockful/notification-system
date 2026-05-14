@@ -1,6 +1,6 @@
 # Logic System
 
-Monitors the AntiCapture GraphQL API on a polling interval and publishes trigger events to RabbitMQ when governance activity is detected.
+Monitors the AntiCapture REST API on a polling interval and publishes trigger events to RabbitMQ when governance activity is detected.
 
 ## How It Works
 
@@ -51,14 +51,14 @@ src/
 ├── interfaces/               # Dispatcher and proposal interfaces
 ├── repositories/             # Data source wrappers (proposal, votes, voting-power)
 └── triggers/                 # All trigger implementations + base class
-tests/                        # Jest tests (separate from src/)
+tests/                        # Vitest tests (separate from src/)
 ```
 
 ## Environment Variables
 
 | Variable | Required | Description |
 |----------|----------|-------------|
-| `ANTICAPTURE_API_URL` | Yes | AntiCapture GraphQL API URL |
+| `ANTICAPTURE_API_URL` | Yes | AntiCapture REST API base URL |
 | `RABBITMQ_URL` | Yes | RabbitMQ connection string |
 | `TRIGGER_INTERVAL` | No | Polling interval in ms (default: 30000) |
 | `PROPOSAL_STATUS` | No | Proposal status filter (default: ACTIVE) |
@@ -69,7 +69,7 @@ tests/                        # Jest tests (separate from src/)
 pnpm logic-system test
 ```
 
-Tests live in `tests/` directory (not `src/`). Uses Jest with SWC transform for speed. Prefer **stubs or fakes** for the RabbitMQ dispatcher (and repositories) over mocks when testing trigger logic in isolation; the repo is moving toward stubs/fakes for better maintainability.
+Tests live in `tests/` directory (not `src/`). Uses Vitest. Prefer **`Simple*` in-memory doubles** (see `tests/simple-doubles.ts`) for the RabbitMQ dispatcher and repositories over `vi.fn()` mocks; use `vi.fn()` only for behaviorless seams (e.g. injected callbacks).
 
 ## Common Gotchas
 

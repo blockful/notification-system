@@ -1,5 +1,6 @@
 import { beforeAll, beforeEach, afterAll } from 'vitest';
 import * as fs from 'fs';
+import * as os from 'os';
 import { server } from '../msw-server';
 import { setupDatabase, db, closeDatabase, startTestApps, stopTestApps, TestApps } from '..';
 import { RabbitMQTestSetup } from '../rabbitmq-setup';
@@ -27,9 +28,10 @@ beforeAll(async () => {
     },
   });
 
-  const tmpFiles = fs.readdirSync('/tmp').filter(f => f.startsWith('test_integration_'));
+  const tmpDir = os.tmpdir();
+  const tmpFiles = fs.readdirSync(tmpDir).filter(f => f.startsWith('test_integration_'));
   for (const file of tmpFiles) {
-    fs.unlinkSync(`/tmp/${file}`);
+    fs.unlinkSync(`${tmpDir}/${file}`);
   }
   await setupDatabase();
 

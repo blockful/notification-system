@@ -6,12 +6,12 @@
 
 Event-driven notification system for DAO governance, built as a **pnpm monorepo** with 4 microservices connected via RabbitMQ:
 
-1. **Logic System** (`apps/logic-system/`) - Polls AntiCapture GraphQL API every Xs, detects governance events, publishes trigger events
+1. **Logic System** (`apps/logic-system/`) - Polls AntiCapture REST API every Xs, detects governance events, publishes trigger events
 2. **Dispatcher** (`apps/dispatcher/`) - Consumes trigger events, fetches subscribers with temporal filtering, routes notifications
 3. **Subscription Server** (`apps/subscription-server/`) - Fastify REST API for user preferences, PostgreSQL persistence, Slack OAuth
 4. **Consumer** (`apps/consumers/`) - Delivers notifications via Telegram (telegraf) and Slack (@slack/bolt) bots
 
-Supporting packages: `anticapture-client` (GraphQL), `messages` (templates), `rabbitmq-client` (AMQP wrapper).
+Supporting packages: `anticapture-client` (REST SDK wrapper), `messages` (templates), `rabbitmq-client` (AMQP wrapper).
 
 Dashboard (`apps/dashboard/`) provides read-only metrics via Next.js.
 
@@ -37,9 +37,6 @@ NODE_ENV=test pnpm --filter @notification-system/integrated-tests test
 # Type checking and linting
 pnpm consumer check-types
 pnpm logic-system lint
-
-# GraphQL code generation (requires ANTICAPTURE_API_URL)
-pnpm client codegen
 ```
 
 ## Notification Pipeline
@@ -134,7 +131,7 @@ TOKEN_ENCRYPTION_KEY=...  # 64-char hex for AES-256-CBC
 - **Language:** TypeScript (strict mode) across all services
 - **Validation:** Zod schemas for environment variables and API inputs
 - **Monorepo:** pnpm workspaces + Turbo for builds
-- **Testing:** Jest with ts-jest (most services), Node.js test runner (dashboard)
+- **Testing:** Vitest (all apps + packages), MSW for HTTP/JSON stubs in integrated-tests, Node.js test runner (dashboard)
 - **Package manager:** pnpm 10.x, Node.js >= 18
 
 ## Deployment
@@ -249,8 +246,6 @@ VALUES (
 **Key differences from new-proposal insert:**
 - `state = 'closed'` (not `'active'`)
 - `end` = recent past (within last 24h so trigger cursor picks it up)
-
-**Gateway note:** If the production gateway returns a GraphQL error for DAOs with `null` in non-nullable fields (e.g. `supportOffchainData`), `getDAOs()` may return an empty list and skip all offchain queries. To avoid this during local testing, run the API gateway locally pointing only to the ENS API and set `ANTICAPTURE_API_URL=http://host.docker.internal:4000/graphql` in `.env`.
 
 ### New Offchain Proposal Insert (Snapshot)
 ```sql

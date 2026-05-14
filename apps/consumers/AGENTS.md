@@ -77,7 +77,7 @@ src/
 | `TELEGRAM_BOT_TOKEN` | Yes | Telegram BotFather token |
 | `SLACK_SIGNING_SECRET` | Yes | Slack app signing secret |
 | `TOKEN_ENCRYPTION_KEY` | Yes | 64-char hex for workspace token decryption |
-| `ANTICAPTURE_API_URL` | Yes | GraphQL API endpoint |
+| `ANTICAPTURE_API_URL` | Yes | REST API base URL |
 | `SUBSCRIPTION_SERVER_URL` | Yes | Subscription Server base URL |
 | `RABBITMQ_URL` | Yes | RabbitMQ connection string |
 | `PORT` | No | Slack HTTP receiver port (default: 3002) |
@@ -88,7 +88,7 @@ src/
 pnpm consumer test
 ```
 
-Uses ts-jest. Type checking: `pnpm consumer check-types`.
+Uses Vitest. Type checking: `pnpm consumer check-types`.
 
 ## Key Implementation Details
 
