@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeEach } from 'vitest';
 import { NonVotingHandler } from './non-voting-handler.service';
 import { NotificationTypeId } from '@notification-system/messages';
-import { IAnticaptureClient } from '@notification-system/anticapture-client';
+import { IAnticaptureClient, OnchainProposal, Voter } from '@notification-system/anticapture-client';
 import {
   SimpleSubscriptionClient,
   SimpleNotificationClientFactory,
@@ -29,15 +29,16 @@ describe('NonVotingHandler', () => {
     return makeAnticaptureClient({
       listProposals: async () => {
         if (opts.listProposalsThrows) throw new Error('API Error');
+        // Stub returns the subset of fields the handler reads — cast to satisfy IAnticaptureClient
         return (opts.proposals ?? []).map(p => ({
           id: p.id,
           endTimestamp: p.endTimestamp,
           title: p.title,
           description: p.description,
-        }));
+        })) as unknown as OnchainProposal[];
       },
       getProposalNonVoters: async (proposalId: string) => {
-        return opts.nonVotersByProposal?.get(proposalId) ?? [];
+        return (opts.nonVotersByProposal?.get(proposalId) ?? []) as unknown as Voter[];
       },
     });
   }

@@ -1,18 +1,16 @@
-import type { FeedEventType, FeedRelevance } from '@anticapture/client';
-import type { OffchainProposalItem, OffchainVoteItem, ProcessedVotingPowerHistory } from './schemas';
+import type { FeedEventType, FeedRelevance, OnchainProposal, OnchainVote, OffchainVote, Voter, OffchainNonVoter, ProposalsQueryParams, VotesQueryParams, OffchainProposalsQueryParams, VotesOffchainQueryParams, HistoricalVotingPowerQueryParams } from '@anticapture/client';
+import type { OffchainProposalItem, OffchainVoteItem, ProcessedVotingPowerHistory } from './types';
 export interface AnticaptureClientConfig {
     baseURL: string;
     defaultHeaders?: Record<string, string>;
     maxRetries?: number;
     timeoutMs?: number;
 }
-export type VoteWithDaoId = {
+export type VoteWithDaoId = OnchainVote & {
     daoId: string;
-    [key: string]: any;
 };
-export type OffchainVoteWithDaoId = {
+export type OffchainVoteWithDaoId = OffchainVote & {
     daoId: string;
-    [key: string]: any;
 };
 export type DaoInfo = {
     id: string;
@@ -27,21 +25,18 @@ export type DaoInfo = {
  */
 export interface IAnticaptureClient {
     getDAOs(): Promise<Array<DaoInfo>>;
-    getProposalById(id: string): Promise<any | null>;
-    listProposals(variables?: any, daoId?: string): Promise<any[]>;
-    listVotingPowerHistory(variables?: any, daoId?: string): Promise<ProcessedVotingPowerHistory[]>;
-    listVotes(daoId: string, variables?: any): Promise<any[]>;
-    getProposalNonVoters(proposalId: string, daoId: string, addresses?: string[]): Promise<any[]>;
-    getOffchainProposalNonVoters(proposalId: string, addresses?: string[]): Promise<{
-        voter: string;
-        votingPower?: string;
-    }[]>;
+    getProposalById(id: string): Promise<OnchainProposal | null>;
+    listProposals(variables?: ProposalsQueryParams, daoId?: string): Promise<OnchainProposal[]>;
+    listVotingPowerHistory(variables?: HistoricalVotingPowerQueryParams, daoId?: string): Promise<ProcessedVotingPowerHistory[]>;
+    listVotes(daoId: string, variables?: VotesQueryParams): Promise<OnchainVote[]>;
+    getProposalNonVoters(proposalId: string, daoId: string, addresses?: string[]): Promise<Voter[]>;
+    getOffchainProposalNonVoters(proposalId: string, addresses?: string[]): Promise<OffchainNonVoter[]>;
     listRecentVotesFromAllDaos(timestampGt: string, limit?: number): Promise<VoteWithDaoId[]>;
     getEventThreshold(daoId: string, type: FeedEventType, relevance: FeedRelevance): Promise<string | null>;
-    listOffchainProposals(variables?: any, daoId?: string): Promise<(OffchainProposalItem & {
+    listOffchainProposals(variables?: OffchainProposalsQueryParams, daoId?: string): Promise<(OffchainProposalItem & {
         daoId: string;
     })[]>;
-    listOffchainVotes(daoId: string, variables?: any): Promise<OffchainVoteItem[]>;
+    listOffchainVotes(daoId: string, variables?: VotesOffchainQueryParams): Promise<OffchainVoteItem[]>;
     listRecentOffchainVotesFromAllDaos(fromDate: number, limit?: number): Promise<OffchainVoteWithDaoId[]>;
 }
 export declare class AnticaptureClient implements IAnticaptureClient {
@@ -61,20 +56,17 @@ export declare class AnticaptureClient implements IAnticaptureClient {
         alreadySupportCalldataReview: boolean;
         supportOffchainData: boolean;
     }>>;
-    getProposalById(id: string): Promise<any | null>;
-    listProposals(variables?: any, daoId?: string): Promise<any[]>;
-    listVotingPowerHistory(variables?: any, daoId?: string): Promise<ProcessedVotingPowerHistory[]>;
-    listVotes(daoId: string, variables?: any): Promise<any[]>;
-    getProposalNonVoters(proposalId: string, daoId: string, addresses?: string[]): Promise<any[]>;
-    getOffchainProposalNonVoters(proposalId: string, addresses?: string[]): Promise<{
-        voter: string;
-        votingPower?: string;
-    }[]>;
+    getProposalById(id: string): Promise<OnchainProposal | null>;
+    listProposals(variables?: ProposalsQueryParams, daoId?: string): Promise<OnchainProposal[]>;
+    listVotingPowerHistory(variables?: HistoricalVotingPowerQueryParams, daoId?: string): Promise<ProcessedVotingPowerHistory[]>;
+    listVotes(daoId: string, variables?: VotesQueryParams): Promise<OnchainVote[]>;
+    getProposalNonVoters(proposalId: string, daoId: string, addresses?: string[]): Promise<Voter[]>;
+    getOffchainProposalNonVoters(proposalId: string, addresses?: string[]): Promise<OffchainNonVoter[]>;
     listRecentVotesFromAllDaos(timestampGt: string, limit?: number): Promise<VoteWithDaoId[]>;
     getEventThreshold(daoId: string, type: FeedEventType, relevance: FeedRelevance): Promise<string | null>;
-    listOffchainProposals(variables?: any, daoId?: string): Promise<(OffchainProposalItem & {
+    listOffchainProposals(variables?: OffchainProposalsQueryParams, daoId?: string): Promise<(OffchainProposalItem & {
         daoId: string;
     })[]>;
-    listOffchainVotes(daoId: string, variables?: any): Promise<OffchainVoteItem[]>;
+    listOffchainVotes(daoId: string, variables?: VotesOffchainQueryParams): Promise<OffchainVoteItem[]>;
     listRecentOffchainVotesFromAllDaos(fromDate: number, limit?: number): Promise<OffchainVoteWithDaoId[]>;
 }

@@ -4,7 +4,24 @@ exports.AnticaptureClient = void 0;
 const client_1 = require("@anticapture/client");
 const viem_1 = require("viem");
 const with_retry_and_timeout_1 = require("./with-retry-and-timeout");
-const schemas_1 = require("./schemas");
+function processProposals(res, daoId) {
+    return (res?.items ?? []).map(p => ({ ...p, daoId }));
+}
+function processVotingPowerHistory(data, daoId, chainId) {
+    const items = data.historicalVotingPower?.items ?? [];
+    return items
+        .filter(item => item.accountId)
+        .map(item => ({
+        ...item,
+        daoId,
+        changeType: item.delegation ? 'delegation' : item.transfer ? 'transfer' : 'other',
+        sourceAccountId: item.transfer?.from || item.delegation?.from || '',
+        targetAccountId: item.accountId,
+        previousDelegate: item.delegation?.previousDelegate || null,
+        newDelegate: item.delegation?.to || null,
+        ...(chainId !== undefined && { chainId }),
+    }));
+}
 class AnticaptureClient {
     constructor(config) {
         this.retries = config.maxRetries ?? 4;
@@ -68,8 +85,9 @@ class AnticaptureClient {
                     return this.toLowercase(res);
             }
             catch (err) {
+                const e = err;
                 // 404 means this DAO doesn't have the proposal — continue to next
-                if (err?.status === 404 || err?.response?.status === 404)
+                if (e?.status === 404 || e?.response?.status === 404)
                     continue;
                 // other errors: log and continue
                 console.warn(`[AnticaptureClient] Error fetching proposal ${id} from DAO ${dao.id}:`, err instanceof Error ? err.message : err);
@@ -82,7 +100,7 @@ class AnticaptureClient {
             try {
                 // SDK dao param is a string-literal enum; DAO IDs come from runtime /daos response, so we cast
                 const res = await this.call(() => (0, client_1.proposals)(daoId, this.toChecksum(variables ?? {}), this.sdkConfig));
-                return this.toLowercase((0, schemas_1.processProposals)({ proposals: res }, daoId) ?? []);
+                return this.toLowercase(processProposals(res, daoId));
             }
             catch (err) {
                 console.warn(`[AnticaptureClient] Error querying proposals for DAO ${daoId}: ${err instanceof Error ? err.message : err}`);
@@ -95,8 +113,8 @@ class AnticaptureClient {
             try {
                 // SDK dao param is a string-literal enum; DAO IDs come from runtime /daos response, so we cast
                 const res = await this.call(() => (0, client_1.proposals)(dao.id, this.toChecksum(variables ?? {}), this.sdkConfig));
-                const processed = (0, schemas_1.processProposals)({ proposals: res }, dao.id);
-                if (processed?.length)
+                const processed = processProposals(res, dao.id);
+                if (processed.length)
                     all.push(...processed);
             }
             catch (err) {
@@ -104,10 +122,10 @@ class AnticaptureClient {
             }
         }
         if (variables?.fromEndDate) {
-            all.sort((a, b) => (b?.endTimestamp ?? 0) - (a?.endTimestamp ?? 0));
+            all.sort((a, b) => (b.endTimestamp ?? 0) - (a.endTimestamp ?? 0));
         }
         else {
-            all.sort((a, b) => (b?.timestamp ?? 0) - (a?.timestamp ?? 0));
+            all.sort((a, b) => (b.timestamp ?? 0) - (a.timestamp ?? 0));
         }
         return this.toLowercase(all);
     }
@@ -115,7 +133,7 @@ class AnticaptureClient {
         if (daoId) {
             try {
                 const res = await this.call(() => (0, client_1.historicalVotingPower)(daoId, this.toChecksum(variables ?? {}), this.sdkConfig));
-                return this.toLowercase((0, schemas_1.processVotingPowerHistory)({ historicalVotingPower: res }, daoId));
+                return this.toLowercase(processVotingPowerHistory({ historicalVotingPower: res }, daoId));
             }
             catch (err) {
                 console.warn(`[AnticaptureClient] Error querying voting power history for DAO ${daoId}: ${err instanceof Error ? err.message : err}`);
@@ -126,7 +144,7 @@ class AnticaptureClient {
         const promises = allDaos.map(async (dao) => {
             try {
                 const res = await this.call(() => (0, client_1.historicalVotingPower)(dao.id, this.toChecksum(variables ?? {}), this.sdkConfig));
-                return (0, schemas_1.processVotingPowerHistory)({ historicalVotingPower: res }, dao.id, dao.chainId);
+                return processVotingPowerHistory({ historicalVotingPower: res }, dao.id, dao.chainId);
             }
             catch (err) {
                 console.warn(`[AnticaptureClient] Skipping ${dao.id} due to API error: ${err instanceof Error ? err.message : err}`);
@@ -171,7 +189,8 @@ class AnticaptureClient {
                     return this.toLowercase(res.items);
             }
             catch (err) {
-                if (err?.status === 404 || err?.response?.status === 404)
+                const e = err;
+                if (e?.status === 404 || e?.response?.status === 404)
                     continue;
                 console.warn(`[AnticaptureClient] Error fetching offchain non-voters for proposal ${proposalId} from DAO ${dao.id}:`, err instanceof Error ? err.message : err);
             }
@@ -206,7 +225,7 @@ class AnticaptureClient {
         if (daoId) {
             try {
                 const res = await this.call(() => (0, client_1.offchainProposals)(daoId, this.toChecksum(variables ?? {}), this.sdkConfig));
-                const items = (res?.items ?? []).map((i) => ({ ...i, daoId }));
+                const items = (res?.items ?? []).map(i => ({ ...i, daoId }));
                 return this.toLowercase(items);
             }
             catch (err) {
@@ -221,7 +240,7 @@ class AnticaptureClient {
                 continue;
             try {
                 const res = await this.call(() => (0, client_1.offchainProposals)(dao.id, this.toChecksum(variables ?? {}), this.sdkConfig));
-                const items = (res?.items ?? []).map((i) => ({ ...i, daoId: dao.id }));
+                const items = (res?.items ?? []).map(i => ({ ...i, daoId: dao.id }));
                 if (items.length)
                     all.push(...items);
             }

@@ -10,7 +10,24 @@ import {
   votesOffchain,
   historicalVotingPower,
 } from '@anticapture/client';
-import type { FeedEventType, FeedRelevance, RequestConfig, HistoricalVotingPower } from '@anticapture/client';
+import type {
+  FeedEventType,
+  FeedRelevance,
+  RequestConfig,
+  HistoricalVotingPower,
+  OnchainProposal,
+  OnchainProposalsResponse,
+  OnchainVote,
+  OffchainVote,
+  Voter,
+  OffchainNonVoter,
+  ProposalsQueryParams,
+  VotesQueryParams,
+  ProposalNonVotersQueryParams,
+  OffchainProposalsQueryParams,
+  VotesOffchainQueryParams,
+  HistoricalVotingPowerQueryParams,
+} from '@anticapture/client';
 import { getAddress, isAddress } from 'viem';
 import { withRetryAndTimeout } from './with-retry-and-timeout';
 import type {
@@ -20,14 +37,10 @@ import type {
 } from './types';
 
 function processProposals(
-  data: { proposals: { items: any[]; totalCount: number } | null },
+  res: OnchainProposalsResponse | null | undefined,
   daoId: string
-) {
-  const items = data.proposals?.items ?? [];
-  return items.filter((p): p is NonNullable<typeof p> => p !== null).map(p => ({
-    ...p,
-    daoId,
-  }));
+): OnchainProposal[] {
+  return (res?.items ?? []).map(p => ({ ...p, daoId }));
 }
 
 function processVotingPowerHistory(
@@ -57,8 +70,8 @@ export interface AnticaptureClientConfig {
   timeoutMs?: number;
 }
 
-export type VoteWithDaoId = { daoId: string; [key: string]: any };
-export type OffchainVoteWithDaoId = { daoId: string; [key: string]: any };
+export type VoteWithDaoId = OnchainVote & { daoId: string };
+export type OffchainVoteWithDaoId = OffchainVote & { daoId: string };
 
 export type DaoInfo = { id: string; blockTime: number; votingDelay: string; chainId: number; alreadySupportCalldataReview: boolean; supportOffchainData: boolean };
 
@@ -67,16 +80,16 @@ export type DaoInfo = { id: string; blockTime: number; votingDelay: string; chai
  */
 export interface IAnticaptureClient {
   getDAOs(): Promise<Array<DaoInfo>>;
-  getProposalById(id: string): Promise<any | null>;
-  listProposals(variables?: any, daoId?: string): Promise<any[]>;
-  listVotingPowerHistory(variables?: any, daoId?: string): Promise<ProcessedVotingPowerHistory[]>;
-  listVotes(daoId: string, variables?: any): Promise<any[]>;
-  getProposalNonVoters(proposalId: string, daoId: string, addresses?: string[]): Promise<any[]>;
-  getOffchainProposalNonVoters(proposalId: string, addresses?: string[]): Promise<{ voter: string; votingPower?: string }[]>;
+  getProposalById(id: string): Promise<OnchainProposal | null>;
+  listProposals(variables?: ProposalsQueryParams, daoId?: string): Promise<OnchainProposal[]>;
+  listVotingPowerHistory(variables?: HistoricalVotingPowerQueryParams, daoId?: string): Promise<ProcessedVotingPowerHistory[]>;
+  listVotes(daoId: string, variables?: VotesQueryParams): Promise<OnchainVote[]>;
+  getProposalNonVoters(proposalId: string, daoId: string, addresses?: string[]): Promise<Voter[]>;
+  getOffchainProposalNonVoters(proposalId: string, addresses?: string[]): Promise<OffchainNonVoter[]>;
   listRecentVotesFromAllDaos(timestampGt: string, limit?: number): Promise<VoteWithDaoId[]>;
   getEventThreshold(daoId: string, type: FeedEventType, relevance: FeedRelevance): Promise<string | null>;
-  listOffchainProposals(variables?: any, daoId?: string): Promise<(OffchainProposalItem & { daoId: string })[]>;
-  listOffchainVotes(daoId: string, variables?: any): Promise<OffchainVoteItem[]>;
+  listOffchainProposals(variables?: OffchainProposalsQueryParams, daoId?: string): Promise<(OffchainProposalItem & { daoId: string })[]>;
+  listOffchainVotes(daoId: string, variables?: VotesOffchainQueryParams): Promise<OffchainVoteItem[]>;
   listRecentOffchainVotesFromAllDaos(fromDate: number, limit?: number): Promise<OffchainVoteWithDaoId[]>;
 }
 
@@ -113,8 +126,8 @@ export class AnticaptureClient implements IAnticaptureClient {
     return obj;
   }
 
-  private toChecksum(o: any) { return this.normalizeAddressesInObject(o, getAddress); }
-  private toLowercase(o: any) { return this.normalizeAddressesInObject(o, a => a.toLowerCase()); }
+  private toChecksum<T>(o: T): T { return this.normalizeAddressesInObject(o, getAddress); }
+  private toLowercase<T>(o: T): T { return this.normalizeAddressesInObject(o, a => a.toLowerCase()); }
 
   async getDAOs(): Promise<Array<{ id: string; blockTime: number; votingDelay: string; chainId: number; alreadySupportCalldataReview: boolean; supportOffchainData: boolean }>> {
     try {
@@ -134,16 +147,17 @@ export class AnticaptureClient implements IAnticaptureClient {
     }
   }
 
-  async getProposalById(id: string): Promise<any | null> {
+  async getProposalById(id: string): Promise<OnchainProposal | null> {
     const allDaos = await this.getDAOs();
     for (const dao of allDaos) {
       try {
         // SDK dao param is a string-literal enum; DAO IDs come from runtime /daos response, so we cast
         const res = await this.call(() => proposal(dao.id as any, id, this.sdkConfig));
         if (res) return this.toLowercase(res);
-      } catch (err: any) {
+      } catch (err) {
+        const e = err as { status?: number; response?: { status?: number } };
         // 404 means this DAO doesn't have the proposal — continue to next
-        if (err?.status === 404 || err?.response?.status === 404) continue;
+        if (e?.status === 404 || e?.response?.status === 404) continue;
         // other errors: log and continue
         console.warn(`[AnticaptureClient] Error fetching proposal ${id} from DAO ${dao.id}:`, err instanceof Error ? err.message : err);
       }
@@ -151,12 +165,12 @@ export class AnticaptureClient implements IAnticaptureClient {
     return null;
   }
 
-  async listProposals(variables?: any, daoId?: string): Promise<any[]> {
+  async listProposals(variables?: ProposalsQueryParams, daoId?: string): Promise<OnchainProposal[]> {
     if (daoId) {
       try {
         // SDK dao param is a string-literal enum; DAO IDs come from runtime /daos response, so we cast
         const res = await this.call(() => proposals(daoId as any, this.toChecksum(variables ?? {}), this.sdkConfig));
-        return this.toLowercase(processProposals({ proposals: res }, daoId) ?? []);
+        return this.toLowercase(processProposals(res, daoId));
       } catch (err) {
         console.warn(`[AnticaptureClient] Error querying proposals for DAO ${daoId}: ${err instanceof Error ? err.message : err}`);
         return [];
@@ -164,26 +178,26 @@ export class AnticaptureClient implements IAnticaptureClient {
     }
 
     const allDaos = await this.getDAOs();
-    const all: any[] = [];
+    const all: OnchainProposal[] = [];
     for (const dao of allDaos) {
       try {
         // SDK dao param is a string-literal enum; DAO IDs come from runtime /daos response, so we cast
         const res = await this.call(() => proposals(dao.id as any, this.toChecksum(variables ?? {}), this.sdkConfig));
-        const processed = processProposals({ proposals: res }, dao.id);
-        if (processed?.length) all.push(...processed);
+        const processed = processProposals(res, dao.id);
+        if (processed.length) all.push(...processed);
       } catch (err) {
         console.warn(`[AnticaptureClient] Skipping ${dao.id} due to API error: ${err instanceof Error ? err.message : err}`);
       }
     }
 
     if (variables?.fromEndDate) {
-      all.sort((a: any, b: any) => (b?.endTimestamp ?? 0) - (a?.endTimestamp ?? 0));
+      all.sort((a, b) => (b.endTimestamp ?? 0) - (a.endTimestamp ?? 0));
     } else {
-      all.sort((a: any, b: any) => (b?.timestamp ?? 0) - (a?.timestamp ?? 0));
+      all.sort((a, b) => (b.timestamp ?? 0) - (a.timestamp ?? 0));
     }
     return this.toLowercase(all);
   }
-  async listVotingPowerHistory(variables?: any, daoId?: string): Promise<ProcessedVotingPowerHistory[]> {
+  async listVotingPowerHistory(variables?: HistoricalVotingPowerQueryParams, daoId?: string): Promise<ProcessedVotingPowerHistory[]> {
     if (daoId) {
       try {
         const res = await this.call(() => historicalVotingPower(daoId as any, this.toChecksum(variables ?? {}), this.sdkConfig));
@@ -211,7 +225,7 @@ export class AnticaptureClient implements IAnticaptureClient {
     );
   }
 
-  async listVotes(daoId: string, variables?: any): Promise<any[]> {
+  async listVotes(daoId: string, variables?: VotesQueryParams): Promise<OnchainVote[]> {
     try {
       // SDK dao param is a string-literal enum; DAO IDs come from runtime /daos response, so we cast
       const res = await this.call(() => votes(daoId as any, this.toChecksum(variables ?? {}), this.sdkConfig));
@@ -222,9 +236,9 @@ export class AnticaptureClient implements IAnticaptureClient {
     }
   }
 
-  async getProposalNonVoters(proposalId: string, daoId: string, addresses?: string[]): Promise<any[]> {
+  async getProposalNonVoters(proposalId: string, daoId: string, addresses?: string[]): Promise<Voter[]> {
     try {
-      const params = addresses?.length ? { addresses } : {};
+      const params: ProposalNonVotersQueryParams = addresses?.length ? { addresses } : {};
       // SDK dao param is a string-literal enum; DAO IDs come from runtime /daos response, so we cast
       const res = await this.call(() => proposalNonVoters(daoId as any, proposalId, this.toChecksum(params), this.sdkConfig));
       return this.toLowercase(res?.items ?? []);
@@ -234,7 +248,7 @@ export class AnticaptureClient implements IAnticaptureClient {
     }
   }
 
-  async getOffchainProposalNonVoters(proposalId: string, addresses?: string[]): Promise<{ voter: string; votingPower?: string }[]> {
+  async getOffchainProposalNonVoters(proposalId: string, addresses?: string[]): Promise<OffchainNonVoter[]> {
     const allDaos = await this.getDAOs();
     const offchainDaos = allDaos.filter(d => d.supportOffchainData);
     const params = addresses?.length ? { addresses } : {};
@@ -243,8 +257,9 @@ export class AnticaptureClient implements IAnticaptureClient {
         // SDK dao param is a string-literal enum; DAO IDs come from runtime /daos response, so we cast
         const res = await this.call(() => offchainProposalNonVoters(dao.id as any, proposalId, this.toChecksum(params), this.sdkConfig));
         if (res?.items != null) return this.toLowercase(res.items);
-      } catch (err: any) {
-        if (err?.status === 404 || err?.response?.status === 404) continue;
+      } catch (err) {
+        const e = err as { status?: number; response?: { status?: number } };
+        if (e?.status === 404 || e?.response?.status === 404) continue;
         console.warn(`[AnticaptureClient] Error fetching offchain non-voters for proposal ${proposalId} from DAO ${dao.id}:`, err instanceof Error ? err.message : err);
       }
     }
@@ -278,11 +293,11 @@ export class AnticaptureClient implements IAnticaptureClient {
     }
   }
 
-  async listOffchainProposals(variables?: any, daoId?: string): Promise<(OffchainProposalItem & { daoId: string })[]> {
+  async listOffchainProposals(variables?: OffchainProposalsQueryParams, daoId?: string): Promise<(OffchainProposalItem & { daoId: string })[]> {
     if (daoId) {
       try {
         const res = await this.call(() => offchainProposals(daoId as any, this.toChecksum(variables ?? {}), this.sdkConfig));
-        const items = (res?.items ?? []).map((i: any) => ({ ...i, daoId }));
+        const items = (res?.items ?? []).map(i => ({ ...i, daoId }));
         return this.toLowercase(items);
       } catch (err) {
         console.warn(`[AnticaptureClient] Error querying offchain proposals for DAO ${daoId}: ${err instanceof Error ? err.message : err}`);
@@ -296,7 +311,7 @@ export class AnticaptureClient implements IAnticaptureClient {
       if (!dao.supportOffchainData) continue;
       try {
         const res = await this.call(() => offchainProposals(dao.id as any, this.toChecksum(variables ?? {}), this.sdkConfig));
-        const items = (res?.items ?? []).map((i: any) => ({ ...i, daoId: dao.id }));
+        const items = (res?.items ?? []).map(i => ({ ...i, daoId: dao.id }));
         if (items.length) all.push(...items);
       } catch (err) {
         console.warn(`[AnticaptureClient] Skipping offchain proposals for ${dao.id}: ${err instanceof Error ? err.message : err}`);
@@ -306,7 +321,7 @@ export class AnticaptureClient implements IAnticaptureClient {
     return this.toLowercase(all);
   }
 
-  async listOffchainVotes(daoId: string, variables?: any): Promise<OffchainVoteItem[]> {
+  async listOffchainVotes(daoId: string, variables?: VotesOffchainQueryParams): Promise<OffchainVoteItem[]> {
     try {
       // SDK dao param is a string-literal enum; DAO IDs come from runtime /daos response, so we cast
       const res = await this.call(() => votesOffchain(daoId as any, this.toChecksum(variables ?? {}), this.sdkConfig));

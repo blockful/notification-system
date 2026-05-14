@@ -77,7 +77,7 @@ function buildExpectedMessage(vote: OffchainVoteWithDaoId): string {
   return replacePlaceholders(template, {
     address: vote.voter,
     daoId: vote.daoId,
-    proposalTitle: vote.proposalTitle,
+    proposalTitle: vote.proposalTitle ?? undefined,
     ...(hasReason && { reason: vote.reason! }),
   });
 }
