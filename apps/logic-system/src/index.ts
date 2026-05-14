@@ -11,6 +11,7 @@ const app = new App(
   env.PROPOSAL_STATUS,
   env.ANTICAPTURE_API_URL,
   env.RABBITMQ_URL,
+  env.PORT,
   undefined,
   env.BLOCKFUL_API_TOKEN ? { Authorization: `Bearer ${env.BLOCKFUL_API_TOKEN}` } : undefined,
 );

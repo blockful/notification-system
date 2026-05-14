@@ -253,7 +253,7 @@ export class SlackBotService implements BotServiceInterface {
 
     // Append UTM tracking params to button URLs
     const triggerType = payload.metadata?.triggerType;
-    const buttons = payload.metadata?.buttons?.map(btn => ({
+    const buttons = payload.metadata?.buttons?.flat().map(btn => ({
       text: btn.text,
       url: triggerType
         ? appendUtmParams(btn.url, { source: 'notification', medium: 'slack', campaign: triggerType })

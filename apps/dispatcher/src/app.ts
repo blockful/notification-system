@@ -18,6 +18,8 @@ import { RabbitMQConnection, RabbitMQPublisher } from '@notification-system/rabb
 import { AnticaptureClient } from '@notification-system/anticapture-client';
 import { NotificationTypeId, votingReminderMessages, offchainVotingReminderMessages } from '@notification-system/messages';
 import { createLogger, wrapWithTracing } from '@anticapture/observability';
+import { type FastifyInstance } from 'fastify';
+import { startServer } from './server';
 
 const logger = createLogger('dispatcher');
 
@@ -25,12 +27,14 @@ export class App {
   private rabbitMQConsumerService!: RabbitMQConsumerService;
   private rabbitmqConnection!: RabbitMQConnection;
   private publisher!: RabbitMQPublisher;
+  private server!: FastifyInstance;
   private isCreated = false;
 
   constructor(
     private subscriptionServerUrl: string,
     private rabbitmqUrl: string,
     private anticaptureBaseURL: string,
+    private port: number,
     private blockfulApiToken?: string
   ) {}
 
@@ -107,7 +111,7 @@ export class App {
     };
 
     const offchainNonVotersSource: NonVotersSource = {
-      getNonVoters: (id, _daoId, addrs) => anticaptureClient.getOffchainProposalNonVoters(id, addrs)
+      getNonVoters: (id, daoId, addrs) => anticaptureClient.getOffchainProposalNonVoters(id, daoId, addrs)
     };
 
     triggerProcessorService.addHandler(
@@ -124,7 +128,7 @@ export class App {
     );
 
     triggerProcessorService.addHandler(
-      NotificationTypeId.OffchainVotingReminder75,
+      NotificationTypeId.OffchainVotingReminder50,
       wrapWithTracing(new VotingReminderTriggerHandler(subscriptionClient, notificationFactory, anticaptureClient, offchainNonVotersSource, offchainVotingReminderMessages, 'offchain-voting-reminder', logger))
     );
 
@@ -134,19 +138,24 @@ export class App {
 
   async start(): Promise<void> {
     await this.setupServices();
+    this.server = await startServer(this.port);
     await this.rabbitMQConsumerService?.start();
     logger.info('dispatcher service running');
   }
 
   async stop(): Promise<void> {
+    if (this.server) {
+      await this.server.close();
+    }
+
     if (this.rabbitMQConsumerService) {
       await this.rabbitMQConsumerService.stop();
     }
-    
+
     if (this.publisher) {
       await this.publisher.close();
     }
-    
+
     if (this.rabbitmqConnection) {
       await this.rabbitmqConnection.close();
     }

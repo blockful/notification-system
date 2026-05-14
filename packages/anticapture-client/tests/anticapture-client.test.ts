@@ -298,76 +298,31 @@ describe('getProposalNonVoters', () => {
 });
 
 describe('getOffchainProposalNonVoters', () => {
-  it('returns offchain non-voters from offchain-enabled DAO', async () => {
+  it('returns offchain non-voters for the given DAO', async () => {
     server.use(
-      http.get(`${TEST_BASE_URL}/daos`, () => HttpResponse.json(
-        daosResponse([
-          { id: 'ens', votingDelay: '0', chainId: 1, supportOffchainData: true, alreadySupportCalldataReview: false },
-        ])
-      )),
       http.get(`${TEST_BASE_URL}/ens/offchain/proposals/sp-1/non-voters`, () =>
         HttpResponse.json({ items: [{ voter: '0xdef', votingPower: '500' }], totalCount: 1 })
       ),
     );
     const client = createTestClient();
-    const result = await client.getOffchainProposalNonVoters('sp-1');
+    const result = await client.getOffchainProposalNonVoters('sp-1', 'ens');
     expect(result).toEqual([{ voter: '0xdef', votingPower: '500' }]);
   });
 
-  it('skips DAO on 404 and continues to next', async () => {
+  it('returns empty array on 404', async () => {
     server.use(
-      http.get(`${TEST_BASE_URL}/daos`, () => HttpResponse.json(
-        daosResponse([
-          { id: 'uniswap', votingDelay: '0', chainId: 1, supportOffchainData: true, alreadySupportCalldataReview: false },
-          { id: 'ens', votingDelay: '0', chainId: 1, supportOffchainData: true, alreadySupportCalldataReview: false },
-        ])
-      )),
-      http.get(`${TEST_BASE_URL}/uniswap/offchain/proposals/sp-2/non-voters`, () => new HttpResponse(null, { status: 404 })),
-      http.get(`${TEST_BASE_URL}/ens/offchain/proposals/sp-2/non-voters`, () =>
-        HttpResponse.json({ items: [{ voter: '0x123' }], totalCount: 1 })
-      ),
-    );
-    const client = createTestClient();
-    const result = await client.getOffchainProposalNonVoters('sp-2');
-    expect(result).toEqual([{ voter: '0x123' }]);
-  });
-
-  it('returns empty array when no offchain-enabled DAOs', async () => {
-    server.use(
-      http.get(`${TEST_BASE_URL}/daos`, () => HttpResponse.json(
-        daosResponse([
-          { id: 'ens', votingDelay: '0', chainId: 1, supportOffchainData: false, alreadySupportCalldataReview: false },
-        ])
-      )),
-    );
-    const client = createTestClient();
-    expect(await client.getOffchainProposalNonVoters('sp-3')).toEqual([]);
-  });
-
-  it('returns empty array when all DAOs return 404', async () => {
-    server.use(
-      http.get(`${TEST_BASE_URL}/daos`, () => HttpResponse.json(
-        daosResponse([
-          { id: 'ens', votingDelay: '0', chainId: 1, supportOffchainData: true, alreadySupportCalldataReview: false },
-        ])
-      )),
       http.get(`${TEST_BASE_URL}/ens/offchain/proposals/missing/non-voters`, () => new HttpResponse(null, { status: 404 })),
     );
     const client = createTestClient();
-    expect(await client.getOffchainProposalNonVoters('missing')).toEqual([]);
+    expect(await client.getOffchainProposalNonVoters('missing', 'ens')).toEqual([]);
   });
 
-  it('returns empty array on 500 from all offchain DAOs', async () => {
+  it('returns empty array on 500', async () => {
     server.use(
-      http.get(`${TEST_BASE_URL}/daos`, () => HttpResponse.json(
-        daosResponse([
-          { id: 'ens', votingDelay: '0', chainId: 1, supportOffchainData: true, alreadySupportCalldataReview: false },
-        ])
-      )),
       http.get(`${TEST_BASE_URL}/ens/offchain/proposals/sp-error/non-voters`, () => new HttpResponse(null, { status: 500 })),
     );
     const client = createTestClient();
-    expect(await client.getOffchainProposalNonVoters('sp-error')).toEqual([]);
+    expect(await client.getOffchainProposalNonVoters('sp-error', 'ens')).toEqual([]);
   });
 });
 

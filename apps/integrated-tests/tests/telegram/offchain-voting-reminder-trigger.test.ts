@@ -1,7 +1,7 @@
 /**
  * @fileoverview Integration tests for the Snapshot (off-chain) voting reminder feature
- * Tests the complete flow for the offchainVotingReminderTrigger75 trigger
- * which fires at 75% elapsed time (within 75-80% window)
+ * Tests the complete flow for the offchainVotingReminderTrigger50 trigger
+ * which fires at 50% elapsed time (within 50-55% window)
  */
 
 import { describe, test, expect, beforeEach, beforeAll } from 'vitest';
@@ -81,10 +81,10 @@ describe('Offchain Voting Reminder Integration Tests', () => {
     );
   });
 
-  describe('75% Reminder Threshold', () => {
-    test('should send Snapshot voting reminder when 77% of voting period has elapsed and user has not voted', async () => {
-      // Create proposal where 77% of time has elapsed (within 75-80% window)
-      const proposal = createOffchainProposalWithElapsedTime('offchain-proposal-75-reminder', 77);
+  describe('50% Reminder Threshold', () => {
+    test('should send Snapshot voting reminder when 52% of voting period has elapsed and user has not voted', async () => {
+      // Create proposal where 52% of time has elapsed (within 50-55% window)
+      const proposal = createOffchainProposalWithElapsedTime('offchain-proposal-50-reminder', 52);
 
       useOffchainProposalsAndVotes([proposal], []);
 
@@ -92,27 +92,27 @@ describe('Offchain Voting Reminder Integration Tests', () => {
       const message = await telegramHelper.waitForMessage(
         msg =>
           msg.text.includes('Snapshot Voting Reminder') ||
-          msg.text.includes('75% of voting period has passed'),
+          msg.text.includes('50% of voting period has passed'),
         { timeout: timeouts.notification.delivery }
       );
 
       // Verify message content matches the expected template
       expect(message.chatId).toBe(testUser.chatId);
       expect(message.text).toContain('⏰ Snapshot Voting Reminder');
-      expect(message.text).toContain('75% of voting period has passed');
+      expect(message.text).toContain('50% of voting period has passed');
       expect(message.text).toContain(testDaoId);
 
       // Verify database record exists for deduplication
       const notifications = await dbHelper.getNotifications();
       const relevantNotifs = notifications.filter(n =>
-        n.event_id?.includes('75-reminder') || n.event_id?.includes('offchain-proposal-75-reminder')
+        n.event_id?.includes('50-reminder') || n.event_id?.includes('offchain-proposal-50-reminder')
       );
       expect(relevantNotifs).toHaveLength(1);
     });
 
     test('should NOT send reminder when user has already voted on the Snapshot proposal', async () => {
-      // Create proposal where 77% of time has elapsed
-      const proposal = createOffchainProposalWithElapsedTime('offchain-proposal-75-voted', 77);
+      // Create proposal where 52% of time has elapsed
+      const proposal = createOffchainProposalWithElapsedTime('offchain-proposal-50-voted', 52);
 
       // Setup MSW handler with user's offchain vote already recorded
       const offchainVotes = [OffchainVoteFactory.createVote(testUser.address, proposal.id, {
@@ -138,9 +138,9 @@ describe('Offchain Voting Reminder Integration Tests', () => {
       expect(snapshotReminderMessages).toHaveLength(0);
     });
 
-    test('should NOT send reminder when proposal is at 60% elapsed (below 75% threshold)', async () => {
-      // Create proposal where only 60% of time has elapsed — below the 75% trigger
-      const proposal = createOffchainProposalWithElapsedTime('offchain-proposal-below-threshold', 60);
+    test('should NOT send reminder when proposal is at 40% elapsed (below 50% threshold)', async () => {
+      // Create proposal where only 40% of time has elapsed — below the 50% trigger
+      const proposal = createOffchainProposalWithElapsedTime('offchain-proposal-below-threshold', 40);
 
       useOffchainProposalsAndVotes([proposal], []);
 
@@ -150,7 +150,7 @@ describe('Offchain Voting Reminder Integration Tests', () => {
           const messages = telegramHelper.getAllMessages();
           return messages.length === 0;
         },
-        'Expected no offchain voting reminder for proposal below 75% threshold',
+        'Expected no offchain voting reminder for proposal below 50% threshold',
         { timeout: 500, interval: 50 }
       );
 
@@ -161,9 +161,9 @@ describe('Offchain Voting Reminder Integration Tests', () => {
       expect(snapshotReminderMessages).toHaveLength(0);
     });
 
-    test('should NOT send reminder when proposal is at 83% elapsed (above 80% window)', async () => {
-      // Create proposal where 83% of time has elapsed — above the 75-80% window
-      const proposal = createOffchainProposalWithElapsedTime('offchain-proposal-above-window', 83);
+    test('should NOT send reminder when proposal is at 60% elapsed (above 55% window)', async () => {
+      // Create proposal where 60% of time has elapsed — above the 50-55% window
+      const proposal = createOffchainProposalWithElapsedTime('offchain-proposal-above-window', 60);
 
       useOffchainProposalsAndVotes([proposal], []);
 
@@ -173,7 +173,7 @@ describe('Offchain Voting Reminder Integration Tests', () => {
           const messages = telegramHelper.getAllMessages();
           return messages.length === 0;
         },
-        'Expected no offchain voting reminder for proposal above 80% window',
+        'Expected no offchain voting reminder for proposal above 55% window',
         { timeout: 500, interval: 50 }
       );
 

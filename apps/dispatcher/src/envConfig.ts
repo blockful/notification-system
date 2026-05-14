@@ -12,6 +12,7 @@ const envSchema = z.object({
   RABBITMQ_URL: z.string().url(),
   ANTICAPTURE_API_URL: z.string().url(),
   BLOCKFUL_API_TOKEN: z.string().optional(),
+  PORT: z.coerce.number().positive().optional().default(3004),
 });
 
 export function loadConfig() {
@@ -23,5 +24,6 @@ export function loadConfig() {
     rabbitmqUrl: env.RABBITMQ_URL,
     anticaptureApiUrl: env.ANTICAPTURE_API_URL,
     blockfulApiToken: env.BLOCKFUL_API_TOKEN,
+    port: env.PORT,
   } as const;
 } 

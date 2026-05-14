@@ -76,6 +76,7 @@ services:
       RABBITMQ_URL: amqp://admin:admin@rabbitmq:5672
       TOKEN_ENCRYPTION_KEY: ${TOKEN_ENCRYPTION_KEY}
       API_PORT_SLACK: 3002
+      RPC_URL: ${RPC_URL:-https://ethereum-rpc.publicnode.com}
     depends_on:
       subscription-server:
         condition: service_started
@@ -91,7 +92,10 @@ services:
       context: .
       dockerfile: apps/dispatcher/Dockerfile
     container_name: dispatcher
+    ports:
+      - "3004:3004"
     environment:
+      PORT: 3004
       ANTICAPTURE_API_URL: ${ANTICAPTURE_API_URL}
       BLOCKFUL_API_TOKEN: ${BLOCKFUL_API_TOKEN:-}
       RABBITMQ_URL: amqp://admin:admin@rabbitmq:5672
@@ -111,6 +115,8 @@ services:
       context: .
       dockerfile: apps/logic-system/Dockerfile
     container_name: logic-system
+    ports:
+      - "3005:3005"
     environment:
       ANTICAPTURE_API_URL: ${ANTICAPTURE_API_URL}
       BLOCKFUL_API_TOKEN: ${BLOCKFUL_API_TOKEN:-}

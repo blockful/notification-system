@@ -88,7 +88,7 @@ export class BatchNotificationService {
     validNotifications: BatchNotificationData[],
     messageGenerator: (address: string) => string,
     metadataGenerator?: (address: string) => Record<string, any>,
-    buttonsGenerator?: (address: string) => Array<{ text: string; url: string }>
+    buttonsGenerator?: (address: string) => Array<Array<{ text: string; url: string }>>
   ): Promise<void> {
     const sendPromises: Promise<void>[] = [];
     const allNotificationsToMark: Notification[] = [];
@@ -132,7 +132,7 @@ export class BatchNotificationService {
     followerMap: Map<string, User>,
     message: string,
     metadata: Record<string, any> | undefined,
-    buttons: Array<{ text: string; url: string }> | undefined,
+    buttons: Array<Array<{ text: string; url: string }>> | undefined,
     sendPromises: Promise<void>[]
   ): void {
     for (const notification of notificationsToSend) {
@@ -178,7 +178,7 @@ export class BatchNotificationService {
     eventIdGenerator: (address: string) => string,
     messageGenerator: (address: string) => string,
     metadataGenerator?: (address: string) => Record<string, any>,
-    buttonsGenerator?: (address: string) => Array<{ text: string; url: string }>
+    buttonsGenerator?: (address: string) => Array<Array<{ text: string; url: string }>>
   ): Promise<number> {
     const batchData = await this.prepareBatchData(addresses, daoId, eventIdGenerator, triggerType);
     const validNotifications = this.filterValidNotifications(batchData);

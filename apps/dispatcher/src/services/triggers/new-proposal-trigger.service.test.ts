@@ -110,8 +110,8 @@ describe('NewProposalTriggerHandler', () => {
         "Hi, I'd like to request a call-data review for proposal prop456 in dao123.",
       );
       expect(notificationFactory.client.sentPayloads[0].metadata?.buttons).toEqual([
-        { text: 'Check proposal details', url: 'https://anticapture.com/dao123/governance/proposal/prop456' },
-        { text: '🔎 Request a call-data review', url: `https://t.me/Zeugh?text=${calldataMessage}` },
+        [{ text: 'Check proposal details', url: 'https://anticapture.com/dao123/governance/proposal/prop456' }],
+        [{ text: '🔎 Request a call-data review', url: `https://t.me/Zeugh?text=${calldataMessage}` }],
       ]);
     });
 
@@ -124,7 +124,7 @@ describe('NewProposalTriggerHandler', () => {
       });
 
       expect(notificationFactory.client.sentPayloads[0].metadata?.buttons).toEqual([
-        { text: 'Check proposal details', url: 'https://anticapture.com/dao456/governance/proposal/prop789' },
+        [{ text: 'Check proposal details', url: 'https://anticapture.com/dao456/governance/proposal/prop789' }],
       ]);
     });
 

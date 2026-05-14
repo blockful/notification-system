@@ -75,7 +75,6 @@ function buildExpectedMessage(vote: OffchainVoteWithDaoId): string {
     : offchainVoteCastMessages.withoutReason;
 
   return replacePlaceholders(template, {
-    address: vote.voter,
     daoId: vote.daoId,
     proposalTitle: vote.proposalTitle ?? undefined,
     ...(hasReason && { reason: vote.reason! }),
@@ -89,7 +88,7 @@ function buildExpectedPayload(vote: OffchainVoteWithDaoId): NotificationPayload 
     channelUserId: STUB_USER.channel_user_id,
     message: buildExpectedMessage(vote),
     bot_token: undefined,
-    metadata: undefined,
+    metadata: { addresses: { address: vote.voter } },
   };
 }
 

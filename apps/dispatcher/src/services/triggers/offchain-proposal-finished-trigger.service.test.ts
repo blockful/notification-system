@@ -88,7 +88,7 @@ describe('OffchainProposalFinishedTriggerHandler', () => {
         channelUserId: '123',
         message: '📊 Snapshot proposal "Grant Program" has ended on DAO test-dao',
         metadata: {
-          buttons: [{ text: 'View proposal results', url: 'https://snapshot.org/#/test-dao/proposal/snap-1' }],
+          buttons: [[{ text: 'View proposal results', url: 'https://snapshot.org/#/test-dao/proposal/snap-1' }]],
         },
       }]);
     });
@@ -113,7 +113,7 @@ describe('OffchainProposalFinishedTriggerHandler', () => {
         channelUserId: '123',
         message: '📊 A Snapshot proposal has ended on DAO test-dao',
         metadata: {
-          buttons: [{ text: 'View proposal results', url: 'https://snapshot.org/#/test-dao/proposal/snap-1' }],
+          buttons: [[{ text: 'View proposal results', url: 'https://snapshot.org/#/test-dao/proposal/snap-1' }]],
         },
       }]);
     });
@@ -176,7 +176,7 @@ describe('OffchainProposalFinishedTriggerHandler', () => {
         channelUserId: '123',
         message: '📊 Snapshot proposal "Test" has ended on DAO test-dao',
         metadata: {
-          buttons: [{ text: 'View proposal results', url: 'https://snapshot.org/#/test-dao/proposal/snap-1' }],
+          buttons: [[{ text: 'View proposal results', url: 'https://snapshot.org/#/test-dao/proposal/snap-1' }]],
         },
       }]);
     });
@@ -200,17 +200,17 @@ describe('OffchainProposalFinishedTriggerHandler', () => {
         {
           userId: 'user-1', channel: 'telegram', channelUserId: '123',
           message: '📊 Snapshot proposal "Proposal A" has ended on DAO dao-a',
-          metadata: { buttons: [{ text: 'View proposal results', url: 'https://snapshot.org/#/dao-a/proposal/snap-1' }] },
+          metadata: { buttons: [[{ text: 'View proposal results', url: 'https://snapshot.org/#/dao-a/proposal/snap-1' }]] },
         },
         {
           userId: 'user-2', channel: 'telegram', channelUserId: '456',
           message: '📊 Snapshot proposal "Proposal A" has ended on DAO dao-a',
-          metadata: { buttons: [{ text: 'View proposal results', url: 'https://snapshot.org/#/dao-a/proposal/snap-1' }] },
+          metadata: { buttons: [[{ text: 'View proposal results', url: 'https://snapshot.org/#/dao-a/proposal/snap-1' }]] },
         },
         {
           userId: 'user-1', channel: 'telegram', channelUserId: '123',
           message: '📊 Snapshot proposal "Proposal B" has ended on DAO dao-b',
-          metadata: { buttons: [{ text: 'View proposal results', url: 'https://snapshot.org/#/dao-b/proposal/snap-2' }] },
+          metadata: { buttons: [[{ text: 'View proposal results', url: 'https://snapshot.org/#/dao-b/proposal/snap-2' }]] },
         },
       ]);
     });

@@ -16,6 +16,8 @@ import { RabbitMQDispatcherService } from './api-clients/rabbitmq-dispatcher.ser
 import { AnticaptureClient, OnchainProposalStatusListEnumKey } from '@notification-system/anticapture-client';
 import { RabbitMQConnection, RabbitMQPublisher } from '@notification-system/rabbitmq-client';
 import { createLogger, wrapWithTracing } from '@anticapture/observability';
+import { type FastifyInstance } from 'fastify';
+import { startServer } from './server';
 
 const logger = createLogger('logic-system');
 
@@ -30,10 +32,11 @@ export class App {
   private votingReminderTrigger30!: VotingReminderTrigger;
   private votingReminderTrigger60!: VotingReminderTrigger;
   private votingReminderTrigger90!: VotingReminderTrigger;
-  private offchainVotingReminderTrigger75!: VotingReminderTrigger;
+  private offchainVotingReminderTrigger50!: VotingReminderTrigger;
   private proposalStatus: OnchainProposalStatusListEnumKey;
   private rabbitMQConnection!: RabbitMQConnection;
   private rabbitMQPublisher!: RabbitMQPublisher;
+  private server!: FastifyInstance;
   private initPromise: Promise<void>;
 
   constructor(
@@ -41,6 +44,7 @@ export class App {
     proposalStatus: OnchainProposalStatusListEnumKey,
     anticaptureBaseURL: string,
     rabbitmqUrl: string,
+    private port: number,
     initialTimestamp?: string,
     anticaptureHeaders?: Record<string, string>
   ) {
@@ -148,18 +152,19 @@ export class App {
       90, // 90% threshold
     );
 
-    this.offchainVotingReminderTrigger75 = new VotingReminderTrigger(
+    this.offchainVotingReminderTrigger50 = new VotingReminderTrigger(
       dispatcherService,
       offchainProposalRepository,
       triggerInterval,
-      75, // 75% threshold
+      50, // 50% threshold
       5,  // default window size
-      'offchain-voting-reminder' // prefix → produces ID 'offchain-voting-reminder-75'
+      'offchain-voting-reminder' // prefix → produces ID 'offchain-voting-reminder-50'
     );
   }
 
   async start(): Promise<void> {
     await this.initPromise;
+    this.server = await startServer(this.port);
     this.trigger.start({ status: this.proposalStatus });
     this.offchainProposalTrigger.start({ status: ['active', 'pending'] });
     this.offchainProposalFinishedTrigger.start();
@@ -172,7 +177,7 @@ export class App {
     this.votingReminderTrigger30.start();
     this.votingReminderTrigger60.start();
     this.votingReminderTrigger90.start();
-    this.offchainVotingReminderTrigger75.start();
+    this.offchainVotingReminderTrigger50.start();
     
     logger.info('logic-system running');
   }
@@ -217,13 +222,17 @@ export class App {
       this.votingReminderTrigger90.stop();
       this.votingReminderTrigger90.start();
     }
-    if (this.offchainVotingReminderTrigger75) {
-      this.offchainVotingReminderTrigger75.stop();
-      this.offchainVotingReminderTrigger75.start();
+    if (this.offchainVotingReminderTrigger50) {
+      this.offchainVotingReminderTrigger50.stop();
+      this.offchainVotingReminderTrigger50.start();
     }
   }
 
   async stop(): Promise<void> {
+    if (this.server) {
+      await this.server.close();
+    }
+
     await this.trigger.stop();
     await this.offchainProposalTrigger.stop();
     await this.offchainProposalFinishedTrigger.stop();
@@ -234,7 +243,7 @@ export class App {
     await this.votingReminderTrigger30.stop();
     await this.votingReminderTrigger60.stop();
     await this.votingReminderTrigger90.stop();
-    await this.offchainVotingReminderTrigger75.stop();
+    await this.offchainVotingReminderTrigger50.stop();
     if (this.rabbitMQPublisher) {
       await this.rabbitMQPublisher.close();
     }

@@ -11,6 +11,7 @@ const app = new App(
   config.subscriptionServerUrl,
   config.rabbitmqUrl,
   config.anticaptureApiUrl,
+  config.port,
   config.blockfulApiToken
 );
 

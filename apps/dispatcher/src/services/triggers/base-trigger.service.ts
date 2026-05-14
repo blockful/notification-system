@@ -69,7 +69,7 @@ export abstract class BaseTriggerHandler<T = any> implements TriggerHandler<T> {
     eventId: string,
     daoId: string,
     metadata?: { transaction?: { hash: string; chainId: number }; [key: string]: any, addresses?: Record<string, string> },
-    buttons?: Array<{ text: string; url: string }>
+    buttons?: Array<Array<{ text: string; url: string }>>
   ): Promise<void> {
     const supportedSubscribers = subscribers.filter(subscriber =>
       this.notificationFactory.supportsChannel(subscriber.channel)

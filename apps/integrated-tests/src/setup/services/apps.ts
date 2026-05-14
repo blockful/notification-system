@@ -63,6 +63,8 @@ export type TestApps = {
 const TEST_CONFIG = {
   ports: {
     subscriptionServer: serviceConfig.ports.subscriptionServer,
+    dispatcher: serviceConfig.ports.dispatcher,
+    logicSystem: serviceConfig.ports.logicSystem,
   },
   urls: {
     subscriptionServer: `http://127.0.0.1:${serviceConfig.ports.subscriptionServer}`,
@@ -177,6 +179,7 @@ const startDispatcher = async (
     TEST_CONFIG.urls.subscriptionServer,
     rabbitmqUrl,
     MOCK_ANTICAPTURE_URL,
+    TEST_CONFIG.ports.dispatcher,
   );
   await dispatcherApp.start();
   return dispatcherApp;
@@ -191,6 +194,7 @@ const startLogicSystem = async (
     onchainProposalStatusListEnum.ACTIVE,
     MOCK_ANTICAPTURE_URL,
     rabbitmqUrl,
+    TEST_CONFIG.ports.logicSystem,
     oneYearAgo
   );
   await logicSystemApp.start();

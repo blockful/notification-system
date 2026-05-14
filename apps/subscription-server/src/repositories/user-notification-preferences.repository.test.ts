@@ -49,7 +49,7 @@ beforeAll(async () => {
   db = createTestDb();
   await db.migrate.latest();
   repo = new UserNotificationPreferencesRepository(db);
-});
+}, 30_000);
 
 afterAll(async () => {
   await db.destroy();

@@ -256,19 +256,16 @@ export class TelegramBotService implements BotServiceInterface {
 
     // Append UTM tracking params to button URLs
     const triggerType = payload.metadata?.triggerType;
-    const buttons = payload.metadata?.buttons?.map(btn => ({
-      text: btn.text,
-      url: triggerType
-        ? appendUtmParams(btn.url, { source: 'notification', medium: 'telegram', campaign: triggerType })
-        : btn.url
-    }));
+    const withUtm = (url: string) => triggerType
+      ? appendUtmParams(url, { source: 'notification', medium: 'telegram', campaign: triggerType })
+      : url;
 
-    // Build inline keyboard if buttons are provided
-    const replyMarkup = buttons ? {
-      inline_keyboard: [[
-        ...buttons.map(btn => ({ text: btn.text, url: btn.url }))
-      ]]
-    } : undefined;
+    const buttonRows = payload.metadata?.buttons;
+    const replyMarkup = buttonRows
+      ? Markup.inlineKeyboard(
+          buttonRows.map(row => row.map(btn => Markup.button.url(btn.text, withUtm(btn.url))))
+        ).reply_markup
+      : undefined;
 
     const sentMessage = await this.telegramClient.sendMessage(
       payload.channelUserId,

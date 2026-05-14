@@ -121,13 +121,11 @@ export interface BuildButtonsParams {
 const explorerService = new ExplorerService();
 
 /**
- * Build buttons for a notification
- * Always includes CTA button with dynamic URL, optionally includes scan button
+ * Build buttons for a notification, organized as rows.
+ * Each inner array is a row rendered side-by-side; outer array stacks rows top-to-bottom.
  */
-export function buildButtons(params: BuildButtonsParams): Button[] {
-  const buttons: Button[] = [];
+export function buildButtons(params: BuildButtonsParams): Button[][] {
   const config = ctaButtonConfigs[params.triggerType];
-
   const url = config.buildUrl({
     daoId: params.daoId,
     address: params.address,
@@ -135,28 +133,26 @@ export function buildButtons(params: BuildButtonsParams): Button[] {
     proposalUrl: params.proposalUrl
   });
 
-  buttons.push({ text: config.text, url });
+  const mainRow: Button[] = [{ text: config.text, url }];
 
-  // Add discussion button if forum URL is available
   if (params.discussionUrl) {
-    buttons.push({ text: discussionButtonText, url: params.discussionUrl });
+    mainRow.push({ text: discussionButtonText, url: params.discussionUrl });
   }
 
-  // Add calldata review button for new proposals when DAO doesn't natively support it
+  if (params.txHash && params.chainId) {
+    const scanUrl = explorerService.getTransactionLink(params.chainId, params.txHash);
+    if (scanUrl) mainRow.push({ text: scanButtonText, url: scanUrl });
+  }
+
+  const rows: Button[][] = [mainRow];
+
+  // Calldata review gets its own row when the DAO doesn't natively support it
   if (params.alreadySupportCalldataReview === false) {
     const message = encodeURIComponent(
       `Hi, I'd like to request a call-data review for proposal ${params.proposalId ?? 'unknown'} in ${params.daoId ?? 'unknown'}.`
     );
-    buttons.push({ text: '🔎 Request a call-data review', url: `https://t.me/Zeugh?text=${message}` });
+    rows.push([{ text: '🔎 Request a call-data review', url: `https://t.me/Zeugh?text=${message}` }]);
   }
 
-  // Add scan button if transaction info is available
-  if (params.txHash && params.chainId) {
-    const scanUrl = explorerService.getTransactionLink(params.chainId, params.txHash);
-    if (scanUrl) {
-      buttons.push({ text: scanButtonText, url: scanUrl });
-    }
-  }
-
-  return buttons;
+  return rows;
 }

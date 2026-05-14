@@ -30,7 +30,7 @@ export interface IAnticaptureClient {
     listVotingPowerHistory(variables?: HistoricalVotingPowerQueryParams, daoId?: string): Promise<ProcessedVotingPowerHistory[]>;
     listVotes(daoId: string, variables?: VotesQueryParams): Promise<OnchainVote[]>;
     getProposalNonVoters(proposalId: string, daoId: string, addresses?: string[]): Promise<Voter[]>;
-    getOffchainProposalNonVoters(proposalId: string, addresses?: string[]): Promise<OffchainNonVoter[]>;
+    getOffchainProposalNonVoters(proposalId: string, daoId: string, addresses?: string[]): Promise<OffchainNonVoter[]>;
     listRecentVotesFromAllDaos(timestampGt: string, limit?: number): Promise<VoteWithDaoId[]>;
     getEventThreshold(daoId: string, type: FeedEventType, relevance: FeedRelevance): Promise<string | null>;
     listOffchainProposals(variables?: OffchainProposalsQueryParams, daoId?: string): Promise<(OffchainProposalItem & {
@@ -61,7 +61,7 @@ export declare class AnticaptureClient implements IAnticaptureClient {
     listVotingPowerHistory(variables?: HistoricalVotingPowerQueryParams, daoId?: string): Promise<ProcessedVotingPowerHistory[]>;
     listVotes(daoId: string, variables?: VotesQueryParams): Promise<OnchainVote[]>;
     getProposalNonVoters(proposalId: string, daoId: string, addresses?: string[]): Promise<Voter[]>;
-    getOffchainProposalNonVoters(proposalId: string, addresses?: string[]): Promise<OffchainNonVoter[]>;
+    getOffchainProposalNonVoters(proposalId: string, daoId: string, addresses?: string[]): Promise<OffchainNonVoter[]>;
     listRecentVotesFromAllDaos(timestampGt: string, limit?: number): Promise<VoteWithDaoId[]>;
     getEventThreshold(daoId: string, type: FeedEventType, relevance: FeedRelevance): Promise<string | null>;
     listOffchainProposals(variables?: OffchainProposalsQueryParams, daoId?: string): Promise<(OffchainProposalItem & {
