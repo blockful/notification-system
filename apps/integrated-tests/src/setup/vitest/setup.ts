@@ -19,7 +19,13 @@ declare global {
 beforeAll(async () => {
   // server.listen MUST run before app boot so the in-process apps' fetch
   // calls are intercepted from the very first request.
-  server.listen({ onUnhandledRequest: 'error' });
+  server.listen({
+    onUnhandledRequest: (request) => {
+      const { hostname } = new URL(request.url);
+      if (hostname === '127.0.0.1' || hostname === 'localhost') return;
+      throw new Error(`[MSW] Unhandled ${request.method} ${request.url}`);
+    },
+  });
 
   const tmpFiles = fs.readdirSync('/tmp').filter(f => f.startsWith('test_integration_'));
   for (const file of tmpFiles) {

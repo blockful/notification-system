@@ -39,6 +39,51 @@ export const nonVotersResolver =
     return HttpResponse.json({ items, totalCount: items.length });
   };
 
+// SDK handlers echo their data verbatim — `:dao` and `?status` are not honored.
+// Tests that poll across multiple DAOs or statuses need that filtering, so we
+// recreate it here against the seeded item list.
+export const proposalsByDaoResolver =
+  <T extends { daoId: string; status?: string | null }>(items: ReadonlyArray<T>) =>
+  ({ request, params }: { request: Request; params: Record<string, string | readonly string[] | undefined> }) => {
+    const dao = params.dao as string;
+    const statuses = new URL(request.url).searchParams.getAll('status').map(s => s.toLowerCase());
+    const filtered = items.filter(item => {
+      if (item.daoId !== dao) return false;
+      if (statuses.length === 0) return true;
+      return statuses.includes((item.status ?? '').toLowerCase());
+    });
+    return HttpResponse.json({ items: filtered, totalCount: filtered.length });
+  };
+
+// Offchain (Snapshot) variant. Watch the asymmetry: the query param is
+// `?status=active|closed` but the payload field is `state` — we match against
+// the payload side.
+export const offchainProposalsByDaoResolver =
+  <T extends { spaceId: string; state?: string | null }>(items: ReadonlyArray<T>) =>
+  ({ request, params }: { request: Request; params: Record<string, string | readonly string[] | undefined> }) => {
+    const dao = params.dao as string;
+    const statuses = new URL(request.url).searchParams.getAll('status').map(s => s.toLowerCase());
+    const filtered = items.filter(item => {
+      if (item.spaceId !== dao) return false;
+      if (statuses.length === 0) return true;
+      return statuses.includes((item.state ?? '').toLowerCase());
+    });
+    return HttpResponse.json({ items: filtered, totalCount: filtered.length });
+  };
+
+// getDaos gates which DAOs ever get polled: a DAO absent from this response
+// stays invisible no matter what proposals or votes are seeded for it. Use
+// this when a test introduces a DAO id outside the default `testDaos` set.
+type WithDao = { daoId: string } | { spaceId: string };
+const idOf = (p: WithDao) => ('daoId' in p ? p.daoId : p.spaceId);
+export const daosFromItems = (items: ReadonlyArray<WithDao>) => {
+  const ids = Array.from(new Set(items.map(idOf)));
+  return getDaosHandler({
+    items: ids.map(id => ({ id, votingDelay: '0', supportOffchainData: true })),
+    totalCount: ids.length,
+  });
+};
+
 const emptyListEnvelope = { items: [], totalCount: 0 };
 const emptyThreshold = { threshold: 0 };
 
