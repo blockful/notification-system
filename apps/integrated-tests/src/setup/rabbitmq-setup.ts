@@ -83,6 +83,7 @@ export class RabbitMQTestSetup {
     try {
       await this.connection.queuePurge(queueName);
     } catch (error) {
+      if ((error as { code?: string })?.code === 'NOT_FOUND') return;
       console.warn(`Failed to clear queue ${queueName}:`, error);
     }
   }
