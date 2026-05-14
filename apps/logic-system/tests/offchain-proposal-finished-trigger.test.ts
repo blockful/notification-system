@@ -1,11 +1,10 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { OffchainProposalFinishedTrigger } from '../src/triggers/offchain-proposal-finished-trigger';
+import { OffchainProposal } from '../src/interfaces/offchain-proposal.interface';
 import {
-  OffchainProposal,
-  OffchainProposalDataSource,
-  ListOffchainProposalsOptions
-} from '../src/interfaces/offchain-proposal.interface';
-import { DispatcherService, DispatcherMessage } from '../src/interfaces/dispatcher.interface';
+  SimpleDispatcherService,
+  SimpleOffchainProposalDataSource,
+} from './simple-doubles';
 
 function createClosedOffchainProposal(overrides?: Partial<OffchainProposal>): OffchainProposal {
   return {
@@ -19,26 +18,6 @@ function createClosedOffchainProposal(overrides?: Partial<OffchainProposal>): Of
     daoId: 'test-dao',
     ...overrides,
   };
-}
-
-class SimpleOffchainProposalDataSource implements OffchainProposalDataSource {
-  proposals: OffchainProposal[] = [];
-  callHistory: ListOffchainProposalsOptions[] = [];
-
-  async listAll(options?: ListOffchainProposalsOptions): Promise<OffchainProposal[]> {
-    if (options) this.callHistory.push(options);
-    return this.proposals;
-  }
-}
-
-class SimpleDispatcherService implements DispatcherService {
-  sentMessages: DispatcherMessage[] = [];
-  shouldFail = false;
-
-  async sendMessage(message: DispatcherMessage): Promise<void> {
-    if (this.shouldFail) throw new Error('Dispatcher failed');
-    this.sentMessages.push(message);
-  }
 }
 
 describe('OffchainProposalFinishedTrigger', () => {
@@ -82,7 +61,7 @@ describe('OffchainProposalFinishedTrigger', () => {
       trigger.start();
       vi.advanceTimersByTime(60000);
 
-      expect(dataSource.callHistory[0]).toEqual({
+      expect(dataSource.listCalls[0]).toEqual({
         status: ['closed'],
         endDate: 1700100201,
         orderDirection: 'desc',
@@ -108,7 +87,7 @@ describe('OffchainProposalFinishedTrigger', () => {
     });
 
     it('should propagate dispatcher errors', async () => {
-      dispatcher.shouldFail = true;
+      dispatcher.sendError = new Error('Dispatcher failed');
       const proposal = createClosedOffchainProposal();
 
       await expect(trigger.process([proposal])).rejects.toThrow('Dispatcher failed');
@@ -118,7 +97,7 @@ describe('OffchainProposalFinishedTrigger', () => {
   describe('start/stop', () => {
     beforeEach(() => {
       vi.useFakeTimers();
-      dataSource.proposals = [createClosedOffchainProposal()];
+      dataSource.listResult = [createClosedOffchainProposal()];
     });
 
     afterEach(() => {
@@ -129,7 +108,7 @@ describe('OffchainProposalFinishedTrigger', () => {
       trigger.start();
       vi.advanceTimersByTime(60000);
 
-      expect(dataSource.callHistory).toEqual([{
+      expect(dataSource.listCalls).toEqual([{
         status: ['closed'],
         endDate: 1700000000,
         orderDirection: 'desc',
@@ -143,7 +122,7 @@ describe('OffchainProposalFinishedTrigger', () => {
 
       vi.advanceTimersByTime(120000);
 
-      expect(dataSource.callHistory).toEqual([]);
+      expect(dataSource.listCalls).toEqual([]);
     });
   });
 
@@ -157,7 +136,7 @@ describe('OffchainProposalFinishedTrigger', () => {
       customTrigger.start();
       vi.advanceTimersByTime(60000);
 
-      expect(dataSource.callHistory[0]).toEqual({
+      expect(dataSource.listCalls[0]).toEqual({
         status: ['closed'],
         endDate: 1234567890,
         orderDirection: 'desc',
@@ -175,7 +154,7 @@ describe('OffchainProposalFinishedTrigger', () => {
       trigger.start();
       vi.advanceTimersByTime(60000);
 
-      expect(dataSource.callHistory[0]).toEqual({
+      expect(dataSource.listCalls[0]).toEqual({
         status: ['closed'],
         endDate: 9999999999,
         orderDirection: 'desc',
@@ -196,7 +175,7 @@ describe('OffchainProposalFinishedTrigger', () => {
 
       trigger.start();
       vi.advanceTimersByTime(60000);
-      expect(dataSource.callHistory[0]).toEqual({
+      expect(dataSource.listCalls[0]).toEqual({
         status: ['closed'],
         endDate: expected,
         orderDirection: 'desc',
@@ -222,7 +201,7 @@ describe('OffchainProposalFinishedTrigger', () => {
       trigger.start();
       vi.advanceTimersByTime(60000);
 
-      expect(dataSource.callHistory[0]).toEqual({
+      expect(dataSource.listCalls[0]).toEqual({
         status: ['closed'],
         endDate: 1700000000,
         orderDirection: 'desc',
@@ -237,7 +216,7 @@ describe('OffchainProposalFinishedTrigger', () => {
       trigger.start();
       vi.advanceTimersByTime(60000);
 
-      expect(dataSource.callHistory[0]).toEqual({
+      expect(dataSource.listCalls[0]).toEqual({
         status: ['closed'],
         endDate: 1700200001,
         orderDirection: 'desc',
@@ -255,7 +234,7 @@ describe('OffchainProposalFinishedTrigger', () => {
       trigger.start();
       vi.advanceTimersByTime(60000);
 
-      expect(dataSource.callHistory[0]).toEqual({
+      expect(dataSource.listCalls[0]).toEqual({
         status: ['closed'],
         endDate: 1700100001,
         orderDirection: 'desc',

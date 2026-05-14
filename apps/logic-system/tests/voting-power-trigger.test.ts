@@ -1,38 +1,39 @@
-/**
- * Unit tests for VotingPowerChangedTrigger
- */
-
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { describe, it, expect, beforeEach } from 'vitest';
 import { VotingPowerChangedTrigger } from '../src/triggers/voting-power-changed-trigger';
-import { createMockDispatcherService, createMockVotingPowerRepository, createMockThresholdRepository, createVotingPowerHistory, mockVotingPowerData } from './mocks';
 import { NotificationTypeId } from '@notification-system/messages';
+import { createVotingPowerHistory, mockVotingPowerData } from './fixtures';
+import {
+  SimpleDispatcherService,
+  SimpleVotingPowerRepository,
+  SimpleThresholdRepository,
+} from './simple-doubles';
 
 describe('VotingPowerChangedTrigger', () => {
   let trigger: VotingPowerChangedTrigger;
-  let mockDispatcherService: ReturnType<typeof createMockDispatcherService>;
-  let mockVotingPowerRepository: ReturnType<typeof createMockVotingPowerRepository>;
-  let mockThresholdRepository: ReturnType<typeof createMockThresholdRepository>;
+  let dispatcherService: SimpleDispatcherService;
+  let votingPowerRepository: SimpleVotingPowerRepository;
+  let thresholdRepository: SimpleThresholdRepository;
 
   beforeEach(() => {
-    vi.clearAllMocks();
-    mockDispatcherService = createMockDispatcherService();
-    mockVotingPowerRepository = createMockVotingPowerRepository();
-    mockThresholdRepository = createMockThresholdRepository();
-    mockThresholdRepository.getThreshold.mockResolvedValue(null);
+    dispatcherService = new SimpleDispatcherService();
+    votingPowerRepository = new SimpleVotingPowerRepository();
+    thresholdRepository = new SimpleThresholdRepository();
+    // Fail-open by default
+    thresholdRepository.defaultThreshold = null;
     trigger = new VotingPowerChangedTrigger(
-      mockDispatcherService,
-      mockVotingPowerRepository,
-      mockThresholdRepository,
-      5000 // 5 second interval for testing
+      dispatcherService,
+      votingPowerRepository,
+      thresholdRepository,
+      5000
     );
   });
 
   describe('Initial state', () => {
     it('should initialize with current timestamp', () => {
       const trigger2 = new VotingPowerChangedTrigger(
-        createMockDispatcherService(),
-        createMockVotingPowerRepository(),
-        createMockThresholdRepository(),
+        new SimpleDispatcherService(),
+        new SimpleVotingPowerRepository(),
+        new SimpleThresholdRepository(),
         5000
       );
 
@@ -44,37 +45,34 @@ describe('VotingPowerChangedTrigger', () => {
 
   describe('fetchData', () => {
     it('should call listVotingPowerHistory with timestamp for incremental processing', async () => {
-      mockVotingPowerRepository.listVotingPowerHistory.mockResolvedValue([]);
-
       trigger['lastProcessedTimestamp'] = '1625000000';
 
       await trigger['fetchData']();
 
-      expect(mockVotingPowerRepository.listVotingPowerHistory).toHaveBeenCalledWith('1625000000');
+      expect(votingPowerRepository.listCalls).toEqual(['1625000000']);
     });
   });
 
   describe('process', () => {
     it('should do nothing when data is empty', async () => {
       await trigger.process([]);
-      
-      expect(mockDispatcherService.sendMessage).not.toHaveBeenCalled();
+
+      expect(dispatcherService.sentMessages).toEqual([]);
     });
 
     it('should send message with correct format when data exists', async () => {
       await trigger.process(mockVotingPowerData);
-      
-      expect(mockDispatcherService.sendMessage).toHaveBeenCalledWith({
+
+      expect(dispatcherService.sentMessages).toEqual([{
         triggerId: NotificationTypeId.VotingPowerChanged,
         events: mockVotingPowerData
-      });
+      }]);
     });
 
     it('should update timestamp to the last item in array + 1 second', async () => {
       await trigger.process(mockVotingPowerData);
 
-      // Should update to timestamp of last item (chronologically last)
-      expect(trigger['lastProcessedTimestamp']).toBe('1625184001'); // Last item timestamp + 1
+      expect(trigger['lastProcessedTimestamp']).toBe('1625184001');
     });
 
     it('should handle single item correctly', async () => {
@@ -82,75 +80,67 @@ describe('VotingPowerChangedTrigger', () => {
 
       await trigger.process(singleItem);
 
-      expect(mockDispatcherService.sendMessage).toHaveBeenCalledWith({
+      expect(dispatcherService.sentMessages).toEqual([{
         triggerId: NotificationTypeId.VotingPowerChanged,
         events: singleItem
-      });
-
-      expect(trigger['lastProcessedTimestamp']).toBe('1625097601'); // timestamp + 1
+      }]);
+      expect(trigger['lastProcessedTimestamp']).toBe('1625097601');
     });
   });
 
   describe('Incremental Processing Flow', () => {
     it('should process incrementally across multiple executions', async () => {
-      // First execution
-      mockVotingPowerRepository.listVotingPowerHistory.mockResolvedValueOnce([mockVotingPowerData[0]]);
+      votingPowerRepository.resultQueue = [
+        [mockVotingPowerData[0]],
+        [mockVotingPowerData[1]],
+      ];
 
       let data = await trigger['fetchData']();
       await trigger.process(data);
 
-      expect(mockDispatcherService.sendMessage).toHaveBeenCalledTimes(1);
-
-      // Second execution - should use updated timestamp
-      mockVotingPowerRepository.listVotingPowerHistory.mockResolvedValueOnce([mockVotingPowerData[1]]);
+      expect(dispatcherService.sentMessages).toHaveLength(1);
 
       data = await trigger['fetchData']();
       await trigger.process(data);
 
-      expect(mockDispatcherService.sendMessage).toHaveBeenCalledTimes(2);
+      expect(dispatcherService.sentMessages).toHaveLength(2);
 
-      // Verify the second call used the updated timestamp
-      const secondCallArgs = mockVotingPowerRepository.listVotingPowerHistory.mock.calls[1][0];
-      expect(secondCallArgs).toBe('1625097601'); // Timestamp from first execution
+      // Second call must use the timestamp updated after the first process()
+      expect(votingPowerRepository.listCalls[1]).toBe('1625097601');
     });
 
     it('should not process when no new data available', async () => {
-      // First execution with data
-      mockVotingPowerRepository.listVotingPowerHistory.mockResolvedValueOnce(mockVotingPowerData);
+      votingPowerRepository.resultQueue = [mockVotingPowerData, []];
 
       let data = await trigger['fetchData']();
       await trigger.process(data);
 
-      // Second execution with no new data
-      mockVotingPowerRepository.listVotingPowerHistory.mockResolvedValueOnce([]);
-
       data = await trigger['fetchData']();
       await trigger.process(data);
 
-      // Should have called sendMessage only once (from first execution)
-      expect(mockDispatcherService.sendMessage).toHaveBeenCalledTimes(1);
+      // Empty second batch produces no extra message
+      expect(dispatcherService.sentMessages).toHaveLength(1);
     });
   });
 
   describe('Error Handling', () => {
     it('should handle repository errors gracefully', async () => {
-      mockVotingPowerRepository.listVotingPowerHistory.mockRejectedValue(new Error('API Error'));
+      votingPowerRepository.defaultResult = new Error('API Error');
 
       await expect(trigger['fetchData']()).rejects.toThrow('API Error');
-      expect(mockDispatcherService.sendMessage).not.toHaveBeenCalled();
+      expect(dispatcherService.sentMessages).toEqual([]);
     });
 
     it('should handle dispatcher errors gracefully', async () => {
-      mockThresholdRepository.getThreshold.mockResolvedValue(null);
-      mockDispatcherService.sendMessage.mockRejectedValue(new Error('Dispatcher Error'));
-      
+      dispatcherService.sendError = new Error('Dispatcher Error');
+
       await expect(trigger.process(mockVotingPowerData)).rejects.toThrow('Dispatcher Error');
     });
   });
 
   describe('Threshold Filtering', () => {
     it('should drop delegation events below threshold', async () => {
-      mockThresholdRepository.getThreshold.mockResolvedValue('500');
+      thresholdRepository.defaultThreshold = '500';
 
       const events = [
         createVotingPowerHistory({ delta: '100', changeType: 'delegation', timestamp: '1000' }),
@@ -159,14 +149,14 @@ describe('VotingPowerChangedTrigger', () => {
 
       await trigger.process(events);
 
-      expect(mockDispatcherService.sendMessage).toHaveBeenCalledWith({
+      expect(dispatcherService.sentMessages).toEqual([{
         triggerId: NotificationTypeId.VotingPowerChanged,
         events: [events[1]]
-      });
+      }]);
     });
 
     it('should drop transfer events below threshold', async () => {
-      mockThresholdRepository.getThreshold.mockResolvedValue('200');
+      thresholdRepository.defaultThreshold = '200';
 
       const events = [
         createVotingPowerHistory({
@@ -183,14 +173,14 @@ describe('VotingPowerChangedTrigger', () => {
 
       await trigger.process(events);
 
-      expect(mockDispatcherService.sendMessage).toHaveBeenCalledWith({
+      expect(dispatcherService.sentMessages).toEqual([{
         triggerId: NotificationTypeId.VotingPowerChanged,
         events: [events[1]]
-      });
+      }]);
     });
 
     it('should use abs(delta) for negative deltas', async () => {
-      mockThresholdRepository.getThreshold.mockResolvedValue('200');
+      thresholdRepository.defaultThreshold = '200';
 
       const events = [
         createVotingPowerHistory({ delta: '-300', changeType: 'delegation', timestamp: '1000' }),
@@ -199,14 +189,14 @@ describe('VotingPowerChangedTrigger', () => {
 
       await trigger.process(events);
 
-      expect(mockDispatcherService.sendMessage).toHaveBeenCalledWith({
+      expect(dispatcherService.sentMessages).toEqual([{
         triggerId: NotificationTypeId.VotingPowerChanged,
         events: [events[0]]
-      });
+      }]);
     });
 
     it('should pass all events through when threshold is null (fail-open)', async () => {
-      mockThresholdRepository.getThreshold.mockResolvedValue(null);
+      thresholdRepository.defaultThreshold = null;
 
       const events = [
         createVotingPowerHistory({ delta: '1', changeType: 'delegation', timestamp: '1000' }),
@@ -214,14 +204,14 @@ describe('VotingPowerChangedTrigger', () => {
 
       await trigger.process(events);
 
-      expect(mockDispatcherService.sendMessage).toHaveBeenCalledWith({
+      expect(dispatcherService.sentMessages).toEqual([{
         triggerId: NotificationTypeId.VotingPowerChanged,
         events
-      });
+      }]);
     });
 
     it('should always advance timestamp even when all events are filtered', async () => {
-      mockThresholdRepository.getThreshold.mockResolvedValue('99999999');
+      thresholdRepository.defaultThreshold = '99999999';
 
       const events = [
         createVotingPowerHistory({ delta: '1', changeType: 'delegation', timestamp: '5000' }),
@@ -230,7 +220,7 @@ describe('VotingPowerChangedTrigger', () => {
 
       await trigger.process(events);
 
-      expect(mockDispatcherService.sendMessage).not.toHaveBeenCalled();
+      expect(dispatcherService.sentMessages).toEqual([]);
       expect(trigger['lastProcessedTimestamp']).toBe('6001');
     });
   });

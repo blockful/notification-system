@@ -1,23 +1,10 @@
-/**
- * Shared test data and helper functions
- */
-
-import { vi } from 'vitest';
-import type { Mocked } from 'vitest';
 import { zeroAddress } from 'viem';
-import { ProposalDataSource, ProposalOnChain } from '../src/interfaces/proposal.interface';
-import { DispatcherService } from '../src/interfaces/dispatcher.interface';
-import { IVotingPowerRepository } from '../src/repositories/voting-power.repository';
-import { IThresholdRepository } from '../src/repositories/threshold.repository';
+import { ProposalOnChain } from '../src/interfaces/proposal.interface';
 import { ProcessedVotingPowerHistory } from '@notification-system/anticapture-client';
 
-// Common test values
 export const DEFAULT_INTERVAL = 5000;
 export const FINISHED_STATUSES = ['EXECUTED', 'DEFEATED', 'SUCCEEDED', 'EXPIRED', 'CANCELED'] as const;
 
-/**
- * Creates a proposal with default values and custom overrides
- */
 export const createProposal = (overrides: Partial<ProposalOnChain> = {}): ProposalOnChain => ({
   id: '1',
   daoId: 'dao1',
@@ -38,17 +25,11 @@ export const createProposal = (overrides: Partial<ProposalOnChain> = {}): Propos
   ...overrides
 });
 
-/**
- * Creates a finished proposal with specific status
- */
 export const createFinishedProposal = (
   status: typeof FINISHED_STATUSES[number],
   overrides: Partial<ProposalOnChain> = {}
 ): ProposalOnChain => createProposal({ status, ...overrides });
 
-/**
- * Creates a proposal with null/undefined fields for edge case testing
- */
 export const createProposalWithMissingFields = (): ProposalOnChain => createProposal({
   description: null,
   timestamp: null,
@@ -59,9 +40,6 @@ export const createProposalWithMissingFields = (): ProposalOnChain => createProp
   abstainVotes: undefined
 });
 
-/**
- * Creates voting power history entry
- */
 export const createVotingPowerHistory = (
   overrides: Partial<ProcessedVotingPowerHistory> = {}
 ): ProcessedVotingPowerHistory => ({
@@ -86,36 +64,6 @@ export const createVotingPowerHistory = (
   ...overrides
 });
 
-/**
- * Creates a mocked DispatcherService
- */
-export const createMockDispatcherService = (): Mocked<DispatcherService> => ({
-  sendMessage: vi.fn()
-});
-
-/**
- * Creates a mocked ProposalDataSource
- */
-export const createMockProposalDataSource = (): Mocked<ProposalDataSource> => ({
-  getById: vi.fn(),
-  listAll: vi.fn()
-});
-
-/**
- * Creates a mocked VotingPowerRepository
- */
-export const createMockVotingPowerRepository = (): Mocked<IVotingPowerRepository> => ({
-  listVotingPowerHistory: vi.fn()
-});
-
-/**
- * Creates a mocked ThresholdRepository
- */
-export const createMockThresholdRepository = (): Mocked<IThresholdRepository> => ({
-  getThreshold: vi.fn()
-});
-
-// Sample voting power data for tests
 export const mockVotingPowerData = [
   createVotingPowerHistory(),
   createVotingPowerHistory({
@@ -136,4 +84,3 @@ export const mockVotingPowerData = [
     votingPower: '500'
   })
 ];
-

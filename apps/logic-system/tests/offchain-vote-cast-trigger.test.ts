@@ -1,27 +1,11 @@
-import { describe, test, expect, vi, beforeEach, afterEach } from 'vitest';
+import { describe, test, expect, vi, beforeEach } from 'vitest';
 import { OffchainVoteCastTrigger } from '../src/triggers/offchain-vote-cast-trigger';
-import { OffchainVotesRepository } from '../src/repositories/offchain-votes.repository';
-import { DispatcherService, DispatcherMessage } from '../src/interfaces/dispatcher.interface';
-import { AnticaptureClient, OffchainVoteWithDaoId } from '@notification-system/anticapture-client';
+import { OffchainVoteWithDaoId } from '@notification-system/anticapture-client';
 import { NotificationTypeId } from '@notification-system/messages';
-
-class SimpleDispatcherService implements DispatcherService {
-  sentMessages: DispatcherMessage[] = [];
-
-  async sendMessage(message: DispatcherMessage): Promise<void> {
-    this.sentMessages.push(message);
-  }
-}
-
-class StubOffchainVotesRepository extends OffchainVotesRepository {
-  constructor() {
-    super(new AnticaptureClient({ baseURL: 'http://localhost' }));
-  }
-
-  override async listRecentOffchainVotes(): Promise<OffchainVoteWithDaoId[]> {
-    return [];
-  }
-}
+import {
+  SimpleDispatcherService,
+  SimpleOffchainVotesRepository,
+} from './simple-doubles';
 
 function createTestVote(overrides?: Partial<OffchainVoteWithDaoId>): OffchainVoteWithDaoId {
   return {
@@ -38,12 +22,12 @@ function createTestVote(overrides?: Partial<OffchainVoteWithDaoId>): OffchainVot
 
 describe('OffchainVoteCastTrigger', () => {
   let dispatcher: SimpleDispatcherService;
-  let repository: StubOffchainVotesRepository;
+  let repository: SimpleOffchainVotesRepository;
   let trigger: OffchainVoteCastTrigger;
 
   beforeEach(() => {
     dispatcher = new SimpleDispatcherService();
-    repository = new StubOffchainVotesRepository();
+    repository = new SimpleOffchainVotesRepository();
     trigger = new OffchainVoteCastTrigger(dispatcher, repository, 60000);
   });
 

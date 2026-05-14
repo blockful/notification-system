@@ -1,10 +1,15 @@
 import { describe, test, expect, beforeEach, beforeAll } from 'vitest';
 import { proposalsHandler } from '@anticapture/client/msw';
+import type { OnchainProposal } from '@notification-system/anticapture-client';
 import { db, TestApps } from '../../src/setup';
-import { server } from '../../src/setup/msw-server';
+import { server, proposalsByDaoResolver } from '../../src/setup/msw-server';
 import { UserFactory, ProposalFactory } from '../../src/fixtures';
 import { TelegramTestHelper, DatabaseTestHelper, TestCleanup } from '../../src/helpers';
 import { testConstants, timeouts } from '../../src/config';
+
+const useProposalsByDao = (proposals: OnchainProposal[]) => {
+  server.use(proposalsHandler(proposalsByDaoResolver(proposals)));
+};
 
 describe('Multi-DAO Notification Flow - Integration Test', () => {
   let apps: TestApps;
@@ -38,7 +43,7 @@ describe('Multi-DAO Notification Flow - Integration Test', () => {
     
     // Setup MSW handler to return active proposals from both DAOs
     const proposals = ProposalFactory.createProposalsForMultipleDaos([testConstants.daoIds.uniswap, testConstants.daoIds.ens], 'multi-proposal');
-    server.use(proposalsHandler({ items: proposals, totalCount: proposals.length }));
+    useProposalsByDao(proposals);
     
     // Wait for all expected messages
     await telegramHelper.waitForMessageCount(4, { timeout: timeouts.notification.delivery });
@@ -79,7 +84,7 @@ describe('Multi-DAO Notification Flow - Integration Test', () => {
     
     // Setup multiple UNI proposals simultaneously
     const multipleUniProposals = ProposalFactory.createMultipleProposals(testConstants.daoIds.uniswap, 3, 'uni-multi');
-    server.use(proposalsHandler({ items: multipleUniProposals, totalCount: multipleUniProposals.length }));
+    useProposalsByDao(multipleUniProposals);
     
     // Wait for all 6 messages (3 proposals × 2 UNI followers)
     await telegramHelper.waitForMessageCount(6);
