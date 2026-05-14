@@ -1,4 +1,3 @@
-import { describe, it, expect, beforeEach } from '@jest/globals';
 import { ExplorerService } from '../src/formatters/explorer.service';
 
 describe('ExplorerService', () => {
