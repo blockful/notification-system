@@ -1,7 +1,9 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.withRetryAndTimeout = withRetryAndTimeout;
-function isRetryable(err) {
+function isRetryable(err, timedOut) {
+    if (timedOut)
+        return true;
     const e = err;
     if (!e)
         return false;
@@ -18,16 +20,17 @@ async function withRetryAndTimeout(fn, opts) {
     let lastErr;
     while (attempt <= retries) {
         const ac = new AbortController();
-        const timer = setTimeout(() => ac.abort(), timeoutMs);
+        let timedOut = false;
+        const timer = setTimeout(() => { timedOut = true; ac.abort(); }, timeoutMs);
         try {
             return await fn(ac.signal);
         }
         catch (err) {
             lastErr = err;
-            if (!isRetryable(err) || attempt === retries)
+            if (!isRetryable(err, timedOut) || attempt === retries)
                 throw err;
             const delay = baseDelayMs * 2 ** attempt;
-            console.warn(`[AnticaptureClient] Retry ${attempt + 1}/${retries} after error: ${err.message}`);
+            console.warn(`[AnticaptureClient] Retry ${attempt + 1}/${retries} after ${timedOut ? 'timeout' : 'error'}: ${err.message}`);
             await sleep(delay);
             attempt += 1;
         }

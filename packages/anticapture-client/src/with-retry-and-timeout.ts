@@ -4,7 +4,8 @@ export interface RetryOptions {
   baseDelayMs?: number; // default 1000
 }
 
-function isRetryable(err: unknown): boolean {
+function isRetryable(err: unknown, timedOut: boolean): boolean {
+  if (timedOut) return true;
   const e = err as { status?: number; code?: string };
   if (!e) return false;
   if (e.code === 'ECONNRESET' || e.code === 'ETIMEDOUT' || e.code === 'ENETUNREACH') return true;
@@ -23,14 +24,15 @@ export async function withRetryAndTimeout<T>(
   let lastErr: unknown;
   while (attempt <= retries) {
     const ac = new AbortController();
-    const timer = setTimeout(() => ac.abort(), timeoutMs);
+    let timedOut = false;
+    const timer = setTimeout(() => { timedOut = true; ac.abort(); }, timeoutMs);
     try {
       return await fn(ac.signal);
     } catch (err) {
       lastErr = err;
-      if (!isRetryable(err) || attempt === retries) throw err;
+      if (!isRetryable(err, timedOut) || attempt === retries) throw err;
       const delay = baseDelayMs * 2 ** attempt;
-      console.warn(`[AnticaptureClient] Retry ${attempt + 1}/${retries} after error: ${(err as Error).message}`);
+      console.warn(`[AnticaptureClient] Retry ${attempt + 1}/${retries} after ${timedOut ? 'timeout' : 'error'}: ${(err as Error).message}`);
       await sleep(delay);
       attempt += 1;
     } finally {

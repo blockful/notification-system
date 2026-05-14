@@ -37,11 +37,26 @@ describe('withRetryAndTimeout', () => {
     expect(fn).toHaveBeenCalledTimes(3); // initial + 2 retries
   });
 
-  it('aborts and throws on timeout', async () => {
+  it('aborts and throws on timeout when no retries left', async () => {
     const fn = vi.fn((signal?: AbortSignal) => new Promise((_, reject) => {
       signal?.addEventListener('abort', () => reject(new Error('aborted')));
     }));
     await expect(withRetryAndTimeout(fn, { retries: 0, timeoutMs: 10 }))
       .rejects.toThrow();
+  });
+
+  it('retries on timeout and eventually succeeds', async () => {
+    let attempts = 0;
+    const fn = vi.fn((signal?: AbortSignal) => new Promise<string>((resolve, reject) => {
+      attempts += 1;
+      if (attempts < 3) {
+        signal?.addEventListener('abort', () => reject(new Error('aborted')));
+        return;
+      }
+      resolve('ok');
+    }));
+    const result = await withRetryAndTimeout(fn, { retries: 4, timeoutMs: 10, baseDelayMs: 1 });
+    expect(result).toBe('ok');
+    expect(fn).toHaveBeenCalledTimes(3);
   });
 });

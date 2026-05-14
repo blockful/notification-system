@@ -4,6 +4,16 @@
   "description": "Shared AnticaptureClient for REST SDK communication",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    },
+    "./test-doubles": {
+      "types": "./dist/test-doubles.d.ts",
+      "default": "./dist/test-doubles.js"
+    }
+  },
   "files": [
     "dist"
   ],
