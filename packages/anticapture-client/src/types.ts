@@ -3,7 +3,11 @@ import type { HistoricalVotingPower, OffchainProposal, OffchainVote } from '@ant
 export type OffchainProposalItem = OffchainProposal;
 export type OffchainVoteItem = OffchainVote;
 
-export type ProcessedVotingPowerHistory = HistoricalVotingPower & {
+// SDK now types these as bigint; the wrapper normalizes them back to decimal strings.
+export type ProcessedVotingPowerHistory = Omit<HistoricalVotingPower, 'timestamp' | 'votingPower' | 'delta'> & {
+  timestamp: string;
+  votingPower: string;
+  delta: string;
   changeType: 'delegation' | 'transfer' | 'other';
   sourceAccountId: string;
   targetAccountId: string;

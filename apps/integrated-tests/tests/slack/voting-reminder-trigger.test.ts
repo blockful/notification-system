@@ -148,7 +148,7 @@ describe('Slack Voting Reminder Trigger - Integration Test', () => {
 
       // Setup MSW handler with user's vote already recorded
       const voteEvents = [VoteFactory.createVote(userAddress, proposal.id, {
-        votingPower: '1000000000000000000000'
+        votingPower: 1000000000000000000000n
       })];
 
       useProposalsAndVotes([proposal], voteEvents);

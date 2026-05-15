@@ -115,7 +115,7 @@ export interface BuildButtonsParams {
   address?: string;
   proposalId?: string;
   proposalUrl?: string;
-  alreadySupportCalldataReview?: boolean;
+  supportsCalldataReview?: boolean;
 }
 
 const explorerService = new ExplorerService();
@@ -147,7 +147,7 @@ export function buildButtons(params: BuildButtonsParams): Button[][] {
   const rows: Button[][] = [mainRow];
 
   // Calldata review gets its own row when the DAO doesn't natively support it
-  if (params.alreadySupportCalldataReview === false) {
+  if (params.supportsCalldataReview === false) {
     const message = encodeURIComponent(
       `Hi, I'd like to request a call-data review for proposal ${params.proposalId ?? 'unknown'} in ${params.daoId ?? 'unknown'}.`
     );

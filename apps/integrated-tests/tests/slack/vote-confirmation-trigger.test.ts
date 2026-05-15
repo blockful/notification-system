@@ -77,7 +77,7 @@ describe('Slack Vote Confirmation Trigger - Integration Test', () => {
         proposalId: 'prop-for-123',
         voterAddress: voterAddress,
         support: '1', // FOR
-        votingPower: '1000000000000000000000', // 1000 tokens
+        votingPower: 1000000000000000000000n, // 1000 tokens
         timestamp: eventTimestamp,
         reason: 'Great proposal!',
         proposalTitle: proposalTitle
@@ -136,7 +136,7 @@ describe('Slack Vote Confirmation Trigger - Integration Test', () => {
         proposalId: 'prop-against-456',
         voterAddress: voterAddress,
         support: '0', // AGAINST
-        votingPower: '5000000000000000000000', // 5000 tokens
+        votingPower: 5000000000000000000000n, // 5000 tokens
         timestamp: eventTimestamp,
         reason: 'Needs more discussion',
         proposalTitle: proposalTitle
@@ -188,7 +188,7 @@ describe('Slack Vote Confirmation Trigger - Integration Test', () => {
         proposalId: 'prop-abstain-789',
         voterAddress: voterAddress,
         support: '2', // ABSTAIN
-        votingPower: '2000000000000000000000', // 2000 tokens
+        votingPower: 2000000000000000000000n, // 2000 tokens
         timestamp: eventTimestamp,
         // No reason provided for abstain
         proposalTitle: proposalTitle
@@ -240,7 +240,7 @@ describe('Slack Vote Confirmation Trigger - Integration Test', () => {
         proposalId: 'prop-dup-123',
         voterAddress: voterAddress,
         support: '1',
-        votingPower: '1000000000000000000000',
+        votingPower: 1000000000000000000000n,
         timestamp: eventTimestamp,
         proposalTitle: 'Duplicate Test Proposal'
       }
@@ -298,7 +298,7 @@ describe('Slack Vote Confirmation Trigger - Integration Test', () => {
         proposalId: 'prop-multi-1',
         voterAddress: voterAddress,
         support: '1', // FOR
-        votingPower: '1000000000000000000000',
+        votingPower: 1000000000000000000000n,
         timestamp: baseTimestamp,
         proposalTitle: 'Multi Vote Proposal 1'
       },
@@ -308,7 +308,7 @@ describe('Slack Vote Confirmation Trigger - Integration Test', () => {
         proposalId: 'prop-multi-2',
         voterAddress: voterAddress,
         support: '0', // AGAINST
-        votingPower: '1000000000000000000000',
+        votingPower: 1000000000000000000000n,
         timestamp: baseTimestamp + 1,
         proposalTitle: 'Multi Vote Proposal 2'
       },
@@ -318,7 +318,7 @@ describe('Slack Vote Confirmation Trigger - Integration Test', () => {
         proposalId: 'prop-multi-3',
         voterAddress: voterAddress,
         support: '2', // ABSTAIN
-        votingPower: '1000000000000000000000',
+        votingPower: 1000000000000000000000n,
         timestamp: baseTimestamp + 2,
         proposalTitle: 'Multi Vote Proposal 3'
       }
@@ -379,7 +379,7 @@ describe('Slack Vote Confirmation Trigger - Integration Test', () => {
         proposalId: 'prop-nosub',
         voterAddress: voterAddress,
         support: '1',
-        votingPower: '1000000000000000000000',
+        votingPower: 1000000000000000000000n,
         timestamp: eventTimestamp,
         proposalTitle: 'No Subscription Proposal'
       }

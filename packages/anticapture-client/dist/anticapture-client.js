@@ -14,6 +14,9 @@ function processVotingPowerHistory(data, daoId, chainId) {
         .map(item => ({
         ...item,
         daoId,
+        timestamp: String(item.timestamp),
+        votingPower: String(item.votingPower),
+        delta: String(item.delta),
         changeType: item.delegation ? 'delegation' : item.transfer ? 'transfer' : 'other',
         sourceAccountId: item.transfer?.from || item.delegation?.from || '',
         targetAccountId: item.accountId,
@@ -59,15 +62,15 @@ class AnticaptureClient {
     toLowercase(o) { return this.normalizeAddressesInObject(o, a => a.toLowerCase()); }
     async getDAOs() {
         try {
-            const res = await this.call(() => (0, client_1.getDaos)(this.sdkConfig));
+            const res = await this.call(() => (0, client_1.daos)(this.sdkConfig));
             const items = res.items ?? [];
             return items.map(d => ({
                 id: d.id,
                 blockTime: 12,
                 votingDelay: d.votingDelay ?? '0',
                 chainId: d.chainId ?? 1,
-                alreadySupportCalldataReview: d.alreadySupportCalldataReview ?? false,
-                supportOffchainData: d.supportOffchainData ?? false,
+                supportsCalldataReview: d.supportsCalldataReview ?? false,
+                supportsOffchainData: d.supportsOffchainData ?? false,
             }));
         }
         catch (err) {
@@ -206,7 +209,7 @@ class AnticaptureClient {
         try {
             // SDK dao param is a string-literal enum; DAO IDs come from runtime /daos response, so we cast
             const res = await this.call(() => (0, client_1.getEventRelevanceThreshold)(daoId, { type, relevance }, this.sdkConfig));
-            return res?.threshold ?? null;
+            return res?.threshold != null ? String(res.threshold) : null;
         }
         catch (err) {
             console.warn(`[AnticaptureClient] Error fetching threshold for ${daoId}/${type}:`, err instanceof Error ? err.message : err);
@@ -228,7 +231,7 @@ class AnticaptureClient {
         const allDaos = await this.getDAOs();
         const all = [];
         for (const dao of allDaos) {
-            if (!dao.supportOffchainData)
+            if (!dao.supportsOffchainData)
                 continue;
             try {
                 const res = await this.call(() => (0, client_1.offchainProposals)(dao.id, this.toChecksum(variables ?? {}), this.sdkConfig));
@@ -257,7 +260,7 @@ class AnticaptureClient {
     async listRecentOffchainVotesFromAllDaos(fromDate, limit = 100) {
         const daos = await this.getDAOs();
         const voteArrays = await Promise.all(daos
-            .filter(dao => dao.supportOffchainData)
+            .filter(dao => dao.supportsOffchainData)
             .map(async (dao) => {
             const vs = await this.listOffchainVotes(dao.id, {
                 fromDate,

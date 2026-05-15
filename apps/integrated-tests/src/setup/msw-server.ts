@@ -79,7 +79,7 @@ const idOf = (p: WithDao) => ('daoId' in p ? p.daoId : p.spaceId);
 export const daosFromItems = (items: ReadonlyArray<WithDao>) => {
   const ids = Array.from(new Set(items.map(idOf)));
   return getDaosHandler({
-    items: ids.map(id => ({ id, votingDelay: '0', supportOffchainData: true })),
+    items: ids.map(id => ({ id, votingDelay: '0', supportsOffchainData: true })),
     totalCount: ids.length,
   });
 };
@@ -90,7 +90,7 @@ const emptyThreshold = { threshold: 0 };
 const testDaos = Object.values(testConstants.daoIds).map(id => ({
   id,
   votingDelay: '0',
-  supportOffchainData: true
+  supportsOffchainData: true
 }));
 
 export const defaultHandlers = [

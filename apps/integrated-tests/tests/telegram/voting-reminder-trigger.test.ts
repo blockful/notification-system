@@ -110,7 +110,7 @@ describe('Voting Reminder Integration Tests', () => {
       
       // Setup MSW handler with user's vote already recorded
       const voteEvents = [VoteFactory.createVote(testUser.address, proposal.id, {
-        votingPower: '1000000000000000000000'
+        votingPower: 1000000000000000000000n
       })];
       
       useProposalsAndVotes([proposal], voteEvents);

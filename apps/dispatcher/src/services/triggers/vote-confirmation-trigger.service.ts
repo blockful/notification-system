@@ -174,7 +174,7 @@ export class VoteConfirmationTriggerHandler extends BaseTriggerHandler<VoteWithD
 
   private formatVoteMessage(vote: VoteWithDaoId): string {
     const supportKey = voteConfirmationMessages.getSupportKey(String(vote.support));
-    const votingPower = formatTokenAmount(vote.votingPower, 18);
+    const votingPower = formatTokenAmount(String(vote.votingPower), 18);
     const hasReason = vote.reason && vote.reason.trim();
 
     const messageTemplate = hasReason

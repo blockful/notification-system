@@ -17,8 +17,8 @@ export type DaoInfo = {
     blockTime: number;
     votingDelay: string;
     chainId: number;
-    alreadySupportCalldataReview: boolean;
-    supportOffchainData: boolean;
+    supportsCalldataReview: boolean;
+    supportsOffchainData: boolean;
 };
 /**
  * Public surface of AnticaptureClient — used for dependency injection and mocking.
@@ -48,14 +48,7 @@ export declare class AnticaptureClient implements IAnticaptureClient {
     private normalizeAddressesInObject;
     private toChecksum;
     private toLowercase;
-    getDAOs(): Promise<Array<{
-        id: string;
-        blockTime: number;
-        votingDelay: string;
-        chainId: number;
-        alreadySupportCalldataReview: boolean;
-        supportOffchainData: boolean;
-    }>>;
+    getDAOs(): Promise<Array<DaoInfo>>;
     getProposalById(id: string): Promise<OnchainProposal | null>;
     listProposals(variables?: ProposalsQueryParams, daoId?: string): Promise<OnchainProposal[]>;
     listVotingPowerHistory(variables?: HistoricalVotingPowerQueryParams, daoId?: string): Promise<ProcessedVotingPowerHistory[]>;

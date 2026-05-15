@@ -18,7 +18,7 @@ export class VoteFactory {
       support: '1',
       timestamp: Math.floor(Date.now() / 1000),
       transactionHash: `0x${uuidv4().replace(/-/g, '')}${uuidv4().replace(/-/g, '').substring(0, 8)}`,
-      votingPower: '1000000000000000000',
+      votingPower: 1000000000000000000n,
       proposalTitle: 'Test Proposal',
       reason: null,
       ...overrides

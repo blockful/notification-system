@@ -33,6 +33,9 @@
   "pnpm": {
     "onlyBuiltDependencies": [
       "sqlite3"
-    ]
+    ],
+    "overrides": {
+      "@anticapture/client": "file:/Users/pedrobinotto/projects/blockful/anticapture/packages/anticapture-client"
+    }
   }
 }

@@ -26,7 +26,7 @@ export class VotingPowerFactory {
       delegation: {
         from: 'delegator.eth',
         to: 'user1.eth',
-        value: testConstants.votingPower.small,
+        value: BigInt(testConstants.votingPower.small),
         previousDelegate: zeroAddress
       },
       transfer: null,
@@ -114,7 +114,7 @@ export class VotingPowerFactory {
       delegation: {
         from: delegatorAccountId,
         to: isUndelegation ? zeroAddress : targetAccountId,
-        value: delegatedValue,
+        value: BigInt(delegatedValue),
         previousDelegate: isUndelegation ? targetAccountId : zeroAddress
       },
       transfer: null,
@@ -153,7 +153,7 @@ export class VotingPowerFactory {
       transfer: {
         from: fromAccountId,
         to: toAccountId,
-        value: transferValue
+        value: BigInt(transferValue)
       },
       delta: transferValue,
       previousDelegate: null,

@@ -1,5 +1,5 @@
 import {
-  getDaos,
+  daos,
   proposal,
   proposals,
   getEventRelevanceThreshold,
@@ -54,6 +54,9 @@ function processVotingPowerHistory(
     .map(item => ({
       ...item,
       daoId,
+      timestamp: String(item.timestamp),
+      votingPower: String(item.votingPower),
+      delta: String(item.delta),
       changeType: item.delegation ? 'delegation' : item.transfer ? 'transfer' : 'other',
       sourceAccountId: item.transfer?.from || item.delegation?.from || '',
       targetAccountId: item.accountId,
@@ -73,7 +76,7 @@ export interface AnticaptureClientConfig {
 export type VoteWithDaoId = OnchainVote & { daoId: string };
 export type OffchainVoteWithDaoId = OffchainVote & { daoId: string };
 
-export type DaoInfo = { id: string; blockTime: number; votingDelay: string; chainId: number; alreadySupportCalldataReview: boolean; supportOffchainData: boolean };
+export type DaoInfo = { id: string; blockTime: number; votingDelay: string; chainId: number; supportsCalldataReview: boolean; supportsOffchainData: boolean };
 
 /**
  * Public surface of AnticaptureClient — used for dependency injection and mocking.
@@ -129,17 +132,17 @@ export class AnticaptureClient implements IAnticaptureClient {
   private toChecksum<T>(o: T): T { return this.normalizeAddressesInObject(o, getAddress); }
   private toLowercase<T>(o: T): T { return this.normalizeAddressesInObject(o, a => a.toLowerCase()); }
 
-  async getDAOs(): Promise<Array<{ id: string; blockTime: number; votingDelay: string; chainId: number; alreadySupportCalldataReview: boolean; supportOffchainData: boolean }>> {
+  async getDAOs(): Promise<Array<DaoInfo>> {
     try {
-      const res = await this.call(() => getDaos(this.sdkConfig));
+      const res = await this.call(() => daos(this.sdkConfig));
       const items = res.items ?? [];
       return items.map(d => ({
         id: d.id,
         blockTime: 12,
         votingDelay: d.votingDelay ?? '0',
         chainId: d.chainId ?? 1,
-        alreadySupportCalldataReview: d.alreadySupportCalldataReview ?? false,
-        supportOffchainData: d.supportOffchainData ?? false,
+        supportsCalldataReview: d.supportsCalldataReview ?? false,
+        supportsOffchainData: d.supportsOffchainData ?? false,
       }));
     } catch (err) {
       console.warn('Returning empty DAO list due to API error:', err instanceof Error ? err.message : err);
@@ -280,7 +283,7 @@ export class AnticaptureClient implements IAnticaptureClient {
     try {
       // SDK dao param is a string-literal enum; DAO IDs come from runtime /daos response, so we cast
       const res = await this.call(() => getEventRelevanceThreshold(daoId as any, { type, relevance }, this.sdkConfig));
-      return res?.threshold ?? null;
+      return res?.threshold != null ? String(res.threshold) : null;
     } catch (err) {
       console.warn(`[AnticaptureClient] Error fetching threshold for ${daoId}/${type}:`, err instanceof Error ? err.message : err);
       return null;
@@ -302,7 +305,7 @@ export class AnticaptureClient implements IAnticaptureClient {
     const allDaos = await this.getDAOs();
     const all: (OffchainProposalItem & { daoId: string })[] = [];
     for (const dao of allDaos) {
-      if (!dao.supportOffchainData) continue;
+      if (!dao.supportsOffchainData) continue;
       try {
         const res = await this.call(() => offchainProposals(dao.id as any, this.toChecksum(variables ?? {}), this.sdkConfig));
         const items = (res?.items ?? []).map(i => ({ ...i, daoId: dao.id }));
@@ -330,7 +333,7 @@ export class AnticaptureClient implements IAnticaptureClient {
     const daos = await this.getDAOs();
     const voteArrays = await Promise.all(
       daos
-        .filter(dao => dao.supportOffchainData)
+        .filter(dao => dao.supportsOffchainData)
         .map(async (dao) => {
           const vs = await this.listOffchainVotes(dao.id, {
             fromDate,

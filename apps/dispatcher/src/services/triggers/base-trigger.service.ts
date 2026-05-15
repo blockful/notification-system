@@ -12,7 +12,7 @@ import { createLogger, type Logger } from '@anticapture/observability';
  * @template T - Type of event data being processed
  */
 export abstract class BaseTriggerHandler<T = any> implements TriggerHandler<T> {
-  private daoCache: Map<string, { chainId: number; alreadySupportCalldataReview: boolean; supportOffchainData: boolean }> = new Map();
+  private daoCache: Map<string, { chainId: number; supportsCalldataReview: boolean; supportsOffchainData: boolean }> = new Map();
 
   protected readonly logger: Logger;
 
@@ -112,9 +112,9 @@ export abstract class BaseTriggerHandler<T = any> implements TriggerHandler<T> {
    * @throws Error if anticaptureClient is not provided
    */
   /**
-   * Gets full DAO info (chainId, alreadySupportCalldataReview) with caching
+   * Gets full DAO info (chainId, supportsCalldataReview) with caching
    */
-  protected async getDaoInfo(daoId: string): Promise<{ chainId: number; alreadySupportCalldataReview: boolean; supportOffchainData: boolean }> {
+  protected async getDaoInfo(daoId: string): Promise<{ chainId: number; supportsCalldataReview: boolean; supportsOffchainData: boolean }> {
     if (!this.anticaptureClient) {
       throw new Error('AnticaptureClient is required for getDaoInfo');
     }
@@ -127,12 +127,12 @@ export abstract class BaseTriggerHandler<T = any> implements TriggerHandler<T> {
     for (const dao of daos) {
       this.daoCache.set(dao.id, {
         chainId: dao.chainId,
-        alreadySupportCalldataReview: dao.alreadySupportCalldataReview,
-        supportOffchainData: dao.supportOffchainData
+        supportsCalldataReview: dao.supportsCalldataReview,
+        supportsOffchainData: dao.supportsOffchainData
       });
     }
 
-    return this.daoCache.get(daoId) || { chainId: 1, alreadySupportCalldataReview: false, supportOffchainData: false };
+    return this.daoCache.get(daoId) || { chainId: 1, supportsCalldataReview: false, supportsOffchainData: false };
   }
 
   /**

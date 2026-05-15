@@ -53,7 +53,7 @@ describe('Address Normalization - Integration Test', () => {
         proposalId: 'prop-checksum-test',
         voterAddress: voterAddressChecksum,
         support: '1', // FOR
-        votingPower: '1000000000000000000000', // 1000 tokens
+        votingPower: 1000000000000000000000n, // 1000 tokens
         timestamp: eventTimestamp,
         reason: 'Testing checksum normalization!',
         proposalTitle: 'Checksum Test Proposal'

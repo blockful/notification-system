@@ -34,6 +34,10 @@ export class ProposalFactory {
       quorum: '0',
       proposalType: null,
       txHash: '0x1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef',
+      queuedTimestamp: null,
+      executedTimestamp: null,
+      queuedTxHash: null,
+      executedTxHash: null,
       ...overrides
     };
   }

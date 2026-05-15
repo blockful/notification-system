@@ -1,7 +1,10 @@
 import type { HistoricalVotingPower, OffchainProposal, OffchainVote } from '@anticapture/client';
 export type OffchainProposalItem = OffchainProposal;
 export type OffchainVoteItem = OffchainVote;
-export type ProcessedVotingPowerHistory = HistoricalVotingPower & {
+export type ProcessedVotingPowerHistory = Omit<HistoricalVotingPower, 'timestamp' | 'votingPower' | 'delta'> & {
+    timestamp: string;
+    votingPower: string;
+    delta: string;
     changeType: 'delegation' | 'transfer' | 'other';
     sourceAccountId: string;
     targetAccountId: string;
