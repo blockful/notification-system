@@ -1,259 +1,139 @@
-import { describe, it, expect, jest, beforeEach, afterEach, beforeAll } from '@jest/globals';
+import { describe, it, expect, beforeEach } from 'vitest';
 import { ProposalFinishedTriggerHandler } from './proposal-finished-trigger.service';
-import { ISubscriptionClient, User, Notification } from '../../interfaces/subscription-client.interface';
-import { NotificationClientFactory } from '../notification/notification-factory.service';
-import { INotificationClient } from '../../interfaces/notification-client.interface';
+import { User } from '../../interfaces/subscription-client.interface';
+import { ProposalFinishedNotification } from '../../interfaces/notification-client.interface';
 import { DispatcherMessage } from '../../interfaces/dispatcher-message.interface';
 import { NotificationTypeId } from '@notification-system/messages';
+import { SimpleSubscriptionClient, SimpleNotificationClientFactory } from './helpers/test-doubles';
 
 describe('ProposalFinishedTriggerHandler', () => {
-  let mockSubscriptionClient: jest.Mocked<ISubscriptionClient>;
-  let mockNotificationFactory: jest.Mocked<NotificationClientFactory>;
-  let mockNotificationClient: jest.Mocked<INotificationClient>;
+  let subscriptionClient: SimpleSubscriptionClient;
+  let notificationFactory: SimpleNotificationClientFactory;
   let handler: ProposalFinishedTriggerHandler;
-  let mockUsers: User[];
-  let mockNotifications: Notification[];
-  let mockProposal: any;
-  
-  beforeAll(() => {
-    mockUsers = [
-      { id: '1', channel: 'telegram', channel_user_id: '123', created_at: new Date() },
-      { id: '2', channel: 'telegram', channel_user_id: '456', created_at: new Date() }
-    ];
-    
-    mockNotifications = [
-      { user_id: '1', event_id: 'prop456-finished', dao_id: 'dao123' },
-      { user_id: '2', event_id: 'prop456-finished', dao_id: 'dao123' }
-    ];
-    
-    mockProposal = {
-      id: 'prop456',
-      daoId: 'dao123',
-      description: 'Test Proposal\nDetailed description',
-      endTimestamp: 1625086400,
-      status: 'EXECUTED',
-      forVotes: '1000000000000000000000',
-      againstVotes: '500000000000000000000',
-      abstainVotes: '100000000000000000000'
-    };
-  });
-  
+
+  const userA: User = { id: '1', channel: 'telegram', channel_user_id: '123', created_at: new Date() };
+  const userB: User = { id: '2', channel: 'telegram', channel_user_id: '456', created_at: new Date() };
+
+  const baseProposal: ProposalFinishedNotification = {
+    id: 'prop456',
+    daoId: 'dao123',
+    description: 'Test Proposal\nDetailed description',
+    endTimestamp: 1625086400,
+    status: 'EXECUTED',
+    forVotes: '1000000000000000000000',
+    againstVotes: '500000000000000000000',
+    abstainVotes: '100000000000000000000',
+  };
+
   beforeEach(() => {
-    mockSubscriptionClient = {
-      getDaoSubscribers: jest.fn(),
-      shouldSend: jest.fn(),
-      shouldSendBatch: jest.fn(),
-      markAsSent: jest.fn(),
-      getWalletOwners: jest.fn(),
-      getWalletOwnersBatch: jest.fn(),
-      getFollowedAddresses: jest.fn()
-    } as jest.Mocked<ISubscriptionClient>;
-    
-    mockNotificationClient = {
-      sendNotification: jest.fn()
-    } as jest.Mocked<INotificationClient>;
-    
-    mockNotificationFactory = {
-      addClient: jest.fn(),
-      getClient: jest.fn().mockReturnValue(mockNotificationClient),
-      supportsChannel: jest.fn().mockReturnValue(true)
-    } as any;
-    
-    mockSubscriptionClient.getDaoSubscribers.mockResolvedValue(mockUsers);
-    mockSubscriptionClient.shouldSend.mockResolvedValue(mockNotifications);
-    mockSubscriptionClient.markAsSent.mockResolvedValue();
-    mockNotificationClient.sendNotification.mockResolvedValue();
-    
-    handler = new ProposalFinishedTriggerHandler(mockSubscriptionClient, mockNotificationFactory);
+    subscriptionClient = new SimpleSubscriptionClient();
+    notificationFactory = new SimpleNotificationClientFactory();
+    handler = new ProposalFinishedTriggerHandler(subscriptionClient, notificationFactory);
   });
-  
-  afterEach(() => {
-    jest.clearAllMocks();
-  });
-  
+
   describe('handleMessage', () => {
-    it('should process single proposal finished message correctly', async () => {
-      const mockMessage: DispatcherMessage<any> = {
+    it('should send a finished notification to every DAO subscriber', async () => {
+      subscriptionClient.daoSubscribersByDao.set('dao123', [userA, userB]);
+
+      await handler.handleMessage({
         triggerId: NotificationTypeId.ProposalFinished,
-        events: [mockProposal]
-      };
-      
-      await handler.handleMessage(mockMessage);
-      
-      expect(mockSubscriptionClient.getDaoSubscribers).toHaveBeenCalledWith('dao123', '1625086400', NotificationTypeId.ProposalFinished);
-      expect(mockSubscriptionClient.shouldSend).toHaveBeenCalledWith(mockUsers, 'prop456-finished', 'dao123');
-      expect(mockNotificationClient.sendNotification).toHaveBeenCalledTimes(2);
-      expect(mockNotificationClient.sendNotification).toHaveBeenCalledWith(expect.objectContaining({
-        userId: expect.any(String),
-        channel: expect.any(String),
-        channelUserId: expect.any(String),
-        message: expect.stringContaining('Test Proposal')
-      }));
+        events: [baseProposal],
+      });
+
+      expect(notificationFactory.client.sentPayloads).toHaveLength(2);
+      const messages = notificationFactory.client.sentPayloads.map(p => p.message);
+      expect(messages.every(m => m.includes('Test Proposal'))).toBe(true);
+      expect(subscriptionClient.markedAsSent).toEqual([
+        { user_id: '1', event_id: 'prop456-finished', dao_id: 'dao123' },
+        { user_id: '2', event_id: 'prop456-finished', dao_id: 'dao123' },
+      ]);
     });
 
-    it('should process multiple proposals in a single message', async () => {
-      const mockUsersForMultiple: User[] = [
-        { id: '1', channel: 'telegram', channel_user_id: '123', created_at: new Date() }
-      ];
-      const mockNotificationsForMultiple: Notification[] = [
-        { user_id: '1', event_id: 'prop1-finished', dao_id: 'dao123' },
-        { user_id: '1', event_id: 'prop2-finished', dao_id: 'dao456' }
-      ];
-      const mockMessage: DispatcherMessage<any> = {
+    it('should process multiple proposals across DAOs in a single message', async () => {
+      subscriptionClient.daoSubscribersByDao.set('dao123', [userA]);
+      subscriptionClient.daoSubscribersByDao.set('dao456', [userA]);
+
+      await handler.handleMessage({
         triggerId: NotificationTypeId.ProposalFinished,
         events: [
-          { id: 'prop1', daoId: 'dao123', description: 'First Proposal', endTimestamp: 1625086401, status: 'executed', forVotes: '1000000000000000000000', againstVotes: '500000000000000000000', abstainVotes: '100000000000000000000' },
-          { id: 'prop2', daoId: 'dao456', description: 'Second Proposal', endTimestamp: 1625086402, status: 'defeated', forVotes: '400000000000000000000', againstVotes: '600000000000000000000', abstainVotes: '50000000000000000000' }
-        ]
-      };
-      
-      mockSubscriptionClient.getDaoSubscribers.mockResolvedValue(mockUsersForMultiple);
-      mockSubscriptionClient.shouldSend.mockResolvedValue(mockNotificationsForMultiple);
-      
-      await handler.handleMessage(mockMessage);
-      
-      expect(mockSubscriptionClient.getDaoSubscribers).toHaveBeenCalledTimes(2);
-      expect(mockSubscriptionClient.getDaoSubscribers).toHaveBeenCalledWith('dao123', '1625086401', NotificationTypeId.ProposalFinished);
-      expect(mockSubscriptionClient.getDaoSubscribers).toHaveBeenCalledWith('dao456', '1625086402', NotificationTypeId.ProposalFinished);
-      expect(mockNotificationClient.sendNotification).toHaveBeenCalledTimes(2);
+          { ...baseProposal, id: 'prop1', daoId: 'dao123', description: 'First Proposal', endTimestamp: 1625086401, status: 'executed' },
+          { ...baseProposal, id: 'prop2', daoId: 'dao456', description: 'Second Proposal', endTimestamp: 1625086402, status: 'defeated', forVotes: '400000000000000000000', againstVotes: '600000000000000000000', abstainVotes: '50000000000000000000' },
+        ],
+      });
+
+      expect(notificationFactory.client.sentPayloads).toHaveLength(2);
+      expect(subscriptionClient.markedAsSent).toEqual([
+        { user_id: '1', event_id: 'prop1-finished', dao_id: 'dao123' },
+        { user_id: '1', event_id: 'prop2-finished', dao_id: 'dao456' },
+      ]);
     });
 
-    it('should handle empty proposals array', async () => {
-      const mockMessage: DispatcherMessage<any> = {
+    it('should not send any notification when proposals array is empty', async () => {
+      await handler.handleMessage({
         triggerId: NotificationTypeId.ProposalFinished,
-        events: []
-      };
-      
-      await handler.handleMessage(mockMessage);
-      
-      expect(mockSubscriptionClient.getDaoSubscribers).not.toHaveBeenCalled();
-      expect(mockNotificationClient.sendNotification).not.toHaveBeenCalled();
+        events: [],
+      });
+
+      expect(notificationFactory.client.sentPayloads).toEqual([]);
+      expect(subscriptionClient.markedAsSent).toEqual([]);
     });
 
-    it('should skip proposals with no subscribers', async () => {
-      const mockMessage: DispatcherMessage<any> = {
+    it('should skip proposals with no DAO subscribers', async () => {
+      await handler.handleMessage({
         triggerId: NotificationTypeId.ProposalFinished,
-        events: [mockProposal]
-      };
-      
-      mockSubscriptionClient.getDaoSubscribers.mockResolvedValue([]);
-      mockSubscriptionClient.shouldSend.mockResolvedValue([]);
-      
-      await handler.handleMessage(mockMessage);
-      
-      expect(mockSubscriptionClient.getDaoSubscribers).toHaveBeenCalledWith('dao123', '1625086400', NotificationTypeId.ProposalFinished);
-      expect(mockNotificationClient.sendNotification).not.toHaveBeenCalled();
+        events: [baseProposal],
+      });
+
+      expect(notificationFactory.client.sentPayloads).toEqual([]);
+      expect(subscriptionClient.markedAsSent).toEqual([]);
     });
 
     it('should extract title from multiline descriptions', async () => {
-      const mockUsersForMultiline: User[] = [
-        { id: '1', channel: 'telegram', channel_user_id: '123', created_at: new Date() }
-      ];
-      const mockNotificationsForMultiline: Notification[] = [
-        { user_id: '1', event_id: 'prop456-finished', dao_id: 'dao123' }
-      ];
-      const proposalWithMultilineDesc = {
-        id: 'prop456',
-        daoId: 'dao123',
-        description: 'Main Title\nDetailed description\nMore details',
-        endTimestamp: 1625086400,
-        status: 'EXECUTED',
-        forVotes: '1000000000000000000000',
-        againstVotes: '500000000000000000000',
-        abstainVotes: '100000000000000000000'
-      };
-      const mockMessage: DispatcherMessage<any> = {
+      subscriptionClient.daoSubscribersByDao.set('dao123', [userA]);
+
+      await handler.handleMessage({
         triggerId: NotificationTypeId.ProposalFinished,
-        events: [proposalWithMultilineDesc]
-      };
-      
-      mockSubscriptionClient.getDaoSubscribers.mockResolvedValue(mockUsersForMultiline);
-      mockSubscriptionClient.shouldSend.mockResolvedValue(mockNotificationsForMultiline);
-      
-      await handler.handleMessage(mockMessage);
-      
-      expect(mockNotificationClient.sendNotification).toHaveBeenCalledWith(expect.objectContaining({
-        message: expect.stringContaining('Main Title')
-      }));
+        events: [{ ...baseProposal, description: 'Main Title\nDetailed description\nMore details' }],
+      });
+
+      expect(notificationFactory.client.sentPayloads[0].message).toContain('Main Title');
     });
 
     it('should handle markdown headers in descriptions', async () => {
-      const mockUsersForMarkdown: User[] = [
-        { id: '1', channel: 'telegram', channel_user_id: '123', created_at: new Date() }
-      ];
-      const mockNotificationsForMarkdown: Notification[] = [
-        { user_id: '1', event_id: 'prop456-finished', dao_id: 'dao123' }
-      ];
-      const proposalWithMarkdownDesc = {
-        id: 'prop456',
-        daoId: 'dao123',
-        description: '# Markdown Title\nDetailed description',
-        endTimestamp: 1625086400,
-        status: 'DEFEATED',
-        forVotes: '400000000000000000000',
-        againstVotes: '600000000000000000000',
-        abstainVotes: '50000000000000000000'
-      };
-      const mockMessage: DispatcherMessage<any> = {
+      subscriptionClient.daoSubscribersByDao.set('dao123', [userA]);
+
+      await handler.handleMessage({
         triggerId: NotificationTypeId.ProposalFinished,
-        events: [proposalWithMarkdownDesc]
-      };
-      
-      mockSubscriptionClient.getDaoSubscribers.mockResolvedValue(mockUsersForMarkdown);
-      mockSubscriptionClient.shouldSend.mockResolvedValue(mockNotificationsForMarkdown);
-      
-      await handler.handleMessage(mockMessage);
-      
-      expect(mockNotificationClient.sendNotification).toHaveBeenCalledWith(expect.objectContaining({
-        message: expect.stringContaining('Markdown Title')
-      }));
+        events: [{ ...baseProposal, description: '# Markdown Title\nDetailed description', status: 'DEFEATED', forVotes: '400000000000000000000', againstVotes: '600000000000000000000', abstainVotes: '50000000000000000000' }],
+      });
+
+      expect(notificationFactory.client.sentPayloads[0].message).toContain('Markdown Title');
     });
 
-    it('should handle empty descriptions', async () => {
-      const mockUsersForEmpty: User[] = [
-        { id: '1', channel: 'telegram', channel_user_id: '123', created_at: new Date() }
-      ];
-      const mockNotificationsForEmpty: Notification[] = [
-        { user_id: '1', event_id: 'prop456-finished', dao_id: 'dao123' }
-      ];
-      const proposalWithEmptyDesc = {
-        id: 'prop456',
-        daoId: 'dao123',
-        description: '',
-        endTimestamp: 1625086400,
-        status: 'CANCELED',
-        forVotes: '0',
-        againstVotes: '0',
-        abstainVotes: '0'
-      };
-      const mockMessage: DispatcherMessage<any> = {
+    it('should use the title-less template when description is empty', async () => {
+      subscriptionClient.daoSubscribersByDao.set('dao123', [userA]);
+
+      await handler.handleMessage({
         triggerId: NotificationTypeId.ProposalFinished,
-        events: [proposalWithEmptyDesc]
-      };
-      
-      mockSubscriptionClient.getDaoSubscribers.mockResolvedValue(mockUsersForEmpty);
-      mockSubscriptionClient.shouldSend.mockResolvedValue(mockNotificationsForEmpty);
-      
-      await handler.handleMessage(mockMessage);
-      
-      expect(mockNotificationClient.sendNotification).toHaveBeenCalledWith(expect.objectContaining({
-        message: expect.stringContaining('A proposal has ended')
-      }));
+        events: [{ ...baseProposal, description: '', status: 'CANCELED', forVotes: '0', againstVotes: '0', abstainVotes: '0' }],
+      });
+
+      expect(notificationFactory.client.sentPayloads[0].message).toContain('A proposal has ended');
     });
 
-    it('should return correct MessageProcessingResult', async () => {
-      const mockMessage: DispatcherMessage<any> = {
+    it('should return MessageProcessingResult tagged with the trigger id', async () => {
+      subscriptionClient.daoSubscribersByDao.set('dao123', [userA]);
+
+      const result = await handler.handleMessage({
         triggerId: NotificationTypeId.ProposalFinished,
-        events: [mockProposal]
-      };
-      
-      const result = await handler.handleMessage(mockMessage);
-      
+        events: [baseProposal],
+      } as DispatcherMessage<ProposalFinishedNotification>);
+
       expect(result).toEqual({
         messageId: NotificationTypeId.ProposalFinished,
-        timestamp: expect.any(String)
+        timestamp: expect.any(String),
       });
-      expect(new Date(result.timestamp)).toBeInstanceOf(Date);
+      expect(Number.isNaN(Date.parse(result.timestamp))).toBe(false);
     });
   });
 });

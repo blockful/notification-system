@@ -1,6 +1,6 @@
 import type { NotificationTypeId } from '@notification-system/messages';
 import { ISubscriptionClient, User, Notification } from '../interfaces/subscription-client.interface';
-import { NotificationClientFactory } from './notification/notification-factory.service';
+import { INotificationClientFactory } from './notification/notification-factory.service';
 import { createLogger, type Logger } from '@anticapture/observability';
 
 /**
@@ -12,7 +12,7 @@ export class BatchNotificationService {
 
   constructor(
     private readonly subscriptionClient: ISubscriptionClient,
-    private readonly notificationFactory: NotificationClientFactory,
+    private readonly notificationFactory: INotificationClientFactory,
     logger: Logger = createLogger('dispatcher'),
   ) {
     this.logger = logger.child({ component: 'BatchNotificationService' });

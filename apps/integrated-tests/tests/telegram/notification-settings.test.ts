@@ -1,14 +1,19 @@
-import { describe, test, expect, beforeEach, beforeAll } from '@jest/globals';
+import { describe, test, expect, beforeEach, beforeAll } from 'vitest';
+import { offchainProposalsHandler } from '@anticapture/client/msw';
+import type { OffchainProposal } from '@notification-system/anticapture-client';
 import { db, TestApps } from '../../src/setup';
-import { HttpClientMockSetup, GraphQLMockSetup } from '../../src/mocks';
+import { server, offchainProposalsByDaoResolver, daosFromItems } from '../../src/setup/msw-server';
 import { UserFactory, OffchainProposalFactory } from '../../src/fixtures';
 import { TelegramTestHelper, DatabaseTestHelper, TestCleanup } from '../../src/helpers';
 import { testConstants, timeouts } from '../../src/config';
 import { NotificationTypeId } from '@notification-system/messages';
 
+const useOffchainProposals = (proposals: OffchainProposal[]) =>
+  server.use(daosFromItems(proposals), offchainProposalsHandler(offchainProposalsByDaoResolver(proposals)));
+
 describe('Notification Settings Filtering - Integration Test', () => {
   let apps: TestApps;
-  let httpMockSetup: HttpClientMockSetup;
+
   let telegramHelper: TelegramTestHelper;
   let dbHelper: DatabaseTestHelper;
 
@@ -16,8 +21,8 @@ describe('Notification Settings Filtering - Integration Test', () => {
 
   beforeAll(async () => {
     apps = TestCleanup.getGlobalApps();
-    httpMockSetup = TestCleanup.getGlobalHttpMockSetup();
-    telegramHelper = new TelegramTestHelper(global.mockTelegramSendMessage);
+
+    telegramHelper = new TelegramTestHelper(global.telegramClient);
     dbHelper = new DatabaseTestHelper(db);
   });
 
@@ -51,14 +56,7 @@ describe('Notification Settings Filtering - Integration Test', () => {
       title: 'Opted Out Proposal',
     });
 
-    GraphQLMockSetup.setupMock(
-      httpMockSetup.getMockClient(),
-      [],
-      [],
-      {},
-      [],
-      [proposal],
-    );
+    useOffchainProposals([proposal]);
 
     // Assert: should NOT receive notification (expect timeout)
     const messagePromise = telegramHelper.waitForMessage(
@@ -87,14 +85,7 @@ describe('Notification Settings Filtering - Integration Test', () => {
       title: 'Default Behavior Proposal',
     });
 
-    GraphQLMockSetup.setupMock(
-      httpMockSetup.getMockClient(),
-      [],
-      [],
-      {},
-      [],
-      [proposal],
-    );
+    useOffchainProposals([proposal]);
 
     // Assert: should receive notification (opt-out model: missing row = enabled)
     const message = await telegramHelper.waitForMessage(

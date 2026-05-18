@@ -1,8 +1,8 @@
 import axios, { AxiosInstance } from 'axios';
-import { AnticaptureClient } from '@notification-system/anticapture-client';
 import { NotificationPayload } from '../../interfaces/notification.interface';
 import { BotServiceInterface } from '../../interfaces/bot-service.interface';
 import { SubscriptionAPIService } from '../subscription-api.service';
+import { IAnticaptureClient } from '@notification-system/anticapture-client';
 import { createLogger, type Logger } from '@anticapture/observability';
 
 export class WebhookService implements BotServiceInterface {
@@ -10,7 +10,7 @@ export class WebhookService implements BotServiceInterface {
   private readonly logger: Logger;
 
   constructor(
-    private anticaptureClient: AnticaptureClient,
+    private anticaptureClient: IAnticaptureClient,
     private subscriptionApi: SubscriptionAPIService,
     logger: Logger = createLogger('consumers'),
   ) {

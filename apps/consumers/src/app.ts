@@ -1,4 +1,3 @@
-import { AxiosInstance } from 'axios';
 import { TelegramBotService } from './services/bot/telegram-bot.service';
 import { SlackBotService } from './services/bot/slack-bot.service';
 import { WebhookService } from './services/webhook/webhook.service';
@@ -11,7 +10,7 @@ import { TelegramDAOService } from './services/dao/telegram-dao.service';
 import { TelegramWalletService } from './services/wallet/telegram-wallet.service';
 import { TelegramSettingsService } from './services/settings/telegram-settings.service';
 import { ExplorerService } from '@notification-system/messages';
-import { EnsResolverService } from './services/ens-resolver.service';
+import { IEnsResolver } from './services/ens-resolver.service';
 import { AnticaptureClient } from '@notification-system/anticapture-client';
 import { SubscriptionAPIService } from './services/subscription-api.service';
 import { RabbitMQNotificationConsumerService } from './services/rabbitmq-notification-consumer.service';
@@ -34,15 +33,19 @@ export class App {
 
   constructor(
     subscriptionServerUrl: string,
-    httpClient: AxiosInstance,
+    anticaptureBaseURL: string,
     rabbitmqUrl: string,
-    ensResolver: EnsResolverService,
+    ensResolver: IEnsResolver,
     telegramClient: TelegramClientInterface,
     slackClient: SlackClientInterface,
-    webhookPort: number
+    webhookPort: number,
+    anticaptureHeaders?: Record<string, string>
   ) {
     const subscriptionApi = wrapWithTracing(new SubscriptionAPIService(subscriptionServerUrl, logger));
-    const anticaptureClient = wrapWithTracing(new AnticaptureClient(httpClient));
+    const anticaptureClient = wrapWithTracing(new AnticaptureClient({
+      baseURL: anticaptureBaseURL,
+      defaultHeaders: anticaptureHeaders,
+    }));
     const explorerService = new ExplorerService();
 
     // Telegram services

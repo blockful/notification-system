@@ -1,58 +1,55 @@
 # AntiCapture Client
 
-Shared GraphQL client for querying the AntiCapture governance API. Provides typed queries with auto-generated types from the GraphQL schema.
-
-## GraphQL Codegen
-
-```bash
-pnpm client codegen
-# or with custom endpoint:
-ANTICAPTURE_GRAPHQL_ENDPOINT="https://..." pnpm client codegen
-```
-
-**Config**: `codegen.yaml` - uses `client-preset` with `@graphql-typed-document-node/core`.
-
-**Important**: Files in `src/gql/` are auto-generated. Do NOT edit them manually. Edit the `.graphql` query files instead.
+Wrapper around `@anticapture/client` (the official REST SDK) that adds retry-with-backoff, per-attempt timeout, address normalization (checksum), and parallel fan-out across DAOs. Consumed by the `dispatcher`, `logic-system`, and `consumers` apps.
 
 ## Project Structure
 
 ```
-queries/                        # GraphQL query definitions (edit these)
-├── daos.graphql
-├── proposals.graphql
-├── votes.graphql
-├── voting-power.graphql
-└── proposalNonVoters.graphql
 src/
-├── anticapture-client.ts       # Main client class (axios + retry)
-├── schemas.ts                  # Zod schemas for response validation + processing
-├── index.ts                    # Public exports
-└── gql/                        # AUTO-GENERATED - do not edit
-    ├── graphql.ts              # Full type definitions
-    ├── gql.ts                  # Document helpers
-    ├── fragment-masking.ts
-    └── index.ts
+├── anticapture-client.ts       # Main client — fan-out per DAO, address normalization, SDK integration
+├── types.ts                    # Shared types (ProcessedVotingPowerHistory, OffchainProposalItem, OffchainVoteItem)
+├── with-retry-and-timeout.ts   # Generic helper: retry with backoff + per-attempt timeout via AbortController
+├── test-doubles.ts             # `makeAnticaptureClient` / `noopAnticaptureClient` for use in consumer tests
+└── index.ts                    # Public exports
 tests/
-├── anticapture-client.test.ts  # Client tests
-├── test-helpers.ts             # Test double / fake client factory (prefer over mocks)
-└── constants.ts                # Test fixtures
+├── anticapture-client.test.ts
+├── offchain-proposal.test.ts
+├── with-retry-and-timeout.test.ts
+├── test-helpers.ts
+└── constants.ts
 ```
 
 ## Client API
 
 ```typescript
-class AnticaptureClient {
-  getDAOs(): Promise<DAO[]>
-  getProposalById(id: string): Promise<Proposal | null>
-  listProposals(variables?, daoId?): Promise<Proposal[]>           // Multi-DAO when no daoId
+class AnticaptureClient implements IAnticaptureClient {
+  getDAOs(): Promise<DaoInfo[]>
+  getProposalById(id: string): Promise<OnchainProposal | null>
+  listProposals(variables?, daoId?): Promise<OnchainProposal[]>
   listVotingPowerHistory(variables?, daoId?): Promise<ProcessedVotingPowerHistory[]>
-  listVotes(daoId, variables?): Promise<Vote[]>
-  getProposalNonVoters(proposalId, daoId, addresses?): Promise<string[]>
+  listVotes(daoId, variables?): Promise<OnchainVote[]>
+  getProposalNonVoters(proposalId, daoId, addresses?): Promise<Voter[]>
+  getOffchainProposalNonVoters(proposalId, addresses?): Promise<OffchainNonVoter[]>
   listRecentVotesFromAllDaos(timestampGt, limit?): Promise<VoteWithDaoId[]>
+  getEventThreshold(daoId, type, relevance): Promise<string | null>
+  listOffchainProposals(variables?, daoId?): Promise<(OffchainProposalItem & { daoId: string })[]>
+  listOffchainVotes(daoId, variables?): Promise<OffchainVoteItem[]>
+  listRecentOffchainVotesFromAllDaos(fromDate, limit?): Promise<OffchainVoteWithDaoId[]>
 }
 ```
 
-Features: automatic retries with exponential backoff (1s, 2s, 4s, 8s), address normalization (checksum format), multi-DAO parallel fetching.
+Features: exponential backoff retry via `with-retry-and-timeout.ts` (1s, 2s, 4s, 8s by default), per-attempt timeout via `AbortController`, address normalization (checksum on request, lowercase on response) via `viem`, parallel fan-out across DAOs when `daoId` isn't specified.
+
+## Test Doubles
+
+For use in other apps' tests:
+
+```typescript
+import { makeAnticaptureClient, noopAnticaptureClient } from '@notification-system/anticapture-client';
+```
+
+- `makeAnticaptureClient(overrides)` — creates an in-memory client with customizable behavior, defaults to no-op responses for any method not overridden.
+- `noopAnticaptureClient` — singleton implementing `IAnticaptureClient` and returning empty responses for every method.
 
 ## Testing
 
@@ -60,11 +57,9 @@ Features: automatic retries with exponential backoff (1s, 2s, 4s, 8s), address n
 pnpm client test
 ```
 
-Uses ts-jest. Tests in `tests/` directory. Prefer **stubs/fakes** for the HTTP layer (e.g. via a fake client or `createMockClient()`-style helper); we are moving away from mocks toward stubs and fakes.
+Runs on **Vitest**. To stub the underlying SDK's HTTP layer in other apps' integration tests, use **MSW** (see `apps/integrated-tests/src/setup/msw-server.ts`).
 
 ## Dependencies
 
-- `axios` + `axios-retry` - HTTP with automatic retries
-- `graphql` + `@graphql-typed-document-node/core` - Type-safe queries
-- `viem` - Address validation/normalization
-- `zod` - Response schema validation
+- `@anticapture/client` — Official REST SDK
+- `viem` — Address validation / checksum normalization

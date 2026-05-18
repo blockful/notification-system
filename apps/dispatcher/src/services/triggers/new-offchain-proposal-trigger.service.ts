@@ -1,6 +1,6 @@
 import { DispatcherMessage, MessageProcessingResult } from "../../interfaces/dispatcher-message.interface";
 import { ISubscriptionClient } from "../../interfaces/subscription-client.interface";
-import { NotificationClientFactory } from "../notification/notification-factory.service";
+import { INotificationClientFactory } from "../notification/notification-factory.service";
 import { BaseTriggerHandler } from "./base-trigger.service";
 import { newOffchainProposalMessages, replacePlaceholders, buildButtons, NotificationTypeId } from '@notification-system/messages';
 import crypto from 'crypto';
@@ -11,7 +11,7 @@ import crypto from 'crypto';
 export class NewOffchainProposalTriggerHandler extends BaseTriggerHandler {
   constructor(
     subscriptionClient: ISubscriptionClient,
-    notificationFactory: NotificationClientFactory,
+    notificationFactory: INotificationClientFactory,
   ) {
     super(subscriptionClient, notificationFactory);
   }

@@ -1,20 +1,21 @@
-import { describe, test, expect, beforeEach, jest, beforeAll } from '@jest/globals';
+import { describe, test, expect, beforeEach, beforeAll } from 'vitest';
+import { votesHandler } from '@anticapture/client/msw';
 import { db, TestApps } from '../../src/setup';
-import { HttpClientMockSetup, GraphQLMockSetup } from '../../src/mocks';
+import { server } from '../../src/setup/msw-server';
 import { UserFactory } from '../../src/fixtures';
 import { TelegramTestHelper, DatabaseTestHelper, TestCleanup } from '../../src/helpers';
 import { testConstants, timeouts } from '../../src/config';
 
 describe('Address Normalization - Integration Test', () => {
   let apps: TestApps;
-  let httpMockSetup: HttpClientMockSetup;
+
   let telegramHelper: TelegramTestHelper;
   let dbHelper: DatabaseTestHelper;
 
   beforeAll(async () => {
     apps = TestCleanup.getGlobalApps();
-    httpMockSetup = TestCleanup.getGlobalHttpMockSetup();
-    telegramHelper = new TelegramTestHelper(global.mockTelegramSendMessage);
+
+    telegramHelper = new TelegramTestHelper(global.telegramClient);
     dbHelper = new DatabaseTestHelper(db);
   });
 
@@ -59,14 +60,7 @@ describe('Address Normalization - Integration Test', () => {
       }
     ];
 
-    // Setup GraphQL mock
-    GraphQLMockSetup.setupMock(
-      httpMockSetup.getMockClient(),
-      [], // No proposals needed
-      [], // No voting power events
-      { [testDaoId]: 1 }, // Map daoId to chainId
-      voteEvents // Add votes to mock
-    );
+    server.use(votesHandler({ items: voteEvents, totalCount: voteEvents.length }));
 
     // Wait for notification
     const message = await telegramHelper.waitForMessage(

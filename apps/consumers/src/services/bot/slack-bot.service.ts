@@ -9,7 +9,7 @@ import { SlackClientInterface } from '../../interfaces/slack-client.interface';
 import { NotificationPayload } from '../../interfaces/notification.interface';
 import { BotServiceInterface } from '../../interfaces/bot-service.interface';
 import { slackMessages, convertMarkdownToSlack, appendUtmParams } from '@notification-system/messages';
-import { EnsResolverService } from '../ens-resolver.service';
+import { IEnsResolver } from '../ens-resolver.service';
 import { SlackDAOService } from '../dao/slack-dao.service';
 import { SlackWalletService } from '../wallet/slack-wallet.service';
 import { SlackSettingsService } from '../settings/slack-settings.service';
@@ -18,7 +18,7 @@ import { createLogger, type Logger } from '@anticapture/observability';
 
 export class SlackBotService implements BotServiceInterface {
   private slackClient: SlackClientInterface;
-  private ensResolver: EnsResolverService;
+  private ensResolver: IEnsResolver;
   private daoService?: SlackDAOService;
   private walletService?: SlackWalletService;
   private settingsService?: SlackSettingsService;
@@ -26,7 +26,7 @@ export class SlackBotService implements BotServiceInterface {
 
   constructor(
     slackClient: SlackClientInterface,
-    ensResolver: EnsResolverService,
+    ensResolver: IEnsResolver,
     daoService?: SlackDAOService,
     walletService?: SlackWalletService,
     settingsService?: SlackSettingsService,

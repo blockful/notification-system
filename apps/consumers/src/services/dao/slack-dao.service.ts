@@ -6,6 +6,8 @@
 
 import { BaseDAOService } from './base-dao.service';
 import { SlackCommandContext, SlackActionContext } from '../../interfaces/slack-context.interface';
+
+export type SlackDAORequest = Pick<SlackActionContext, 'body' | 'session' | 'ack' | 'respond'>;
 import { slackMessages, replacePlaceholders } from '@notification-system/messages';
 import type { ViewStateSelectedOption } from '@slack/bolt';
 import {
@@ -27,7 +29,7 @@ export class SlackDAOService extends BaseDAOService {
   /**
    * Initialize DAO selection interface
    */
-  async initialize(context: SlackCommandContext | SlackActionContext): Promise<void> {
+  async initialize(context: SlackDAORequest): Promise<void> {
     const channelId = context.body.channel?.id || context.body.channel_id;
     const workspaceId = context.body.team?.id || context.body.team_id || context.body.user?.team_id;
     const fullUserId = `${workspaceId}:${channelId}`;

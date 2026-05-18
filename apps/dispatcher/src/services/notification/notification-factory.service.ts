@@ -1,11 +1,20 @@
 import { INotificationClient } from "../../interfaces/notification-client.interface";
 
 /**
+ * Subset of NotificationClientFactory required by trigger handlers.
+ */
+export interface INotificationClientFactory {
+  addClient(channel: string, client: INotificationClient): void;
+  getClient(channel: string): INotificationClient;
+  supportsChannel(channel: string): boolean;
+}
+
+/**
  * Factory for creating notification clients
  * Allows for easy creation of different notification clients
  * based on the channel type
  */
-export class NotificationClientFactory {
+export class NotificationClientFactory implements INotificationClientFactory {
   private readonly clients: Map<string, INotificationClient>;
 
   /**

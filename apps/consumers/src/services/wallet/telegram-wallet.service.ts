@@ -6,7 +6,7 @@
 
 import { BaseWalletService } from './base-wallet.service';
 import { SubscriptionAPIService } from '../subscription-api.service';
-import { EnsResolverService } from '../ens-resolver.service';
+import { IEnsResolver } from '../ens-resolver.service';
 import { ContextWithSession } from '../../interfaces/bot.interface';
 import { uiMessages } from '@notification-system/messages';
 import { createLogger, type Logger } from '@anticapture/observability';
@@ -15,7 +15,7 @@ export class TelegramWalletService extends BaseWalletService {
 
   constructor(
     subscriptionApi: SubscriptionAPIService,
-    ensResolver: EnsResolverService,
+    ensResolver: IEnsResolver,
     logger: Logger = createLogger('consumers'),
   ) {
     super(subscriptionApi, ensResolver, logger, 'telegram-wallet');

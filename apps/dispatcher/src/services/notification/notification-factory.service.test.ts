@@ -1,50 +1,46 @@
-import { describe, it, expect, jest, beforeEach } from '@jest/globals';
+import { describe, it, expect, beforeEach } from 'vitest';
 import { NotificationClientFactory } from './notification-factory.service';
-import { RabbitMQNotificationService } from './rabbitmq-notification.service';
+import type {
+  INotificationClient,
+  NotificationPayload,
+} from '../../interfaces/notification-client.interface';
 
-jest.mock('./rabbitmq-notification.service', () => ({
-  RabbitMQNotificationService: jest.fn()
-}));
+class SimpleNotificationClient implements INotificationClient {
+  public readonly sent: NotificationPayload[] = [];
+  async sendNotification(payload: NotificationPayload): Promise<void> {
+    this.sent.push(payload);
+  }
+}
 
 describe('NotificationClientFactory', () => {
   let factory: NotificationClientFactory;
-  let mockRabbitMQClient: any;
-  
+  let client: SimpleNotificationClient;
+
   beforeEach(() => {
-    jest.clearAllMocks();
-    mockRabbitMQClient = { sendNotification: jest.fn() };
-    jest.mocked(RabbitMQNotificationService).mockReturnValue(mockRabbitMQClient);
     factory = new NotificationClientFactory();
+    client = new SimpleNotificationClient();
   });
-  
+
   describe('getClient', () => {
-    it('should return the correct client for a supported channel', () => {
-      factory.addClient('telegram', mockRabbitMQClient);
-      const client = factory.getClient('telegram');
-      expect(client).toBe(mockRabbitMQClient);
+    it('returns the registered client for a supported channel', () => {
+      factory.addClient('telegram', client);
+      expect(factory.getClient('telegram')).toBe(client);
     });
-    
-    it('should throw error for unsupported channel', () => {
+
+    it('throws for unsupported channel', () => {
       expect(() => factory.getClient('unsupported'))
         .toThrow("Notification client for channel 'unsupported' not found");
     });
   });
-  
-  describe('addClient', () => {
-    it('should add a client to the factory', () => {
-      factory.addClient('telegram', mockRabbitMQClient);
-      expect(factory.supportsChannel('telegram')).toBe(true);
-    });
-  });
-  
+
   describe('supportsChannel', () => {
-    it('should return true for supported channels', () => {
-      factory.addClient('telegram', mockRabbitMQClient);
+    it('is true after addClient', () => {
+      factory.addClient('telegram', client);
       expect(factory.supportsChannel('telegram')).toBe(true);
     });
-    
-    it('should return false for unsupported channels', () => {
+
+    it('is false for unknown channels', () => {
       expect(factory.supportsChannel('unsupported')).toBe(false);
     });
   });
-}); 
+});

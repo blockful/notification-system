@@ -1,12 +1,11 @@
-import { describe, it, expect, jest, beforeEach, afterEach } from '@jest/globals';
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { NewOffchainProposalTrigger } from '../src/triggers/new-offchain-proposal-trigger';
-import {
-  OffchainProposal,
-  OffchainProposalDataSource,
-  ListOffchainProposalsOptions
-} from '../src/interfaces/offchain-proposal.interface';
-import { DispatcherService, DispatcherMessage } from '../src/interfaces/dispatcher.interface';
+import { OffchainProposal } from '../src/interfaces/offchain-proposal.interface';
 import { NotificationTypeId } from '@notification-system/messages';
+import {
+  SimpleDispatcherService,
+  SimpleOffchainProposalDataSource,
+} from './simple-doubles';
 
 function createOffchainProposal(overrides?: Partial<OffchainProposal>): OffchainProposal {
   return {
@@ -18,26 +17,6 @@ function createOffchainProposal(overrides?: Partial<OffchainProposal>): Offchain
     daoId: 'test-dao',
     ...overrides,
   };
-}
-
-class SimpleOffchainProposalDataSource implements OffchainProposalDataSource {
-  proposals: OffchainProposal[] = [];
-  lastOptions?: ListOffchainProposalsOptions;
-
-  async listAll(options?: ListOffchainProposalsOptions): Promise<OffchainProposal[]> {
-    this.lastOptions = options;
-    return this.proposals;
-  }
-}
-
-class SimpleDispatcherService implements DispatcherService {
-  sentMessages: DispatcherMessage[] = [];
-  shouldFail = false;
-
-  async sendMessage(message: DispatcherMessage): Promise<void> {
-    if (this.shouldFail) throw new Error('Dispatcher failed');
-    this.sentMessages.push(message);
-  }
 }
 
 describe('NewOffchainProposalTrigger', () => {
@@ -55,7 +34,7 @@ describe('NewOffchainProposalTrigger', () => {
     it('should not send message when array is empty', async () => {
       await trigger.process([]);
 
-      expect(dispatcher.sentMessages).toHaveLength(0);
+      expect(dispatcher.sentMessages).toEqual([]);
     });
 
     it('should send single proposal with correct triggerId and events', async () => {
@@ -63,11 +42,10 @@ describe('NewOffchainProposalTrigger', () => {
 
       await trigger.process([proposal]);
 
-      expect(dispatcher.sentMessages).toHaveLength(1);
-      expect(dispatcher.sentMessages[0]).toEqual({
+      expect(dispatcher.sentMessages).toEqual([{
         triggerId: NotificationTypeId.NewOffchainProposal,
         events: [proposal],
-      });
+      }]);
     });
 
     it('should update timestampCursor to data[0].created + 1', async () => {
@@ -87,12 +65,12 @@ describe('NewOffchainProposalTrigger', () => {
       await trigger.process(proposals);
 
       expect(dispatcher.sentMessages).toHaveLength(1);
-      expect(dispatcher.sentMessages[0].events).toHaveLength(2);
+      expect(dispatcher.sentMessages[0].events).toEqual(proposals);
       expect(trigger['timestampCursor']).toBe(1700000201);
     });
 
     it('should propagate dispatcher errors', async () => {
-      dispatcher.shouldFail = true;
+      dispatcher.sendError = new Error('Dispatcher failed');
       const proposal = createOffchainProposal();
 
       await expect(trigger.process([proposal])).rejects.toThrow('Dispatcher failed');
@@ -101,20 +79,19 @@ describe('NewOffchainProposalTrigger', () => {
 
   describe('start/stop', () => {
     beforeEach(() => {
-      jest.useFakeTimers();
-      dataSource.proposals = [createOffchainProposal()];
+      vi.useFakeTimers();
+      dataSource.listResult = [createOffchainProposal()];
     });
 
     afterEach(() => {
-      jest.useRealTimers();
+      vi.useRealTimers();
     });
 
     it('should start interval, fetch data, and process it', () => {
       trigger.start({ status: ['active', 'pending'] });
-      jest.advanceTimersByTime(60000);
+      vi.advanceTimersByTime(60000);
 
-      expect(dataSource.lastOptions).toBeDefined();
-      expect(dataSource.lastOptions!.status).toEqual(['active', 'pending']);
+      expect(dataSource.listCalls.at(-1)?.status).toEqual(['active', 'pending']);
     });
 
     it('should stop and clear timer', async () => {
@@ -123,8 +100,8 @@ describe('NewOffchainProposalTrigger', () => {
 
       expect(trigger['timer']).toBeNull();
 
-      jest.advanceTimersByTime(120000);
-      expect(dataSource.lastOptions).toBeUndefined();
+      vi.advanceTimersByTime(120000);
+      expect(dataSource.listCalls).toEqual([]);
     });
   });
 
@@ -144,15 +121,15 @@ describe('NewOffchainProposalTrigger', () => {
     });
 
     it('should reset to 24h ago when no argument', () => {
-      jest.useFakeTimers();
-      jest.setSystemTime(new Date('2025-01-15T12:00:00Z'));
+      vi.useFakeTimers();
+      vi.setSystemTime(new Date('2025-01-15T12:00:00Z'));
 
       trigger.reset();
 
       const expected = Math.floor((Date.now() - 24 * 60 * 60 * 1000) / 1000);
       expect(trigger['timestampCursor']).toBe(expected);
 
-      jest.useRealTimers();
+      vi.useRealTimers();
     });
   });
 
@@ -164,13 +141,13 @@ describe('NewOffchainProposalTrigger', () => {
 
       await customTrigger['fetchData']({ status: ['active'] });
 
-      expect(dataSource.lastOptions?.fromDate).toBe(1700000000);
+      expect(dataSource.listCalls.at(-1)?.fromDate).toBe(1700000000);
     });
 
     it('should pass status from options', async () => {
       await trigger['fetchData']({ status: ['active', 'pending'] });
 
-      expect(dataSource.lastOptions?.status).toEqual(['active', 'pending']);
+      expect(dataSource.listCalls.at(-1)?.status).toEqual(['active', 'pending']);
     });
   });
 });

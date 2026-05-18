@@ -4,8 +4,8 @@
  * Platform-specific implementations handle only UI/interaction logic.
  */
 
-import { AnticaptureClient } from '@notification-system/anticapture-client';
-import { SubscriptionAPIService } from '../subscription-api.service';
+import { IAnticaptureClient } from '@notification-system/anticapture-client';
+import { ISubscriptionAPI } from '../subscription-api.service';
 import { getDaoWithEmoji } from '@notification-system/messages';
 import { createLogger, type Logger } from '@anticapture/observability';
 
@@ -18,8 +18,8 @@ export abstract class BaseDAOService {
   protected readonly logger: Logger;
 
   constructor(
-    protected readonly anticaptureClient: AnticaptureClient,
-    protected readonly subscriptionApi: SubscriptionAPIService,
+    protected readonly anticaptureClient: IAnticaptureClient,
+    protected readonly subscriptionApi: ISubscriptionAPI,
     logger: Logger = createLogger('consumers'),
   ) {
     this.logger = logger.child({ component: `${this.getPlatformId()}-dao` });

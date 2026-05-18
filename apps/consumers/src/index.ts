@@ -10,7 +10,6 @@
 
 import './instrumentation';
 
-import axios from 'axios';
 import { App } from './app';
 import { createLogger, wrapWithTracing } from '@anticapture/observability';
 
@@ -40,19 +39,13 @@ const slackClient = wrapWithTracing(new SlackClient(
 // Create and start the application
 const app = new App(
   config.subscriptionServerUrl,
-  axios.create({
-    baseURL: config.anticaptureGraphqlEndpoint,
-    headers: {
-      ...(config.blockfulApiToken && {
-        Authorization: `Bearer ${config.blockfulApiToken}`,
-      }),
-    },
-  }),
+  config.anticaptureApiUrl,
   config.rabbitmqUrl,
   ensResolver,
   telegramClient,
   slackClient,
-  config.webhookPort
+  config.webhookPort,
+  config.blockfulApiToken ? { Authorization: `Bearer ${config.blockfulApiToken}` } : undefined,
 );
 
 (async () => {

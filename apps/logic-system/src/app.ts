@@ -13,9 +13,8 @@ import { ThresholdRepository } from './repositories/threshold.repository';
 import { VotesRepository } from './repositories/votes.repository';
 import { OffchainVotesRepository } from './repositories/offchain-votes.repository';
 import { RabbitMQDispatcherService } from './api-clients/rabbitmq-dispatcher.service';
-import { AnticaptureClient, QueryInput_Proposals_Status_Items } from '@notification-system/anticapture-client';
+import { AnticaptureClient, OnchainProposalStatusListEnumKey } from '@notification-system/anticapture-client';
 import { RabbitMQConnection, RabbitMQPublisher } from '@notification-system/rabbitmq-client';
-import { AxiosInstance } from 'axios';
 import { createLogger, wrapWithTracing } from '@anticapture/observability';
 import { type FastifyInstance } from 'fastify';
 import { startServer } from './server';
@@ -34,7 +33,7 @@ export class App {
   private votingReminderTrigger60!: VotingReminderTrigger;
   private votingReminderTrigger90!: VotingReminderTrigger;
   private offchainVotingReminderTrigger50!: VotingReminderTrigger;
-  private proposalStatus: QueryInput_Proposals_Status_Items;
+  private proposalStatus: OnchainProposalStatusListEnumKey;
   private rabbitMQConnection!: RabbitMQConnection;
   private rabbitMQPublisher!: RabbitMQPublisher;
   private server!: FastifyInstance;
@@ -42,15 +41,19 @@ export class App {
 
   constructor(
     triggerInterval: number,
-    proposalStatus: QueryInput_Proposals_Status_Items,
-    anticaptureHttpClient: AxiosInstance,
+    proposalStatus: OnchainProposalStatusListEnumKey,
+    anticaptureBaseURL: string,
     rabbitmqUrl: string,
     private port: number,
-    initialTimestamp?: string
+    initialTimestamp?: string,
+    anticaptureHeaders?: Record<string, string>
   ) {
     this.proposalStatus = proposalStatus;
-    
-    const anticaptureClient = wrapWithTracing(new AnticaptureClient(anticaptureHttpClient));
+
+    const anticaptureClient = wrapWithTracing(new AnticaptureClient({
+      baseURL: anticaptureBaseURL,
+      defaultHeaders: anticaptureHeaders,
+    }));
     const proposalRepository = wrapWithTracing(new ProposalRepository(anticaptureClient));
     const offchainProposalRepository = wrapWithTracing(new OffchainProposalRepository(anticaptureClient));
     const votingPowerRepository = wrapWithTracing(new VotingPowerRepository(anticaptureClient));

@@ -1,4 +1,4 @@
-import { AxiosInstance } from 'axios';
+import type { AxiosInstance } from 'axios';
 import type { NotificationTypeId } from '@notification-system/messages';
 import { ISubscriptionClient, User, Notification } from '../interfaces/subscription-client.interface';
 
@@ -9,10 +9,6 @@ import { ISubscriptionClient, User, Notification } from '../interfaces/subscript
 export class SubscriptionClient implements ISubscriptionClient {
   private client: AxiosInstance;
 
-  /**
-   * Creates a new instance of the SubscriptionClient
-   * @param client Configured axios instance for API communication
-   */
   constructor(client: AxiosInstance) {
     this.client = client;
   }
@@ -31,7 +27,7 @@ export class SubscriptionClient implements ISubscriptionClient {
     const queryString = params.toString();
     const url = queryString ? `/subscriptions/${daoId}?${queryString}` : `/subscriptions/${daoId}`;
 
-    const response = await this.client.get(url);
+    const response = await this.client.get<User[]>(url);
     return response.data;
   }
 
@@ -49,7 +45,7 @@ export class SubscriptionClient implements ISubscriptionClient {
       dao_id: daoId
     }));
 
-    const response = await this.client.post('/notifications/exclude-sent', {
+    const response = await this.client.post<Notification[]>('/notifications/exclude-sent', {
       notifications
     });
 
@@ -80,13 +76,13 @@ export class SubscriptionClient implements ISubscriptionClient {
     }
 
     // Make single batch request
-    const response = await this.client.post('/notifications/exclude-sent', {
+    const response = await this.client.post<Notification[]>('/notifications/exclude-sent', {
       notifications: allNotifications
     });
-    
+
     // Create Map for O(1) lookup and return result in one flow
     const notificationMap = new Map<string, Notification>();
-    (response.data as Notification[]).forEach(notification => {
+    response.data.forEach(notification => {
       notificationMap.set(
         `${notification.user_id}-${notification.event_id}-${notification.dao_id}`,
         notification
@@ -126,7 +122,7 @@ export class SubscriptionClient implements ISubscriptionClient {
     const url = queryString
       ? `/users/by-address/${encodeURIComponent(address)}?${queryString}`
       : `/users/by-address/${encodeURIComponent(address)}`;
-    const response = await this.client.get(url);
+    const response = await this.client.get<User[]>(url);
     return response.data;
   }
 
@@ -139,7 +135,7 @@ export class SubscriptionClient implements ISubscriptionClient {
   async getWalletOwnersBatch(addresses: string[], triggerType?: NotificationTypeId): Promise<Record<string, User[]>> {
     const body: { addresses: string[]; trigger_type?: NotificationTypeId } = { addresses };
     if (triggerType) body.trigger_type = triggerType;
-    const response = await this.client.post('/users/by-addresses/batch', body);
+    const response = await this.client.post<Record<string, User[]>>('/users/by-addresses/batch', body);
     return response.data;
   }
 
@@ -149,7 +145,7 @@ export class SubscriptionClient implements ISubscriptionClient {
    * @returns List of unique addresses being followed
    */
   async getFollowedAddresses(daoId: string): Promise<string[]> {
-    const response = await this.client.get(`/dao/${encodeURIComponent(daoId)}/followed-addresses`);
+    const response = await this.client.get<string[]>(`/dao/${encodeURIComponent(daoId)}/followed-addresses`);
     return response.data;
   }
 } 

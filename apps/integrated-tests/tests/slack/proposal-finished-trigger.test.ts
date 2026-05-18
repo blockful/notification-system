@@ -1,23 +1,28 @@
 /**
  * Slack Proposal Finished Trigger - Integration Test
  * Tests that proposal finished notifications are correctly delivered via Slack
- * Supports both mock and real Slack delivery modes
+ * Supports both captured and real Slack delivery modes
  */
 
-import { describe, test, expect, beforeAll, afterEach } from '@jest/globals';
+import { describe, test, expect, beforeAll, afterEach } from 'vitest';
+import { proposalsHandler } from '@anticapture/client/msw';
+import { type OnchainProposal } from '@notification-system/anticapture-client';
 import { db, TestApps } from '../../src/setup';
-import { HttpClientMockSetup, GraphQLMockSetup } from '../../src/mocks';
+import { server, proposalsByDaoResolver } from '../../src/setup/msw-server';
 import { UserFactory, ProposalFactory, WorkspaceFactory } from '../../src/fixtures';
 import { SlackTestHelper, DatabaseTestHelper, TestCleanup } from '../../src/helpers';
-import { SlackTestClient } from '../../src/test-clients/slack-test.client';
+import { SimpleSlackClient } from '../../src/test-clients/simple-slack.client';
 import { testConstants, timeouts } from '../../src/config';
 import { env } from '../../src/config/env';
 
+const useProposals = (proposals: OnchainProposal[]) =>
+  server.use(proposalsHandler(proposalsByDaoResolver(proposals)));
+
 describe('Slack Proposal Finished Trigger - Integration Test', () => {
   let apps: TestApps;
-  let httpMockSetup: HttpClientMockSetup;
+
   let slackHelper: SlackTestHelper;
-  let slackClient: SlackTestClient;
+  let slackClient: SimpleSlackClient;
   let dbHelper: DatabaseTestHelper;
 
   // Helper function - identical to Telegram version
@@ -35,10 +40,10 @@ describe('Slack Proposal Finished Trigger - Integration Test', () => {
     const endBlock = startBlock + blocksToRun;
 
     return ProposalFactory.createProposal(daoId, proposalId, {
-      timestamp: Math.floor(proposalCreationTime.getTime() / 1000).toString(),
+      timestamp: Math.floor(proposalCreationTime.getTime() / 1000),
       startBlock: startBlock,
       endBlock: endBlock,
-      endTimestamp: Math.floor(proposalEndTime / 1000).toString(), // Finished 10 seconds ago
+      endTimestamp: Math.floor(proposalEndTime / 1000),
       status: 'EXECUTED',
       description: `# Finished Proposal\n\nThis proposal has ended.`
     });
@@ -47,11 +52,11 @@ describe('Slack Proposal Finished Trigger - Integration Test', () => {
 
   beforeAll(async () => {
     apps = TestCleanup.getGlobalApps();
-    httpMockSetup = TestCleanup.getGlobalHttpMockSetup();
+
 
     // Create Slack client and helper
-    slackClient = new SlackTestClient(global.mockSlackSendMessage);
-    slackHelper = new SlackTestHelper(global.mockSlackSendMessage, slackClient);
+    slackClient = global.slackClient;
+    slackHelper = new SlackTestHelper(global.slackClient);
 
     dbHelper = new DatabaseTestHelper(db);
   });
@@ -81,8 +86,7 @@ describe('Slack Proposal Finished Trigger - Integration Test', () => {
     // Create a proposal that has already finished
     const proposal = createFinishedProposal(testDaoId, 'finishing-proposal-1');
 
-    // Setup mock to return the finished proposal
-    GraphQLMockSetup.setupMock(httpMockSetup.getMockClient(), [proposal], []);
+    useProposals([proposal]);
 
     // Wait for the notification to be sent
     const message = await slackHelper.waitForMessage(
@@ -136,15 +140,14 @@ describe('Slack Proposal Finished Trigger - Integration Test', () => {
     // Create a proposal that will finish in the future
     const now = Math.floor(Date.now() / 1000);
     const futureProposal = ProposalFactory.createProposal(testDaoId, 'future-proposal-1', {
-      timestamp: (now - 10).toString(), // Created 10 seconds ago
+      timestamp: now - 10,
       startBlock: testConstants.proposalTiming.defaultStartBlock,
-      endBlock: testConstants.proposalTiming.defaultStartBlock + testConstants.proposalTiming.futureProposalBlocks, // Will finish in ~1080 seconds
+      endBlock: testConstants.proposalTiming.defaultStartBlock + testConstants.proposalTiming.futureProposalBlocks,
       status: 'ACTIVE',
       description: '# Future Proposal\n\nThis proposal will not finish during the test.'
     });
 
-    // Setup mock
-    GraphQLMockSetup.setupMock(httpMockSetup.getMockClient(), [futureProposal], []);
+    useProposals([futureProposal]);
 
     // Ensure no messages are sent
     await slackHelper.waitForNoMessages(timeouts.notification.processing);
@@ -180,8 +183,7 @@ describe('Slack Proposal Finished Trigger - Integration Test', () => {
       createFinishedProposal(testDaoId, 'finished-3', new Date(baseTime.getTime() + 2000))
     ];
 
-    // Setup mock
-    GraphQLMockSetup.setupMock(httpMockSetup.getMockClient(), proposals, []);
+    useProposals(proposals);
 
     // Wait for all 3 messages
     await slackHelper.waitForMessageCount(3, {
@@ -237,16 +239,15 @@ describe('Slack Proposal Finished Trigger - Integration Test', () => {
 
     // Create proposal that was created and finished before user subscription
     const oldProposal = ProposalFactory.createProposal(testDaoId, 'old-finished-proposal', {
-      timestamp: Math.floor(proposalCreatedAt.getTime() / 1000).toString(),
-      endTimestamp: Math.floor(proposalCreatedAt.getTime() / 1000 + 3600).toString(), // Ended 1 hour after creation, still before subscription
+      timestamp: Math.floor(proposalCreatedAt.getTime() / 1000),
+      endTimestamp: Math.floor(proposalCreatedAt.getTime() / 1000 + 3600),
       startBlock: testConstants.proposalTiming.defaultStartBlock,
-      endBlock: testConstants.proposalTiming.defaultStartBlock + 1, // Finished quickly (1 block = 12 seconds)
+      endBlock: testConstants.proposalTiming.defaultStartBlock + 1,
       status: 'EXECUTED',
       description: '# Old Proposal\n\nThis finished before user subscribed.'
     });
 
-    // Setup mock
-    GraphQLMockSetup.setupMock(httpMockSetup.getMockClient(), [oldProposal], []);
+    useProposals([oldProposal]);
 
     // Ensure no messages are sent
     await slackHelper.waitForNoMessages(timeouts.notification.processing);
@@ -288,8 +289,7 @@ describe('Slack Proposal Finished Trigger - Integration Test', () => {
     const dao1Proposal = createFinishedProposal(dao1Id, 'dao1-finished', baseTime);
     const dao2Proposal = createFinishedProposal(dao2Id, 'dao2-finished', new Date(baseTime.getTime() + 1000)); // 1 second later
 
-    // Setup mock
-    GraphQLMockSetup.setupMock(httpMockSetup.getMockClient(), [dao1Proposal, dao2Proposal], []);
+    useProposals([dao1Proposal, dao2Proposal]);
 
     // Wait for 2 messages (one for each DAO)
     await slackHelper.waitForMessageCount(2, {

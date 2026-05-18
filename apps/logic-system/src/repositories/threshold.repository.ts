@@ -1,7 +1,6 @@
 import {
-  AnticaptureClient,
   FeedEventType,
-  FeedRelevance
+  IAnticaptureClient
 } from '@notification-system/anticapture-client';
 import { createLogger, type Logger } from '@anticapture/observability';
 
@@ -12,12 +11,16 @@ interface CacheEntry {
 
 const ONE_DAY_MS = 86_400_000;
 
-export class ThresholdRepository {
+export interface IThresholdRepository {
+  getThreshold(daoId: string, type: FeedEventType): Promise<string | null>;
+}
+
+export class ThresholdRepository implements IThresholdRepository {
   private cache = new Map<string, CacheEntry>();
   private readonly logger: Logger;
 
   constructor(
-    private readonly anticaptureClient: AnticaptureClient,
+    private readonly anticaptureClient: IAnticaptureClient,
     private readonly cacheTtlMs: number = ONE_DAY_MS,
     logger: Logger = createLogger('logic-system'),
   ) {
@@ -33,7 +36,7 @@ export class ThresholdRepository {
     }
 
     try {
-      const threshold = await this.anticaptureClient.getEventThreshold(daoId, type, FeedRelevance.High);
+      const threshold = await this.anticaptureClient.getEventThreshold(daoId, type, "HIGH");
 
       if (threshold !== null) {
         this.cache.set(cacheKey, { value: threshold, fetchedAt: Date.now() });

@@ -1,3 +1,4 @@
+import { describe, it, expect } from 'vitest';
 import { formatTokenAmount } from './number-formatter';
 
 describe('formatTokenAmount', () => {

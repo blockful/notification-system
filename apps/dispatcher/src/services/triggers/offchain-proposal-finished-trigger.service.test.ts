@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach } from '@jest/globals';
+import { describe, it, expect, beforeEach } from 'vitest';
 import { OffchainProposalFinishedTriggerHandler } from './offchain-proposal-finished-trigger.service';
 import { ISubscriptionClient, User, Notification } from '../../interfaces/subscription-client.interface';
 import { NotificationClientFactory } from '../notification/notification-factory.service';

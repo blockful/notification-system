@@ -26,7 +26,6 @@ coverage
 out/
 build
 dist
-!packages/anticapture-client/dist
 
 # Generated GraphQL files
 **/src/generated/

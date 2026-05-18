@@ -37,7 +37,7 @@ src/
 
 | Variable | Required | Default | Description |
 |----------|----------|---------|-------------|
-| `ANTICAPTURE_GRAPHQL_ENDPOINT` | ✅ | - | GraphQL API endpoint URL |
+| `ANTICAPTURE_API_URL` | ✅ | - | REST API base URL |
 | `RABBITMQ_URL` | ✅ | - | RabbitMQ connection string |
 | `PROPOSAL_STATUS` | ✅ | - | Proposal status to monitor |
 | `TRIGGER_INTERVAL` | ❌ | `60000` | Execution interval in milliseconds |
@@ -48,7 +48,7 @@ src/
 
 ### Example Configuration
 ```bash
-ANTICAPTURE_GRAPHQL_ENDPOINT=https://api.anticapture.xyz/graphql
+ANTICAPTURE_API_URL=https://api.anticapture.xyz
 RABBITMQ_URL=amqp://user:pass@rabbitmq:5672
 PROPOSAL_STATUS=active
 TRIGGER_INTERVAL=30000

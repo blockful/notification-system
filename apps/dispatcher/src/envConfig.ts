@@ -10,7 +10,7 @@ import { z } from 'zod';
 const envSchema = z.object({
   SUBSCRIPTION_SERVER_URL: z.string().url(),
   RABBITMQ_URL: z.string().url(),
-  ANTICAPTURE_GRAPHQL_ENDPOINT: z.string().url(),
+  ANTICAPTURE_API_URL: z.string().url(),
   BLOCKFUL_API_TOKEN: z.string().optional(),
   PORT: z.coerce.number().positive().optional().default(3004),
 });
@@ -22,7 +22,7 @@ export function loadConfig() {
   return {
     subscriptionServerUrl: env.SUBSCRIPTION_SERVER_URL,
     rabbitmqUrl: env.RABBITMQ_URL,
-    anticaptureGraphqlEndpoint: env.ANTICAPTURE_GRAPHQL_ENDPOINT,
+    anticaptureApiUrl: env.ANTICAPTURE_API_URL,
     blockfulApiToken: env.BLOCKFUL_API_TOKEN,
     port: env.PORT,
   } as const;

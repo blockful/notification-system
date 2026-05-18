@@ -4,21 +4,21 @@
  */
 
 import { Trigger } from './base-trigger';
-import { VotingPowerRepository } from '../repositories/voting-power.repository';
-import { ThresholdRepository } from '../repositories/threshold.repository';
+import { IVotingPowerRepository } from '../repositories/voting-power.repository';
+import { IThresholdRepository } from '../repositories/threshold.repository';
 import { DispatcherService, DispatcherMessage } from '../interfaces/dispatcher.interface';
-import { ProcessedVotingPowerHistory, FeedEventType } from '@notification-system/anticapture-client';
+import { ProcessedVotingPowerHistory, FeedEventType, feedEventTypeEnum } from '@notification-system/anticapture-client';
 import { NotificationTypeId } from '@notification-system/messages';
 
 const triggerId = NotificationTypeId.VotingPowerChanged;
 
 export class VotingPowerChangedTrigger extends Trigger<ProcessedVotingPowerHistory, void> {
-  private lastProcessedTimestamp: string = Math.floor(Date.now() / 1000).toString();
+  protected lastProcessedTimestamp: string = Math.floor(Date.now() / 1000).toString();
 
   constructor(
     private readonly dispatcherService: DispatcherService,
-    private readonly votingPowerRepository: VotingPowerRepository,
-    private readonly thresholdRepository: ThresholdRepository,
+    private readonly votingPowerRepository: IVotingPowerRepository,
+    private readonly thresholdRepository: IThresholdRepository,
     interval: number
   ) {
     super(triggerId, interval);
@@ -66,7 +66,7 @@ export class VotingPowerChangedTrigger extends Trigger<ProcessedVotingPowerHisto
     const keep = await Promise.all(
       data.map(async (event) => {
         const type = event.changeType.toUpperCase();
-        if (!Object.values(FeedEventType).includes(type as FeedEventType)) return true;
+        if (!Object.values(feedEventTypeEnum).includes(type as FeedEventType)) return true;
 
         const threshold = await this.thresholdRepository.getThreshold(event.daoId, type as FeedEventType);
         return threshold === null || Math.abs(Number(event.delta)) >= Number(threshold);

@@ -1,5 +1,0 @@
-query GetEventRelevanceThreshold($relevance: FeedRelevance!, $type: FeedEventType!) {
-    getEventRelevanceThreshold(relevance: $relevance, type: $type) {
-      threshold
-    }
-}

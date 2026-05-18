@@ -1,20 +1,25 @@
-import { describe, test, expect, beforeEach, jest } from '@jest/globals';
+import { describe, test, expect, beforeEach, beforeAll } from 'vitest';
+import { proposalsHandler } from '@anticapture/client/msw';
+import { type OnchainProposal } from '@notification-system/anticapture-client';
 import { db, TestApps } from '../../src/setup';
-import { HttpClientMockSetup, GraphQLMockSetup } from '../../src/mocks';
+import { server, proposalsByDaoResolver } from '../../src/setup/msw-server';
 import { UserFactory, ProposalFactory } from '../../src/fixtures';
 import { TelegramTestHelper, DatabaseTestHelper, TestCleanup } from '../../src/helpers';
 import { testConstants, timeouts } from '../../src/config';
 
+const useProposals = (proposals: OnchainProposal[]) =>
+  server.use(proposalsHandler(proposalsByDaoResolver(proposals)));
+
 describe('Temporal Filtering - Integration Test', () => {
   let apps: TestApps;
-  let httpMockSetup: HttpClientMockSetup;
+
   let telegramHelper: TelegramTestHelper;
   let dbHelper: DatabaseTestHelper;
 
   beforeAll(async () => {
     apps = TestCleanup.getGlobalApps();
-    httpMockSetup = TestCleanup.getGlobalHttpMockSetup();
-    telegramHelper = new TelegramTestHelper(global.mockTelegramSendMessage);
+
+    telegramHelper = new TelegramTestHelper(global.telegramClient);
     dbHelper = new DatabaseTestHelper(db);
   });
 
@@ -31,8 +36,8 @@ describe('Temporal Filtering - Integration Test', () => {
     // Create proposal BEFORE user subscription (older timestamp)
     const oldProposal = ProposalFactory.createProposal(testDaoId, 'old-proposal', {
       status: 'ACTIVE',
-      timestamp: Math.floor(baseTime.getTime() / 1000).toString(), // 10:00 AM
-      endTimestamp: Math.floor(baseTime.getTime() / 1000 + 3600).toString() // Ends 1 hour later
+      timestamp: Math.floor(baseTime.getTime() / 1000),
+      endTimestamp: Math.floor(baseTime.getTime() / 1000 + 3600)
     });
     
     // User subscribes AFTER proposal creation
@@ -45,7 +50,7 @@ describe('Temporal Filtering - Integration Test', () => {
       subscriptionTime.toISOString()
     );
 
-    GraphQLMockSetup.setupMock(httpMockSetup.getMockClient(), [oldProposal]);
+    useProposals([oldProposal]);
     
     // Ensure no messages are sent for old proposals
     await telegramHelper.waitForNoMessages(timeouts.notification.processing);
@@ -74,7 +79,7 @@ describe('Temporal Filtering - Integration Test', () => {
       status: 'ACTIVE'
     });
 
-    GraphQLMockSetup.setupMock(httpMockSetup.getMockClient(), [newProposal]);
+    useProposals([newProposal]);
     
     // Wait for the notification to be sent
     const message = await telegramHelper.waitForUserMessage(testConstants.profiles.p7.chatId, {
@@ -107,16 +112,16 @@ describe('Temporal Filtering - Integration Test', () => {
     
     // Proposal created during inactive period (user should NOT be notified about this)
     const inactiveProposal = ProposalFactory.createProposal(testDaoId, 'during-inactive-proposal', {
-      status: 'ACTIVE', 
-      timestamp: Math.floor(new Date('2024-01-01T13:00:00Z').getTime() / 1000).toString(), // 1:00 PM
-      endTimestamp: Math.floor(new Date('2024-01-01T14:00:00Z').getTime() / 1000).toString() // Ends at 2:00 PM
+      status: 'ACTIVE',
+      timestamp: Math.floor(new Date('2024-01-01T13:00:00Z').getTime() / 1000),
+      endTimestamp: Math.floor(new Date('2024-01-01T14:00:00Z').getTime() / 1000)
     });
 
     // User resubscribes
     await UserFactory.updateUserPreference(testUser.user.id, testDaoId, true, new Date('2024-01-01T14:00:00Z').toISOString());
     
 
-    GraphQLMockSetup.setupMock(httpMockSetup.getMockClient(), [inactiveProposal]);
+    useProposals([inactiveProposal]);
     
     // Ensure no notification is sent for proposals created during inactive period
     await telegramHelper.waitForNoMessages(timeouts.notification.delivery, { fromUser: testConstants.profiles.p8.chatId });

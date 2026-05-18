@@ -1,4 +1,4 @@
-import { describe, test, expect, beforeEach } from '@jest/globals';
+import { describe, test, expect, beforeEach } from 'vitest';
 import { NotificationTypeId } from '@notification-system/messages';
 import { SettingsService } from './settings.service';
 import {
@@ -6,11 +6,11 @@ import {
   UserNotificationPreference,
 } from '../interfaces/user_subscription.interface';
 
-// ---- STUB ----
+// ---- SIMPLE DOUBLES ----
 
 const FIXED_DATE = '2025-06-01T00:00:00.000Z';
 
-class StubPrefsRepo implements IUserNotificationPreferencesRepository {
+class SimpleUserNotificationPreferencesRepository implements IUserNotificationPreferencesRepository {
   findByUserResult: UserNotificationPreference[] = [];
   upsertManyCalls: Array<{
     userId: string;
@@ -36,11 +36,11 @@ class StubPrefsRepo implements IUserNotificationPreferencesRepository {
 // ---- TESTS ----
 
 describe('SettingsService', () => {
-  let stub: StubPrefsRepo;
+  let stub: SimpleUserNotificationPreferencesRepository;
   let settingsService: SettingsService;
 
   beforeEach(() => {
-    stub = new StubPrefsRepo();
+    stub = new SimpleUserNotificationPreferencesRepository();
     settingsService = new SettingsService(stub);
   });
 

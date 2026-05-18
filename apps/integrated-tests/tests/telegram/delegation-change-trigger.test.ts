@@ -1,20 +1,21 @@
-import { describe, test, expect, beforeAll, beforeEach } from '@jest/globals';
+import { describe, test, expect, beforeAll, beforeEach } from 'vitest';
+import { historicalVotingPowerHandler } from '@anticapture/client/msw';
 import { db, TestApps } from '../../src/setup';
-import { HttpClientMockSetup, GraphQLMockSetup } from '../../src/mocks';
+import { server } from '../../src/setup/msw-server';
 import { UserFactory, VotingPowerFactory } from '../../src/fixtures';
 import { TelegramTestHelper, DatabaseTestHelper, TestCleanup } from '../../src/helpers';
 import { testConstants, timeouts } from '../../src/config';
 
 describe('Delegation Change Notifications - Integration Test', () => {
   let apps: TestApps;
-  let httpMockSetup: HttpClientMockSetup;
+
   let telegramHelper: TelegramTestHelper;
   let dbHelper: DatabaseTestHelper;
 
   beforeAll(async () => {
     apps = TestCleanup.getGlobalApps();
-    httpMockSetup = TestCleanup.getGlobalHttpMockSetup();
-    telegramHelper = new TelegramTestHelper(global.mockTelegramSendMessage);
+
+    telegramHelper = new TelegramTestHelper(global.telegramClient);
     dbHelper = new DatabaseTestHelper(db);
   });
 
@@ -52,13 +53,7 @@ describe('Delegation Change Notifications - Integration Test', () => {
       }
     );
 
-    // Setup GraphQL mock to return voting power data
-    GraphQLMockSetup.setupMock(
-      httpMockSetup.getMockClient(),
-      [],
-      [delegationEvent],
-      { [testDaoId]: 1 }
-    );
+    server.use(historicalVotingPowerHandler({ items: [delegationEvent], totalCount: 1 }));
 
     // Wait for delegation confirmation notification (new feature we implemented)
     const delegatorMessage = await telegramHelper.waitForMessage(
@@ -115,12 +110,7 @@ describe('Delegation Change Notifications - Integration Test', () => {
       }
     );
 
-    GraphQLMockSetup.setupMock(
-      httpMockSetup.getMockClient(),
-      [],
-      [undelegationEvent],
-      { [testDaoId]: 1 }
-    );
+    server.use(historicalVotingPowerHandler({ items: [undelegationEvent], totalCount: 1 }));
 
     // Wait for undelegation confirmation notification
     const delegatorMessage = await telegramHelper.waitForMessage(

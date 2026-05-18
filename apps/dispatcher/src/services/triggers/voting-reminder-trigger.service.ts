@@ -2,9 +2,9 @@ import type { NotificationTypeId } from '@notification-system/messages';
 
 import { BaseTriggerHandler } from './base-trigger.service';
 import { DispatcherMessage, MessageProcessingResult } from '../../interfaces/dispatcher-message.interface';
-import { NotificationClientFactory } from '../notification/notification-factory.service';
+import { INotificationClientFactory } from '../notification/notification-factory.service';
 import { ISubscriptionClient } from '../../interfaces/subscription-client.interface';
-import { AnticaptureClient } from '@notification-system/anticapture-client';
+import { IAnticaptureClient } from '@notification-system/anticapture-client';
 import { FormattingService } from '../formatting.service';
 import { replacePlaceholders, buildButtons } from '@notification-system/messages';
 import { BatchNotificationService } from '../batch-notification.service';
@@ -33,8 +33,8 @@ export class VotingReminderTriggerHandler extends BaseTriggerHandler<VotingRemin
 
   constructor(
     protected readonly subscriptionClient: ISubscriptionClient,
-    protected readonly notificationFactory: NotificationClientFactory,
-    anticaptureClient: AnticaptureClient,
+    protected readonly notificationFactory: INotificationClientFactory,
+    anticaptureClient: IAnticaptureClient,
     private readonly nonVotersSource: NonVotersSource,
     private readonly messages: VotingReminderMessageSet,
     private readonly triggerType: string,
@@ -136,7 +136,7 @@ export class VotingReminderTriggerHandler extends BaseTriggerHandler<VotingRemin
   /**
    * Creates the reminder message based on proposal data and urgency level
    */
-  private createReminderMessage(event: VotingReminderEvent): string {
+  protected createReminderMessage(event: VotingReminderEvent): string {
     const timeRemaining = FormattingService.calculateTimeRemaining(event.endTimestamp);
     const title =
       event.title || FormattingService.extractTitle(event.description ?? '') || 'Untitled Proposal';

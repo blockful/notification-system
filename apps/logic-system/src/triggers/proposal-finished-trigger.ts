@@ -1,27 +1,25 @@
 import { Trigger } from './base-trigger';
-import { ProposalRepository } from '../repositories/proposal.repository';
-import { RabbitMQDispatcherService } from '../api-clients/rabbitmq-dispatcher.service';
-import { DispatcherMessage } from '../interfaces/dispatcher.interface';
-import { ProposalOnChain, ProposalFinishedNotification } from '../interfaces/proposal.interface';
+import { DispatcherService, DispatcherMessage } from '../interfaces/dispatcher.interface';
+import { ProposalDataSource, ProposalOnChain, ProposalFinishedNotification } from '../interfaces/proposal.interface';
 import { NotificationTypeId } from '@notification-system/messages';
-import { OrderDirection, QueryInput_Proposals_Status_Items } from '@notification-system/anticapture-client';
+import { OnchainProposalStatusListEnumKey } from '@notification-system/anticapture-client';
 
 /**
  * Trigger for detecting finished proposals
  */
 export class ProposalFinishedTrigger extends Trigger<ProposalOnChain, void> {
-  private readonly finishedStatuses: QueryInput_Proposals_Status_Items[] = [
-    QueryInput_Proposals_Status_Items.Executed,
-    QueryInput_Proposals_Status_Items.Defeated,
-    QueryInput_Proposals_Status_Items.Succeeded,
-    QueryInput_Proposals_Status_Items.Expired,
-    QueryInput_Proposals_Status_Items.Canceled,
+  private readonly finishedStatuses: OnchainProposalStatusListEnumKey[] = [
+    "EXECUTED",
+    "DEFEATED",
+    "SUCCEEDED",
+    "EXPIRED",
+    "CANCELED",
   ];
-  private endTimestampCursor: number;
+  protected endTimestampCursor: number;
 
   constructor(
-    private readonly proposalRepository: ProposalRepository,
-    private readonly rabbitMQDispatcherService: RabbitMQDispatcherService,
+    private readonly proposalRepository: ProposalDataSource,
+    private readonly rabbitMQDispatcherService: DispatcherService,
     interval: number,
     initialTimestamp?: string
   ) {
@@ -52,7 +50,7 @@ export class ProposalFinishedTrigger extends Trigger<ProposalOnChain, void> {
     return await this.proposalRepository.listAll({
       status: this.finishedStatuses,
       fromEndDate: this.endTimestampCursor,
-      orderDirection: OrderDirection.Desc,
+      orderDirection: "desc",
       limit: 100
     });
   }
