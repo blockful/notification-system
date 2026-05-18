@@ -22,7 +22,6 @@ import type { IEnsResolver } from '@notification-system/consumer/dist/services/e
 import { SimpleTelegramClient } from '../../test-clients/simple-telegram.client';
 import { SimpleSlackClient } from '../../test-clients/simple-slack.client';
 import { MOCK_ANTICAPTURE_URL } from '../msw-server';
-import { onchainProposalStatusListEnum } from '@notification-system/anticapture-client';
 
 class SimpleEnsResolver implements IEnsResolver {
   private readonly ensNames: Record<string, string> = {
@@ -191,7 +190,7 @@ const startLogicSystem = async (
   const oneYearAgo = Math.floor((Date.now() - 365 * 24 * 60 * 60 * 1000) / 1000).toString();
   const logicSystemApp = new LogicSystemApp(
     TEST_CONFIG.logicSystem.interval,
-    onchainProposalStatusListEnum.ACTIVE,
+    'ACTIVE',
     MOCK_ANTICAPTURE_URL,
     rabbitmqUrl,
     TEST_CONFIG.ports.logicSystem,

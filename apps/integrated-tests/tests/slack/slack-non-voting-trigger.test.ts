@@ -6,7 +6,7 @@
 
 import { describe, test, expect, beforeEach, beforeAll } from 'vitest';
 import { proposalsHandler, proposalNonVotersHandler } from '@anticapture/client/msw';
-import { onchainProposalStatusListEnum, type OnchainProposal } from '@notification-system/anticapture-client';
+import { type OnchainProposal } from '@notification-system/anticapture-client';
 import { db, TestApps } from '../../src/setup';
 import { server, nonVotersResolver, proposalsByDaoResolver, daosFromItems } from '../../src/setup/msw-server';
 import { UserFactory, ProposalFactory, VoteFactory, VoteData, WorkspaceFactory } from '../../src/fixtures';
@@ -80,7 +80,7 @@ describe('Slack Non-Voting Trigger - Integration Test', () => {
 
       return ProposalFactory.createProposal(daoId, proposalId, {
         title: `Proposal ${count - i}`,
-        status: onchainProposalStatusListEnum.EXECUTED,
+        status: 'EXECUTED',
         timestamp: Math.floor(proposalCreationTime / 1000),
         startBlock: startBlock,
         endBlock: endBlock,
@@ -423,17 +423,17 @@ Consider reaching out to encourage participation!`;
     const proposals = [
       ProposalFactory.createProposal(testDaoId, 'proposal-1', {
         title: 'Proposal with **Bold Text**',
-        status: onchainProposalStatusListEnum.EXECUTED,
+        status: 'EXECUTED',
         endTimestamp: Math.floor((Date.now() - 1000) / 1000)
       }),
       ProposalFactory.createProposal(testDaoId, 'proposal-2', {
         title: 'Proposal with __Underline__',
-        status: onchainProposalStatusListEnum.EXECUTED,
+        status: 'EXECUTED',
         endTimestamp: Math.floor((Date.now() - 2000) / 1000)
       }),
       ProposalFactory.createProposal(testDaoId, 'proposal-3', {
         title: 'Regular Proposal Title',
-        status: onchainProposalStatusListEnum.EXECUTED,
+        status: 'EXECUTED',
         endTimestamp: Math.floor((Date.now() - 3000) / 1000)
       })
     ];

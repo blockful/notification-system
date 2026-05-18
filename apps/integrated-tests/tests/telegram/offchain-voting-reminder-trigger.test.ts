@@ -10,7 +10,7 @@ import {
   votesOffchainHandler,
   offchainProposalNonVotersHandler,
 } from '@anticapture/client/msw';
-import { offchainProposalStatusListEnum, type OffchainProposal, type OffchainVote } from '@notification-system/anticapture-client';
+import { type OffchainProposal, type OffchainVote } from '@notification-system/anticapture-client';
 import { db, TestApps } from '../../src/setup';
 import { server, nonVotersResolver, offchainProposalsByDaoResolver, daosFromItems } from '../../src/setup/msw-server';
 import { UserFactory, OffchainProposalFactory, OffchainVoteFactory } from '../../src/fixtures';
@@ -51,7 +51,7 @@ describe('Offchain Voting Reminder Integration Tests', () => {
     const end = start + duration;
 
     return OffchainProposalFactory.createProposal(testDaoId, proposalId, {
-      state: offchainProposalStatusListEnum.active,
+      state: 'active',
       start,
       end,
       created: start,

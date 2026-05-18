@@ -6,7 +6,7 @@
 
 import { describe, test, expect, beforeAll, afterEach } from 'vitest';
 import { proposalsHandler } from '@anticapture/client/msw';
-import { onchainProposalStatusListEnum, type OnchainProposal } from '@notification-system/anticapture-client';
+import { type OnchainProposal } from '@notification-system/anticapture-client';
 import { db, TestApps } from '../../src/setup';
 import { server, proposalsByDaoResolver } from '../../src/setup/msw-server';
 import { UserFactory, ProposalFactory, WorkspaceFactory } from '../../src/fixtures';
@@ -44,7 +44,7 @@ describe('Slack Proposal Finished Trigger - Integration Test', () => {
       startBlock: startBlock,
       endBlock: endBlock,
       endTimestamp: Math.floor(proposalEndTime / 1000),
-      status: onchainProposalStatusListEnum.EXECUTED,
+      status: 'EXECUTED',
       description: `# Finished Proposal\n\nThis proposal has ended.`
     });
   };
@@ -143,7 +143,7 @@ describe('Slack Proposal Finished Trigger - Integration Test', () => {
       timestamp: now - 10,
       startBlock: testConstants.proposalTiming.defaultStartBlock,
       endBlock: testConstants.proposalTiming.defaultStartBlock + testConstants.proposalTiming.futureProposalBlocks,
-      status: onchainProposalStatusListEnum.ACTIVE,
+      status: 'ACTIVE',
       description: '# Future Proposal\n\nThis proposal will not finish during the test.'
     });
 
@@ -243,7 +243,7 @@ describe('Slack Proposal Finished Trigger - Integration Test', () => {
       endTimestamp: Math.floor(proposalCreatedAt.getTime() / 1000 + 3600),
       startBlock: testConstants.proposalTiming.defaultStartBlock,
       endBlock: testConstants.proposalTiming.defaultStartBlock + 1,
-      status: onchainProposalStatusListEnum.EXECUTED,
+      status: 'EXECUTED',
       description: '# Old Proposal\n\nThis finished before user subscribed.'
     });
 

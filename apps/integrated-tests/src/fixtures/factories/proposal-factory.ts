@@ -1,4 +1,4 @@
-import { onchainProposalStatusListEnum, type OnchainProposal } from '@notification-system/anticapture-client';
+import { type OnchainProposal } from '@notification-system/anticapture-client';
 
 export type ProposalData = OnchainProposal;
 
@@ -27,7 +27,7 @@ export class ProposalFactory {
       startTimestamp: now,
       endTimestamp: now + 300,
       timestamp: now,
-      status: onchainProposalStatusListEnum.ACTIVE,
+      status: 'ACTIVE',
       forVotes: '1000000000000000000',
       againstVotes: '500000000000000000',
       abstainVotes: '200000000000000000',

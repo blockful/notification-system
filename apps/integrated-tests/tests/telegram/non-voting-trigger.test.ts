@@ -1,6 +1,6 @@
 import { describe, test, expect, beforeEach, beforeAll } from 'vitest';
 import { proposalsHandler, proposalNonVotersHandler } from '@anticapture/client/msw';
-import { onchainProposalStatusListEnum, type OnchainProposal } from '@notification-system/anticapture-client';
+import { type OnchainProposal } from '@notification-system/anticapture-client';
 import { db, TestApps } from '../../src/setup';
 import { server, nonVotersResolver, proposalsByDaoResolver, daosFromItems } from '../../src/setup/msw-server';
 import { UserFactory, ProposalFactory, VoteFactory, VoteData } from '../../src/fixtures';
@@ -41,7 +41,7 @@ describe('Non-Voting Trigger - Integration Test', () => {
       
       return ProposalFactory.createProposal(daoId, proposalId, {
         title: `Proposal ${count - i}`,
-        status: onchainProposalStatusListEnum.EXECUTED,
+        status: 'EXECUTED',
         timestamp: Math.floor(proposalCreationTime.getTime() / 1000),
         startBlock: startBlock,
         endBlock: endBlock,

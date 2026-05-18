@@ -1,6 +1,6 @@
 import { describe, test, expect, beforeEach, beforeAll } from 'vitest';
 import { proposalsHandler } from '@anticapture/client/msw';
-import { onchainProposalStatusListEnum, type OnchainProposal } from '@notification-system/anticapture-client';
+import { type OnchainProposal } from '@notification-system/anticapture-client';
 import { db, TestApps } from '../../src/setup';
 import { server, proposalsByDaoResolver } from '../../src/setup/msw-server';
 import { UserFactory, ProposalFactory } from '../../src/fixtures';
@@ -35,7 +35,7 @@ describe('Temporal Filtering - Integration Test', () => {
     
     // Create proposal BEFORE user subscription (older timestamp)
     const oldProposal = ProposalFactory.createProposal(testDaoId, 'old-proposal', {
-      status: onchainProposalStatusListEnum.ACTIVE,
+      status: 'ACTIVE',
       timestamp: Math.floor(baseTime.getTime() / 1000),
       endTimestamp: Math.floor(baseTime.getTime() / 1000 + 3600)
     });
@@ -76,7 +76,7 @@ describe('Temporal Filtering - Integration Test', () => {
 
     // Create proposal AFTER user subscription (newer timestamp)
     const newProposal = ProposalFactory.createProposal(testDaoId, 'new-proposal', {
-      status: onchainProposalStatusListEnum.ACTIVE
+      status: 'ACTIVE'
     });
 
     useProposals([newProposal]);
@@ -112,7 +112,7 @@ describe('Temporal Filtering - Integration Test', () => {
     
     // Proposal created during inactive period (user should NOT be notified about this)
     const inactiveProposal = ProposalFactory.createProposal(testDaoId, 'during-inactive-proposal', {
-      status: onchainProposalStatusListEnum.ACTIVE,
+      status: 'ACTIVE',
       timestamp: Math.floor(new Date('2024-01-01T13:00:00Z').getTime() / 1000),
       endTimestamp: Math.floor(new Date('2024-01-01T14:00:00Z').getTime() / 1000)
     });

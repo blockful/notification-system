@@ -1,4 +1,4 @@
-import { offchainProposalStatusListEnum, type OffchainProposal } from '@notification-system/anticapture-client';
+import { type OffchainProposal } from '@notification-system/anticapture-client';
 
 export type OffchainProposalData = OffchainProposal;
 
@@ -26,7 +26,7 @@ export class OffchainProposalFactory {
       type: 'single-choice',
       start: futureTimestamp,
       end: futureTimestamp + 7 * 24 * 60 * 60,
-      state: offchainProposalStatusListEnum.active,
+      state: 'active',
       created: futureTimestamp,
       updated: futureTimestamp,
       link: '',

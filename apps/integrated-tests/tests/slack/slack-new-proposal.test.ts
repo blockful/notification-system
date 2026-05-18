@@ -6,7 +6,7 @@
 
 import { describe, test, expect, beforeEach, beforeAll } from 'vitest';
 import { proposalsHandler } from '@anticapture/client/msw';
-import { onchainProposalStatusListEnum, type OnchainProposal } from '@notification-system/anticapture-client';
+import { type OnchainProposal } from '@notification-system/anticapture-client';
 import { db, TestApps } from '../../src/setup';
 import { server, proposalsByDaoResolver, daosFromItems } from '../../src/setup/msw-server';
 import { UserFactory, ProposalFactory, WorkspaceFactory } from '../../src/fixtures';
@@ -68,7 +68,7 @@ describe('Slack New Proposal - Integration Test', () => {
     const futureTimestamp = Math.floor((Date.now() + 5000) / 1000);
     const proposal = ProposalFactory.createProposal(TEST_DAO_ID, proposalId, {
       title: `Test Proposal for Slack ${Date.now()}`,
-      status: onchainProposalStatusListEnum.ACTIVE,
+      status: 'ACTIVE',
       timestamp: futureTimestamp,
       startBlock: 100000,
       endBlock: 200000,
@@ -135,7 +135,7 @@ describe('Slack New Proposal - Integration Test', () => {
     const futureTimestamp = Math.floor((Date.now() + 5000) / 1000);
     const proposal = ProposalFactory.createProposal(TEST_DAO_ID, proposalId, {
       title: 'Proposal with **Bold Text** and Links',
-      status: onchainProposalStatusListEnum.ACTIVE,
+      status: 'ACTIVE',
       timestamp: futureTimestamp,
       startBlock: 100000,
       endBlock: 200000,
@@ -187,7 +187,7 @@ describe('Slack New Proposal - Integration Test', () => {
     const futureTimestamp = Math.floor((Date.now() + 5000) / 1000);
     const proposal = ProposalFactory.createProposal(TEST_DAO_ID, proposalId, {
       title: `Multi-User Proposal ${Date.now()}`,
-      status: onchainProposalStatusListEnum.ACTIVE,
+      status: 'ACTIVE',
       timestamp: futureTimestamp,
       startBlock: 100000,
       endBlock: 200000
@@ -242,7 +242,7 @@ describe('Slack New Proposal - Integration Test', () => {
     const futureTimestamp = Math.floor((Date.now() + 5000) / 1000);
     const proposal = ProposalFactory.createProposal(TEST_DAO_ID, proposalId, {
       title: `Cross-Platform Proposal ${Date.now()}`,
-      status: onchainProposalStatusListEnum.ACTIVE,
+      status: 'ACTIVE',
       timestamp: futureTimestamp
     });
 

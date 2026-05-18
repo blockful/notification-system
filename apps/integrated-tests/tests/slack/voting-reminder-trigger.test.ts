@@ -6,7 +6,7 @@
 
 import { describe, test, expect, beforeAll, afterEach } from 'vitest';
 import { proposalsHandler, votesHandler, proposalNonVotersHandler } from '@anticapture/client/msw';
-import { onchainProposalStatusListEnum, type OnchainProposal, type OnchainVote } from '@notification-system/anticapture-client';
+import { type OnchainProposal, type OnchainVote } from '@notification-system/anticapture-client';
 import { db, TestApps } from '../../src/setup';
 import { server, nonVotersResolver, proposalsByDaoResolver, daosFromItems } from '../../src/setup/msw-server';
 import { UserFactory, ProposalFactory, VoteFactory, WorkspaceFactory } from '../../src/fixtures';
@@ -64,7 +64,7 @@ describe('Slack Voting Reminder Trigger - Integration Test', () => {
     const endTime = startTime + proposalDuration;
 
     return ProposalFactory.createProposal(testDaoId, proposalId, {
-      status: onchainProposalStatusListEnum.ACTIVE,
+      status: 'ACTIVE',
       timestamp: startTime,
       endTimestamp: endTime,
       description: `Test proposal for ${elapsedPercentage}% voting reminder`,
@@ -315,7 +315,7 @@ describe('Slack Voting Reminder Trigger - Integration Test', () => {
       const endTime = startTime + proposalDuration;
 
       const proposal = ProposalFactory.createProposal(testDaoId, 'proposal-time-calc', {
-        status: onchainProposalStatusListEnum.ACTIVE,
+        status: 'ACTIVE',
         timestamp: startTime,
         endTimestamp: endTime,
         description: 'Test time calculation'
