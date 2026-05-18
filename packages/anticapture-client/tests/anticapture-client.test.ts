@@ -1,7 +1,6 @@
 import { describe, it, expect, beforeAll, afterAll, afterEach } from 'vitest';
 import { http, HttpResponse } from 'msw';
 import { startServer, createTestClient, daosResponse, TEST_BASE_URL } from './test-helpers';
-import { feedEventTypeEnum, feedRelevanceEnum } from '@anticapture/client';
 
 const server = startServer();
 beforeAll(() => server.listen({ onUnhandledRequest: 'error' }));
@@ -119,14 +118,14 @@ describe('getEventThreshold', () => {
       HttpResponse.json({ threshold: '40000000000000000000000' })
     ));
     const client = createTestClient();
-    const result = await client.getEventThreshold('ens', feedEventTypeEnum.DELEGATION, feedRelevanceEnum.HIGH);
+    const result = await client.getEventThreshold('ens', 'DELEGATION', 'HIGH');
     expect(result).toBe('40000000000000000000000');
   });
 
   it('returns null on error', async () => {
     server.use(http.get(`${TEST_BASE_URL}/ens/event-relevance/threshold`, () => new HttpResponse(null, { status: 500 })));
     const client = createTestClient();
-    expect(await client.getEventThreshold('ens', feedEventTypeEnum.VOTE, feedRelevanceEnum.HIGH)).toBeNull();
+    expect(await client.getEventThreshold('ens', 'VOTE', 'HIGH')).toBeNull();
   });
 });
 
