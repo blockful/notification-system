@@ -3,7 +3,7 @@ import { DispatcherMessage, MessageProcessingResult } from '../../interfaces/dis
 import { ISubscriptionClient } from '../../interfaces/subscription-client.interface';
 import { INotificationClientFactory } from '../notification/notification-factory.service';
 import { ProposalFinishedNotification } from '../../interfaces/notification-client.interface';
-import { IAnticaptureClient, orderDirectionEnum, onchainProposalStatusListEnum } from '@notification-system/anticapture-client';
+import { IAnticaptureClient } from '@notification-system/anticapture-client';
 import { BatchNotificationService } from '../batch-notification.service';
 import { createLogger, type Logger, wrapWithTracing } from '@anticapture/observability';
 import { FormattingService } from '../formatting.service';
@@ -166,9 +166,9 @@ export class NonVotingHandler extends BaseTriggerHandler<ProposalFinishedNotific
     currentEndTimestamp: number
   ): Promise<any[]> {
     const proposals = await this.anticaptureClient!.listProposals({
-      status: [onchainProposalStatusListEnum.EXECUTED, onchainProposalStatusListEnum.SUCCEEDED, onchainProposalStatusListEnum.DEFEATED, onchainProposalStatusListEnum.EXPIRED, onchainProposalStatusListEnum.CANCELED],
+      status: ["EXECUTED", "SUCCEEDED", "DEFEATED", "EXPIRED", "CANCELED"],
       limit: NonVotingHandler.PROPOSALS_TO_CHECK * NonVotingHandler.FETCH_MARGIN_MULTIPLIER,
-      orderDirection: orderDirectionEnum.desc
+      orderDirection: "desc"
     }, daoId);
 
     // If proposals is undefined or empty, return empty array
