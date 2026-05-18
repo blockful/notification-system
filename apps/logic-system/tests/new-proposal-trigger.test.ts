@@ -2,7 +2,6 @@ import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { NewProposalTrigger } from '../src/triggers/new-proposal-trigger';
 import { ProposalOnChain } from '../src/interfaces/proposal.interface';
 import { NotificationTypeId } from '@notification-system/messages';
-import { onchainProposalStatusListEnum } from '@notification-system/anticapture-client';
 import { createProposal } from './fixtures';
 import { SimpleDispatcherService, SimpleProposalDataSource } from './simple-doubles';
 
@@ -83,7 +82,7 @@ describe('NewProposalTrigger', () => {
 
     it('should start the interval and fetch proposals with status and timestamp filter', () => {
       const initialTimestamp = trigger['timestampCursor'];
-      trigger.start({ status: onchainProposalStatusListEnum.ACTIVE });
+      trigger.start({ status: "ACTIVE" });
       vi.advanceTimersByTime(60000);
 
       expect(proposalDataSource.listAllCalls).toEqual([
@@ -93,8 +92,8 @@ describe('NewProposalTrigger', () => {
 
     it('should stop and restart the interval if start is called twice', () => {
       const initialTimestamp = trigger['timestampCursor'];
-      trigger.start({ status: onchainProposalStatusListEnum.ACTIVE });
-      trigger.start({ status: onchainProposalStatusListEnum.ACTIVE });
+      trigger.start({ status: "ACTIVE" });
+      trigger.start({ status: "ACTIVE" });
       vi.advanceTimersByTime(60000);
 
       // Only one call: the second start() cancelled the first interval.
@@ -106,7 +105,7 @@ describe('NewProposalTrigger', () => {
 
     it('should stop the interval when stop is called', () => {
       const initialTimestamp = trigger['timestampCursor'];
-      trigger.start({ status: onchainProposalStatusListEnum.ACTIVE });
+      trigger.start({ status: "ACTIVE" });
       vi.advanceTimersByTime(60000);
 
       expect(proposalDataSource.listAllCalls).toEqual([

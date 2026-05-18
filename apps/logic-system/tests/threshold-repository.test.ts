@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { ThresholdRepository } from '../src/repositories/threshold.repository';
-import { feedEventTypeEnum, feedRelevanceEnum, makeAnticaptureClient } from '@notification-system/anticapture-client';
+import { makeAnticaptureClient } from '@notification-system/anticapture-client';
 
 describe('ThresholdRepository', () => {
   let repository: ThresholdRepository;
@@ -18,19 +18,19 @@ describe('ThresholdRepository', () => {
     it('should fetch threshold from client on cache miss', async () => {
       getEventThreshold.mockResolvedValue('40000000000000000000000');
 
-      const result = await repository.getThreshold('ENS', feedEventTypeEnum.DELEGATION);
+      const result = await repository.getThreshold('ENS', "DELEGATION");
 
       expect(result).toBe('40000000000000000000000');
       expect(getEventThreshold).toHaveBeenCalledWith(
-        'ENS', feedEventTypeEnum.DELEGATION, feedRelevanceEnum.HIGH
+        'ENS', "DELEGATION", "HIGH"
       );
     });
 
     it('should return cached value on cache hit', async () => {
       getEventThreshold.mockResolvedValue('40000000000000000000000');
 
-      await repository.getThreshold('ENS', feedEventTypeEnum.DELEGATION);
-      const result = await repository.getThreshold('ENS', feedEventTypeEnum.DELEGATION);
+      await repository.getThreshold('ENS', "DELEGATION");
+      const result = await repository.getThreshold('ENS', "DELEGATION");
 
       expect(result).toBe('40000000000000000000000');
       expect(getEventThreshold).toHaveBeenCalledTimes(1);
@@ -42,9 +42,9 @@ describe('ThresholdRepository', () => {
         .mockResolvedValueOnce('2000')
         .mockResolvedValueOnce('3000');
 
-      const r1 = await repository.getThreshold('ENS', feedEventTypeEnum.DELEGATION);
-      const r2 = await repository.getThreshold('ENS', feedEventTypeEnum.TRANSFER);
-      const r3 = await repository.getThreshold('UNISWAP', feedEventTypeEnum.DELEGATION);
+      const r1 = await repository.getThreshold('ENS', "DELEGATION");
+      const r2 = await repository.getThreshold('ENS', "TRANSFER");
+      const r3 = await repository.getThreshold('UNISWAP', "DELEGATION");
 
       expect(r1).toBe('1000');
       expect(r2).toBe('2000');
@@ -61,12 +61,12 @@ describe('ThresholdRepository', () => {
         .mockResolvedValueOnce('1000')
         .mockResolvedValueOnce('2000');
 
-      const r1 = await shortTtlRepo.getThreshold('ENS', feedEventTypeEnum.DELEGATION);
+      const r1 = await shortTtlRepo.getThreshold('ENS', "DELEGATION");
       expect(r1).toBe('1000');
 
       await new Promise(resolve => setTimeout(resolve, 150));
 
-      const r2 = await shortTtlRepo.getThreshold('ENS', feedEventTypeEnum.DELEGATION);
+      const r2 = await shortTtlRepo.getThreshold('ENS', "DELEGATION");
       expect(r2).toBe('2000');
       expect(getEventThreshold).toHaveBeenCalledTimes(2);
     });
@@ -74,7 +74,7 @@ describe('ThresholdRepository', () => {
     it('should return null when client returns null (fail-open)', async () => {
       getEventThreshold.mockResolvedValue(null);
 
-      const result = await repository.getThreshold('ENS', feedEventTypeEnum.DELEGATION);
+      const result = await repository.getThreshold('ENS', "DELEGATION");
 
       expect(result).toBeNull();
     });
@@ -84,8 +84,8 @@ describe('ThresholdRepository', () => {
         .mockResolvedValueOnce(null)
         .mockResolvedValueOnce('5000');
 
-      const r1 = await repository.getThreshold('ENS', feedEventTypeEnum.DELEGATION);
-      const r2 = await repository.getThreshold('ENS', feedEventTypeEnum.DELEGATION);
+      const r1 = await repository.getThreshold('ENS', "DELEGATION");
+      const r2 = await repository.getThreshold('ENS', "DELEGATION");
 
       expect(r1).toBeNull();
       expect(r2).toBe('5000');
@@ -95,7 +95,7 @@ describe('ThresholdRepository', () => {
     it('should return null when client throws (fail-open)', async () => {
       getEventThreshold.mockRejectedValue(new Error('Network error'));
 
-      const result = await repository.getThreshold('ENS', feedEventTypeEnum.DELEGATION);
+      const result = await repository.getThreshold('ENS', "DELEGATION");
 
       expect(result).toBeNull();
     });

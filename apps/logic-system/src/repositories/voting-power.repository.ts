@@ -1,9 +1,7 @@
 import {
   AnticaptureClient,
   HistoricalVotingPowerQueryParams,
-  ProcessedVotingPowerHistory,
-  historicalVotingPowerQueryParamsOrderByEnum,
-  orderDirectionEnum
+  ProcessedVotingPowerHistory
 } from '@notification-system/anticapture-client';
 
 export interface IVotingPowerRepository {
@@ -20,8 +18,8 @@ export class VotingPowerRepository implements IVotingPowerRepository {
   async listVotingPowerHistory(timestampGt: string): Promise<ProcessedVotingPowerHistory []> {
     const variables: HistoricalVotingPowerQueryParams = {
       // Always order by timestamp ascending for chronological processing
-      orderBy: historicalVotingPowerQueryParamsOrderByEnum.timestamp,
-      orderDirection: orderDirectionEnum.asc,
+      orderBy: "timestamp",
+      orderDirection: "asc",
       limit: 100,
       fromDate: parseInt(timestampGt, 10)
     };

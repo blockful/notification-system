@@ -1,7 +1,6 @@
 import {
   FeedEventType,
-  IAnticaptureClient,
-  feedRelevanceEnum
+  IAnticaptureClient
 } from '@notification-system/anticapture-client';
 import { createLogger, type Logger } from '@anticapture/observability';
 
@@ -37,7 +36,7 @@ export class ThresholdRepository implements IThresholdRepository {
     }
 
     try {
-      const threshold = await this.anticaptureClient.getEventThreshold(daoId, type, feedRelevanceEnum.HIGH);
+      const threshold = await this.anticaptureClient.getEventThreshold(daoId, type, "HIGH");
 
       if (threshold !== null) {
         this.cache.set(cacheKey, { value: threshold, fetchedAt: Date.now() });

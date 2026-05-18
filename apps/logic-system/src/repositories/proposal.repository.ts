@@ -1,6 +1,6 @@
 import { ProposalDataSource, ProposalOnChain, ProposalOrNull, ListProposalsOptions } from '../interfaces/proposal.interface';
 import { VotingReminderDataSource, VotingReminderProposal } from '../interfaces/voting-reminder.interface';
-import { AnticaptureClient, ProposalsQueryParams, onchainProposalStatusListEnum } from '@notification-system/anticapture-client';
+import { AnticaptureClient, ProposalsQueryParams } from '@notification-system/anticapture-client';
 import { mapOnchainToReminderProposal } from '../mappers/proposal-reminder.mapper';
 
 export class ProposalRepository implements ProposalDataSource, VotingReminderDataSource {
@@ -61,7 +61,7 @@ export class ProposalRepository implements ProposalDataSource, VotingReminderDat
 
   async listActiveForReminder(): Promise<VotingReminderProposal[]> {
     const proposals = await this.listAll({
-      status: onchainProposalStatusListEnum.ACTIVE,
+      status: "ACTIVE",
       includeOptimisticProposals: false,
     });
 
