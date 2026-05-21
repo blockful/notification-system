@@ -11,7 +11,7 @@ import {
   offchainProposalNonVotersHandler,
   votesByProposalIdHandler,
   votesOffchainByProposalIdHandler,
-  getDaosHandler
+  daosHandler
 } from '@anticapture/client/msw';
 import { testConstants } from '../config';
 
@@ -78,7 +78,7 @@ type WithDao = { daoId: string } | { spaceId: string };
 const idOf = (p: WithDao) => ('daoId' in p ? p.daoId : p.spaceId);
 export const daosFromItems = (items: ReadonlyArray<WithDao>) => {
   const ids = Array.from(new Set(items.map(idOf)));
-  return getDaosHandler({
+  return daosHandler({
     items: ids.map(id => ({ id, votingDelay: '0', supportsOffchainData: true })),
     totalCount: ids.length,
   });
@@ -94,7 +94,7 @@ const testDaos = Object.values(testConstants.daoIds).map(id => ({
 }));
 
 export const defaultHandlers = [
-  getDaosHandler({ items: testDaos, totalCount: testDaos.length }),
+  daosHandler({ items: testDaos, totalCount: testDaos.length }),
   offchainProposalsHandler(emptyListEnvelope),
   votesOffchainHandler(emptyListEnvelope),
   offchainProposalNonVotersHandler(emptyListEnvelope),
