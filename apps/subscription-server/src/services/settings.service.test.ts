@@ -64,6 +64,20 @@ describe('SettingsService', () => {
 
       expect(result).toEqual([]);
     });
+
+    test('drops rows whose trigger_type is no longer in the current enum', async () => {
+      stub.findByUserResult = [
+        { user_id: 'user-1', trigger_type: NotificationTypeId.NewProposal, is_active: true, updated_at: FIXED_DATE },
+        { user_id: 'user-1', trigger_type: 'offchain-voting-reminder-75' as NotificationTypeId, is_active: false, updated_at: FIXED_DATE },
+        { user_id: 'user-1', trigger_type: 'totally-made-up' as NotificationTypeId, is_active: true, updated_at: FIXED_DATE },
+      ];
+
+      const result = await settingsService.getUserPreferences('user-1');
+
+      expect(result).toEqual([
+        { user_id: 'user-1', trigger_type: NotificationTypeId.NewProposal, is_active: true, updated_at: FIXED_DATE },
+      ]);
+    });
   });
 
   describe('saveUserPreferences', () => {
