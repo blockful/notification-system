@@ -38,8 +38,8 @@ describe('NewProposalTriggerHandler', () => {
 
   const anticaptureClient = makeAnticaptureClient({
     getDAOs: async () => [
-      makeDao({ id: 'dao123', alreadySupportCalldataReview: false }),
-      makeDao({ id: 'dao456', chainId: 10, alreadySupportCalldataReview: true, supportOffchainData: true }),
+      makeDao({ id: 'dao123', supportsCalldataReview: false }),
+      makeDao({ id: 'dao456', chainId: 10, supportsCalldataReview: true, supportsOffchainData: true }),
     ],
   });
 
@@ -183,8 +183,8 @@ describe('NewProposalTriggerHandler - cross-DAO eventId deduplication', () => {
       },
       makeAnticaptureClient({
         getDAOs: async () => [
-          { id: 'ens.eth', blockTime: 12, votingDelay: '1', chainId: 1, alreadySupportCalldataReview: true, supportOffchainData: true },
-          { id: 'uniswap.eth', blockTime: 12, votingDelay: '1', chainId: 1, alreadySupportCalldataReview: false, supportOffchainData: true }
+          { id: 'ens.eth', blockTime: 12, votingDelay: '1', chainId: 1, supportsCalldataReview: true, supportsOffchainData: true },
+          { id: 'uniswap.eth', blockTime: 12, votingDelay: '1', chainId: 1, supportsCalldataReview: false, supportsOffchainData: true }
         ],
       })
     );

@@ -47,7 +47,7 @@ export class NewProposalTriggerHandler extends BaseTriggerHandler {
         chainId: daoInfo.chainId,
         daoId,
         proposalId,
-        alreadySupportCalldataReview: daoInfo.alreadySupportCalldataReview
+        alreadySupportCalldataReview: daoInfo.supportsCalldataReview
       });
 
       await this.sendNotificationsToSubscribers(
