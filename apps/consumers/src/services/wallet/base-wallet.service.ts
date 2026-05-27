@@ -4,7 +4,7 @@
  */
 
 import { SubscriptionAPIService } from '../subscription-api.service';
-import { EnsResolverService } from '../ens-resolver.service';
+import { IEnsResolver } from '../ens-resolver.service';
 import { uiMessages } from '@notification-system/messages';
 import { createLogger, type Logger } from '@anticapture/observability';
 
@@ -18,7 +18,7 @@ export class BaseWalletService {
 
   constructor(
     protected subscriptionApi: SubscriptionAPIService,
-    protected ensResolver: EnsResolverService,
+    protected ensResolver: IEnsResolver,
     logger: Logger = createLogger('consumers'),
     component: string = 'BaseWalletService',
   ) {

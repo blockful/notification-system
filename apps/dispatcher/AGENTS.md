@@ -63,7 +63,7 @@ src/
 |----------|----------|-------------|
 | `SUBSCRIPTION_SERVER_URL` | Yes | Base URL for Subscription Server API |
 | `RABBITMQ_URL` | Yes | RabbitMQ connection string |
-| `ANTICAPTURE_GRAPHQL_ENDPOINT` | Yes | AntiCapture GraphQL endpoint |
+| `ANTICAPTURE_API_URL` | Yes | AntiCapture REST API base URL |
 
 ## Testing
 
@@ -71,4 +71,4 @@ src/
 pnpm dispatcher test
 ```
 
-Tests are co-located with implementations (`.service.test.ts`). Uses test factories in `non-voting-handler.test-factory.ts` for reusable test data builders. Prefer **stubs or fakes** for dependencies (e.g. `ISubscriptionClient`, `INotificationClient`) over Jest mocks; we are moving toward stubs/fakes for better maintainability.
+Tests are co-located with implementations (`.service.test.ts`). Runs on Vitest. Prefer **`Simple*` in-memory doubles** in `src/services/triggers/helpers/test-doubles.ts` (e.g. `SimpleSubscriptionClient`, `SimpleNotificationClient`) over `vi.fn()` mocks. Use `makeAnticaptureClient` for the anticapture SDK in tests, `makeDao` for DAO fixtures.

@@ -111,7 +111,7 @@ export class VotingReminderTrigger extends Trigger<VotingReminderProposal> {
   /**
    * Calculates the percentage of time elapsed for a proposal
    */
-  private calculateTimeElapsedPercentage(
+  protected calculateTimeElapsedPercentage(
     startTime: number,
     endTime: number,
     currentTime: number

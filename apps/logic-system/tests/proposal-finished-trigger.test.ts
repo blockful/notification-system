@@ -1,49 +1,45 @@
-import { describe, it, expect, jest, beforeEach } from '@jest/globals';
+import { describe, it, expect, beforeEach } from 'vitest';
 import { ProposalFinishedTrigger } from '../src/triggers/proposal-finished-trigger';
-import { ProposalRepository } from '../src/repositories/proposal.repository';
+import { NotificationTypeId } from '@notification-system/messages';
 import {
-  createMockDispatcherService,
   createProposal,
   createFinishedProposal,
   createProposalWithMissingFields,
-  DEFAULT_INTERVAL
-} from './mocks';
-import { NotificationTypeId } from '@notification-system/messages';
+  DEFAULT_INTERVAL,
+} from './fixtures';
+import {
+  SimpleDispatcherService,
+  SimpleProposalDataSource,
+} from './simple-doubles';
 
 describe('ProposalFinishedTrigger', () => {
   let trigger: ProposalFinishedTrigger;
-  let mockDispatcherService: ReturnType<typeof createMockDispatcherService>;
-  let mockProposalRepository: jest.Mocked<ProposalRepository>;
+  let dispatcherService: SimpleDispatcherService;
+  let proposalRepository: SimpleProposalDataSource;
 
   beforeEach(() => {
-    jest.clearAllMocks();
-    
-    mockDispatcherService = createMockDispatcherService();
-    mockProposalRepository = {
-      listAll: jest.fn(),
-      getById: jest.fn()
-    } as any;
-    
+    dispatcherService = new SimpleDispatcherService();
+    proposalRepository = new SimpleProposalDataSource();
+
     trigger = new ProposalFinishedTrigger(
-      mockProposalRepository,
-      mockDispatcherService as any,
+      proposalRepository,
+      dispatcherService,
       DEFAULT_INTERVAL
     );
   });
 
   describe('Data Fetching', () => {
     it('should fetch proposals with finished statuses and temporal filter', async () => {
-      mockProposalRepository.listAll.mockResolvedValue([]);
       const initialTimestamp = trigger['endTimestampCursor'];
-      
-      await (trigger as any).fetchData();
-      
-      expect(mockProposalRepository.listAll).toHaveBeenCalledWith({
+
+      await trigger['fetchData']();
+
+      expect(proposalRepository.listAllCalls).toEqual([{
         status: ['EXECUTED', 'DEFEATED', 'SUCCEEDED', 'EXPIRED', 'CANCELED'],
         fromEndDate: initialTimestamp,
         orderDirection: 'desc',
         limit: 100
-      });
+      }]);
     });
 
     it('should return fetched proposals', async () => {
@@ -51,11 +47,10 @@ describe('ProposalFinishedTrigger', () => {
         createFinishedProposal('EXECUTED', { id: '1' }),
         createFinishedProposal('DEFEATED', { id: '2' })
       ];
-      
-      mockProposalRepository.listAll.mockResolvedValue(mockProposals);
-      
-      const result = await (trigger as any).fetchData();
-      
+      proposalRepository.listAllResult = mockProposals;
+
+      const result = await trigger['fetchData']();
+
       expect(result).toEqual(mockProposals);
     });
   });
@@ -64,8 +59,8 @@ describe('ProposalFinishedTrigger', () => {
     describe('when no proposals exist', () => {
       it('should not send any messages', async () => {
         await trigger.process([]);
-        
-        expect(mockDispatcherService.sendMessage).not.toHaveBeenCalled();
+
+        expect(dispatcherService.sentMessages).toEqual([]);
       });
     });
 
@@ -90,10 +85,10 @@ describe('ProposalFinishedTrigger', () => {
             abstainVotes: '50000000000000000000'
           })
         ];
-        
+
         await trigger.process(proposals);
-        
-        expect(mockDispatcherService.sendMessage).toHaveBeenCalledWith({
+
+        expect(dispatcherService.sentMessages).toEqual([{
           triggerId: NotificationTypeId.ProposalFinished,
           events: [
             {
@@ -117,19 +112,19 @@ describe('ProposalFinishedTrigger', () => {
               abstainVotes: '50000000000000000000'
             }
           ]
-        });
-        
-        // Should update to the first notification's endTimestamp + 1 (prop1 is first in array)
+        }]);
+
+        // Cursor advances to first proposal's endTimestamp + 1 (data is desc-ordered)
         expect(trigger['endTimestampCursor']).toBe(1625097601);
       });
 
       it('should handle proposals with missing optional fields', async () => {
         const proposal = createProposalWithMissingFields();
         proposal.id = 'prop1';
-        
+
         await trigger.process([proposal]);
-        
-        expect(mockDispatcherService.sendMessage).toHaveBeenCalledWith({
+
+        expect(dispatcherService.sentMessages).toEqual([{
           triggerId: NotificationTypeId.ProposalFinished,
           events: [
             {
@@ -143,29 +138,20 @@ describe('ProposalFinishedTrigger', () => {
               abstainVotes: '0'
             }
           ]
-        });
+        }]);
       });
 
       it('should send all proposals in a single batch message', async () => {
         const proposals = Array.from({ length: 5 }, (_, i) =>
           createProposal({ id: `prop${i}`, status: 'EXECUTED' })
         );
-        
+
         await trigger.process(proposals);
-        
-        expect(mockDispatcherService.sendMessage).toHaveBeenCalledTimes(1);
-        expect(mockDispatcherService.sendMessage).toHaveBeenCalledWith(
-          expect.objectContaining({
-            triggerId: NotificationTypeId.ProposalFinished,
-            events: expect.arrayContaining([
-              expect.objectContaining({ id: 'prop0' }),
-              expect.objectContaining({ id: 'prop1' }),
-              expect.objectContaining({ id: 'prop2' }),
-              expect.objectContaining({ id: 'prop3' }),
-              expect.objectContaining({ id: 'prop4' })
-            ])
-          })
-        );
+
+        expect(dispatcherService.sentMessages).toHaveLength(1);
+        expect(dispatcherService.sentMessages[0].triggerId).toBe(NotificationTypeId.ProposalFinished);
+        expect(dispatcherService.sentMessages[0].events.map((e: any) => e.id))
+          .toEqual(['prop0', 'prop1', 'prop2', 'prop3', 'prop4']);
       });
     });
 
@@ -186,52 +172,46 @@ describe('ProposalFinishedTrigger', () => {
         });
 
         // First execution: process proposal A
-        mockProposalRepository.listAll.mockResolvedValueOnce([proposalA]);
-        await (trigger as any).fetchData();
+        proposalRepository.listAllResult = [proposalA];
+        await trigger['fetchData']();
         await trigger.process([proposalA]);
 
-        // Verify endTimestampCursor was updated to A's endTimestamp + 1
         expect(trigger['endTimestampCursor']).toBe(2001);
 
-        // Second execution: should fetch proposals with fromEndDate=2001
-        // Proposal B should be returned because endTimestamp(2100) >= 2001
-        // Proposal A (endTimestamp=2000) will NOT be returned (2000 < 2001)
-        mockProposalRepository.listAll.mockResolvedValueOnce([proposalB]);
-        const secondFetchResult = await (trigger as any).fetchData();
+        // Second execution: query should use fromEndDate=2001 so A is not refetched
+        proposalRepository.listAllResult = [proposalB];
+        const secondFetchResult = await trigger['fetchData']();
 
-        // Verify the query uses fromEndDate=2001 (A's endTimestamp + 1)
-        // This ensures A is not fetched again, avoiding duplicates
-        expect(mockProposalRepository.listAll).toHaveBeenLastCalledWith({
+        expect(proposalRepository.listAllCalls.at(-1)).toEqual({
           status: ['EXECUTED', 'DEFEATED', 'SUCCEEDED', 'EXPIRED', 'CANCELED'],
-          fromEndDate: 2001,  // A's endTimestamp + 1
+          fromEndDate: 2001,
           orderDirection: 'desc',
           limit: 100
         });
 
-        // Verify proposal B is returned and can be processed
         expect(secondFetchResult).toEqual([proposalB]);
 
-        // Process B and verify it's notified
         await trigger.process([proposalB]);
-        expect(mockDispatcherService.sendMessage).toHaveBeenCalledWith(
-          expect.objectContaining({
-            triggerId: NotificationTypeId.ProposalFinished,
-            events: expect.arrayContaining([
-              expect.objectContaining({
-                id: 'proposal-b',
-                endTimestamp: 2100
-              })
-            ])
-          })
-        );
+        expect(dispatcherService.sentMessages.at(-1)?.events).toEqual([
+          {
+            id: 'proposal-b',
+            daoId: 'dao1',
+            description: 'Test proposal',
+            endTimestamp: 2100,
+            status: 'DEFEATED',
+            forVotes: '1000000000000000000000',
+            againstVotes: '500000000000000000000',
+            abstainVotes: '100000000000000000000'
+          }
+        ]);
       });
     });
 
     describe('Error Handling', () => {
       it('should propagate errors from dispatcher service', async () => {
         const proposal = createFinishedProposal('EXECUTED', { id: 'prop1' });
-        mockDispatcherService.sendMessage.mockRejectedValue(new Error('Network error'));
-        
+        dispatcherService.sendError = new Error('Network error');
+
         await expect(trigger.process([proposal])).rejects.toThrow('Network error');
       });
     });

@@ -1,23 +1,7 @@
-/**
- * Slack Test Helper
- * Utilities for waiting for and asserting Slack messages in integration tests
- * Similar to TelegramTestHelper but adapted for Slack's API structure
- */
-
-import { jest } from '@jest/globals';
 import { waitFor, waitForCondition } from '../utilities/wait-for';
 import { timeouts } from '../../config';
-import { SlackTestClient } from '../../test-clients/slack-test.client';
+import { SimpleSlackClient, SlackCall } from '../../test-clients/simple-slack.client';
 
-/**
- * Represents a mock call to Slack sendMessage
- * Tuple structure: [channel, text, options?]
- */
-type MockCall = [channel: string, text: string, options?: Record<string, any>];
-
-/**
- * Represents a Slack message in test context
- */
 export interface SlackTestMessage {
   channel: string;
   text: string;
@@ -25,39 +9,16 @@ export interface SlackTestMessage {
   [key: string]: any;
 }
 
-/**
- * Test helper for Slack message assertions and waiting
- * Provides async waiting and filtering capabilities for integration tests
- */
 export class SlackTestHelper {
-  private slackClient?: SlackTestClient;
+  constructor(private client: SimpleSlackClient) {}
 
-  /**
-   * Creates a new Slack test helper
-   * @param mockSendMessage Jest mock of the Slack sendMessage function
-   * @param slackClient Optional SlackTestClient for real mode history access
-   */
-  constructor(
-    private mockSendMessage: jest.Mock,
-    slackClient?: SlackTestClient
-  ) {
-    this.slackClient = slackClient;
-  }
-
-  /**
-   * Waits for a message matching the given predicate
-   * @param predicate Function to test each message
-   * @param options Configuration for timeout and error messaging
-   * @return Promise that resolves with the matching message
-   */
   async waitForMessage(
     predicate: (message: SlackTestMessage) => boolean,
     options?: { timeout?: number; errorMessage?: string; useHistory?: boolean; channel?: string; token?: string }
   ): Promise<SlackTestMessage> {
-    const startCount = this.mockSendMessage.mock.calls.length;
+    const startCount = this.client.getCapturedCalls().length;
 
-    // If using history mode and we have a real client, poll conversations.history
-    if (options?.useHistory && this.slackClient) {
+    if (options?.useHistory) {
       return this.waitForMessageInHistory(predicate, options);
     }
 
@@ -74,29 +35,18 @@ export class SlackTestHelper {
     );
   }
 
-  /**
-   * Waits for a message in Slack's conversation history (real mode)
-   * @param predicate Function to test each message
-   * @param options Configuration options
-   * @return Promise that resolves with the matching message
-   */
   private async waitForMessageInHistory(
     predicate: (message: SlackTestMessage) => boolean,
     options?: { timeout?: number; errorMessage?: string; channel?: string; token?: string }
   ): Promise<SlackTestMessage> {
-    if (!this.slackClient) {
-      throw new Error('SlackTestClient required for history mode');
-    }
-
-    // Get channel from first mock call if not provided
-    const channel = options?.channel || this.getChannelFromMocks();
+    const channel = options?.channel || this.getChannelFromCaptured();
     if (!channel) {
-      throw new Error('No channel specified or found in mock calls');
+      throw new Error('No channel specified or found in captured calls');
     }
 
     return waitFor(
       async () => {
-        const history = await this.slackClient!.getMessageHistory(channel, 20, options?.token);
+        const history = await this.client.getMessageHistory(channel, 20, options?.token);
         const messages = history.map(msg => ({
           channel,
           text: msg.text || '',
@@ -112,12 +62,6 @@ export class SlackTestHelper {
     );
   }
 
-  /**
-   * Waits for a specific number of messages with optional filtering
-   * @param expectedCount Number of messages to wait for
-   * @param options Filtering and timeout options
-   * @return Promise that resolves with the matching messages
-   */
   async waitForMessageCount(
     expectedCount: number,
     options?: {
@@ -126,7 +70,7 @@ export class SlackTestHelper {
       containing?: string;
     }
   ): Promise<SlackTestMessage[]> {
-    const startCount = this.mockSendMessage.mock.calls.length;
+    const startCount = this.client.getCapturedCalls().length;
 
     await waitForCondition(
       () => {
@@ -144,12 +88,6 @@ export class SlackTestHelper {
     return this.toMessages(filteredCalls.slice(0, expectedCount));
   }
 
-  /**
-   * Waits for a message sent to a specific channel
-   * @param channel Target channel ID to wait for
-   * @param options Configuration for timeout and text filtering
-   * @return Promise that resolves with the channel's message
-   */
   async waitForChannelMessage(
     channel: string,
     options?: { timeout?: number; containing?: string }
@@ -167,16 +105,11 @@ export class SlackTestHelper {
     );
   }
 
-  /**
-   * Waits and ensures no messages are sent during the duration
-   * @param duration Time in milliseconds to wait
-   * @param options Filtering options to check specific channels
-   */
   async waitForNoMessages(
     duration: number = timeouts.wait.short,
     options?: { toChannel?: string }
   ): Promise<void> {
-    const startCount = this.mockSendMessage.mock.calls.length;
+    const startCount = this.client.getCapturedCalls().length;
 
     await new Promise(resolve => setTimeout(resolve, duration));
 
@@ -190,33 +123,19 @@ export class SlackTestHelper {
     }
   }
 
-  /**
-   * Gets all messages sent during the test
-   * @return Array of all Slack messages sent via the mock
-   */
   getAllMessages(): SlackTestMessage[] {
-    return this.toMessages(this.mockSendMessage.mock.calls as MockCall[]);
+    return this.toMessages(this.client.getCapturedCalls());
   }
 
-  /**
-   * Gets the total number of messages sent
-   * @return Total count of messages sent via the mock
-   */
   getCallCount(): number {
-    return this.mockSendMessage.mock.calls.length;
+    return this.client.getCapturedCalls().length;
   }
 
-  /**
-   * Filters mock calls based on channel and text content
-   * @param calls Array of mock call data
-   * @param options Filtering criteria
-   * @return Filtered array of calls
-   */
   private filterCalls(
-    calls: MockCall[],
+    calls: readonly SlackCall[],
     options?: { toChannel?: string; containing?: string }
-  ): MockCall[] {
-    let filteredCalls = calls;
+  ): readonly SlackCall[] {
+    let filteredCalls: readonly SlackCall[] = calls;
 
     if (options?.toChannel) {
       filteredCalls = filteredCalls.filter(
@@ -233,21 +152,11 @@ export class SlackTestHelper {
     return filteredCalls;
   }
 
-  /**
-   * Gets new mock calls since a given count
-   * @param sinceCount Starting count to slice from
-   * @return Array of new mock calls
-   */
-  private getNewCalls(sinceCount: number): MockCall[] {
-    return this.mockSendMessage.mock.calls.slice(sinceCount) as MockCall[];
+  private getNewCalls(sinceCount: number): readonly SlackCall[] {
+    return this.client.getCapturedCalls().slice(sinceCount);
   }
 
-  /**
-   * Converts mock calls to SlackTestMessage objects
-   * @param calls Array of mock call data
-   * @return Array of SlackTestMessage objects
-   */
-  private toMessages(calls: MockCall[]): SlackTestMessage[] {
+  private toMessages(calls: readonly SlackCall[]): SlackTestMessage[] {
     return calls.map(([channel, text, options = {}]) => ({
       channel,
       text,
@@ -256,12 +165,8 @@ export class SlackTestHelper {
     }));
   }
 
-  /**
-   * Gets the channel from the first mock call
-   * @return Channel ID or undefined
-   */
-  private getChannelFromMocks(): string | undefined {
-    const firstCall = this.mockSendMessage.mock.calls[0];
+  private getChannelFromCaptured(): string | undefined {
+    const firstCall = this.client.getCapturedCalls()[0];
     return firstCall ? firstCall[0] : undefined;
   }
 }

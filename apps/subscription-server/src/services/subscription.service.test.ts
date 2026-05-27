@@ -1,9 +1,15 @@
-import { describe, test, expect, jest, beforeEach } from '@jest/globals';
+import { describe, test, expect, beforeEach } from 'vitest';
+import type { NotificationTypeId } from '@notification-system/messages';
 import { SubscriptionService } from './subscription.service';
-import { User, UserPreference, IUserRepository, IPreferenceRepository, IUserNotificationPreferencesRepository } from '../interfaces';
-import { IUserAddressRepository } from '../interfaces/user-address.interface';
+import { User, UserPreference } from '../interfaces';
+import {
+  SimpleUserRepository,
+  SimplePreferenceRepository,
+  SimpleUserAddressRepository,
+  SimpleUserNotificationPreferencesRepository,
+} from './test-doubles';
 
-// ---- MOCKS ----
+// ---- FIXTURES ----
 const mockUser: User = {
   id: '123',
   channel: 'telegram',
@@ -15,89 +21,45 @@ const mockPreference: UserPreference = {
   user_id: '123',
   dao_id: 'dao123',
   is_active: true,
-  created_at: new Date(),
-  updated_at: new Date()
+  created_at: new Date().toISOString(),
+  updated_at: new Date().toISOString()
 };
 
-const mockSubscribers = [
+const mockSubscribers: User[] = [
   {
-    id: '456',
-    user_id: '123',
-    dao_id: 'dao123',
-    is_active: true,
-    created_at: new Date(),
-    updated_at: new Date(),
+    id: '123',
     channel: 'telegram',
     channel_user_id: 'user123'
   },
   {
-    id: '789',
-    user_id: '456',
-    dao_id: 'dao123',
-    is_active: true,
-    created_at: new Date(),
-    updated_at: new Date(),
+    id: '456',
     channel: 'discord',
     channel_user_id: 'discord_user_456'
   }
 ];
 
-// ---- REPOSITORY MOCKS ----
-const createMockUserRepo = (): jest.Mocked<IUserRepository> => ({
-  findByChannelAndId: jest.fn(),
-  create: jest.fn(),
-  findById: jest.fn(),
-  findByIds: jest.fn(),
-  findByIdsWithWorkspaceTokens: jest.fn()
-});
-
-const createMockPrefRepo = (): jest.Mocked<IPreferenceRepository> => ({
-  findByUserAndDao: jest.fn(),
-  create: jest.fn(),
-  update: jest.fn(),
-  findByDao: jest.fn()
-});
-
-const createMockUserAddressRepo = (): jest.Mocked<IUserAddressRepository> => ({
-  findByUser: jest.fn(),
-  findByAddress: jest.fn(),
-  findByAddresses: jest.fn(),
-  findByUserAndAddress: jest.fn(),
-  create: jest.fn(),
-  deactivate: jest.fn(),
-  reactivate: jest.fn(),
-  getFollowedAddressByDao: jest.fn()
-});
-
-const createMockNotificationPrefsRepo = (): jest.Mocked<IUserNotificationPreferencesRepository> => ({
-  findByUser: jest.fn(),
-  upsertMany: jest.fn(),
-  filterActiveUsers: jest.fn()
-});
-
 // ---- TESTS ----
 describe('Subscription Service', () => {
-  let userRepo: jest.Mocked<IUserRepository>;
-  let prefRepo: jest.Mocked<IPreferenceRepository>;
-  let userAddressRepo: jest.Mocked<IUserAddressRepository>;
-  let notificationPrefsRepo: jest.Mocked<IUserNotificationPreferencesRepository>;
+  let userRepo: SimpleUserRepository;
+  let prefRepo: SimplePreferenceRepository;
+  let userAddressRepo: SimpleUserAddressRepository;
+  let notificationPrefsRepo: SimpleUserNotificationPreferencesRepository;
   let subscriptionService: SubscriptionService;
 
   beforeEach(() => {
-    jest.clearAllMocks();
-    userRepo = createMockUserRepo();
-    prefRepo = createMockPrefRepo();
-    userAddressRepo = createMockUserAddressRepo();
-    notificationPrefsRepo = createMockNotificationPrefsRepo();
+    userRepo = new SimpleUserRepository();
+    prefRepo = new SimplePreferenceRepository();
+    userAddressRepo = new SimpleUserAddressRepository();
+    notificationPrefsRepo = new SimpleUserNotificationPreferencesRepository();
     subscriptionService = new SubscriptionService(userRepo, prefRepo, userAddressRepo, notificationPrefsRepo);
   });
 
   describe('handleSubscription', () => {
     test('should create new user and subscription', async () => {
-      userRepo.findByChannelAndId.mockResolvedValueOnce(undefined);
-      userRepo.create.mockResolvedValueOnce(mockUser);
-      prefRepo.findByUserAndDao.mockResolvedValueOnce(undefined);
-      prefRepo.create.mockResolvedValueOnce(mockPreference);
+      userRepo.findByChannelAndIdResult = undefined;
+      userRepo.createResult = mockUser;
+      prefRepo.findByUserAndDaoResult = undefined;
+      prefRepo.createResult = mockPreference;
 
       const result = await subscriptionService.handleSubscription(
         'dao123',
@@ -112,10 +74,10 @@ describe('Subscription Service', () => {
 
     test('should update existing subscription', async () => {
       const updatedPreference = { ...mockPreference, is_active: false };
-      
-      userRepo.findByChannelAndId.mockResolvedValueOnce(mockUser);
-      prefRepo.findByUserAndDao.mockResolvedValueOnce(mockPreference);
-      prefRepo.update.mockResolvedValueOnce(updatedPreference);
+
+      userRepo.findByChannelAndIdResult = mockUser;
+      prefRepo.findByUserAndDaoResult = mockPreference;
+      prefRepo.updateResult = updatedPreference;
 
       const result = await subscriptionService.handleSubscription(
         'dao123',
@@ -128,8 +90,8 @@ describe('Subscription Service', () => {
     });
 
     test('should return existing preference if no change needed', async () => {
-      userRepo.findByChannelAndId.mockResolvedValueOnce(mockUser);
-      prefRepo.findByUserAndDao.mockResolvedValueOnce(mockPreference);
+      userRepo.findByChannelAndIdResult = mockUser;
+      prefRepo.findByUserAndDaoResult = mockPreference;
 
       const result = await subscriptionService.handleSubscription(
         'dao123',
@@ -142,9 +104,9 @@ describe('Subscription Service', () => {
     });
 
     test('should create new subscription for existing user', async () => {
-      userRepo.findByChannelAndId.mockResolvedValueOnce(mockUser);
-      prefRepo.findByUserAndDao.mockResolvedValueOnce(undefined);
-      prefRepo.create.mockResolvedValueOnce(mockPreference);
+      userRepo.findByChannelAndIdResult = mockUser;
+      prefRepo.findByUserAndDaoResult = undefined;
+      prefRepo.createResult = mockPreference;
 
       const result = await subscriptionService.handleSubscription(
         'dao123',
@@ -157,7 +119,7 @@ describe('Subscription Service', () => {
     });
 
     test('should handle error when finding user', async () => {
-      userRepo.findByChannelAndId.mockRejectedValueOnce(new Error('DB Error'));
+      userRepo.findByChannelAndIdError = new Error('DB Error');
 
       await expect(subscriptionService.handleSubscription(
         'dao123',
@@ -168,8 +130,8 @@ describe('Subscription Service', () => {
     });
 
     test('should handle error when creating user', async () => {
-      userRepo.findByChannelAndId.mockResolvedValueOnce(undefined);
-      userRepo.create.mockRejectedValueOnce(new Error('DB Error'));
+      userRepo.findByChannelAndIdResult = undefined;
+      userRepo.createError = new Error('DB Error');
 
       await expect(subscriptionService.handleSubscription(
         'dao123',
@@ -180,8 +142,8 @@ describe('Subscription Service', () => {
     });
 
     test('should handle error when finding preference', async () => {
-      userRepo.findByChannelAndId.mockResolvedValueOnce(mockUser);
-      prefRepo.findByUserAndDao.mockRejectedValueOnce(new Error('DB Error'));
+      userRepo.findByChannelAndIdResult = mockUser;
+      prefRepo.findByUserAndDaoError = new Error('DB Error');
 
       await expect(subscriptionService.handleSubscription(
         'dao123',
@@ -192,9 +154,9 @@ describe('Subscription Service', () => {
     });
 
     test('should handle error when creating preference', async () => {
-      userRepo.findByChannelAndId.mockResolvedValueOnce(mockUser);
-      prefRepo.findByUserAndDao.mockResolvedValueOnce(undefined);
-      prefRepo.create.mockRejectedValueOnce(new Error('DB Error'));
+      userRepo.findByChannelAndIdResult = mockUser;
+      prefRepo.findByUserAndDaoResult = undefined;
+      prefRepo.createError = new Error('DB Error');
 
       await expect(subscriptionService.handleSubscription(
         'dao123',
@@ -205,9 +167,9 @@ describe('Subscription Service', () => {
     });
 
     test('should handle error when updating preference', async () => {
-      userRepo.findByChannelAndId.mockResolvedValueOnce(mockUser);
-      prefRepo.findByUserAndDao.mockResolvedValueOnce(mockPreference);
-      prefRepo.update.mockRejectedValueOnce(new Error('DB Error'));
+      userRepo.findByChannelAndIdResult = mockUser;
+      prefRepo.findByUserAndDaoResult = mockPreference;
+      prefRepo.updateError = new Error('DB Error');
 
       await expect(subscriptionService.handleSubscription(
         'dao123',
@@ -217,19 +179,16 @@ describe('Subscription Service', () => {
       )).rejects.toThrow('DB Error');
     });
   });
-  
+
   describe('getDaoSubscribers', () => {
     test('should retrieve and format subscribers for a DAO', async () => {
-      // Mock preferences
       const mockPreferences = [
         { user_id: '123', is_active: true },
         { user_id: '456', is_active: true }
       ] as UserPreference[];
 
-      // Mock findByIdsWithWorkspaceTokens to return users
-      userRepo.findByIdsWithWorkspaceTokens.mockResolvedValueOnce(mockSubscribers);
-
-      prefRepo.findByDao.mockResolvedValueOnce(mockPreferences);
+      userRepo.findByIdsWithWorkspaceTokensResult = mockSubscribers;
+      prefRepo.findByDaoResult = mockPreferences;
 
       const result = await subscriptionService.getDaoSubscribers('dao123');
 
@@ -238,24 +197,23 @@ describe('Subscription Service', () => {
       expect(result.subscribers[0]).toHaveProperty('id');
       expect(result.subscribers[0]).toHaveProperty('channel');
       expect(result.subscribers[0]).toHaveProperty('channel_user_id');
-      expect(result.subscribers[0]).toHaveProperty('is_active');
 
-      expect(prefRepo.findByDao).toHaveBeenCalledWith('dao123', undefined);
-      expect(userRepo.findByIdsWithWorkspaceTokens).toHaveBeenCalledWith(['123', '456']);
+      expect(prefRepo.findByDaoCalls).toEqual([{ daoId: 'dao123', eventTimestamp: undefined }]);
+      expect(userRepo.findByIdsWithWorkspaceTokensCalls).toEqual([['123', '456']]);
     });
 
     test('should return empty array when no subscribers exist', async () => {
-      prefRepo.findByDao.mockResolvedValueOnce([]);
-      userRepo.findByIdsWithWorkspaceTokens.mockResolvedValueOnce([]);
+      prefRepo.findByDaoResult = [];
+      userRepo.findByIdsWithWorkspaceTokensResult = [];
 
       const result = await subscriptionService.getDaoSubscribers('unknown-dao');
 
       expect(result.subscribers).toEqual([]);
-      expect(userRepo.findByIdsWithWorkspaceTokens).toHaveBeenCalledWith([]);
+      expect(userRepo.findByIdsWithWorkspaceTokensCalls).toEqual([[]]);
     });
-    
+
     test('should handle errors properly', async () => {
-      prefRepo.findByDao.mockRejectedValueOnce(new Error('DB Error'));
+      prefRepo.findByDaoError = new Error('DB Error');
 
       await expect(subscriptionService.getDaoSubscribers('dao123')).rejects.toThrow('DB Error');
     });
@@ -266,15 +224,17 @@ describe('Subscription Service', () => {
         { user_id: '456', is_active: true }
       ] as UserPreference[];
 
-      prefRepo.findByDao.mockResolvedValueOnce(mockPreferences);
-      notificationPrefsRepo.filterActiveUsers.mockResolvedValueOnce(['123']);
-      userRepo.findByIdsWithWorkspaceTokens.mockResolvedValueOnce([mockSubscribers[0]]);
+      prefRepo.findByDaoResult = mockPreferences;
+      notificationPrefsRepo.filterActiveUsersResult = ['123'];
+      userRepo.findByIdsWithWorkspaceTokensResult = [mockSubscribers[0]];
 
-      const result = await subscriptionService.getDaoSubscribers('dao123', undefined, 'PROPOSAL_CREATED');
+      const result = await subscriptionService.getDaoSubscribers('dao123', undefined, 'PROPOSAL_CREATED' as NotificationTypeId);
 
-      expect(notificationPrefsRepo.filterActiveUsers).toHaveBeenCalledWith(['123', '456'], 'PROPOSAL_CREATED');
-      expect(userRepo.findByIdsWithWorkspaceTokens).toHaveBeenCalledWith(['123']);
+      expect(notificationPrefsRepo.filterActiveUsersCalls).toEqual([
+        { userIds: ['123', '456'], triggerType: 'PROPOSAL_CREATED' as NotificationTypeId },
+      ]);
+      expect(userRepo.findByIdsWithWorkspaceTokensCalls).toEqual([['123']]);
       expect(result.subscribers.length).toBe(1);
     });
   });
-}); 
+});

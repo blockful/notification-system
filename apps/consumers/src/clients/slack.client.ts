@@ -46,12 +46,7 @@ export class SlackClient implements SlackClientInterface {
     this.boltApp = this.createBoltApp(signingSecret);
   }
 
-  /**
-   * Create Bolt app with installationStore and authorize callback
-   */
-  private createBoltApp(
-    signingSecret: string
-  ): App {
+  private createBoltApp(signingSecret: string): App {
     const installationStore = {
       storeInstallation: async () => {},
       fetchInstallation: async (installQuery) => {

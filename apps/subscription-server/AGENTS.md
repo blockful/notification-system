@@ -89,4 +89,4 @@ The `getDaoSubscribers` query accepts `proposal_timestamp` to only return users 
 pnpm subscription-server test
 ```
 
-Uses ts-jest. Tests co-located in `src/services/`. Prefer **stubs or fakes** for repository interfaces in unit tests (e.g. in-memory implementations) over mocks; we are moving toward stubs/fakes.
+Uses Vitest. Tests co-located in `src/services/` and `src/repositories/`. Prefer **`Simple*` in-memory doubles** for repository interfaces (defined inline in each test file, following `apps/dispatcher/src/services/triggers/helpers/test-doubles.ts` as reference); use `vi.fn()` only for behaviorless seams. Repository tests use real pglite (`@electric-sql/pglite`) for DB integration.

@@ -1,6 +1,6 @@
 import { DispatcherMessage, MessageProcessingResult } from "../../interfaces/dispatcher-message.interface";
 import { ISubscriptionClient, User } from "../../interfaces/subscription-client.interface";
-import { NotificationClientFactory } from "../notification/notification-factory.service";
+import { INotificationClientFactory } from "../notification/notification-factory.service";
 import { BaseTriggerHandler } from "./base-trigger.service";
 import { formatTokenAmount } from "../../lib/number-formatter";
 import { votingPowerMessages, replacePlaceholders, buildButtons, NotificationTypeId } from '@notification-system/messages';
@@ -18,7 +18,7 @@ export class VotingPowerTriggerHandler extends BaseTriggerHandler {
    */
   constructor(
     subscriptionClient: ISubscriptionClient,
-    notificationFactory: NotificationClientFactory
+    notificationFactory: INotificationClientFactory
   ) {
     super(subscriptionClient, notificationFactory);
   }

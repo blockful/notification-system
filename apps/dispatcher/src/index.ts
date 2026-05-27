@@ -10,9 +10,8 @@ const config = loadConfig();
 const app = new App(
   config.subscriptionServerUrl,
   config.rabbitmqUrl,
-  config.anticaptureGraphqlEndpoint,
+  config.anticaptureApiUrl,
   config.port,
-  undefined,
   config.blockfulApiToken
 );
 

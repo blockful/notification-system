@@ -1,20 +1,21 @@
-import { describe, test, expect, beforeEach, beforeAll } from '@jest/globals';
+import { describe, test, expect, beforeEach, beforeAll } from 'vitest';
+import { votesOffchainHandler } from '@anticapture/client/msw';
 import { db, TestApps } from '../../src/setup';
-import { HttpClientMockSetup, GraphQLMockSetup } from '../../src/mocks';
+import { server } from '../../src/setup/msw-server';
 import { UserFactory, OffchainVoteFactory } from '../../src/fixtures';
 import { TelegramTestHelper, DatabaseTestHelper, TestCleanup } from '../../src/helpers';
 import { testConstants, timeouts } from '../../src/config';
 
 describe('Offchain Vote Cast Trigger - Integration Test', () => {
   let apps: TestApps;
-  let httpMockSetup: HttpClientMockSetup;
+
   let telegramHelper: TelegramTestHelper;
   let dbHelper: DatabaseTestHelper;
 
   beforeAll(async () => {
     apps = TestCleanup.getGlobalApps();
-    httpMockSetup = TestCleanup.getGlobalHttpMockSetup();
-    telegramHelper = new TelegramTestHelper(global.mockTelegramSendMessage);
+
+    telegramHelper = new TelegramTestHelper(global.telegramClient);
     dbHelper = new DatabaseTestHelper(db);
   });
 
@@ -43,7 +44,7 @@ describe('Offchain Vote Cast Trigger - Integration Test', () => {
     const proposalTitle = 'Snapshot: Enable Community Grants';
 
     const offchainVoteEvents = [
-      OffchainVoteFactory.createVote(voterAddress, 'snap-prop-123', testDaoId, {
+      OffchainVoteFactory.createVote(voterAddress, 'snap-prop-123', {
         created: eventTimestamp,
         proposalTitle,
         reason: 'Fully support this initiative!',
@@ -51,15 +52,7 @@ describe('Offchain Vote Cast Trigger - Integration Test', () => {
       })
     ];
 
-    GraphQLMockSetup.setupMock(
-      httpMockSetup.getMockClient(),
-      [],
-      [],
-      { [testDaoId]: 1 },
-      [],
-      [],
-      offchainVoteEvents
-    );
+    server.use(votesOffchainHandler({ items: offchainVoteEvents, totalCount: offchainVoteEvents.length }));
 
     const message = await telegramHelper.waitForMessage(
       msg => msg.text.includes('voted on Snapshot proposal'),
@@ -94,22 +87,14 @@ describe('Offchain Vote Cast Trigger - Integration Test', () => {
     const eventTimestamp = Math.floor(Date.now() / 1000) + 10;
 
     const offchainVoteEvents = [
-      OffchainVoteFactory.createVote(voterAddress, 'snap-dedup-1', testDaoId, {
+      OffchainVoteFactory.createVote(voterAddress, 'snap-dedup-1', {
         created: eventTimestamp,
         proposalTitle: 'Dedup Test Proposal',
         vp: 1000
       })
     ];
 
-    GraphQLMockSetup.setupMock(
-      httpMockSetup.getMockClient(),
-      [],
-      [],
-      { [testDaoId]: 1 },
-      [],
-      [],
-      offchainVoteEvents
-    );
+    server.use(votesOffchainHandler({ items: offchainVoteEvents, totalCount: offchainVoteEvents.length }));
 
     // Wait for first notification
     const firstMessage = await telegramHelper.waitForMessage(
@@ -152,22 +137,14 @@ describe('Offchain Vote Cast Trigger - Integration Test', () => {
     const eventTimestamp = Math.floor(Date.now() / 1000) + 10;
 
     const offchainVoteEvents = [
-      OffchainVoteFactory.createVote(voterAddress, 'snap-nosub-1', testDaoId, {
+      OffchainVoteFactory.createVote(voterAddress, 'snap-nosub-1', {
         created: eventTimestamp,
         proposalTitle: 'Unsubscribed DAO Proposal',
         vp: 500
       })
     ];
 
-    GraphQLMockSetup.setupMock(
-      httpMockSetup.getMockClient(),
-      [],
-      [],
-      { [testDaoId]: 1 },
-      [],
-      [],
-      offchainVoteEvents
-    );
+    server.use(votesOffchainHandler({ items: offchainVoteEvents, totalCount: offchainVoteEvents.length }));
 
     const messagePromise = telegramHelper.waitForMessage(
       msg => msg.text.includes('voted on Snapshot proposal'),

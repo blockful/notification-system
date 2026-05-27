@@ -1,4 +1,4 @@
-import { describe, it, expect } from '@jest/globals';
+import { describe, it, expect } from 'vitest';
 import { OffchainVoteCastTriggerHandler } from './offchain-vote-cast-trigger.service';
 import { NotificationClientFactory } from '../notification/notification-factory.service';
 import { INotificationClient, NotificationPayload } from '../../interfaces/notification-client.interface';
@@ -76,7 +76,7 @@ function buildExpectedMessage(vote: OffchainVoteWithDaoId): string {
 
   return replacePlaceholders(template, {
     daoId: vote.daoId,
-    proposalTitle: vote.proposalTitle,
+    proposalTitle: vote.proposalTitle ?? undefined,
     ...(hasReason && { reason: vote.reason! }),
   });
 }

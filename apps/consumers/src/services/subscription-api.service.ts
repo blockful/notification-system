@@ -8,15 +8,23 @@ import type { NotificationTypeId } from '@notification-system/messages';
 import { UserSubscriptionResponse, UserResponse } from '../interfaces/subscription.interface';
 import { createLogger, type Logger } from '@anticapture/observability';
 
-export class SubscriptionAPIService {
-  private client: AxiosInstance;
+export type SubscriptionApiHttpClient = Pick<AxiosInstance, 'get' | 'post' | 'delete'>;
+
+export interface ISubscriptionAPI {
+  saveUserPreference(daoId: string, channelUserId: string | number, channel: string, isActive?: boolean): Promise<UserSubscriptionResponse>;
+  getUserPreferences(channelUserId: string | number, channel: string, availableDAOs: string[]): Promise<string[]>;
+}
+
+export class SubscriptionAPIService implements ISubscriptionAPI {
+  private client: SubscriptionApiHttpClient;
   private readonly logger: Logger;
 
   constructor(
     private readonly baseUrl: string,
     logger: Logger = createLogger('consumers'),
+    httpClient?: SubscriptionApiHttpClient,
   ) {
-    this.client = axios.create({
+    this.client = httpClient ?? axios.create({
       baseURL: this.baseUrl,
       headers: {
         'Content-Type': 'application/json',
@@ -41,26 +49,6 @@ export class SubscriptionAPIService {
       is_active: isActive
     });
     return data;
-  }
-
-  /**
-   * Checks if a user exists by querying subscriptions
-   * @param channelUserId User/chat ID (string for Slack, number for Telegram)
-   * @param channel The notification channel
-   * @param daoIds List of DAOs to check for user subscriptions
-   * @returns Boolean indicating if the user has any subscriptions
-   */
-  public async userExists(channelUserId: string | number, channel: string, daoIds: string[]): Promise<boolean> {
-    const userIdStr = channelUserId.toString();
-    // For each DAO, check if the user is subscribed
-    for (const daoId of daoIds) {
-      const subscribers = await this.getDaoSubscribers(daoId);
-      return subscribers.some(sub =>
-          sub.channel === channel &&
-          sub.channel_user_id === userIdStr
-      )
-    }
-    return false;
   }
 
   /**

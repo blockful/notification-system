@@ -1,39 +1,20 @@
 import { v4 as uuidv4 } from 'uuid';
+import type { OnchainVote } from '@notification-system/anticapture-client';
 
-export interface VoteData {
-  proposalId: string;
-  voterAddress: string;
-  daoId: string;
-  support: string;
-  reason?: string | null;
-  timestamp: number;
-  transactionHash: string;
-  votingPower: string;
-  proposalTitle: string;
-}
+export type VoteData = OnchainVote;
 
 /**
  * Factory for creating vote test data
  */
 export class VoteFactory {
-  /**
-   * Creates a vote for testing
-   * @param voterAddress The address of the voter
-   * @param proposalId The proposal being voted on
-   * @param daoId The DAO identifier
-   * @param overrides Optional field overrides
-   * @returns Vote data object
-   */
   static createVote(
     voterAddress: string,
     proposalId: string,
-    daoId: string,
-    overrides: Partial<VoteData> = {}
-  ): VoteData {
+    overrides: Partial<OnchainVote> = {}
+  ): OnchainVote {
     return {
       proposalId,
       voterAddress,
-      daoId,
       support: '1',
       timestamp: Math.floor(Date.now() / 1000),
       transactionHash: `0x${uuidv4().replace(/-/g, '')}${uuidv4().replace(/-/g, '').substring(0, 8)}`,
@@ -44,37 +25,21 @@ export class VoteFactory {
     };
   }
 
-  /**
-   * Creates multiple votes for different proposals
-   * @param voterAddress The address of the voter
-   * @param proposalIds Array of proposal IDs to vote on
-   * @param daoId The DAO identifier
-   * @returns Array of vote data objects
-   */
   static createVotesForProposals(
     voterAddress: string,
-    proposalIds: string[],
-    daoId: string
-  ): VoteData[] {
+    proposalIds: string[]
+  ): OnchainVote[] {
     return proposalIds.map(proposalId =>
-      this.createVote(voterAddress, proposalId, daoId)
+      this.createVote(voterAddress, proposalId)
     );
   }
 
-  /**
-   * Creates votes from multiple voters for a single proposal
-   * @param voterAddresses Array of voter addresses
-   * @param proposalId The proposal being voted on
-   * @param daoId The DAO identifier
-   * @returns Array of vote data objects
-   */
   static createVotesFromMultipleVoters(
     voterAddresses: string[],
-    proposalId: string,
-    daoId: string
-  ): VoteData[] {
+    proposalId: string
+  ): OnchainVote[] {
     return voterAddresses.map(voterAddress =>
-      this.createVote(voterAddress, proposalId, daoId)
+      this.createVote(voterAddress, proposalId)
     );
   }
 }

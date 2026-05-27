@@ -1,4 +1,4 @@
-import { describe, test, expect, beforeAll, afterAll, beforeEach } from '@jest/globals';
+import { describe, test, expect, beforeAll, afterAll, beforeEach } from 'vitest';
 import { knex, Knex } from 'knex';
 import ClientPgLite from 'knex-pglite';
 import path from 'path';

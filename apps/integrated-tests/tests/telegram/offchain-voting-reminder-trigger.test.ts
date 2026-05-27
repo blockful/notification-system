@@ -4,17 +4,31 @@
  * which fires at 50% elapsed time (within 50-55% window)
  */
 
-import { describe, test, expect, beforeEach, beforeAll } from '@jest/globals';
+import { describe, test, expect, beforeEach, beforeAll } from 'vitest';
+import {
+  offchainProposalsHandler,
+  votesOffchainHandler,
+  offchainProposalNonVotersHandler,
+} from '@anticapture/client/msw';
+import { type OffchainProposal, type OffchainVote } from '@notification-system/anticapture-client';
 import { db, TestApps } from '../../src/setup';
-import { HttpClientMockSetup, GraphQLMockSetup } from '../../src/mocks';
-import { UserFactory, OffchainProposalFactory } from '../../src/fixtures';
+import { server, nonVotersResolver, offchainProposalsByDaoResolver, daosFromItems } from '../../src/setup/msw-server';
+import { UserFactory, OffchainProposalFactory, OffchainVoteFactory } from '../../src/fixtures';
 import { TelegramTestHelper, DatabaseTestHelper, TestCleanup } from '../../src/helpers';
 import { testConstants, timeouts } from '../../src/config';
 import { waitForCondition } from '../../src/helpers/utilities/wait-for';
 
+const useOffchainProposalsAndVotes = (proposals: OffchainProposal[], votes: OffchainVote[]) =>
+  server.use(
+    daosFromItems(proposals),
+    offchainProposalsHandler(offchainProposalsByDaoResolver(proposals)),
+    votesOffchainHandler({ items: votes, totalCount: votes.length }),
+    offchainProposalNonVotersHandler(nonVotersResolver(votes)),
+  );
+
 describe('Offchain Voting Reminder Integration Tests', () => {
   let apps: TestApps;
-  let httpMockSetup: HttpClientMockSetup;
+
   let telegramHelper: TelegramTestHelper;
   let dbHelper: DatabaseTestHelper;
 
@@ -47,8 +61,8 @@ describe('Offchain Voting Reminder Integration Tests', () => {
 
   beforeAll(async () => {
     apps = TestCleanup.getGlobalApps();
-    httpMockSetup = TestCleanup.getGlobalHttpMockSetup();
-    telegramHelper = new TelegramTestHelper(global.mockTelegramSendMessage);
+
+    telegramHelper = new TelegramTestHelper(global.telegramClient);
     dbHelper = new DatabaseTestHelper(db);
   });
 
@@ -72,16 +86,7 @@ describe('Offchain Voting Reminder Integration Tests', () => {
       // Create proposal where 52% of time has elapsed (within 50-55% window)
       const proposal = createOffchainProposalWithElapsedTime('offchain-proposal-50-reminder', 52);
 
-      // Setup mock with no offchain votes — user has NOT voted
-      GraphQLMockSetup.setupMock(
-        httpMockSetup.getMockClient(),
-        [],       // no on-chain proposals
-        [],       // no voting power data
-        { [testDaoId]: 1 },
-        [],       // no on-chain votes
-        [proposal],
-        []        // no offchain votes
-      );
+      useOffchainProposalsAndVotes([proposal], []);
 
       // Wait for the notification to be sent
       const message = await telegramHelper.waitForMessage(
@@ -109,24 +114,12 @@ describe('Offchain Voting Reminder Integration Tests', () => {
       // Create proposal where 52% of time has elapsed
       const proposal = createOffchainProposalWithElapsedTime('offchain-proposal-50-voted', 52);
 
-      // Setup mock with user's offchain vote already recorded
-      const offchainVotes = [{
-        voter: testUser.address,
-        proposalId: proposal.id,
-        daoId: testDaoId,
-        created: Math.floor(Date.now() / 1000),
+      // Setup MSW handler with user's offchain vote already recorded
+      const offchainVotes = [OffchainVoteFactory.createVote(testUser.address, proposal.id, {
         vp: 1000
-      }];
+      })];
 
-      GraphQLMockSetup.setupMock(
-        httpMockSetup.getMockClient(),
-        [],
-        [],
-        { [testDaoId]: 1 },
-        [],
-        [proposal],
-        offchainVotes // User HAS voted
-      );
+      useOffchainProposalsAndVotes([proposal], offchainVotes);
 
       // Wait for processing to complete and verify no messages were sent
       await waitForCondition(
@@ -149,15 +142,7 @@ describe('Offchain Voting Reminder Integration Tests', () => {
       // Create proposal where only 40% of time has elapsed — below the 50% trigger
       const proposal = createOffchainProposalWithElapsedTime('offchain-proposal-below-threshold', 40);
 
-      GraphQLMockSetup.setupMock(
-        httpMockSetup.getMockClient(),
-        [],
-        [],
-        { [testDaoId]: 1 },
-        [],
-        [proposal],
-        []
-      );
+      useOffchainProposalsAndVotes([proposal], []);
 
       // Wait for processing and verify no messages were sent
       await waitForCondition(
@@ -180,15 +165,7 @@ describe('Offchain Voting Reminder Integration Tests', () => {
       // Create proposal where 60% of time has elapsed — above the 50-55% window
       const proposal = createOffchainProposalWithElapsedTime('offchain-proposal-above-window', 60);
 
-      GraphQLMockSetup.setupMock(
-        httpMockSetup.getMockClient(),
-        [],
-        [],
-        { [testDaoId]: 1 },
-        [],
-        [proposal],
-        []
-      );
+      useOffchainProposalsAndVotes([proposal], []);
 
       // Wait for processing and verify no messages were sent
       await waitForCondition(

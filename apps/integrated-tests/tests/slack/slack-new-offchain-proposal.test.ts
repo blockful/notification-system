@@ -3,29 +3,34 @@
  * Tests that Snapshot proposal notifications are correctly delivered via Slack
  */
 
-import { describe, test, expect, beforeEach, beforeAll } from '@jest/globals';
+import { describe, test, expect, beforeEach, beforeAll } from 'vitest';
+import { offchainProposalsHandler } from '@anticapture/client/msw';
+import type { OffchainProposal } from '@notification-system/anticapture-client';
 import { db, TestApps } from '../../src/setup';
-import { HttpClientMockSetup, GraphQLMockSetup } from '../../src/mocks';
+import { server, offchainProposalsByDaoResolver, daosFromItems } from '../../src/setup/msw-server';
 import { UserFactory, OffchainProposalFactory, WorkspaceFactory } from '../../src/fixtures';
 import { SlackTestHelper, DatabaseTestHelper, TestCleanup } from '../../src/helpers';
-import { SlackTestClient } from '../../src/test-clients/slack-test.client';
+import { SimpleSlackClient } from '../../src/test-clients/simple-slack.client';
 import { testConstants, timeouts } from '../../src/config';
+
+const useOffchainProposals = (proposals: OffchainProposal[]) =>
+  server.use(daosFromItems(proposals), offchainProposalsHandler(offchainProposalsByDaoResolver(proposals)));
 
 describe('Slack New Offchain Proposal - Integration Test', () => {
   let apps: TestApps;
-  let httpMockSetup: HttpClientMockSetup;
+
   let slackHelper: SlackTestHelper;
-  let slackClient: SlackTestClient;
+  let slackClient: SimpleSlackClient;
   let dbHelper: DatabaseTestHelper;
 
   const testDaoId = testConstants.daoIds.ens;
 
   beforeAll(async () => {
     apps = TestCleanup.getGlobalApps();
-    httpMockSetup = TestCleanup.getGlobalHttpMockSetup();
 
-    slackClient = new SlackTestClient(global.mockSlackSendMessage);
-    slackHelper = new SlackTestHelper(global.mockSlackSendMessage, slackClient);
+
+    slackClient = global.slackClient;
+    slackHelper = new SlackTestHelper(global.slackClient);
 
     dbHelper = new DatabaseTestHelper(db);
   });
@@ -52,14 +57,7 @@ describe('Slack New Offchain Proposal - Integration Test', () => {
       title: 'Slack Snapshot Proposal',
     });
 
-    GraphQLMockSetup.setupMock(
-      httpMockSetup.getMockClient(),
-      [],
-      [],
-      {},
-      [],
-      [proposal],
-    );
+    useOffchainProposals([proposal]);
 
     const message = await slackHelper.waitForMessage(
       msg =>
@@ -115,14 +113,7 @@ describe('Slack New Offchain Proposal - Integration Test', () => {
       title: 'Multi-User Offchain Proposal',
     });
 
-    GraphQLMockSetup.setupMock(
-      httpMockSetup.getMockClient(),
-      [],
-      [],
-      {},
-      [],
-      [proposal],
-    );
+    useOffchainProposals([proposal]);
 
     const messages = await slackHelper.waitForMessageCount(2, {
       timeout: timeouts.notification.delivery,

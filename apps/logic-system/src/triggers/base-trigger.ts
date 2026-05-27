@@ -28,9 +28,9 @@ export abstract class Trigger<TData, TFilterOptions = void> {
 
     /**
      * Counter for consecutive failures
-     * @private
+     * @protected
      */
-    private consecutiveFailures = 0;
+    protected consecutiveFailures = 0;
 
     /**
      * Maximum consecutive failures before stopping the trigger

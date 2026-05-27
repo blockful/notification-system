@@ -8,7 +8,12 @@ import { mainnet } from 'viem/chains';
 import { normalize } from 'viem/ens';
 import { createLogger, type Logger } from '@anticapture/observability';
 
-export class EnsResolverService {
+export interface IEnsResolver {
+  resolveToAddress(name: string): Promise<string | null>;
+  resolveDisplayName(address: string): Promise<string>;
+}
+
+export class EnsResolverService implements IEnsResolver {
   private client;
   private readonly logger: Logger;
 

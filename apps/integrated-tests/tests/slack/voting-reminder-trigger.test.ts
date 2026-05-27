@@ -1,24 +1,34 @@
 /**
  * Slack Voting Reminder Trigger - Integration Test
  * Tests that voting reminder notifications are correctly delivered via Slack
- * Supports both mock and real Slack delivery modes
+ * Supports both captured and real Slack delivery modes
  */
 
-import { describe, test, expect, beforeAll, afterEach } from '@jest/globals';
+import { describe, test, expect, beforeAll, afterEach } from 'vitest';
+import { proposalsHandler, votesHandler, proposalNonVotersHandler } from '@anticapture/client/msw';
+import { type OnchainProposal, type OnchainVote } from '@notification-system/anticapture-client';
 import { db, TestApps } from '../../src/setup';
-import { HttpClientMockSetup, GraphQLMockSetup } from '../../src/mocks';
-import { UserFactory, ProposalFactory, WorkspaceFactory } from '../../src/fixtures';
+import { server, nonVotersResolver, proposalsByDaoResolver, daosFromItems } from '../../src/setup/msw-server';
+import { UserFactory, ProposalFactory, VoteFactory, WorkspaceFactory } from '../../src/fixtures';
 import { SlackTestHelper, DatabaseTestHelper, TestCleanup } from '../../src/helpers';
-import { SlackTestClient } from '../../src/test-clients/slack-test.client';
+import { SimpleSlackClient } from '../../src/test-clients/simple-slack.client';
 import { testConstants, timeouts } from '../../src/config';
 import { env } from '../../src/config/env';
 import { waitForCondition } from '../../src/helpers/utilities/wait-for';
 
+const useProposalsAndVotes = (proposals: OnchainProposal[], votes: OnchainVote[]) =>
+  server.use(
+    daosFromItems(proposals),
+    proposalsHandler(proposalsByDaoResolver(proposals)),
+    votesHandler({ items: votes, totalCount: votes.length }),
+    proposalNonVotersHandler(nonVotersResolver(votes)),
+  );
+
 describe('Slack Voting Reminder Trigger - Integration Test', () => {
   let apps: TestApps;
-  let httpMockSetup: HttpClientMockSetup;
+
   let slackHelper: SlackTestHelper;
-  let slackClient: SlackTestClient;
+  let slackClient: SimpleSlackClient;
   let dbHelper: DatabaseTestHelper;
 
   const testDaoId = 'test-dao-voting-reminder';
@@ -55,8 +65,8 @@ describe('Slack Voting Reminder Trigger - Integration Test', () => {
 
     return ProposalFactory.createProposal(testDaoId, proposalId, {
       status: 'ACTIVE',
-      timestamp: startTime.toString(),
-      endTimestamp: endTime.toString(),
+      timestamp: startTime,
+      endTimestamp: endTime,
       description: `Test proposal for ${elapsedPercentage}% voting reminder`,
       title: `Proposal ${elapsedPercentage}% Reminder Test`
     });
@@ -64,11 +74,11 @@ describe('Slack Voting Reminder Trigger - Integration Test', () => {
 
   beforeAll(async () => {
     apps = TestCleanup.getGlobalApps();
-    httpMockSetup = TestCleanup.getGlobalHttpMockSetup();
+
 
     // Create Slack client and helper
-    slackClient = new SlackTestClient(global.mockSlackSendMessage);
-    slackHelper = new SlackTestHelper(global.mockSlackSendMessage, slackClient);
+    slackClient = global.slackClient;
+    slackHelper = new SlackTestHelper(global.slackClient);
 
     dbHelper = new DatabaseTestHelper(db);
   });
@@ -88,14 +98,7 @@ describe('Slack Voting Reminder Trigger - Integration Test', () => {
       // Create proposal where 32% of time has elapsed (triggers 30% reminder, within 30-35% window)
       const proposal = createActiveProposalWithElapsedTime('proposal-30-reminder', 32);
 
-      // Setup mock to return the active proposal
-      GraphQLMockSetup.setupMock(
-        httpMockSetup.getMockClient(),
-        [proposal],
-        [],
-        { [testDaoId]: 1 },
-        [] // Empty votes array - user has NOT voted
-      );
+      useProposalsAndVotes([proposal], []);
 
       // Wait for the notification to be sent
       const message = await slackHelper.waitForMessage(
@@ -143,23 +146,12 @@ describe('Slack Voting Reminder Trigger - Integration Test', () => {
       // Create proposal where 32% of time has elapsed
       const proposal = createActiveProposalWithElapsedTime('proposal-30-voted', 32);
 
-      // Setup mock with user's vote already recorded
-      const voteEvents = [{
-        daoId: testDaoId,
-        proposalId: proposal.id,
-        voterAddress: userAddress,
-        support: '1',
-        votingPower: '1000000000000000000000',
-        timestamp: Math.floor(Date.now() / 1000).toString()
-      }];
+      // Setup MSW handler with user's vote already recorded
+      const voteEvents = [VoteFactory.createVote(userAddress, proposal.id, {
+        votingPower: '1000000000000000000000'
+      })];
 
-      GraphQLMockSetup.setupMock(
-        httpMockSetup.getMockClient(),
-        [proposal],
-        [],
-        { [testDaoId]: 1 },
-        voteEvents // User HAS voted
-      );
+      useProposalsAndVotes([proposal], voteEvents);
 
       // Wait for processing to complete and verify no messages
       await waitForCondition(
@@ -191,14 +183,7 @@ describe('Slack Voting Reminder Trigger - Integration Test', () => {
       // Create proposal where 32% of time has elapsed
       const proposal = createActiveProposalWithElapsedTime('proposal-30-duplicate', 32);
 
-      // Setup mock FIRST before inserting deduplication record
-      GraphQLMockSetup.setupMock(
-        httpMockSetup.getMockClient(),
-        [proposal],
-        [],
-        { [testDaoId]: 1 },
-        [] // User has NOT voted
-      );
+      useProposalsAndVotes([proposal], []);
 
       // Wait for initial notification to be sent
       await waitForCondition(
@@ -237,14 +222,7 @@ describe('Slack Voting Reminder Trigger - Integration Test', () => {
       // Create proposal where 62% of time has elapsed (triggers 60% reminder, within 60-65% window)
       const proposal = createActiveProposalWithElapsedTime('proposal-60-reminder', 62);
 
-      // Setup mock to return the active proposal
-      GraphQLMockSetup.setupMock(
-        httpMockSetup.getMockClient(),
-        [proposal],
-        [],
-        { [testDaoId]: 1 },
-        [] // User has NOT voted
-      );
+      useProposalsAndVotes([proposal], []);
 
       // Wait for the notification to be sent
       const message = await slackHelper.waitForMessage(
@@ -289,14 +267,7 @@ describe('Slack Voting Reminder Trigger - Integration Test', () => {
       // Create proposal where 92% of time has elapsed (triggers 90% reminder)
       const proposal = createActiveProposalWithElapsedTime('proposal-90-reminder', 92);
 
-      // Setup mock
-      GraphQLMockSetup.setupMock(
-        httpMockSetup.getMockClient(),
-        [proposal],
-        [],
-        { [testDaoId]: 1 },
-        [] // User has NOT voted
-      );
+      useProposalsAndVotes([proposal], []);
 
       // Wait for the notification to be sent
       const message = await slackHelper.waitForMessage(
@@ -345,19 +316,12 @@ describe('Slack Voting Reminder Trigger - Integration Test', () => {
 
       const proposal = ProposalFactory.createProposal(testDaoId, 'proposal-time-calc', {
         status: 'ACTIVE',
-        timestamp: startTime.toString(),
-        endTimestamp: endTime.toString(),
+        timestamp: startTime,
+        endTimestamp: endTime,
         description: 'Test time calculation'
       });
 
-      // Setup mocks
-      GraphQLMockSetup.setupMock(
-        httpMockSetup.getMockClient(),
-        [proposal],
-        [],
-        { [testDaoId]: 1 },
-        []
-      );
+      useProposalsAndVotes([proposal], []);
 
       // Wait for the notification
       const message = await slackHelper.waitForMessage(
@@ -388,13 +352,7 @@ describe('Slack Voting Reminder Trigger - Integration Test', () => {
 
       // First: 30% threshold
       let proposal = createActiveProposalWithElapsedTime(proposalId, 32);
-      GraphQLMockSetup.setupMock(
-        httpMockSetup.getMockClient(),
-        [proposal],
-        [],
-        { [testDaoId]: 1 },
-        []
-      );
+      useProposalsAndVotes([proposal], []);
 
       let message = await slackHelper.waitForMessage(
         msg => msg.text.includes('Early Voting Reminder') &&
@@ -409,13 +367,7 @@ describe('Slack Voting Reminder Trigger - Integration Test', () => {
 
       // Second: 60% threshold (proposal time has advanced)
       proposal = createActiveProposalWithElapsedTime(proposalId, 62);
-      GraphQLMockSetup.setupMock(
-        httpMockSetup.getMockClient(),
-        [proposal],
-        [],
-        { [testDaoId]: 1 },
-        []
-      );
+      useProposalsAndVotes([proposal], []);
 
       message = await slackHelper.waitForMessage(
         msg => msg.text.includes('Mid-Period Voting Reminder') &&
@@ -454,17 +406,11 @@ describe('Slack Voting Reminder Trigger - Integration Test', () => {
       await createSlackUserWithWallet(channelId, testDaoId, userAddress);
 
       const proposal = createActiveProposalWithElapsedTime('proposal-no-title', 32);
-      // Remove title to test extraction from description
-      proposal.title = undefined;
+      // Empty title forces extraction from description
+      proposal.title = '';
       proposal.description = 'Update governance parameters. This proposal aims to improve the system.';
 
-      GraphQLMockSetup.setupMock(
-        httpMockSetup.getMockClient(),
-        [proposal],
-        [],
-        { [testDaoId]: 1 },
-        []
-      );
+      useProposalsAndVotes([proposal], []);
 
       const message = await slackHelper.waitForMessage(
         msg => msg.text.includes('Voting Reminder') &&
@@ -490,13 +436,7 @@ describe('Slack Voting Reminder Trigger - Integration Test', () => {
       // Create proposal where only 25% of time has elapsed (below 30% threshold)
       const proposal = createActiveProposalWithElapsedTime('proposal-below-threshold', 25);
 
-      GraphQLMockSetup.setupMock(
-        httpMockSetup.getMockClient(),
-        [proposal],
-        [],
-        { [testDaoId]: 1 },
-        []
-      );
+      useProposalsAndVotes([proposal], []);
 
       // Wait for processing to complete and verify no messages
       await waitForCondition(
@@ -533,13 +473,7 @@ describe('Slack Voting Reminder Trigger - Integration Test', () => {
       // Create proposal in original DAO
       const proposal = createActiveProposalWithElapsedTime('proposal-non-subscribed', 32);
 
-      GraphQLMockSetup.setupMock(
-        httpMockSetup.getMockClient(),
-        [proposal],
-        [],
-        { [testDaoId]: 1 },
-        []
-      );
+      useProposalsAndVotes([proposal], []);
 
       // Wait for notification (should only go to subscribed user)
       const message = await slackHelper.waitForMessage(

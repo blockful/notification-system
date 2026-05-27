@@ -1,23 +1,28 @@
 /**
  * Slack New Proposal Integration Test
  * Tests that new proposal notifications are correctly delivered via Slack
- * Supports both mock and real Slack delivery modes
+ * Supports both captured and real Slack delivery modes
  */
 
-import { describe, test, expect, beforeEach, beforeAll } from '@jest/globals';
+import { describe, test, expect, beforeEach, beforeAll } from 'vitest';
+import { proposalsHandler } from '@anticapture/client/msw';
+import { type OnchainProposal } from '@notification-system/anticapture-client';
 import { db, TestApps } from '../../src/setup';
-import { HttpClientMockSetup, GraphQLMockSetup } from '../../src/mocks';
+import { server, proposalsByDaoResolver, daosFromItems } from '../../src/setup/msw-server';
 import { UserFactory, ProposalFactory, WorkspaceFactory } from '../../src/fixtures';
 import { SlackTestHelper, DatabaseTestHelper, TestCleanup } from '../../src/helpers';
-import { SlackTestClient } from '../../src/test-clients/slack-test.client';
+import { SimpleSlackClient } from '../../src/test-clients/simple-slack.client';
 import { testConstants, timeouts } from '../../src/config';
 import { env } from '../../src/config/env';
 
+const useProposals = (proposals: OnchainProposal[]) =>
+  server.use(daosFromItems(proposals), proposalsHandler(proposalsByDaoResolver(proposals)));
+
 describe('Slack New Proposal - Integration Test', () => {
   let apps: TestApps;
-  let httpMockSetup: HttpClientMockSetup;
+
   let slackHelper: SlackTestHelper;
-  let slackClient: SlackTestClient;
+  let slackClient: SimpleSlackClient;
   let dbHelper: DatabaseTestHelper;
 
   // Test configuration
@@ -26,11 +31,11 @@ describe('Slack New Proposal - Integration Test', () => {
 
   beforeAll(async () => {
     apps = TestCleanup.getGlobalApps();
-    httpMockSetup = TestCleanup.getGlobalHttpMockSetup();
+
 
     // Create Slack client and helper
-    slackClient = new SlackTestClient(global.mockSlackSendMessage);
-    slackHelper = new SlackTestHelper(global.mockSlackSendMessage, slackClient);
+    slackClient = global.slackClient;
+    slackHelper = new SlackTestHelper(global.slackClient);
 
     dbHelper = new DatabaseTestHelper(db);
 
@@ -64,14 +69,13 @@ describe('Slack New Proposal - Integration Test', () => {
     const proposal = ProposalFactory.createProposal(TEST_DAO_ID, proposalId, {
       title: `Test Proposal for Slack ${Date.now()}`,
       status: 'ACTIVE',
-      timestamp: futureTimestamp.toString(),
+      timestamp: futureTimestamp,
       startBlock: 100000,
       endBlock: 200000,
-      endTimestamp: Math.floor((Date.now() + 7 * 24 * 60 * 60 * 1000) / 1000).toString()
+      endTimestamp: Math.floor((Date.now() + 7 * 24 * 60 * 60 * 1000) / 1000)
     });
 
-    // Setup GraphQL mock to return the proposal
-    GraphQLMockSetup.setupMock(httpMockSetup.getMockClient(), [proposal], [], {}, []);
+    useProposals([proposal]);
 
     // Wait for Slack notification
     const message = await slackHelper.waitForMessage(
@@ -132,14 +136,13 @@ describe('Slack New Proposal - Integration Test', () => {
     const proposal = ProposalFactory.createProposal(TEST_DAO_ID, proposalId, {
       title: 'Proposal with **Bold Text** and Links',
       status: 'ACTIVE',
-      timestamp: futureTimestamp.toString(),
+      timestamp: futureTimestamp,
       startBlock: 100000,
       endBlock: 200000,
-      endTimestamp: Math.floor((Date.now() + 7 * 24 * 60 * 60 * 1000) / 1000).toString()
+      endTimestamp: Math.floor((Date.now() + 7 * 24 * 60 * 60 * 1000) / 1000)
     });
 
-    // Setup GraphQL mock
-    GraphQLMockSetup.setupMock(httpMockSetup.getMockClient(), [proposal], [], {}, []);
+    useProposals([proposal]);
 
     // Wait for Slack notification
     const message = await slackHelper.waitForMessage(
@@ -185,13 +188,12 @@ describe('Slack New Proposal - Integration Test', () => {
     const proposal = ProposalFactory.createProposal(TEST_DAO_ID, proposalId, {
       title: `Multi-User Proposal ${Date.now()}`,
       status: 'ACTIVE',
-      timestamp: futureTimestamp.toString(),
+      timestamp: futureTimestamp,
       startBlock: 100000,
       endBlock: 200000
     });
 
-    // Setup GraphQL mock
-    GraphQLMockSetup.setupMock(httpMockSetup.getMockClient(), [proposal], [], {}, []);
+    useProposals([proposal]);
 
     // Wait for both notifications
     const messages = await slackHelper.waitForMessageCount(
@@ -241,11 +243,10 @@ describe('Slack New Proposal - Integration Test', () => {
     const proposal = ProposalFactory.createProposal(TEST_DAO_ID, proposalId, {
       title: `Cross-Platform Proposal ${Date.now()}`,
       status: 'ACTIVE',
-      timestamp: futureTimestamp.toString()
+      timestamp: futureTimestamp
     });
 
-    // Setup GraphQL mock
-    GraphQLMockSetup.setupMock(httpMockSetup.getMockClient(), [proposal], [], {}, []);
+    useProposals([proposal]);
 
     // Wait for Slack notification
     const slackMessage = await slackHelper.waitForMessage(
@@ -257,8 +258,8 @@ describe('Slack New Proposal - Integration Test', () => {
     expect(slackMessage.channel).toBe(SLACK_CHANNEL_ID);
     expect(slackMessage.text).toContain(proposal.title);
 
-    // Verify Telegram also received (checking mock calls)
-    const telegramCalls = global.mockTelegramSendMessage.mock.calls;
+    // Verify Telegram also received (checking captured calls)
+    const telegramCalls = global.telegramClient.getCapturedCalls();
     const telegramMessage = telegramCalls.find(([chatId, text]) =>
       text.includes(proposal.title) &&
       chatId.toString() === testConstants.profiles.p1.chatId

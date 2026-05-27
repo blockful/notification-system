@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach } from '@jest/globals';
+import { describe, it, expect, beforeEach } from 'vitest';
 import { NewOffchainProposalTriggerHandler } from './new-offchain-proposal-trigger.service';
 import { ISubscriptionClient, User, Notification } from '../../interfaces/subscription-client.interface';
 import { NotificationClientFactory } from '../notification/notification-factory.service';
@@ -80,7 +80,9 @@ describe('NewOffchainProposalTriggerHandler', () => {
       await handler.handleMessage(message);
 
       expect(notificationClient.sentPayloads).toHaveLength(1);
-      expect(notificationClient.sentPayloads[0].message).toContain("Grant Program");
+      expect(notificationClient.sentPayloads[0].message).toBe(
+        '📋 New Snapshot proposal in test-dao: "Grant Program"'
+      );
     });
 
     it('should use "Untitled Proposal" when title is empty', async () => {
@@ -96,7 +98,9 @@ describe('NewOffchainProposalTriggerHandler', () => {
 
       await handler.handleMessage(message);
 
-      expect(notificationClient.sentPayloads[0].message).toContain('Untitled Proposal');
+      expect(notificationClient.sentPayloads[0].message).toBe(
+        '📋 New Snapshot proposal in test-dao: "Untitled Proposal"'
+      );
     });
 
     it('should set correct eventId as offchain-{proposalId}', async () => {
