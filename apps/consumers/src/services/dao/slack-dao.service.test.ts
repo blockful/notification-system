@@ -10,8 +10,8 @@ const TEST_API_URL = 'http://test-api';
 
 const anticaptureClient = makeAnticaptureClient({
   getDAOs: async () => [
-    { id: 'UNI', chainId: 1, blockTime: 12, votingDelay: '0', alreadySupportCalldataReview: false, supportOffchainData: false },
-    { id: 'ENS', chainId: 1, blockTime: 12, votingDelay: '0', alreadySupportCalldataReview: false, supportOffchainData: false },
+    { id: 'UNI', chainId: 1, blockTime: 12, votingDelay: '0', supportsCalldataReview: false, supportsOffchainData: false },
+    { id: 'ENS', chainId: 1, blockTime: 12, votingDelay: '0', supportsCalldataReview: false, supportsOffchainData: false },
   ],
 });
 

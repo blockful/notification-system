@@ -32,7 +32,7 @@ describe('listOffchainProposals', () => {
   it('returns empty array when no DAOs support offchain data', async () => {
     server.use(
       http.get(`${TEST_BASE_URL}/daos`, () => HttpResponse.json(
-        daosResponse([{ id: 'uniswap', supportOffchainData: false }])
+        daosResponse([{ id: 'uniswap', supportsOffchainData: false }])
       )),
     );
     const client = createTestClient();
@@ -42,7 +42,7 @@ describe('listOffchainProposals', () => {
   it('returns proposals with daoId attached', async () => {
     server.use(
       http.get(`${TEST_BASE_URL}/daos`, () => HttpResponse.json(
-        daosResponse([{ id: 'ens', supportOffchainData: true }])
+        daosResponse([{ id: 'ens', supportsOffchainData: true }])
       )),
       http.get(`${TEST_BASE_URL}/ens/offchain/proposals`, () =>
         HttpResponse.json(offchainProposalsResponse([
@@ -60,8 +60,8 @@ describe('listOffchainProposals', () => {
     server.use(
       http.get(`${TEST_BASE_URL}/daos`, () => HttpResponse.json(
         daosResponse([
-          { id: 'dao_a', supportOffchainData: true },
-          { id: 'dao_b', supportOffchainData: true },
+          { id: 'dao_a', supportsOffchainData: true },
+          { id: 'dao_b', supportsOffchainData: true },
         ])
       )),
       http.get(`${TEST_BASE_URL}/dao_a/offchain/proposals`, () =>
@@ -81,12 +81,12 @@ describe('listOffchainProposals', () => {
     expect(result.map(p => p.id)).toEqual(['snap-b', 'snap-a']); // sorted DESC by created
   });
 
-  it('skips DAOs without supportOffchainData and queries only offchain-enabled ones', async () => {
+  it('skips DAOs without supportsOffchainData and queries only offchain-enabled ones', async () => {
     server.use(
       http.get(`${TEST_BASE_URL}/daos`, () => HttpResponse.json(
         daosResponse([
-          { id: 'onchain_only', supportOffchainData: false },
-          { id: 'offchain_dao', supportOffchainData: true },
+          { id: 'onchain_only', supportsOffchainData: false },
+          { id: 'offchain_dao', supportsOffchainData: true },
         ])
       )),
       http.get(`${TEST_BASE_URL}/offchain_dao/offchain/proposals`, () =>
@@ -106,8 +106,8 @@ describe('listOffchainProposals', () => {
     server.use(
       http.get(`${TEST_BASE_URL}/daos`, () => HttpResponse.json(
         daosResponse([
-          { id: 'ok_dao', supportOffchainData: true },
-          { id: 'bad_dao', supportOffchainData: true },
+          { id: 'ok_dao', supportsOffchainData: true },
+          { id: 'bad_dao', supportsOffchainData: true },
         ])
       )),
       http.get(`${TEST_BASE_URL}/ok_dao/offchain/proposals`, () =>

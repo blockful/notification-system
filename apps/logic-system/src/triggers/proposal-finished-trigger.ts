@@ -67,9 +67,9 @@ export class ProposalFinishedTrigger extends Trigger<ProposalOnChain, void> {
       description: proposal?.description || '',
       endTimestamp: proposal?.endTimestamp ?? 0,
       status: proposal?.status || 'unknown',
-      forVotes: proposal?.forVotes || '0',
-      againstVotes: proposal?.againstVotes || '0',
-      abstainVotes: proposal?.abstainVotes || '0'
+      forVotes: proposal?.forVotes != null ? String(proposal.forVotes) : '0',
+      againstVotes: proposal?.againstVotes != null ? String(proposal.againstVotes) : '0',
+      abstainVotes: proposal?.abstainVotes != null ? String(proposal.abstainVotes) : '0'
     }));
 
     // Send all proposals in a single batch message for maximum efficiency

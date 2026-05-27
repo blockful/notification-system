@@ -21,16 +21,16 @@ export function daosResponse(items: Array<{
   id: string;
   votingDelay?: string;
   chainId?: number;
-  supportOffchainData?: boolean;
-  alreadySupportCalldataReview?: boolean;
+  supportsOffchainData?: boolean;
+  supportsCalldataReview?: boolean;
 }>) {
   return {
     items: items.map(d => ({
       id: d.id,
       votingDelay: d.votingDelay ?? '0',
       chainId: d.chainId ?? 1,
-      supportOffchainData: d.supportOffchainData ?? false,
-      alreadySupportCalldataReview: d.alreadySupportCalldataReview ?? false,
+      supportsOffchainData: d.supportsOffchainData ?? false,
+      supportsCalldataReview: d.supportsCalldataReview ?? false,
     })),
   };
 }
