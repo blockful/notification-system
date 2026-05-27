@@ -7,7 +7,7 @@
     "test": "vitest run"
   },
   "devDependencies": {
-    "@anticapture/client": "^1.1.0",
+    "@anticapture/client": "^1.2.0",
     "@notification-system/anticapture-client": "workspace:*",
     "@notification-system/consumer": "workspace:*",
     "@notification-system/dispatcher": "workspace:*",
