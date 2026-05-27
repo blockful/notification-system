@@ -1,11 +1,13 @@
-import type { NotificationTypeId } from '@notification-system/messages';
+import { NotificationTypeId } from '@notification-system/messages';
 import { IUserNotificationPreferencesRepository, UserNotificationPreference } from '../interfaces/user_subscription.interface';
 
 export class SettingsService {
   constructor(private prefsRepo: IUserNotificationPreferencesRepository) {}
 
   async getUserPreferences(userId: string): Promise<UserNotificationPreference[]> {
-    return this.prefsRepo.findByUser(userId);
+    const stored = await this.prefsRepo.findByUser(userId);
+    const validTriggerTypes = new Set<string>(Object.values(NotificationTypeId));
+    return stored.filter(p => validTriggerTypes.has(p.trigger_type));
   }
 
   async saveUserPreferences(
