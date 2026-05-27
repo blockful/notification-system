@@ -17,14 +17,14 @@ describe('getDAOs', () => {
   it('maps DAOs adding hardcoded blockTime: 12', async () => {
     server.use(http.get(`${TEST_BASE_URL}/daos`, () => HttpResponse.json(
       daosResponse([
-        { id: 'uniswap', votingDelay: '1000', chainId: 1, alreadySupportCalldataReview: false, supportOffchainData: false },
-        { id: 'ens', votingDelay: '500', chainId: 1, alreadySupportCalldataReview: false, supportOffchainData: false },
+        { id: 'uniswap', votingDelay: '1000', chainId: 1, supportsCalldataReview: false, supportsOffchainData: false },
+        { id: 'ens', votingDelay: '500', chainId: 1, supportsCalldataReview: false, supportsOffchainData: false },
       ])
     )));
     const client = createTestClient();
     expect(await client.getDAOs()).toEqual([
-      { id: 'uniswap', blockTime: 12, votingDelay: '1000', chainId: 1, alreadySupportCalldataReview: false, supportOffchainData: false },
-      { id: 'ens', blockTime: 12, votingDelay: '500', chainId: 1, alreadySupportCalldataReview: false, supportOffchainData: false },
+      { id: 'uniswap', blockTime: 12, votingDelay: '1000', chainId: 1, supportsCalldataReview: false, supportsOffchainData: false },
+      { id: 'ens', blockTime: 12, votingDelay: '500', chainId: 1, supportsCalldataReview: false, supportsOffchainData: false },
     ]);
   });
 
@@ -40,7 +40,7 @@ describe('getProposalById', () => {
     server.use(
       http.get(`${TEST_BASE_URL}/daos`, () => HttpResponse.json(
         daosResponse([
-          { id: 'ens', votingDelay: '0', chainId: 1, supportOffchainData: false, alreadySupportCalldataReview: false },
+          { id: 'ens', votingDelay: '0', chainId: 1, supportsOffchainData: false, supportsCalldataReview: false },
         ])
       )),
       http.get(`${TEST_BASE_URL}/ens/proposals/prop-1`, () =>
@@ -57,8 +57,8 @@ describe('getProposalById', () => {
     server.use(
       http.get(`${TEST_BASE_URL}/daos`, () => HttpResponse.json(
         daosResponse([
-          { id: 'uniswap', votingDelay: '0', chainId: 1, supportOffchainData: false, alreadySupportCalldataReview: false },
-          { id: 'ens', votingDelay: '0', chainId: 1, supportOffchainData: false, alreadySupportCalldataReview: false },
+          { id: 'uniswap', votingDelay: '0', chainId: 1, supportsOffchainData: false, supportsCalldataReview: false },
+          { id: 'ens', votingDelay: '0', chainId: 1, supportsOffchainData: false, supportsCalldataReview: false },
         ])
       )),
       http.get(`${TEST_BASE_URL}/uniswap/proposals/prop-2`, () => new HttpResponse(null, { status: 404 })),
@@ -76,7 +76,7 @@ describe('getProposalById', () => {
     server.use(
       http.get(`${TEST_BASE_URL}/daos`, () => HttpResponse.json(
         daosResponse([
-          { id: 'ens', votingDelay: '0', chainId: 1, supportOffchainData: false, alreadySupportCalldataReview: false },
+          { id: 'ens', votingDelay: '0', chainId: 1, supportsOffchainData: false, supportsCalldataReview: false },
         ])
       )),
       http.get(`${TEST_BASE_URL}/ens/proposals/missing-prop`, () => new HttpResponse(null, { status: 404 })),
@@ -96,8 +96,8 @@ describe('getProposalById', () => {
     server.use(
       http.get(`${TEST_BASE_URL}/daos`, () => HttpResponse.json(
         daosResponse([
-          { id: 'uniswap', votingDelay: '0', chainId: 1, supportOffchainData: false, alreadySupportCalldataReview: false },
-          { id: 'ens', votingDelay: '0', chainId: 1, supportOffchainData: false, alreadySupportCalldataReview: false },
+          { id: 'uniswap', votingDelay: '0', chainId: 1, supportsOffchainData: false, supportsCalldataReview: false },
+          { id: 'ens', votingDelay: '0', chainId: 1, supportsOffchainData: false, supportsCalldataReview: false },
         ])
       )),
       http.get(`${TEST_BASE_URL}/uniswap/proposals/prop-500`, () => new HttpResponse(null, { status: 500 })),
@@ -382,12 +382,12 @@ describe('listRecentVotesFromAllDaos', () => {
 });
 
 describe('listRecentOffchainVotesFromAllDaos', () => {
-  it('only queries DAOs with supportOffchainData: true', async () => {
+  it('only queries DAOs with supportsOffchainData: true', async () => {
     server.use(
       http.get(`${TEST_BASE_URL}/daos`, () => HttpResponse.json(daosResponse([
-        { id: 'dao1', supportOffchainData: true },
-        { id: 'dao2', supportOffchainData: false },
-        { id: 'dao3', supportOffchainData: true },
+        { id: 'dao1', supportsOffchainData: true },
+        { id: 'dao2', supportsOffchainData: false },
+        { id: 'dao3', supportsOffchainData: true },
       ]))),
       http.get(`${TEST_BASE_URL}/dao1/offchain/votes`, () =>
         HttpResponse.json({ items: [{ voter: '0xaaa', created: 2000, proposalId: 'sp1', proposalTitle: 'T1' }], totalCount: 1 })),
@@ -405,7 +405,7 @@ describe('listRecentOffchainVotesFromAllDaos', () => {
   it('returns empty array when no DAOs support offchain data', async () => {
     server.use(
       http.get(`${TEST_BASE_URL}/daos`, () => HttpResponse.json(daosResponse([
-        { id: 'dao1', supportOffchainData: false }
+        { id: 'dao1', supportsOffchainData: false }
       ]))),
     );
     const client = createTestClient();

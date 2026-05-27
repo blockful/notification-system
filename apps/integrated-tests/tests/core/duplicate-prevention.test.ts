@@ -1,5 +1,5 @@
 import { describe, test, expect, beforeAll, afterEach } from 'vitest';
-import { proposalsHandler, getDaosHandler, offchainProposalsHandler } from '@anticapture/client/msw';
+import { proposalsHandler, daosHandler, offchainProposalsHandler } from '@anticapture/client/msw';
 import { HttpResponse } from 'msw';
 import type { OnchainProposal } from '@notification-system/anticapture-client';
 import { db, TestApps } from '../../src/setup';
@@ -10,7 +10,7 @@ import { testConstants, timeouts } from '../../src/config';
 
 const useDaoAndActiveProposal = (daoId: string, proposal: OnchainProposal) =>
   server.use(
-    getDaosHandler({ items: [{ id: daoId, votingDelay: '0' }], totalCount: 1 }),
+    daosHandler({ items: [{ id: daoId, votingDelay: '0' }], totalCount: 1 }),
     offchainProposalsHandler({ items: [], totalCount: 0 }),
     proposalsHandler(({ request }) => {
       const statuses = new URL(request.url).searchParams.getAll('status').map(s => s.toLowerCase());
