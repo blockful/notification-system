@@ -9,9 +9,8 @@ import { SlackCommandContext, SlackActionContext } from '../../interfaces/slack-
 
 export type SlackDAORequest = Pick<SlackActionContext, 'body' | 'session' | 'ack' | 'respond'>;
 import { slackMessages, replacePlaceholders } from '@notification-system/messages';
-import type { ViewStateSelectedOption } from '@slack/bolt';
 import {
-  daoSelectionList,
+  daoToggleList,
   errorMessage,
   daoEmptyState,
   daoListWithEdit
@@ -50,10 +49,10 @@ export class SlackDAOService extends BaseDAOService {
       const userPreferences = await this.getUserSubscriptions(fullUserId);
       const currentSelections = new Set(userPreferences);
 
-      const blocks = daoSelectionList(
+      const blocks = daoToggleList(
         daos,
         currentSelections,
-        'dao_checkboxes',
+        'dao_toggle',
         'dao_confirm_subscribe',
         slackMessages.dao.subscribeInstructions
       );
@@ -121,64 +120,83 @@ export class SlackDAOService extends BaseDAOService {
   }
 
   /**
-   * Confirm DAO selection changes from checkboxes
+   * Toggle a single DAO subscription on/off, then re-render the list in place.
+   * Option 2 UI: each DAO is a button that saves immediately on click — there is
+   * no batch "confirm" step for the selection itself.
    */
-  async confirm(context: SlackActionContext): Promise<void> {
-    const channelId = context.body.channel?.id;
-    const workspaceId = context.body.team?.id || context.body.user?.team_id;
+  async toggle(context: SlackActionContext, daoId: string): Promise<void> {
+    const channelId = context.body.channel?.id || context.body.channel_id;
+    const workspaceId = context.body.team?.id || context.body.team_id || context.body.user?.team_id;
     const fullUserId = `${workspaceId}:${channelId}`;
 
     try {
       await context.ack();
 
-      // Extract selected DAOs from checkbox state
-      const state = context.body.state;
-      if (typeof state === 'string') {
-        throw new Error('Unexpected DialogAction state format');
-      }
+      const normalized = daoId.toUpperCase();
+      const daos = await this.fetchAvailableDAOs();
+      const current = new Set(
+        await this.subscriptionApi.getUserPreferences(fullUserId, this.getPlatformId(), daos.map(dao => dao.id))
+      );
 
-      const selectedOptions: ViewStateSelectedOption[] =
-        state?.values?.dao_checkboxes_block?.dao_checkboxes?.selected_options || [];
-      const selectedDAOs = new Set<string>(selectedOptions.map(opt => opt.value));
-
-      // Sync to the complete desired state (handles both adds and removes)
-      await this.syncSubscriptionsToState(fullUserId, selectedDAOs);
-
-      // Show confirmation message
-      let successMessage: string;
-      if (selectedDAOs.size === 0) {
-        successMessage = slackMessages.dao.unsubscribeAllSuccess;
+      // Flip just the clicked DAO and persist that single change
+      const willSubscribe = !current.has(normalized);
+      await this.subscriptionApi.saveUserPreference(normalized, fullUserId, this.getPlatformId(), willSubscribe);
+      if (willSubscribe) {
+        current.add(normalized);
       } else {
-        const daoList = this.formatDAOList(selectedDAOs);
-        successMessage = replacePlaceholders(slackMessages.dao.subscribeSuccess, { daoList });
+        current.delete(normalized);
       }
 
       if (context.respond) {
         await context.respond({
-          replace_original: false,
+          blocks: daoToggleList(daos, current, 'dao_toggle', 'dao_confirm_subscribe', slackMessages.dao.subscribeInstructions),
+          response_type: 'in_channel',
+          replace_original: true
+        });
+      }
+    } catch (error) {
+      this.logger.error({ err: error, event: 'dao.toggle_failed' }, 'error toggling DAO subscription');
+      if (context.respond) {
+        await context.respond({
+          text: slackMessages.dao.updateError,
+          response_type: 'in_channel'
+        });
+      }
+    }
+  }
+
+  /**
+   * "Done" button. Subscriptions were already saved per-click via toggle(), so
+   * this just collapses the button list into a final summary. Onboarding advance
+   * (the wallet step) is triggered by the action handler in slack-bot.service.
+   */
+  async confirm(context: SlackActionContext): Promise<void> {
+    const channelId = context.body.channel?.id || context.body.channel_id;
+    const workspaceId = context.body.team?.id || context.body.team_id || context.body.user?.team_id;
+    const fullUserId = `${workspaceId}:${channelId}`;
+
+    try {
+      await context.ack();
+
+      const daos = await this.fetchAvailableDAOs();
+      const current = await this.subscriptionApi.getUserPreferences(fullUserId, this.getPlatformId(), daos.map(dao => dao.id));
+
+      const summaryMessage = current.length === 0
+        ? slackMessages.dao.unsubscribeAllSuccess
+        : replacePlaceholders(slackMessages.dao.subscribeSuccess, { daoList: this.formatDAOList(current) });
+
+      if (context.respond) {
+        await context.respond({
+          replace_original: true,
           blocks: [
-            {
-              type: 'section',
-              text: {
-                type: 'mrkdwn',
-                text: successMessage
-              }
-            },
-            {
-              type: 'context',
-              elements: [
-                {
-                  type: 'mrkdwn',
-                  text: slackMessages.dao.updateInstructions
-                }
-              ]
-            }
+            { type: 'section', text: { type: 'mrkdwn', text: summaryMessage } },
+            { type: 'context', elements: [{ type: 'mrkdwn', text: slackMessages.dao.updateInstructions }] }
           ],
           response_type: 'in_channel'
         });
       }
     } catch (error) {
-      this.logger.error({ err: error, event: 'dao.update_failed' }, 'error updating subscriptions');
+      this.logger.error({ err: error, event: 'dao.confirm_failed' }, 'error finalizing DAO selection');
       if (context.respond) {
         await context.respond({
           replace_original: false,

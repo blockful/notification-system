@@ -109,32 +109,50 @@ export const checkboxSelectionList = (
  * DAO selection list with checkboxes
  * Wrapper around checkboxSelectionList with DAO-specific formatting
  */
-export const daoSelectionList = (
+export const daoToggleList = (
   daos: Array<{ id: string; name?: string }>,
   selectedIds: Set<string>,
-  actionPrefix: string,
-  confirmActionId: string,
+  toggleActionPrefix: string,
+  doneActionId: string,
   headerText: string
 ): KnownBlock[] => {
-  // Format DAOs with emojis
-  const items = daos.map(dao => {
+  // Option 2 UI: one button per DAO so the whole list stays visible. Neither a
+  // `checkboxes` element (caps at 10 options) nor a `multi_static_select` (a
+  // dropdown) fits a friendly >10 list — buttons do. Selected DAOs get a ✅ and
+  // primary (green) style. Each button's action_id must be unique within a block
+  // (`dao_toggle_<ID>`); the DAO id also rides in `value` for the handler to read.
+  // Clicking a button saves immediately (see SlackDAOService.toggle).
+  const toggleButtons = daos.map(dao => {
     const daoId = dao.id.toUpperCase();
     const emoji = daoEmojis.get(daoId) || defaultDaoEmoji;
-    return {
-      value: daoId,
-      displayText: `${emoji} *${daoId}*`
-    };
+    const isOn = selectedIds.has(daoId);
+    return button(
+      `${isOn ? '✅ ' : ''}${emoji} ${daoId}`,
+      `${toggleActionPrefix}_${daoId}`,
+      isOn ? { style: 'primary', value: daoId } : { value: daoId },
+    );
   });
 
-  return checkboxSelectionList(
-    items,
-    selectedIds,
-    actionPrefix,
-    'dao_checkboxes_block',
-    confirmActionId,
-    headerText,
-    'primary'
-  );
+  // An actions block holds at most 25 elements, so chunk the buttons across blocks.
+  const buttonBlocks: ActionsBlock[] = [];
+  for (let i = 0; i < toggleButtons.length; i += 25) {
+    buttonBlocks.push(actions(...toggleButtons.slice(i, i + 25)));
+  }
+
+  return [
+    section(headerText),
+    ...buttonBlocks,
+    {
+      type: 'context',
+      elements: [
+        {
+          type: 'mrkdwn',
+          text: `Tracking *${selectedIds.size}* of *${daos.length}* — changes save as you click.`,
+        },
+      ],
+    },
+    actions(button('✅ Done', doneActionId, { style: 'primary' })),
+  ];
 };
 
 /**

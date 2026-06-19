@@ -96,8 +96,15 @@ export class SlackBotService implements BotServiceInterface {
         }
       });
 
-      handlers.action('dao_checkboxes', async (ctx) => {
-        await ctx.ack();
+      handlers.action(/^dao_toggle_/, async (ctx) => {
+        if (this.daoService) {
+          const daoId = ctx.body.actions?.[0]?.value;
+          if (daoId) {
+            await this.daoService.toggle(ctx, daoId);
+          } else {
+            await ctx.ack();
+          }
+        }
       });
 
 
@@ -140,8 +147,15 @@ export class SlackBotService implements BotServiceInterface {
         }
       });
 
-      handlers.action('settings_checkboxes', async (ctx) => {
-        await ctx.ack();
+      handlers.action(/^settings_toggle_/, async (ctx) => {
+        if (this.settingsService) {
+          const typeId = ctx.body.actions?.[0]?.value;
+          if (typeId) {
+            await this.settingsService.toggle(ctx, typeId);
+          } else {
+            await ctx.ack();
+          }
+        }
       });
 
       handlers.action('settings_confirm', async (ctx) => {
