@@ -75,10 +75,6 @@ export class SlackClient implements SlackClientInterface {
         signingSecret,
         endpoints: '/slack/events',
         processBeforeResponse: true,
-        // Railway's healthcheck hits $PORT/health, and this Bolt receiver is the one
-        // bound to $PORT. The real /health lives on the separate webhook server
-        // (WEBHOOK_API_PORT), which Railway does not probe, so the check 404s and the
-        // deploy never goes live. Expose /health here too so the probe on $PORT gets 200.
         customRoutes: [
           {
             path: '/health',
