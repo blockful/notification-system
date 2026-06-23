@@ -75,6 +75,16 @@ export class SlackClient implements SlackClientInterface {
         signingSecret,
         endpoints: '/slack/events',
         processBeforeResponse: true,
+        customRoutes: [
+          {
+            path: '/health',
+            method: ['GET'],
+            handler: (_req, res) => {
+              res.writeHead(200, { 'Content-Type': 'application/json' });
+              res.end(JSON.stringify({ status: 'ok' }));
+            },
+          },
+        ],
       }),
       installationStore,
       authorize: async (source) => {
