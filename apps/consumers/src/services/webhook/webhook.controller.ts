@@ -15,10 +15,29 @@ export class WebhookController {
   async register(app: FastifyInstance): Promise<void> {
     const typedApp = app.withTypeProvider<ZodTypeProvider>();
     typedApp.post('/webhooks', {
-      schema: { body: webhookBodySchema },
+      schema: {
+        body: webhookBodySchema,
+        response: {
+          201: z.union([
+            z.object({
+              success: z.literal(true),
+              secret: z.string(),
+              note: z.string(),
+            }),
+            z.object({ success: z.literal(true) }),
+          ]),
+        },
+      },
     }, async (request, reply) => {
       const { url } = request.body;
-      await this.webhookService.registerWebhook(url);
+      const { created, secret } = await this.webhookService.registerWebhook(url);
+      if (created) {
+        return reply.code(201).send({
+          success: true,
+          secret,
+          note: 'Store this secret now — it will not be shown again.',
+        });
+      }
       return reply.code(201).send({ success: true });
     });
 

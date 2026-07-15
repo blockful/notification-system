@@ -51,16 +51,22 @@ export class WebhookService implements BotServiceInterface {
    * Register a webhook URL by subscribing it to all available DAOs.
    * For each DAO, calls saveUserPreference which creates the user + preference
    * (or reactivates if already exists).
+   * Only the call that actually inserts the underlying `users` row (shared across
+   * all DAOs by channel + url) will ever return a `secret`.
    */
-  async registerWebhook(url: string): Promise<void> {
+  async registerWebhook(url: string): Promise<{ created: boolean; secret?: string }> {
     const daos = await this.anticaptureClient.getDAOs();
     if (daos.length === 0) {
       throw new Error('No DAOs available to subscribe to');
     }
 
+    let secret: string | undefined;
     for (const dao of daos) {
-      await this.subscriptionApi.saveUserPreference(dao.id, url, 'webhook', true);
+      const response = await this.subscriptionApi.saveUserPreference(dao.id, url, 'webhook', true);
+      secret = secret ?? response.secret;
     }
+
+    return secret ? { created: true, secret } : { created: false };
   }
 
   /**
