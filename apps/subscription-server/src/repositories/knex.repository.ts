@@ -120,7 +120,7 @@ export class KnexUserRepository implements IUserRepository {
         } catch (error) {
           this.logger.error(
             { err: error, userId: user.id, event: 'secret.decrypt_failed' },
-            'failed to decrypt workspace token',
+            'failed to decrypt webhook secret',
           );
         }
       }
