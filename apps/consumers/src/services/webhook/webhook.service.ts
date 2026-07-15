@@ -1,4 +1,5 @@
 import axios, { AxiosInstance } from 'axios';
+import * as crypto from 'crypto';
 import { NotificationPayload } from '../../interfaces/notification.interface';
 import { BotServiceInterface } from '../../interfaces/bot-service.interface';
 import { SubscriptionAPIService } from '../subscription-api.service';
@@ -13,8 +14,9 @@ export class WebhookService implements BotServiceInterface {
     private anticaptureClient: IAnticaptureClient,
     private subscriptionApi: SubscriptionAPIService,
     logger: Logger = createLogger('consumers'),
+    httpClient?: AxiosInstance,
   ) {
-    this.httpClient = axios.create({
+    this.httpClient = httpClient ?? axios.create({
       timeout: 30000,
       headers: { 'Content-Type': 'application/json' },
     });
@@ -23,6 +25,14 @@ export class WebhookService implements BotServiceInterface {
 
   async sendNotification(payload: NotificationPayload): Promise<string> {
     const url = payload.channelUserId.toString();
+
+    if (!payload.bot_token) {
+      this.logger.warn(
+        { url, userId: payload.userId, event: 'webhook.skipped_unsigned' },
+        'no secret for subscriber, skipping delivery',
+      );
+      return '';
+    }
 
     const metadata: Record<string, any> = {
       channel: payload.channel,
@@ -37,7 +47,19 @@ export class WebhookService implements BotServiceInterface {
       metadata,
     };
 
-    const response = await this.httpClient.post(url, body);
+    const timestamp = Math.floor(Date.now() / 1000);
+    const rawBody = JSON.stringify(body);
+    const signature = crypto
+      .createHmac('sha256', payload.bot_token)
+      .update(`${timestamp}.${rawBody}`)
+      .digest('hex');
+
+    const response = await this.httpClient.post(url, rawBody, {
+      headers: {
+        'X-Webhook-Timestamp': String(timestamp),
+        'X-Webhook-Signature': `sha256=${signature}`,
+      },
+    });
     const responseId = response.data?.id || response.data?.messageId || `webhook-${Date.now()}`;
 
     this.logger.info(

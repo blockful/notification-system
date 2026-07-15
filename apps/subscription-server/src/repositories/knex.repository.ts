@@ -100,16 +100,26 @@ export class KnexUserRepository implements IUserRepository {
       .whereIn('users.id', ids);
 
     if (!this.tokenEncryptionKey) {
-      return rows.map(({ encrypted_token, ...user }) => user);
+      return rows.map(({ encrypted_token, secret, ...user }) => user);
     }
 
-    return rows.map(({ encrypted_token, ...user }) => {
+    return rows.map(({ encrypted_token, secret, ...user }) => {
       if (encrypted_token) {
         try {
           user.token = CryptoUtil.decrypt(encrypted_token, this.tokenEncryptionKey!);
         } catch (error) {
           this.logger.error(
             { err: error, userId: user.id, event: 'token.decrypt_failed' },
+            'failed to decrypt workspace token',
+          );
+        }
+      }
+      if (secret) {
+        try {
+          user.token = CryptoUtil.decrypt(secret, this.tokenEncryptionKey!);
+        } catch (error) {
+          this.logger.error(
+            { err: error, userId: user.id, event: 'secret.decrypt_failed' },
             'failed to decrypt workspace token',
           );
         }

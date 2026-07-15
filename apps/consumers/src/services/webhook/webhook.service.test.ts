@@ -1,8 +1,20 @@
 import { describe, it, expect, beforeEach } from 'vitest';
+import * as crypto from 'crypto';
+import { AxiosInstance } from 'axios';
 import { WebhookService } from './webhook.service';
 import { ISubscriptionAPI } from '../subscription-api.service';
 import { UserSubscriptionResponse } from '../../interfaces/subscription.interface';
+import { NotificationPayload } from '../../interfaces/notification.interface';
 import { makeAnticaptureClient } from '@notification-system/anticapture-client';
+
+class SimpleHttpClient {
+  public posts: Array<{ url: string; data: any; config: any }> = [];
+
+  post = async (url: string, data: any, config?: any) => {
+    this.posts.push({ url, data, config });
+    return { data: { id: 'delivered-1' } };
+  };
+}
 
 const anticaptureClient = makeAnticaptureClient({
   getDAOs: async () => [
@@ -51,6 +63,67 @@ describe('WebhookService', () => {
       const result = await webhookService.registerWebhook('https://example.com/webhook');
 
       expect(result).toEqual({ created: false });
+    });
+  });
+
+  describe('sendNotification', () => {
+    const subscriptionApi = new SimpleSubscriptionAPI([]);
+
+    const basePayload: NotificationPayload = {
+      userId: 'user123',
+      channel: 'webhook',
+      channelUserId: 'https://example.com/webhook',
+      message: 'Test notification message',
+      bot_token: 'shared-webhook-secret',
+    };
+
+    it('signs the delivery with an HMAC computed from the subscriber secret', async () => {
+      const httpClient = new SimpleHttpClient();
+      const webhookService = new WebhookService(
+        anticaptureClient,
+        subscriptionApi,
+        undefined,
+        httpClient as unknown as AxiosInstance,
+      );
+
+      const before = Math.floor(Date.now() / 1000);
+      await webhookService.sendNotification(basePayload);
+      const after = Math.floor(Date.now() / 1000);
+
+      expect(httpClient.posts).toHaveLength(1);
+      const [{ url, data: rawBody, config }] = httpClient.posts;
+
+      expect(url).toBe('https://example.com/webhook');
+      expect(typeof rawBody).toBe('string');
+
+      const timestamp = Number(config.headers['X-Webhook-Timestamp']);
+      expect(timestamp).toBeGreaterThanOrEqual(before);
+      expect(timestamp).toBeLessThanOrEqual(after);
+
+      const expectedSignature = crypto
+        .createHmac('sha256', basePayload.bot_token!)
+        .update(`${timestamp}.${rawBody}`)
+        .digest('hex');
+
+      expect(config.headers['X-Webhook-Signature']).toBe(`sha256=${expectedSignature}`);
+    });
+
+    it('skips delivery and does not POST when the subscriber has no bot_token/secret', async () => {
+      const httpClient = new SimpleHttpClient();
+      const webhookService = new WebhookService(
+        anticaptureClient,
+        subscriptionApi,
+        undefined,
+        httpClient as unknown as AxiosInstance,
+      );
+
+      const result = await webhookService.sendNotification({
+        ...basePayload,
+        bot_token: undefined,
+      });
+
+      expect(httpClient.posts).toHaveLength(0);
+      expect(result).toBe('');
     });
   });
 });
