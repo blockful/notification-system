@@ -3,9 +3,11 @@
  * Handles the business logic for managing user subscriptions to DAOs
  */
 
+import * as crypto from 'crypto';
 import type { NotificationTypeId } from '@notification-system/messages';
 import { IUserRepository, IPreferenceRepository, User, IUserNotificationPreferencesRepository } from '../interfaces';
 import { IUserAddressRepository, UserAddress } from '../interfaces/user-address.interface';
+import { CryptoUtil } from '../utils/crypto';
 
 /**
  * Service class for handling subscription operations
@@ -15,7 +17,8 @@ export class SubscriptionService {
     private userRepository: IUserRepository,
     private preferenceRepository: IPreferenceRepository,
     private userAddressRepository: IUserAddressRepository,
-    private notificationPrefsRepo: IUserNotificationPreferencesRepository
+    private notificationPrefsRepo: IUserNotificationPreferencesRepository,
+    private readonly tokenEncryptionKey: string
   ) {}
 
   /**
@@ -40,13 +43,25 @@ export class SubscriptionService {
     is_active: boolean,
   ) {
     let user = await this.userRepository.findByChannelAndId(channel, channel_user_id);
-    
+    let plaintextSecret: string | undefined;
+
     if (!user) {
       try {
-        user = await this.userRepository.create({
-          channel,
-          channel_user_id
-        });
+        if (channel === 'webhook') {
+          const rawSecret = crypto.randomBytes(32).toString('hex');
+          const encryptedSecret = CryptoUtil.encrypt(rawSecret, this.tokenEncryptionKey);
+          user = await this.userRepository.create({
+            channel,
+            channel_user_id,
+            secret: encryptedSecret
+          });
+          plaintextSecret = rawSecret;
+        } else {
+          user = await this.userRepository.create({
+            channel,
+            channel_user_id
+          });
+        }
       } catch (error: any) {
         // Handle race condition - if user was created by another request
         if (error.message && error.message.includes('duplicate key value violates unique constraint')) {
@@ -54,12 +69,13 @@ export class SubscriptionService {
           if (!user) {
             throw new Error('Failed to create or find user after duplicate key error');
           }
+          plaintextSecret = undefined;
         } else {
           throw error;
         }
       }
     }
-    
+
     let existingPreference = await this.preferenceRepository.findByUserAndDao(user.id, dao);
     let result;
     
@@ -79,7 +95,8 @@ export class SubscriptionService {
     
     return {
       user,
-      result
+      result,
+      secret: plaintextSecret
     };
   }
 

@@ -1,7 +1,10 @@
 import { describe, test, expect, beforeEach } from 'vitest';
 import type { NotificationTypeId } from '@notification-system/messages';
 import { SubscriptionService } from './subscription.service';
+import { CryptoUtil } from '../utils/crypto';
 import { User, UserPreference } from '../interfaces';
+
+const TEST_ENCRYPTION_KEY = '0'.repeat(64);
 import {
   SimpleUserRepository,
   SimplePreferenceRepository,
@@ -51,7 +54,7 @@ describe('Subscription Service', () => {
     prefRepo = new SimplePreferenceRepository();
     userAddressRepo = new SimpleUserAddressRepository();
     notificationPrefsRepo = new SimpleUserNotificationPreferencesRepository();
-    subscriptionService = new SubscriptionService(userRepo, prefRepo, userAddressRepo, notificationPrefsRepo);
+    subscriptionService = new SubscriptionService(userRepo, prefRepo, userAddressRepo, notificationPrefsRepo, TEST_ENCRYPTION_KEY);
   });
 
   describe('handleSubscription', () => {
@@ -70,6 +73,63 @@ describe('Subscription Service', () => {
 
       expect(result.user).toEqual(mockUser);
       expect(result.result).toEqual(mockPreference);
+    });
+
+    test('should generate and return a plaintext secret when creating a new webhook user', async () => {
+      const mockWebhookUser: User = { id: '789', channel: 'webhook', channel_user_id: 'webhook_user_1' };
+      userRepo.findByChannelAndIdResult = undefined;
+      userRepo.createResult = mockWebhookUser;
+      prefRepo.findByUserAndDaoResult = undefined;
+      prefRepo.createResult = mockPreference;
+
+      const result = await subscriptionService.handleSubscription(
+        'dao123',
+        'webhook',
+        'webhook_user_1',
+        true
+      );
+
+      expect(result.secret).toBeDefined();
+      expect(result.secret).toMatch(/^[0-9a-f]{64}$/);
+
+      expect(userRepo.createCalls).toHaveLength(1);
+      const storedSecret = userRepo.createCalls[0].secret;
+      expect(storedSecret).toBeDefined();
+      expect(storedSecret).not.toBe(result.secret);
+      expect(CryptoUtil.decrypt(storedSecret!, TEST_ENCRYPTION_KEY)).toBe(result.secret);
+    });
+
+    test('should not generate a secret for a new non-webhook user', async () => {
+      userRepo.findByChannelAndIdResult = undefined;
+      userRepo.createResult = mockUser;
+      prefRepo.findByUserAndDaoResult = undefined;
+      prefRepo.createResult = mockPreference;
+
+      const result = await subscriptionService.handleSubscription(
+        'dao123',
+        'telegram',
+        'user123',
+        true
+      );
+
+      expect(result.secret).toBeUndefined();
+      expect(userRepo.createCalls[0].secret).toBeUndefined();
+    });
+
+    test('should not generate a secret when an existing webhook user is found', async () => {
+      const mockWebhookUser: User = { id: '789', channel: 'webhook', channel_user_id: 'webhook_user_1' };
+      userRepo.findByChannelAndIdResult = mockWebhookUser;
+      prefRepo.findByUserAndDaoResult = mockPreference;
+
+      const result = await subscriptionService.handleSubscription(
+        'dao123',
+        'webhook',
+        'webhook_user_1',
+        true
+      );
+
+      expect(result.secret).toBeUndefined();
+      expect(userRepo.createCalls).toHaveLength(0);
     });
 
     test('should update existing subscription', async () => {

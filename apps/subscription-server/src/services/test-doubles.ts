@@ -18,6 +18,7 @@ export class SimpleUserRepository implements IUserRepository {
   findByChannelAndIdError: Error | undefined;
   createResult: User | undefined;
   createError: Error | undefined;
+  createCalls: Omit<User, 'id'>[] = [];
   findByIdsWithWorkspaceTokensResult: User[] = [];
   findByIdsWithWorkspaceTokensCalls: string[][] = [];
 
@@ -25,7 +26,8 @@ export class SimpleUserRepository implements IUserRepository {
     if (this.findByChannelAndIdError) throw this.findByChannelAndIdError;
     return this.findByChannelAndIdResult;
   }
-  async create(): Promise<User> {
+  async create(data: Omit<User, 'id'>): Promise<User> {
+    this.createCalls.push(data);
     if (this.createError) throw this.createError;
     return this.createResult!;
   }
