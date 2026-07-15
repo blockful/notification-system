@@ -124,7 +124,7 @@ exactly once and never returned again. Re-registering the same URL returns succe
 
 Every delivery includes two headers:
 - `X-Webhook-Timestamp` — unix seconds
-- `X-Webhook-Signature` — `sha256=<hex>`
+- `X-Webhook-Signature-V2` — raw HMAC-SHA256 hex digest
 
 To verify:
 1. Recompute `HMAC-SHA256(secret, "{timestamp}.{raw_request_body}")`. Use the exact raw body bytes
@@ -149,10 +149,9 @@ function isValidSignature(secret, timestamp, rawBody, signatureHeader) {
     .createHmac('sha256', secret)
     .update(`${timestamp}.${rawBody}`)
     .digest('hex');
-  const expectedHeader = `sha256=${expected}`;
 
   const a = Buffer.from(signatureHeader);
-  const b = Buffer.from(expectedHeader);
+  const b = Buffer.from(expected);
   if (a.length !== b.length) return false;
 
   return crypto.timingSafeEqual(a, b);

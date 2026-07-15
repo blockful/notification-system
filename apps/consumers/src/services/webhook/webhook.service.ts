@@ -2,7 +2,7 @@ import axios, { AxiosInstance } from 'axios';
 import * as crypto from 'crypto';
 import { NotificationPayload } from '../../interfaces/notification.interface';
 import { BotServiceInterface } from '../../interfaces/bot-service.interface';
-import { SubscriptionAPIService } from '../subscription-api.service';
+import type { ISubscriptionAPI } from '../subscription-api.service';
 import { IAnticaptureClient } from '@notification-system/anticapture-client';
 import { createLogger, type Logger } from '@anticapture/observability';
 
@@ -12,7 +12,7 @@ export class WebhookService implements BotServiceInterface {
 
   constructor(
     private anticaptureClient: IAnticaptureClient,
-    private subscriptionApi: SubscriptionAPIService,
+    private subscriptionApi: ISubscriptionAPI,
     logger: Logger = createLogger('consumers'),
     httpClient?: AxiosInstance,
   ) {
@@ -57,7 +57,7 @@ export class WebhookService implements BotServiceInterface {
     const response = await this.httpClient.post(url, rawBody, {
       headers: {
         'X-Webhook-Timestamp': String(timestamp),
-        'X-Webhook-Signature': `sha256=${signature}`,
+        'X-Webhook-Signature-V2': signature,
       },
     });
     const responseId = response.data?.id || response.data?.messageId || `webhook-${Date.now()}`;

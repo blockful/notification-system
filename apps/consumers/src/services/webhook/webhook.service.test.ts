@@ -105,7 +105,7 @@ describe('WebhookService', () => {
         .update(`${timestamp}.${rawBody}`)
         .digest('hex');
 
-      expect(config.headers['X-Webhook-Signature']).toBe(`sha256=${expectedSignature}`);
+      expect(config.headers['X-Webhook-Signature-V2']).toBe(expectedSignature);
     });
 
     it('skips delivery and does not POST when the subscriber has no bot_token/secret', async () => {

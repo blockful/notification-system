@@ -10,8 +10,8 @@ const webhookBodySchema = z.object({
 });
 
 const VERIFICATION_RECIPE = `Deliveries are signed with HMAC-SHA256: HMAC-SHA256(\`\${timestamp}.\${rawBody}\`, secret), ` +
-  'sent as the `X-Webhook-Timestamp` header (unix seconds) and the `X-Webhook-Signature` header ' +
-  '(`sha256=<hex>`). Receivers should recompute the signature and compare it using a timing-safe ' +
+  'sent as the `X-Webhook-Timestamp` header (unix seconds) and the `X-Webhook-Signature-V2` header ' +
+  '(raw hex digest). Receivers should recompute the signature and compare it using a timing-safe ' +
   'comparison (`crypto.timingSafeEqual`), and reject requests where the timestamp is more than 5 ' +
   'minutes old to prevent replay attacks.';
 
