@@ -19,6 +19,10 @@ export class SimpleUserRepository implements IUserRepository {
   createResult: User | undefined;
   createError: Error | undefined;
   createCalls: Omit<User, 'id'>[] = [];
+  // ponytail: models onConflict(...).merge(['channel','channel_user_id']) - a real insert
+  // persists (and returns) the secret it was given, unless a concurrent racer's row won
+  // the conflict first. Set this to simulate the "lost the race" case in a test.
+  createRaceWinnerSecret: string | undefined;
   findByIdsWithWorkspaceTokensResult: User[] = [];
   findByIdsWithWorkspaceTokensCalls: string[][] = [];
 
@@ -29,7 +33,10 @@ export class SimpleUserRepository implements IUserRepository {
   async create(data: Omit<User, 'id'>): Promise<User> {
     this.createCalls.push(data);
     if (this.createError) throw this.createError;
-    return this.createResult!;
+    return {
+      ...this.createResult!,
+      secret: this.createRaceWinnerSecret !== undefined ? this.createRaceWinnerSecret : data.secret
+    };
   }
   async findByIdsWithWorkspaceTokens(ids: string[]): Promise<User[]> {
     this.findByIdsWithWorkspaceTokensCalls.push(ids);

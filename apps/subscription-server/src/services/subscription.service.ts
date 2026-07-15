@@ -55,7 +55,11 @@ export class SubscriptionService {
             channel_user_id,
             secret: encryptedSecret
           });
-          plaintextSecret = rawSecret;
+          // .onConflict(...).merge([...]) never raises a unique-violation error, so a
+          // concurrent racing insert silently wins at the DB level instead of throwing.
+          // Only trust our plaintext secret if the row Postgres actually persisted matches
+          // what we just tried to insert; otherwise another request's secret won the race.
+          plaintextSecret = user.secret === encryptedSecret ? rawSecret : undefined;
         } else {
           user = await this.userRepository.create({
             channel,

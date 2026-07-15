@@ -48,7 +48,7 @@ export class KnexUserRepository implements IUserRepository {
     const [user] = await this.knex<User>('users')
       .insert(userData)
       .onConflict(['channel', 'channel_user_id'])
-      .merge()
+      .merge(['channel', 'channel_user_id']) // restrict merge to conflict keys only: never clobber secret/token on a racing insert
       .returning('*');
 
     return user;

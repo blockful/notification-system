@@ -3,14 +3,14 @@ import type { NotificationTypeId } from '@notification-system/messages';
 import { SubscriptionService } from './subscription.service';
 import { CryptoUtil } from '../utils/crypto';
 import { User, UserPreference } from '../interfaces';
-
-const TEST_ENCRYPTION_KEY = '0'.repeat(64);
 import {
   SimpleUserRepository,
   SimplePreferenceRepository,
   SimpleUserAddressRepository,
   SimpleUserNotificationPreferencesRepository,
 } from './test-doubles';
+
+const TEST_ENCRYPTION_KEY = '0'.repeat(64);
 
 // ---- FIXTURES ----
 const mockUser: User = {
@@ -114,6 +114,30 @@ describe('Subscription Service', () => {
 
       expect(result.secret).toBeUndefined();
       expect(userRepo.createCalls[0].secret).toBeUndefined();
+    });
+
+    test('should not return a locally-generated secret when a concurrent request wins the race', async () => {
+      // Simulate: onConflict(...).merge(['channel','channel_user_id']) means a concurrent
+      // insert never raises a duplicate-key error - Postgres just returns the row that
+      // actually won. Model that by having create() return a persisted secret different
+      // from whatever this call encrypts (encryption is non-deterministic via a random IV,
+      // so any fixed encrypted value here will never equal what this call computes).
+      const winningEncryptedSecret = CryptoUtil.encrypt('someone-elses-raw-secret', TEST_ENCRYPTION_KEY);
+      const mockWebhookUser: User = { id: '789', channel: 'webhook', channel_user_id: 'webhook_user_1' };
+      userRepo.findByChannelAndIdResult = undefined;
+      userRepo.createResult = mockWebhookUser;
+      userRepo.createRaceWinnerSecret = winningEncryptedSecret;
+      prefRepo.findByUserAndDaoResult = undefined;
+      prefRepo.createResult = mockPreference;
+
+      const result = await subscriptionService.handleSubscription(
+        'dao123',
+        'webhook',
+        'webhook_user_1',
+        true
+      );
+
+      expect(result.secret).toBeUndefined();
     });
 
     test('should not generate a secret when an existing webhook user is found', async () => {
