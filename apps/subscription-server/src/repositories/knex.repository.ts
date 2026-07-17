@@ -48,10 +48,32 @@ export class KnexUserRepository implements IUserRepository {
     const [user] = await this.knex<User>('users')
       .insert(userData)
       .onConflict(['channel', 'channel_user_id'])
-      .merge()
+      .merge(['channel', 'channel_user_id']) // restrict merge to conflict keys only: never clobber secret/token on a racing insert
       .returning('*');
 
     return user;
+  }
+
+  /**
+   * Sets the webhook signing secret on an existing user that has none yet.
+   * If another request backfilled first, returns the current row without overwriting.
+   */
+  async updateSecret(userId: string, secret: string): Promise<User> {
+    const [user] = await this.knex<User>('users')
+      .where({ id: userId })
+      .whereNull('secret')
+      .update({ secret })
+      .returning('*');
+
+    if (user) {
+      return user;
+    }
+
+    const existing = await this.findById(userId);
+    if (!existing) {
+      throw new Error(`User ${userId} not found`);
+    }
+    return existing;
   }
 
   /**
@@ -100,10 +122,10 @@ export class KnexUserRepository implements IUserRepository {
       .whereIn('users.id', ids);
 
     if (!this.tokenEncryptionKey) {
-      return rows.map(({ encrypted_token, ...user }) => user);
+      return rows.map(({ encrypted_token, secret, ...user }) => user);
     }
 
-    return rows.map(({ encrypted_token, ...user }) => {
+    return rows.map(({ encrypted_token, secret, ...user }) => {
       if (encrypted_token) {
         try {
           user.token = CryptoUtil.decrypt(encrypted_token, this.tokenEncryptionKey!);
@@ -111,6 +133,16 @@ export class KnexUserRepository implements IUserRepository {
           this.logger.error(
             { err: error, userId: user.id, event: 'token.decrypt_failed' },
             'failed to decrypt workspace token',
+          );
+        }
+      }
+      if (secret) {
+        try {
+          user.token = CryptoUtil.decrypt(secret, this.tokenEncryptionKey!);
+        } catch (error) {
+          this.logger.error(
+            { err: error, userId: user.id, event: 'secret.decrypt_failed' },
+            'failed to decrypt webhook secret',
           );
         }
       }

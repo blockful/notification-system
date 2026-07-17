@@ -104,6 +104,62 @@ Consumes notifications from `consumer-queue`:
 "🗳️ New governance proposal in UNI: 'Uniswap Protocol Governance'"
 ```
 
+## 🔔 Webhook Notifications
+
+Subscribers can receive notifications over HTTP instead of Telegram by registering a webhook URL.
+
+### Register
+
+`POST /webhooks` with `{ "url": "https://..." }` (HTTPS required).
+
+The response on first registration includes a `secret` field — store it immediately, it is shown
+exactly once and never returned again. Re-registering the same URL returns success without a
+`secret`, and the stored secret does not change.
+
+### Unregister
+
+`DELETE /webhooks` with the same `{ "url": "https://..." }` body.
+
+### Verifying a delivery
+
+Every delivery includes two headers:
+- `X-Webhook-Timestamp` — unix seconds
+- `X-Webhook-Signature-V2` — raw HMAC-SHA256 hex digest
+
+To verify:
+1. Recompute `HMAC-SHA256(secret, "{timestamp}.{raw_request_body}")`. Use the exact raw body bytes
+   received — not a re-serialized/re-parsed version of it.
+2. Compare the result to the signature using a timing-safe comparison (e.g. Node's
+   `crypto.timingSafeEqual`, or your language's constant-time equivalent) — never `===`/`==`.
+3. Reject the request if the timestamp is more than 5 minutes old (replay protection).
+
+Minimal Node.js example (mirrors the signing logic in
+`src/services/webhook/webhook.service.ts`). Note that `crypto.timingSafeEqual` throws if the two
+buffers differ in length, so guard for that — the snippet below returns `false` in that case rather
+than letting it throw:
+
+```js
+const crypto = require('crypto');
+
+function isValidSignature(secret, timestamp, rawBody, signatureHeader) {
+  const age = Math.abs(Date.now() / 1000 - Number(timestamp));
+  if (age > 300) return false; // reject stale requests (> 5 min)
+
+  const expected = crypto
+    .createHmac('sha256', secret)
+    .update(`${timestamp}.${rawBody}`)
+    .digest('hex');
+
+  const a = Buffer.from(signatureHeader);
+  const b = Buffer.from(expected);
+  if (a.length !== b.length) return false;
+
+  return crypto.timingSafeEqual(a, b);
+}
+```
+
+See `/docs` for the full OpenAPI spec, including request/response schemas for both endpoints.
+
 ## 🧪 Testing
 
 ### Running Tests

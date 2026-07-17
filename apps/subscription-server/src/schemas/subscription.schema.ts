@@ -57,7 +57,8 @@ export const createUpdateSubscriptionResponseSchema = {
     dao_id: z.string(),
     is_active: z.boolean(),
     created_at: z.string().optional(),
-    updated_at: z.string().optional()
+    updated_at: z.string().optional(),
+    secret: z.string().optional()
   }).describe('Subscription DTO')
 };
 
