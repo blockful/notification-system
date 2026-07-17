@@ -140,8 +140,14 @@ describe('Subscription Service', () => {
       expect(result.secret).toBeUndefined();
     });
 
-    test('should not generate a secret when an existing webhook user is found', async () => {
-      const mockWebhookUser: User = { id: '789', channel: 'webhook', channel_user_id: 'webhook_user_1' };
+    test('should not generate a secret when an existing webhook user already has one', async () => {
+      const encryptedSecret = CryptoUtil.encrypt('existing-secret', TEST_ENCRYPTION_KEY);
+      const mockWebhookUser: User = {
+        id: '789',
+        channel: 'webhook',
+        channel_user_id: 'webhook_user_1',
+        secret: encryptedSecret,
+      };
       userRepo.findByChannelAndIdResult = mockWebhookUser;
       prefRepo.findByUserAndDaoResult = mockPreference;
 
@@ -154,6 +160,28 @@ describe('Subscription Service', () => {
 
       expect(result.secret).toBeUndefined();
       expect(userRepo.createCalls).toHaveLength(0);
+      expect(userRepo.updateSecretCalls).toHaveLength(0);
+    });
+
+    test('should backfill and return a secret when an existing webhook user has none', async () => {
+      const mockWebhookUser: User = { id: '789', channel: 'webhook', channel_user_id: 'webhook_user_1' };
+      userRepo.findByChannelAndIdResult = mockWebhookUser;
+      userRepo.updateSecretResult = mockWebhookUser;
+      prefRepo.findByUserAndDaoResult = mockPreference;
+
+      const result = await subscriptionService.handleSubscription(
+        'dao123',
+        'webhook',
+        'webhook_user_1',
+        true
+      );
+
+      expect(result.secret).toBeDefined();
+      expect(result.secret).toMatch(/^[0-9a-f]{64}$/);
+      expect(userRepo.createCalls).toHaveLength(0);
+      expect(userRepo.updateSecretCalls).toHaveLength(1);
+      expect(userRepo.updateSecretCalls[0].userId).toBe('789');
+      expect(CryptoUtil.decrypt(userRepo.updateSecretCalls[0].secret, TEST_ENCRYPTION_KEY)).toBe(result.secret);
     });
 
     test('should update existing subscription', async () => {

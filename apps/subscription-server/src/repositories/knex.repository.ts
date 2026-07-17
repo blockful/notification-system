@@ -55,6 +55,28 @@ export class KnexUserRepository implements IUserRepository {
   }
 
   /**
+   * Sets the webhook signing secret on an existing user that has none yet.
+   * If another request backfilled first, returns the current row without overwriting.
+   */
+  async updateSecret(userId: string, secret: string): Promise<User> {
+    const [user] = await this.knex<User>('users')
+      .where({ id: userId })
+      .whereNull('secret')
+      .update({ secret })
+      .returning('*');
+
+    if (user) {
+      return user;
+    }
+
+    const existing = await this.findById(userId);
+    if (!existing) {
+      throw new Error(`User ${userId} not found`);
+    }
+    return existing;
+  }
+
+  /**
    * Gets a user by their ID
    * @param id - The user's ID
    */

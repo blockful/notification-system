@@ -46,6 +46,7 @@ export interface IUserRepository {
   findByIds(ids: string[]): Promise<User[]>;
   findByIdsWithWorkspaceTokens(ids: string[]): Promise<User[]>;
   create(data: Omit<User, 'id'>): Promise<User>;
+  updateSecret(userId: string, secret: string): Promise<User>;
 }
 
 /**

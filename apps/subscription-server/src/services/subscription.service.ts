@@ -78,6 +78,11 @@ export class SubscriptionService {
           throw error;
         }
       }
+    } else if (channel === 'webhook' && !user.secret) {
+      const rawSecret = crypto.randomBytes(32).toString('hex');
+      const encryptedSecret = CryptoUtil.encrypt(rawSecret, this.tokenEncryptionKey);
+      user = await this.userRepository.updateSecret(user.id, encryptedSecret);
+      plaintextSecret = user.secret === encryptedSecret ? rawSecret : undefined;
     }
 
     let existingPreference = await this.preferenceRepository.findByUserAndDao(user.id, dao);

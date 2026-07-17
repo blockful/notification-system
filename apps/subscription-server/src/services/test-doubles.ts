@@ -23,6 +23,9 @@ export class SimpleUserRepository implements IUserRepository {
   // persists (and returns) the secret it was given, unless a concurrent racer's row won
   // the conflict first. Set this to simulate the "lost the race" case in a test.
   createRaceWinnerSecret: string | undefined;
+  updateSecretResult: User | undefined;
+  updateSecretError: Error | undefined;
+  updateSecretCalls: Array<{ userId: string; secret: string }> = [];
   findByIdsWithWorkspaceTokensResult: User[] = [];
   findByIdsWithWorkspaceTokensCalls: string[][] = [];
 
@@ -37,6 +40,11 @@ export class SimpleUserRepository implements IUserRepository {
       ...this.createResult!,
       secret: this.createRaceWinnerSecret !== undefined ? this.createRaceWinnerSecret : data.secret
     };
+  }
+  async updateSecret(userId: string, secret: string): Promise<User> {
+    this.updateSecretCalls.push({ userId, secret });
+    if (this.updateSecretError) throw this.updateSecretError;
+    return { ...this.updateSecretResult!, secret };
   }
   async findByIdsWithWorkspaceTokens(ids: string[]): Promise<User[]> {
     this.findByIdsWithWorkspaceTokensCalls.push(ids);
