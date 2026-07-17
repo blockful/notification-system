@@ -80,7 +80,7 @@ export class SlackClient implements SlackClientInterface {
             path: '/health',
             method: ['GET'],
             handler: (_req, res) => {
-              res.writeHead(200, { 'content-type': 'application/json' });
+              res.writeHead(200, { 'Content-Type': 'application/json' });
               res.end(JSON.stringify({ status: 'ok' }));
             },
           },
