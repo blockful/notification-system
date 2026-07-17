@@ -119,7 +119,7 @@ const startSubscriptionServer = async (db: Knex): Promise<SubscriptionServerApp>
 
   // Service instances
   const workspaceService = new WorkspaceService(db, serviceConfig.oauth.tokenEncryptionKey);
-  const subscriptionService = new SubscriptionService(userRepository, preferenceRepository, userAddressRepository, notificationPrefsRepository);
+  const subscriptionService = new SubscriptionService(userRepository, preferenceRepository, userAddressRepository, notificationPrefsRepository, serviceConfig.oauth.tokenEncryptionKey);
   const notificationService = new NotificationService(notificationRepository);
   const settingsService = new SettingsService(notificationPrefsRepository);
 

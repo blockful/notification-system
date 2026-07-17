@@ -13,6 +13,7 @@ export interface User {
   channel_user_id: string;
   created_at?: string;
   token?: string;  // Optional token for workspace authentication
+  secret?: string; // Encrypted-at-rest webhook signing secret (raw persisted column)
 }
 
 /**
@@ -45,6 +46,7 @@ export interface IUserRepository {
   findByIds(ids: string[]): Promise<User[]>;
   findByIdsWithWorkspaceTokens(ids: string[]): Promise<User[]>;
   create(data: Omit<User, 'id'>): Promise<User>;
+  updateSecret(userId: string, secret: string): Promise<User>;
 }
 
 /**
@@ -75,6 +77,7 @@ export interface UserSubscriptionResponse {
   is_active: boolean;
   created_at?: string;
   updated_at?: string;
+  secret?: string;
 }
 
 /**

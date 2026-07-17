@@ -12,12 +12,14 @@ import { UserPreference, UserSubscriptionResponse } from '../interfaces';
  * @returns The subscription response with properly formatted data
  */
 export const toSubscriptionResponse = (
-  preference: UserPreference, 
-  daoId?: string
+  preference: UserPreference,
+  daoId?: string,
+  secret?: string
 ): UserSubscriptionResponse => ({
   user_id: preference.user_id,
   dao_id: daoId || preference.dao_id,
   is_active: preference.is_active,
   created_at: preference.created_at,
-  updated_at: preference.updated_at
+  updated_at: preference.updated_at,
+  ...(secret ? { secret } : {})
 }); 

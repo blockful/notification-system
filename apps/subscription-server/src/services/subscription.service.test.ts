@@ -1,6 +1,7 @@
 import { describe, test, expect, beforeEach } from 'vitest';
 import type { NotificationTypeId } from '@notification-system/messages';
 import { SubscriptionService } from './subscription.service';
+import { CryptoUtil } from '../utils/crypto';
 import { User, UserPreference } from '../interfaces';
 import {
   SimpleUserRepository,
@@ -8,6 +9,8 @@ import {
   SimpleUserAddressRepository,
   SimpleUserNotificationPreferencesRepository,
 } from './test-doubles';
+
+const TEST_ENCRYPTION_KEY = '0'.repeat(64);
 
 // ---- FIXTURES ----
 const mockUser: User = {
@@ -51,7 +54,7 @@ describe('Subscription Service', () => {
     prefRepo = new SimplePreferenceRepository();
     userAddressRepo = new SimpleUserAddressRepository();
     notificationPrefsRepo = new SimpleUserNotificationPreferencesRepository();
-    subscriptionService = new SubscriptionService(userRepo, prefRepo, userAddressRepo, notificationPrefsRepo);
+    subscriptionService = new SubscriptionService(userRepo, prefRepo, userAddressRepo, notificationPrefsRepo, TEST_ENCRYPTION_KEY);
   });
 
   describe('handleSubscription', () => {
@@ -70,6 +73,115 @@ describe('Subscription Service', () => {
 
       expect(result.user).toEqual(mockUser);
       expect(result.result).toEqual(mockPreference);
+    });
+
+    test('should generate and return a plaintext secret when creating a new webhook user', async () => {
+      const mockWebhookUser: User = { id: '789', channel: 'webhook', channel_user_id: 'webhook_user_1' };
+      userRepo.findByChannelAndIdResult = undefined;
+      userRepo.createResult = mockWebhookUser;
+      prefRepo.findByUserAndDaoResult = undefined;
+      prefRepo.createResult = mockPreference;
+
+      const result = await subscriptionService.handleSubscription(
+        'dao123',
+        'webhook',
+        'webhook_user_1',
+        true
+      );
+
+      expect(result.secret).toBeDefined();
+      expect(result.secret).toMatch(/^[0-9a-f]{64}$/);
+
+      expect(userRepo.createCalls).toHaveLength(1);
+      const storedSecret = userRepo.createCalls[0].secret;
+      expect(storedSecret).toBeDefined();
+      expect(storedSecret).not.toBe(result.secret);
+      expect(CryptoUtil.decrypt(storedSecret!, TEST_ENCRYPTION_KEY)).toBe(result.secret);
+    });
+
+    test('should not generate a secret for a new non-webhook user', async () => {
+      userRepo.findByChannelAndIdResult = undefined;
+      userRepo.createResult = mockUser;
+      prefRepo.findByUserAndDaoResult = undefined;
+      prefRepo.createResult = mockPreference;
+
+      const result = await subscriptionService.handleSubscription(
+        'dao123',
+        'telegram',
+        'user123',
+        true
+      );
+
+      expect(result.secret).toBeUndefined();
+      expect(userRepo.createCalls[0].secret).toBeUndefined();
+    });
+
+    test('should not return a locally-generated secret when a concurrent request wins the race', async () => {
+      // Simulate: onConflict(...).merge(['channel','channel_user_id']) means a concurrent
+      // insert never raises a duplicate-key error - Postgres just returns the row that
+      // actually won. Model that by having create() return a persisted secret different
+      // from whatever this call encrypts (encryption is non-deterministic via a random IV,
+      // so any fixed encrypted value here will never equal what this call computes).
+      const winningEncryptedSecret = CryptoUtil.encrypt('someone-elses-raw-secret', TEST_ENCRYPTION_KEY);
+      const mockWebhookUser: User = { id: '789', channel: 'webhook', channel_user_id: 'webhook_user_1' };
+      userRepo.findByChannelAndIdResult = undefined;
+      userRepo.createResult = mockWebhookUser;
+      userRepo.createRaceWinnerSecret = winningEncryptedSecret;
+      prefRepo.findByUserAndDaoResult = undefined;
+      prefRepo.createResult = mockPreference;
+
+      const result = await subscriptionService.handleSubscription(
+        'dao123',
+        'webhook',
+        'webhook_user_1',
+        true
+      );
+
+      expect(result.secret).toBeUndefined();
+    });
+
+    test('should not generate a secret when an existing webhook user already has one', async () => {
+      const encryptedSecret = CryptoUtil.encrypt('existing-secret', TEST_ENCRYPTION_KEY);
+      const mockWebhookUser: User = {
+        id: '789',
+        channel: 'webhook',
+        channel_user_id: 'webhook_user_1',
+        secret: encryptedSecret,
+      };
+      userRepo.findByChannelAndIdResult = mockWebhookUser;
+      prefRepo.findByUserAndDaoResult = mockPreference;
+
+      const result = await subscriptionService.handleSubscription(
+        'dao123',
+        'webhook',
+        'webhook_user_1',
+        true
+      );
+
+      expect(result.secret).toBeUndefined();
+      expect(userRepo.createCalls).toHaveLength(0);
+      expect(userRepo.updateSecretCalls).toHaveLength(0);
+    });
+
+    test('should backfill and return a secret when an existing webhook user has none', async () => {
+      const mockWebhookUser: User = { id: '789', channel: 'webhook', channel_user_id: 'webhook_user_1' };
+      userRepo.findByChannelAndIdResult = mockWebhookUser;
+      userRepo.updateSecretResult = mockWebhookUser;
+      prefRepo.findByUserAndDaoResult = mockPreference;
+
+      const result = await subscriptionService.handleSubscription(
+        'dao123',
+        'webhook',
+        'webhook_user_1',
+        true
+      );
+
+      expect(result.secret).toBeDefined();
+      expect(result.secret).toMatch(/^[0-9a-f]{64}$/);
+      expect(userRepo.createCalls).toHaveLength(0);
+      expect(userRepo.updateSecretCalls).toHaveLength(1);
+      expect(userRepo.updateSecretCalls[0].userId).toBe('789');
+      expect(CryptoUtil.decrypt(userRepo.updateSecretCalls[0].secret, TEST_ENCRYPTION_KEY)).toBe(result.secret);
     });
 
     test('should update existing subscription', async () => {

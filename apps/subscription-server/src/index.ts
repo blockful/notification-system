@@ -34,7 +34,7 @@ const notificationPrefsRepository = wrapWithTracing(new UserNotificationPreferen
 
 // Service instances
 const workspaceService = wrapWithTracing(new WorkspaceService(db, config.tokenEncryptionKey));
-const subscriptionService = wrapWithTracing(new SubscriptionService(userRepository, preferenceRepository, userAddressRepository, notificationPrefsRepository));
+const subscriptionService = wrapWithTracing(new SubscriptionService(userRepository, preferenceRepository, userAddressRepository, notificationPrefsRepository, config.tokenEncryptionKey));
 const notificationService = wrapWithTracing(new NotificationService(notificationRepository));
 const settingsService = wrapWithTracing(new SettingsService(notificationPrefsRepository));
 

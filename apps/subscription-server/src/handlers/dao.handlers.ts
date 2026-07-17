@@ -23,14 +23,14 @@ export class DaoHandler {
     channel_user_id: string,
     is_active: boolean = true
   ) {
-    const { user, result } = await this.subscriptionService.handleSubscription(
+    const { user, result, secret } = await this.subscriptionService.handleSubscription(
       dao,
       channel,
       channel_user_id,
       is_active
     );
-    
-    return toSubscriptionResponse(result, dao);
+
+    return toSubscriptionResponse(result, dao, secret);
   }
 
   /**
