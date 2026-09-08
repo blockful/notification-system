@@ -3,7 +3,7 @@ import { ISubscriptionClient } from "../../interfaces/subscription-client.interf
 import { INotificationClientFactory } from "../notification/notification-factory.service";
 import { BaseTriggerHandler } from "./base-trigger.service";
 import { FormattingService } from "../formatting.service";
-import { newProposalMessages, replacePlaceholders, buildButtons, NotificationTypeId } from '@notification-system/messages';
+import { newProposalMessages, replacePlaceholders, buildButtons, buildProposalUrl, NotificationTypeId } from '@notification-system/messages';
 import { IAnticaptureClient } from '@notification-system/anticapture-client';
 import crypto from 'crypto';
 
@@ -50,12 +50,30 @@ export class NewProposalTriggerHandler extends BaseTriggerHandler {
         alreadySupportCalldataReview: daoInfo.supportsCalldataReview
       });
 
+      // Structured metadata: consumers (e.g. the calldata-review webhook) read these
+      // fields directly. Anything that only exists inside a button URL is unreachable.
+      const proposalUrl = buildProposalUrl(daoId, proposalId);
+      if (!txHash) {
+        this.logger.warn(
+          { daoId, proposalId, event: 'newProposal.missing_tx_hash' },
+          'proposal has no txHash; webhook consumers cannot resolve on-chain identity',
+        );
+      }
+
       await this.sendNotificationsToSubscribers(
         subscribers,
         notificationMessage,
         proposalId,
         daoId,
-        { triggerType: 'newProposal' },
+        {
+          triggerType: 'newProposal',
+          daoId,
+          proposalId,
+          ...(proposalUrl && { proposalUrl }),
+          ...(txHash && daoInfo.chainId && {
+            transaction: { hash: txHash, chainId: daoInfo.chainId },
+          }),
+        },
         buttons
       );
     }

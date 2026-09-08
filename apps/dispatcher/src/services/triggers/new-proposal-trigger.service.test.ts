@@ -50,6 +50,36 @@ describe('NewProposalTriggerHandler', () => {
   });
 
   describe('handleMessage', () => {
+    it('should put proposal identity in metadata, not only inside button URLs', async () => {
+      subscriptionClient.daoSubscribersByDao.set('dao123', [userA]);
+
+      await handler.handleMessage({
+        triggerId: NotificationTypeId.NewProposal,
+        events: [{ ...baseProposal, txHash: '0xabc' }],
+      });
+
+      expect(notificationFactory.client.sentPayloads[0].metadata).toMatchObject({
+        triggerType: 'newProposal',
+        daoId: 'dao123',
+        proposalId: 'prop456',
+        proposalUrl: 'https://anticapture.com/dao123/governance/proposal/prop456',
+        transaction: { hash: '0xabc', chainId: 1 },
+      });
+    });
+
+    it('should omit transaction metadata rather than emit a partial one when txHash is missing', async () => {
+      subscriptionClient.daoSubscribersByDao.set('dao123', [userA]);
+
+      await handler.handleMessage({
+        triggerId: NotificationTypeId.NewProposal,
+        events: [baseProposal],
+      });
+
+      const metadata = notificationFactory.client.sentPayloads[0].metadata as Record<string, unknown>;
+      expect(metadata).not.toHaveProperty('transaction');
+      expect(metadata.proposalUrl).toBe('https://anticapture.com/dao123/governance/proposal/prop456');
+    });
+
     it('should send a notification per subscriber with the proposal title in the message', async () => {
       subscriptionClient.daoSubscribersByDao.set('dao123', [userA, userB]);
 
