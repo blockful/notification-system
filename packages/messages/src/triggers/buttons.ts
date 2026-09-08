@@ -12,6 +12,14 @@ export interface Button {
 
 const BASE_URL = 'https://anticapture.com';
 
+/**
+ * Canonical anticapture proposal page.
+ * Returns undefined when either id is missing so callers can choose between a
+ * fallback link (buttons) and omitting the value entirely (notification metadata).
+ */
+export const buildProposalUrl = (daoId?: string, proposalId?: string): string | undefined =>
+  daoId && proposalId ? `${BASE_URL}/${daoId}/governance/proposal/${proposalId}` : undefined;
+
 interface CtaButtonConfig {
   text: string;
   buildUrl: (params: Record<string, string | undefined>) => string;
@@ -31,10 +39,7 @@ const ctaButtonConfigs: Record<string, CtaButtonConfig> = {
   },
   newProposal: {
     text: 'Check proposal details',
-    buildUrl: ({ daoId, proposalId }) =>
-      daoId && proposalId
-        ? `${BASE_URL}/${daoId}/governance/proposal/${proposalId}`
-        : BASE_URL
+    buildUrl: ({ daoId, proposalId }) => buildProposalUrl(daoId, proposalId) ?? BASE_URL
   },
   nonVoting: {
     text: 'Check previous votes',
@@ -59,17 +64,11 @@ const ctaButtonConfigs: Record<string, CtaButtonConfig> = {
   },
   votingReminder: {
     text: 'Cast your vote',
-    buildUrl: ({ daoId, proposalId }) =>
-      daoId && proposalId
-        ? `${BASE_URL}/${daoId}/governance/proposal/${proposalId}`
-        : BASE_URL
+    buildUrl: ({ daoId, proposalId }) => buildProposalUrl(daoId, proposalId) ?? BASE_URL
   },
   'voting-reminder': {
     text: 'Cast your vote',
-    buildUrl: ({ daoId, proposalId }) =>
-      daoId && proposalId
-        ? `${BASE_URL}/${daoId}/governance/proposal/${proposalId}`
-        : BASE_URL
+    buildUrl: ({ daoId, proposalId }) => buildProposalUrl(daoId, proposalId) ?? BASE_URL
   },
   newOffchainProposal: {
     text: 'Cast your vote',
