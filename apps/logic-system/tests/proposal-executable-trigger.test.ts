@@ -49,6 +49,19 @@ describe('ProposalExecutableTrigger', () => {
       await trigger['fetchData']();
       expect(repo.listAllCalls.map(c => c?.daoId)).toEqual(['ens', 'uni']);
     });
+
+    it("keeps processing other DAOs when one DAO's query fails", async () => {
+      trigger = new ProposalExecutableTrigger(repo, dispatcher, DEFAULT_INTERVAL, {
+        daoIds: ['ens', 'uni'], timelockDelaySeconds: TIMELOCK, marginSeconds: MARGIN, lookbackDays: 3, now: () => NOW,
+      });
+      repo.failFor.add('ens');
+      const uniProposal = pending('p1', NOW - TIMELOCK - MARGIN, 'uni');
+      repo.listAllResult = [uniProposal];
+
+      const data = await trigger['fetchData']();
+
+      expect(data).toEqual([uniProposal]);
+    });
   });
 
   describe('process', () => {
@@ -73,7 +86,7 @@ describe('ProposalExecutableTrigger', () => {
       await trigger.process([pending('old', eligible), pending('new', tooSoon)]);
 
       expect(dispatcher.sentMessages[0].events.map((e: { id: string }) => e.id)).toEqual(['old']);
-      expect(trigger['endTimestampCursor']).toBe(eligible + 1);
+      expect(trigger['cursors'].get('ens')).toBe(eligible + 1);
 
       // next poll must still see 'new'
       await trigger['fetchData']();
@@ -81,10 +94,28 @@ describe('ProposalExecutableTrigger', () => {
     });
 
     it('does not move the cursor when nothing is emitted', async () => {
-      const before = trigger['endTimestampCursor'];
+      const before = trigger['cursors'].get('ens');
       await trigger.process([pending('p1', NOW - TIMELOCK)]);
-      expect(trigger['endTimestampCursor']).toBe(before);
+      expect(trigger['cursors'].get('ens')).toBe(before);
       expect(dispatcher.sentMessages).toEqual([]);
+    });
+
+    it('advances only the cursor of the DAO that emitted', async () => {
+      trigger = new ProposalExecutableTrigger(repo, dispatcher, DEFAULT_INTERVAL, {
+        daoIds: ['ens', 'uni'], timelockDelaySeconds: TIMELOCK, marginSeconds: MARGIN, lookbackDays: 3, now: () => NOW,
+      });
+      const initialCursor = NOW - 3 * DAY;
+      const eligible = NOW - TIMELOCK - MARGIN;
+
+      await trigger.process([pending('p1', eligible, 'ens')]);
+
+      expect(trigger['cursors'].get('ens')).toBe(eligible + 1);
+      expect(trigger['cursors'].get('uni')).toBe(initialCursor);
+
+      // next poll must still send the untouched lookback cursor for 'uni'
+      await trigger['fetchData']();
+      const uniCall = repo.listAllCalls.find(c => c?.daoId === 'uni');
+      expect(uniCall?.fromEndDate).toBe(initialCursor);
     });
 
     it('does not send a message for an empty batch', async () => {

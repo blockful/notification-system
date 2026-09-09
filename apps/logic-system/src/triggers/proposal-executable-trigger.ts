@@ -25,9 +25,14 @@ export interface ProposalExecutableTriggerOptions {
  * eligibility is `endTimestamp + delay + margin`, and delay/margin are constants, so proposals
  * become eligible in endTimestamp order and an endTimestamp cursor is enough for exactly-once
  * emission within a process lifetime. The dispatcher dedupes across restarts.
+ *
+ * The cursor is tracked per DAO: DAOs can have independent indexer lag, so a single shared
+ * cursor would let one DAO's emission permanently skip past another DAO's not-yet-eligible
+ * proposal. Similarly, DAOs are fetched independently (`Promise.allSettled`) so that one DAO's
+ * API error doesn't stall every other DAO's polling cycle.
  */
 export class ProposalExecutableTrigger extends Trigger<ProposalOnChain, void> {
-  protected endTimestampCursor: number;
+  private readonly cursors: Map<string, number>;
   private readonly now: () => number;
 
   constructor(
@@ -38,21 +43,38 @@ export class ProposalExecutableTrigger extends Trigger<ProposalOnChain, void> {
   ) {
     super(NotificationTypeId.ProposalExecutable, interval);
     this.now = triggerOptions.now ?? (() => Math.floor(Date.now() / 1000));
-    this.endTimestampCursor = this.now() - triggerOptions.lookbackDays * 86_400;
+    const initialCursor = this.now() - triggerOptions.lookbackDays * 86_400;
+    this.cursors = new Map(triggerOptions.daoIds.map(daoId => [daoId, initialCursor]));
   }
 
   protected async fetchData(): Promise<ProposalOnChain[]> {
-    const batches = await Promise.all(
+    const results = await Promise.allSettled(
       this.triggerOptions.daoIds.map(daoId =>
         this.proposalRepository.listAll({
           daoId,
           status: ['PENDING_EXECUTION'],
-          fromEndDate: this.endTimestampCursor,
+          fromEndDate: this.cursors.get(daoId),
           orderDirection: 'asc',
           limit: 100,
         }),
       ),
     );
+
+    const batches: ProposalOnChain[][] = [];
+    results.forEach((result, index) => {
+      if (result.status === 'fulfilled') {
+        batches.push(result.value);
+        return;
+      }
+      this.logger.warn(
+        {
+          err: result.reason,
+          daoId: this.triggerOptions.daoIds[index],
+          event: 'proposal_executable.fetch_failed',
+        },
+        'failed to fetch PENDING_EXECUTION proposals for dao; skipping this cycle',
+      );
+    });
     return batches.flat();
   }
 
@@ -78,8 +100,18 @@ export class ProposalExecutableTrigger extends Trigger<ProposalOnChain, void> {
     };
     await this.dispatcherService.sendMessage(message);
 
-    // Advance past what we emitted only: a later proposal still inside the margin
-    // must come back on the next poll.
-    this.endTimestampCursor = Math.max(...events.map(e => e.endTimestamp)) + 1;
+    // Advance only the cursor of each DAO that emitted, past the highest endTimestamp
+    // emitted for that DAO. A later proposal still inside the margin, or a proposal
+    // from a DAO that emitted nothing this cycle, must come back on the next poll.
+    const maxEndTimestampByDao = new Map<string, number>();
+    for (const event of events) {
+      const current = maxEndTimestampByDao.get(event.daoId);
+      if (current === undefined || event.endTimestamp > current) {
+        maxEndTimestampByDao.set(event.daoId, event.endTimestamp);
+      }
+    }
+    for (const [daoId, maxEndTimestamp] of maxEndTimestampByDao) {
+      this.cursors.set(daoId, maxEndTimestamp + 1);
+    }
   }
 }
