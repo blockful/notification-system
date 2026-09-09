@@ -78,4 +78,15 @@ export interface ProposalFinishedNotification {
     forVotes: string;
     againstVotes: string;
     abstainVotes: string;
+}
+
+/**
+ * Interface for proposal executable notifications (sent to Dispatcher).
+ * Emitted once when an on-chain proposal's timelock eta (plus margin) has passed.
+ */
+export interface ProposalExecutableNotification {
+    id: string;
+    daoId: string;
+    status: string;
+    endTimestamp: number;
 } 
