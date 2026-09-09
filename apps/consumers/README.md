@@ -110,7 +110,7 @@ Subscribers can receive notifications over HTTP instead of Telegram by registeri
 
 ### Register
 
-`POST /webhooks` with `{ "url": "https://..." }` (HTTPS required).
+`POST /webhooks` with `{ "url": "https://..." }` (HTTPS required, except `http://*.railway.internal` hosts for services in the same Railway project).
 
 The response on first registration includes a `secret` field — store it immediately, it is shown
 exactly once and never returned again. Re-registering the same URL returns success without a

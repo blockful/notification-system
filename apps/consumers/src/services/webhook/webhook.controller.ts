@@ -3,9 +3,19 @@ import { ZodTypeProvider } from 'fastify-type-provider-zod';
 import { z } from 'zod';
 import { WebhookService } from './webhook.service';
 
+/** Plain http is allowed only inside Railway's private network, which has no TLS. */
+const isPrivateNetworkUrl = (url: string): boolean => {
+  try {
+    const { protocol, hostname } = new URL(url);
+    return protocol === 'http:' && hostname.endsWith('.railway.internal');
+  } catch {
+    return false;
+  }
+};
+
 const webhookBodySchema = z.object({
-  url: z.string().url().refine((url) => url.startsWith('https://'), {
-    message: 'Webhook URL must use HTTPS',
+  url: z.string().url().refine((url) => url.startsWith('https://') || isPrivateNetworkUrl(url), {
+    message: 'Webhook URL must use HTTPS (plain HTTP is only allowed for *.railway.internal hosts)',
   }),
 });
 
