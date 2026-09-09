@@ -14,6 +14,12 @@ const app = new App(
   env.PORT,
   undefined,
   env.BLOCKFUL_API_TOKEN ? { Authorization: `Bearer ${env.BLOCKFUL_API_TOKEN}` } : undefined,
+  {
+    daoIds: env.PROPOSAL_EXECUTABLE_DAOS,
+    timelockDelaySeconds: env.PROPOSAL_EXECUTABLE_TIMELOCK_DELAY_SECONDS,
+    marginSeconds: env.PROPOSAL_EXECUTABLE_MARGIN_SECONDS,
+    lookbackDays: env.PROPOSAL_EXECUTABLE_LOOKBACK_DAYS,
+  },
 );
 
 app.start().catch((err) => {

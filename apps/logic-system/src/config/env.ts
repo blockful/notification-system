@@ -13,6 +13,13 @@ const envSchema = z.object({
   TRIGGER_INTERVAL: z.coerce.number().optional().default(60000),
   PROPOSAL_STATUS: z.nativeEnum(onchainProposalStatusListEnum),
   PORT: z.coerce.number().positive().optional().default(3005),
+
+  // ProposalExecutable trigger (webhook-only). Delay must match the configured DAOs' governor timelock.
+  PROPOSAL_EXECUTABLE_DAOS: z.string().default('ens')
+    .transform(v => v.split(',').map(s => s.trim().toLowerCase()).filter(Boolean)),
+  PROPOSAL_EXECUTABLE_TIMELOCK_DELAY_SECONDS: z.coerce.number().int().positive().default(172800),
+  PROPOSAL_EXECUTABLE_MARGIN_SECONDS: z.coerce.number().int().nonnegative().default(3600),
+  PROPOSAL_EXECUTABLE_LOOKBACK_DAYS: z.coerce.number().positive().default(3),
 });
 
 const _env = envSchema.safeParse(process.env);
