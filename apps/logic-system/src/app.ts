@@ -3,7 +3,7 @@ import { NewOffchainProposalTrigger } from './triggers/new-offchain-proposal-tri
 import { OffchainProposalFinishedTrigger } from './triggers/offchain-proposal-finished-trigger';
 import { VotingPowerChangedTrigger } from './triggers/voting-power-changed-trigger';
 import { ProposalFinishedTrigger } from './triggers/proposal-finished-trigger';
-import { ProposalExecutableTrigger, ProposalExecutableTriggerOptions } from './triggers/proposal-executable-trigger';
+import { ProposalExecutableTrigger, ProposalExecutableTriggerOptions, DEFAULT_PROPOSAL_EXECUTABLE_OPTIONS } from './triggers/proposal-executable-trigger';
 import { VoteConfirmationTrigger } from './triggers/vote-confirmation-trigger';
 import { OffchainVoteCastTrigger } from './triggers/offchain-vote-cast-trigger';
 import { VotingReminderTrigger } from './triggers/voting-reminder-trigger';
@@ -49,9 +49,7 @@ export class App {
     private port: number,
     initialTimestamp?: string,
     anticaptureHeaders?: Record<string, string>,
-    private proposalExecutableOptions: ProposalExecutableTriggerOptions = {
-      daoIds: ['ens'], timelockDelaySeconds: 172800, marginSeconds: 3600, lookbackDays: 3,
-    },
+    private proposalExecutableOptions: ProposalExecutableTriggerOptions = DEFAULT_PROPOSAL_EXECUTABLE_OPTIONS,
   ) {
     this.proposalStatus = proposalStatus;
 

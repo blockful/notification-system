@@ -118,6 +118,17 @@ describe('ProposalExecutableTrigger', () => {
       expect(uniCall?.fromEndDate).toBe(initialCursor);
     });
 
+    it('never moves the cursor backwards', async () => {
+      // Simulate a cursor that has already advanced past this batch's proposal
+      // (e.g. a previous cycle already emitted something newer for this DAO).
+      const eligible = NOW - TIMELOCK - MARGIN - 100;
+      trigger['cursors'].set('ens', eligible + 50);
+
+      await trigger.process([pending('old', eligible)]);
+
+      expect(trigger['cursors'].get('ens')).toBe(eligible + 50);
+    });
+
     it('does not send a message for an empty batch', async () => {
       await trigger.process([]);
       expect(dispatcher.sentMessages).toEqual([]);

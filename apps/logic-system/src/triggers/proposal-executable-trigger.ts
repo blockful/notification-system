@@ -18,6 +18,14 @@ export interface ProposalExecutableTriggerOptions {
   now?: () => number;
 }
 
+/** Single source of truth for the trigger's defaults, shared by `App`'s constructor and `env.ts`. */
+export const DEFAULT_PROPOSAL_EXECUTABLE_OPTIONS: ProposalExecutableTriggerOptions = {
+  daoIds: ['ENS'],
+  timelockDelaySeconds: 172800,
+  marginSeconds: 3600,
+  lookbackDays: 3,
+};
+
 /**
  * Detects on-chain proposals that became executable and emits one event per proposal.
  *
@@ -111,7 +119,8 @@ export class ProposalExecutableTrigger extends Trigger<ProposalOnChain, void> {
       }
     }
     for (const [daoId, maxEndTimestamp] of maxEndTimestampByDao) {
-      this.cursors.set(daoId, maxEndTimestamp + 1);
+      const current = this.cursors.get(daoId) ?? -Infinity;
+      this.cursors.set(daoId, Math.max(current, maxEndTimestamp + 1));
     }
   }
 }
