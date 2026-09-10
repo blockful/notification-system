@@ -9,7 +9,7 @@ import { DatabaseTestHelper, TestCleanup } from '../../src/helpers';
 import { testConstants, timeouts, serviceConfig } from '../../src/config';
 
 // The trigger's own delay/margin/DAO list under test come from `App`'s constructor
-// defaults (no options passed by the test harness): daoIds: ['ens'], 172800s delay,
+// defaults (no options passed by the test harness): daoIds: ['ENS'], 172800s delay,
 // 3600s margin, 3-day lookback. See apps/logic-system/src/app.ts.
 const WEBHOOK_URL = 'http://relayer.railway.internal:3002/relay/webhook';
 const TIMELOCK = 172_800;
@@ -44,32 +44,24 @@ describe('Proposal Executable Trigger - webhook delivery', () => {
   // WebhookService skipping delivery (`webhook.skipped_unsigned`). So the seeded
   // value must be encrypted the same way the real subscription flow does it.
   //
-  // `subscribedBeforeUnixSeconds` backdates the preference's `updated_at`: the
-  // dispatcher's getSubscribers passes the proposal's endTimestamp as
-  // `proposal_timestamp`, and subscription-server's findByDao only returns
-  // preferences with `updated_at <= proposal_timestamp` (i.e. subscribed before
-  // the event). Our proposals here have an endTimestamp ~2 days in the past, so
-  // a preference created "now" (the default) would postdate it and be filtered
-  // out — the subscription must be backdated to before the proposal's endTimestamp.
-  const registerRelayerWebhook = async (subscribedBeforeUnixSeconds: number) => {
+  // No `updated_at` backdating needed: the dispatcher's ProposalExecutable handler
+  // does not time-filter subscribers (see proposal-executable-trigger.service.ts),
+  // so a preference created "now" is picked up regardless of the proposal's
+  // endTimestamp.
+  const registerRelayerWebhook = async () => {
     const user = await UserFactory.createUser(WEBHOOK_URL, 'relayer', 'webhook');
     const encryptedSecret = CryptoUtil.encrypt('test-secret', serviceConfig.oauth.tokenEncryptionKey);
     await db(testConstants.tables.users).where({ id: user.id }).update({ secret: encryptedSecret });
-    await UserFactory.createUserPreference(
-      user.id,
-      'ens',
-      true,
-      new Date(subscribedBeforeUnixSeconds * 1000).toISOString(),
-    );
+    await UserFactory.createUserPreference(user.id, testConstants.daoIds.ens, true);
     return user;
   };
 
   test('delivers exactly one webhook for a proposal whose eta plus margin has passed', async () => {
     const now = Math.floor(Date.now() / 1000);
     const endTimestamp = now - TIMELOCK - MARGIN - 60;
-    await registerRelayerWebhook(endTimestamp - 3600);
+    await registerRelayerWebhook();
 
-    const proposal = ProposalFactory.createProposal('ens', 'executable-1', {
+    const proposal = ProposalFactory.createProposal(testConstants.daoIds.ens, 'executable-1', {
       status: 'PENDING_EXECUTION',
       endTimestamp,
       description: '# Executable\n\nReady.',
@@ -86,7 +78,7 @@ describe('Proposal Executable Trigger - webhook delivery', () => {
     expect(received).toHaveLength(1);
     expect(received[0].metadata).toMatchObject({
       triggerType: 'proposalExecutable',
-      daoId: 'ens',
+      daoId: testConstants.daoIds.ens,
       proposalId: 'executable-1',
       status: 'PENDING_EXECUTION',
     });
@@ -104,9 +96,9 @@ describe('Proposal Executable Trigger - webhook delivery', () => {
   test('does not deliver while the proposal is still inside the margin', async () => {
     const now = Math.floor(Date.now() / 1000);
     const endTimestamp = now - TIMELOCK + 60;
-    await registerRelayerWebhook(endTimestamp - 3600);
+    await registerRelayerWebhook();
 
-    const proposal = ProposalFactory.createProposal('ens', 'too-soon-1', {
+    const proposal = ProposalFactory.createProposal(testConstants.daoIds.ens, 'too-soon-1', {
       status: 'PENDING_EXECUTION',
       endTimestamp,
     });
