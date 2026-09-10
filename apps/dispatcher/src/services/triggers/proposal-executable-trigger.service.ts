@@ -19,10 +19,9 @@ export class ProposalExecutableTriggerHandler extends BaseTriggerHandler<Proposa
     for (const proposal of message.events) {
       const eventId = `${proposal.id}-executable`;
 
-      // No timestamp filter: machine subscribers should receive whatever became
-      // executable within the trigger's lookback, even if they registered after
-      // voting ended but before the proposal became executable. Dedupe (shouldSend/
-      // markAsSent) prevents repeats.
+      // No timestamp filter: machine subscribers should receive whatever is
+      // executable now, even if they registered after voting ended but before the
+      // timelock eta passed. Dedupe (shouldSend/markAsSent) prevents repeats.
       const subscribers = (await this.getSubscribers(
         proposal.daoId,
         eventId,

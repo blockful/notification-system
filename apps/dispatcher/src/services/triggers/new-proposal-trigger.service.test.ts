@@ -213,8 +213,8 @@ describe('NewProposalTriggerHandler - cross-DAO eventId deduplication', () => {
       },
       makeAnticaptureClient({
         getDAOs: async () => [
-          { id: 'ens.eth', blockTime: 12, votingDelay: '1', chainId: 1, supportsCalldataReview: true, supportsOffchainData: true },
-          { id: 'uniswap.eth', blockTime: 12, votingDelay: '1', chainId: 1, supportsCalldataReview: false, supportsOffchainData: true }
+          { id: 'ens.eth', blockTime: 12, votingDelay: '1', timelockDelay: '0', chainId: 1, supportsCalldataReview: true, supportsOffchainData: true },
+          { id: 'uniswap.eth', blockTime: 12, votingDelay: '1', timelockDelay: '0', chainId: 1, supportsCalldataReview: false, supportsOffchainData: true }
         ],
       })
     );
