@@ -46,6 +46,7 @@ const app = new App(
   slackClient,
   config.webhookPort,
   config.blockfulApiToken ? { Authorization: `Bearer ${config.blockfulApiToken}` } : undefined,
+  config.webhookAllowedPrivateHosts,
 );
 
 (async () => {

@@ -39,7 +39,8 @@ export class App {
     telegramClient: TelegramClientInterface,
     slackClient: SlackClientInterface,
     webhookPort: number,
-    anticaptureHeaders?: Record<string, string>
+    anticaptureHeaders?: Record<string, string>,
+    webhookAllowedPrivateHosts: string[] = [],
   ) {
     const subscriptionApi = wrapWithTracing(new SubscriptionAPIService(subscriptionServerUrl, logger));
     const anticaptureClient = wrapWithTracing(new AnticaptureClient({
@@ -77,7 +78,7 @@ export class App {
 
     this.webhookService = wrapWithTracing(new WebhookService(anticaptureClient, subscriptionApi, logger));
 
-    const webhookController = new WebhookController(this.webhookService);
+    const webhookController = new WebhookController(this.webhookService, webhookAllowedPrivateHosts);
     this.webhookServer = new WebhookServer(webhookController, logger);
 
     this.rabbitmqUrl = rabbitmqUrl;

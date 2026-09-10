@@ -16,6 +16,10 @@ const envSchema = z.object({
   PORT: z.coerce.number().positive().optional().default(3002),
   WEBHOOK_API_PORT: z.coerce.number().positive().default(3003),
   RPC_URL: z.string().optional(),
+  // Exact hostnames allowed to register a plain-http webhook (Railway's private
+  // network has no TLS). Comma-separated, e.g. "relayer.railway.internal".
+  WEBHOOK_ALLOWED_PRIVATE_HOSTS: z.string().default('')
+    .transform(v => v.split(',').map(s => s.trim().toLowerCase()).filter(Boolean)),
 });
 
 export function loadConfig() {
@@ -33,5 +37,6 @@ export function loadConfig() {
     port: env.PORT,
     webhookPort: env.WEBHOOK_API_PORT,
     rpcUrl: env.RPC_URL,
+    webhookAllowedPrivateHosts: env.WEBHOOK_ALLOWED_PRIVATE_HOSTS,
   } as const;
 } 

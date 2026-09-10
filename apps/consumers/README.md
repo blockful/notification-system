@@ -56,6 +56,7 @@ src/
 | `ANTICAPTURE_API_URL` | ✅ | REST API endpoint for DAO data |
 | `SUBSCRIPTION_SERVER_URL` | ✅ | Subscription management API URL |
 | `RABBITMQ_URL` | ✅ | RabbitMQ connection string |
+| `WEBHOOK_ALLOWED_PRIVATE_HOSTS` | ❌ | Comma-separated exact hostnames allowed to register a plain-`http://` webhook (Railway private network), e.g. `relayer.railway.internal` |
 
 ### Example Configuration
 ```bash
@@ -110,7 +111,8 @@ Subscribers can receive notifications over HTTP instead of Telegram by registeri
 
 ### Register
 
-`POST /webhooks` with `{ "url": "https://..." }` (HTTPS required, except `http://*.railway.internal` hosts for services in the same Railway project).
+`POST /webhooks` with `{ "url": "https://..." }` (HTTPS required, except plain `http://` for hosts
+listed in `WEBHOOK_ALLOWED_PRIVATE_HOSTS` — services in the same Railway private network).
 
 The response on first registration includes a `secret` field — store it immediately, it is shown
 exactly once and never returned again. Re-registering the same URL returns success without a

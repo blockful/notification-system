@@ -13,7 +13,7 @@ describe('WebhookController URL validation', () => {
       registerWebhook: async (url: string) => { registered.push(url); return { created: true, secret: 's3cret' }; },
       deactivateWebhook: async () => true,
     } as unknown as WebhookService;
-    webhookServer = new WebhookServer(new WebhookController(service));
+    webhookServer = new WebhookServer(new WebhookController(service, ['relayer.railway.internal']));
     server = (webhookServer as any).server;
     registered.length = 0;
   });
@@ -28,11 +28,17 @@ describe('WebhookController URL validation', () => {
     expect(registered).toEqual(['https://example.com/hook']);
   });
 
-  it('accepts http URLs on the Railway private network', async () => {
+  it('accepts http URLs on an allowlisted private host', async () => {
     const url = 'http://relayer.railway.internal:3002/relay/webhook';
     const res = await server.inject({ method: 'POST', url: '/webhooks', payload: { url } });
     expect(res.statusCode).toBe(201);
     expect(registered).toEqual([url]);
+  });
+
+  it('rejects http URLs on a non-allowlisted railway.internal host', async () => {
+    const res = await server.inject({ method: 'POST', url: '/webhooks', payload: { url: 'http://other.railway.internal/hook' } });
+    expect(res.statusCode).toBe(400);
+    expect(registered).toEqual([]);
   });
 
   it('rejects other http URLs', async () => {
