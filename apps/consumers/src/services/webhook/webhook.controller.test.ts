@@ -1,25 +1,26 @@
 import { describe, it, expect, beforeEach, afterEach } from 'vitest';
-import { WebhookServer } from './webhook-server';
-import { WebhookController } from './webhook.controller';
-import { WebhookService } from './webhook.service';
+import fastify, { FastifyInstance } from 'fastify';
+import { validatorCompiler, serializerCompiler } from 'fastify-type-provider-zod';
+import { WebhookController, WebhookRegistrar } from './webhook.controller';
 
 describe('WebhookController URL validation', () => {
-  let webhookServer: WebhookServer;
-  let server: any;
+  let server: FastifyInstance;
   const registered: string[] = [];
 
-  beforeEach(() => {
-    const service = {
-      registerWebhook: async (url: string) => { registered.push(url); return { created: true, secret: 's3cret' }; },
+  beforeEach(async () => {
+    const service: WebhookRegistrar = {
+      registerWebhook: async (url) => { registered.push(url); return { created: true, secret: 's3cret' }; },
       deactivateWebhook: async () => true,
-    } as unknown as WebhookService;
-    webhookServer = new WebhookServer(new WebhookController(service, ['relayer.railway.internal']));
-    server = (webhookServer as any).server;
+    };
+    server = fastify();
+    server.setValidatorCompiler(validatorCompiler);
+    server.setSerializerCompiler(serializerCompiler);
+    await new WebhookController(service, ['relayer.railway.internal']).register(server);
     registered.length = 0;
   });
 
   afterEach(async () => {
-    await webhookServer.stop();
+    await server.close();
   });
 
   it('accepts https URLs', async () => {

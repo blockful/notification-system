@@ -11,7 +11,6 @@ export enum NotificationTypeId {
   OffchainVoteCast = 'offchain-vote-cast',
   OffchainProposalFinished = 'offchain-proposal-finished',
   OffchainVotingReminder50 = 'offchain-voting-reminder-50',
-  /** Webhook-only: an on-chain proposal's timelock eta has passed. Not shown in bot settings. */
   ProposalExecutable = 'proposal-executable',
 }
 

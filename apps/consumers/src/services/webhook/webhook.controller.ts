@@ -25,10 +25,13 @@ const VERIFICATION_RECIPE = `Deliveries are signed with HMAC-SHA256: HMAC-SHA256
   'comparison (`crypto.timingSafeEqual`), and reject requests where the timestamp is more than 5 ' +
   'minutes old to prevent replay attacks.';
 
+/** What the controller needs from WebhookService; lets tests pass a plain typed stub. */
+export type WebhookRegistrar = Pick<WebhookService, 'registerWebhook' | 'deactivateWebhook'>;
+
 export class WebhookController {
   private readonly webhookBodySchema: ReturnType<typeof buildWebhookBodySchema>;
 
-  constructor(private webhookService: WebhookService, allowedPrivateHosts: string[] = []) {
+  constructor(private webhookService: WebhookRegistrar, allowedPrivateHosts: string[] = []) {
     this.webhookBodySchema = buildWebhookBodySchema(allowedPrivateHosts);
   }
 

@@ -42,7 +42,6 @@ export class ProposalFinishedTriggerHandler extends BaseTriggerHandler<ProposalF
         notificationMessage,
         eventId,
         proposal.daoId,
-        // Structured identity for machine consumers (webhook); bots ignore these fields.
         {
           triggerType: 'proposalFinished',
           daoId: proposal.daoId,
