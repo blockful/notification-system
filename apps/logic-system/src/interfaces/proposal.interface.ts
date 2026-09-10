@@ -80,13 +80,25 @@ export interface ProposalFinishedNotification {
     abstainVotes: string;
 }
 
+/** The subset of the API's DAO record the ProposalExecutable trigger needs. */
+export interface DaoTimelockInfo {
+    id: string;
+    /** Governor timelock delay in seconds, as returned by the API (bigint string). */
+    timelockDelay: string;
+}
+
+/** Source of DAO governance parameters. `AnticaptureClient.getDAOs` satisfies it. */
+export interface DaoDataSource {
+    getDAOs(): Promise<DaoTimelockInfo[]>;
+}
+
 /**
  * Interface for proposal executable notifications (sent to Dispatcher).
- * Emitted once when an on-chain proposal's timelock eta (plus margin) has passed.
+ * Emitted once when an on-chain proposal's timelock eta has passed.
  */
 export interface ProposalExecutableNotification {
     id: string;
     daoId: string;
     status: string;
     endTimestamp: number;
-} 
+}

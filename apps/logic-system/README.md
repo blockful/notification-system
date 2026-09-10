@@ -41,10 +41,6 @@ src/
 | `RABBITMQ_URL` | ✅ | - | RabbitMQ connection string |
 | `PROPOSAL_STATUS` | ✅ | - | Proposal status to monitor |
 | `TRIGGER_INTERVAL` | ❌ | `60000` | Execution interval in milliseconds |
-| `PROPOSAL_EXECUTABLE_DAOS` | ❌ | `ENS` | Comma-separated DAO ids watched by the ProposalExecutable (webhook-only) trigger |
-| `PROPOSAL_EXECUTABLE_TIMELOCK_DELAY_SECONDS` | ❌ | `172800` | Governor timelock delay (seconds); must match the configured DAOs |
-| `PROPOSAL_EXECUTABLE_MARGIN_SECONDS` | ❌ | `3600` | Extra grace period after the timelock delay before emitting |
-| `PROPOSAL_EXECUTABLE_LOOKBACK_DAYS` | ❌ | `3` | How far back the trigger's cursor starts on boot |
 
 ### Valid Proposal Statuses
 - `pending`, `active`, `succeeded`, `defeated`

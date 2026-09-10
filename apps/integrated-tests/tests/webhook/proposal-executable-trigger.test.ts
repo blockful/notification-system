@@ -3,17 +3,16 @@ import { http, HttpResponse } from 'msw';
 import { proposalsHandler } from '@anticapture/client/msw';
 import { CryptoUtil } from '@notification-system/subscription-server/dist/utils/crypto';
 import { db, TestApps } from '../../src/setup';
-import { server, proposalsByDaoResolver } from '../../src/setup/msw-server';
+import { server, proposalsByDaoResolver, TEST_TIMELOCK_DELAY } from '../../src/setup/msw-server';
 import { UserFactory, ProposalFactory } from '../../src/fixtures';
 import { DatabaseTestHelper, TestCleanup } from '../../src/helpers';
 import { testConstants, timeouts, serviceConfig } from '../../src/config';
 
-// The trigger's own delay/margin/DAO list under test come from `App`'s constructor
-// defaults (no options passed by the test harness): daoIds: ['ENS'], 172800s delay,
-// 3600s margin, 3-day lookback. See apps/logic-system/src/app.ts.
+// The trigger computes the on-chain eta from API data: `queuedTimestamp + dao.timelockDelay`
+// (plus a 60s wall-clock tolerance). `timelockDelay` comes from the `/daos` fixture in
+// msw-server, so no logic-system configuration is involved.
 const WEBHOOK_URL = 'http://relayer.railway.internal:3002/relay/webhook';
-const TIMELOCK = 172_800;
-const MARGIN = 3_600;
+const TIMELOCK = Number(TEST_TIMELOCK_DELAY);
 
 describe('Proposal Executable Trigger - webhook delivery', () => {
   let apps: TestApps;
@@ -45,9 +44,7 @@ describe('Proposal Executable Trigger - webhook delivery', () => {
   // value must be encrypted the same way the real subscription flow does it.
   //
   // No `updated_at` backdating needed: the dispatcher's ProposalExecutable handler
-  // does not time-filter subscribers (see proposal-executable-trigger.service.ts),
-  // so a preference created "now" is picked up regardless of the proposal's
-  // endTimestamp.
+  // does not time-filter subscribers (see proposal-executable-trigger.service.ts).
   const registerRelayerWebhook = async () => {
     const user = await UserFactory.createUser(WEBHOOK_URL, 'relayer', 'webhook');
     const encryptedSecret = CryptoUtil.encrypt('test-secret', serviceConfig.oauth.tokenEncryptionKey);
@@ -56,14 +53,14 @@ describe('Proposal Executable Trigger - webhook delivery', () => {
     return user;
   };
 
-  test('delivers exactly one webhook for a proposal whose eta plus margin has passed', async () => {
+  test('delivers exactly one webhook for a proposal whose timelock eta has passed', async () => {
     const now = Math.floor(Date.now() / 1000);
-    const endTimestamp = now - TIMELOCK - MARGIN - 60;
     await registerRelayerWebhook();
 
     const proposal = ProposalFactory.createProposal(testConstants.daoIds.ens, 'executable-1', {
       status: 'PENDING_EXECUTION',
-      endTimestamp,
+      endTimestamp: now - TIMELOCK - 3_600,
+      queuedTimestamp: now - TIMELOCK - 120, // eta passed 2 minutes ago
       description: '# Executable\n\nReady.',
     });
     server.use(proposalsHandler(proposalsByDaoResolver([proposal])));
@@ -83,24 +80,24 @@ describe('Proposal Executable Trigger - webhook delivery', () => {
       status: 'PENDING_EXECUTION',
     });
 
-    // A second poll cycle (poll interval is 500ms in the test harness; the
-    // 3000ms wait below covers several) must not deliver again. The logic-system
-    // trigger re-fetches the same proposal every cycle because the msw resolver
-    // doesn't honor `fromEndDate` (it only filters by daoId/status), so exactly-once
-    // delivery here is actually proving the dispatcher's DB-backed shouldSend/markAsSent
-    // idempotency against the `notifications` table, not the trigger's in-memory cursor.
+    // The trigger has no cursor: it re-fetches the same proposal every poll cycle
+    // (500ms in the test harness; the wait below covers several). Exactly-once
+    // delivery here is the dispatcher's DB-backed shouldSend/markAsSent idempotency
+    // against the `notifications` table.
     await new Promise(r => setTimeout(r, timeouts.notification.delivery));
     expect(received).toHaveLength(1);
   });
 
-  test('does not deliver while the proposal is still inside the margin', async () => {
+  test('does not deliver a PENDING_EXECUTION proposal whose timelock eta has not passed', async () => {
     const now = Math.floor(Date.now() / 1000);
-    const endTimestamp = now - TIMELOCK + 60;
     await registerRelayerWebhook();
 
+    // Queued late: the API already flags PENDING_EXECUTION (endTimestamp + delay passed),
+    // but the real eta (queuedTimestamp + delay) is still 10 minutes away.
     const proposal = ProposalFactory.createProposal(testConstants.daoIds.ens, 'too-soon-1', {
       status: 'PENDING_EXECUTION',
-      endTimestamp,
+      endTimestamp: now - TIMELOCK - 3_600,
+      queuedTimestamp: now - TIMELOCK + 600,
     });
     server.use(proposalsHandler(proposalsByDaoResolver([proposal])));
 
