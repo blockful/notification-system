@@ -17,14 +17,14 @@ describe('getDAOs', () => {
   it('maps DAOs adding hardcoded blockTime: 12', async () => {
     server.use(http.get(`${TEST_BASE_URL}/daos`, () => HttpResponse.json(
       daosResponse([
-        { id: 'uniswap', votingDelay: '1000', chainId: 1, supportsCalldataReview: false, supportsOffchainData: false },
+        { id: 'uniswap', votingDelay: '1000', timelockDelay: '172800', chainId: 1, supportsCalldataReview: false, supportsOffchainData: false },
         { id: 'ens', votingDelay: '500', chainId: 1, supportsCalldataReview: false, supportsOffchainData: false },
       ])
     )));
     const client = createTestClient();
     expect(await client.getDAOs()).toEqual([
-      { id: 'uniswap', blockTime: 12, votingDelay: '1000', chainId: 1, supportsCalldataReview: false, supportsOffchainData: false },
-      { id: 'ens', blockTime: 12, votingDelay: '500', chainId: 1, supportsCalldataReview: false, supportsOffchainData: false },
+      { id: 'uniswap', blockTime: 12, votingDelay: '1000', timelockDelay: '172800', chainId: 1, supportsCalldataReview: false, supportsOffchainData: false },
+      { id: 'ens', blockTime: 12, votingDelay: '500', timelockDelay: '0', chainId: 1, supportsCalldataReview: false, supportsOffchainData: false },
     ]);
   });
 

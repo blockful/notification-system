@@ -20,6 +20,7 @@ export function createTestClient() {
 export function daosResponse(items: Array<{
   id: string;
   votingDelay?: string;
+  timelockDelay?: string;
   chainId?: number;
   supportsOffchainData?: boolean;
   supportsCalldataReview?: boolean;
@@ -28,6 +29,7 @@ export function daosResponse(items: Array<{
     items: items.map(d => ({
       id: d.id,
       votingDelay: d.votingDelay ?? '0',
+      ...(d.timelockDelay !== undefined ? { timelockDelay: d.timelockDelay } : {}),
       chainId: d.chainId ?? 1,
       supportsOffchainData: d.supportsOffchainData ?? false,
       supportsCalldataReview: d.supportsCalldataReview ?? false,

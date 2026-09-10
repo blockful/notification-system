@@ -3,7 +3,7 @@ import { NewOffchainProposalTrigger } from './triggers/new-offchain-proposal-tri
 import { OffchainProposalFinishedTrigger } from './triggers/offchain-proposal-finished-trigger';
 import { VotingPowerChangedTrigger } from './triggers/voting-power-changed-trigger';
 import { ProposalFinishedTrigger } from './triggers/proposal-finished-trigger';
-import { ProposalExecutableTrigger, ProposalExecutableTriggerOptions, DEFAULT_PROPOSAL_EXECUTABLE_OPTIONS } from './triggers/proposal-executable-trigger';
+import { ProposalExecutableTrigger } from './triggers/proposal-executable-trigger';
 import { VoteConfirmationTrigger } from './triggers/vote-confirmation-trigger';
 import { OffchainVoteCastTrigger } from './triggers/offchain-vote-cast-trigger';
 import { VotingReminderTrigger } from './triggers/voting-reminder-trigger';
@@ -49,7 +49,6 @@ export class App {
     private port: number,
     initialTimestamp?: string,
     anticaptureHeaders?: Record<string, string>,
-    private proposalExecutableOptions: ProposalExecutableTriggerOptions = DEFAULT_PROPOSAL_EXECUTABLE_OPTIONS,
   ) {
     this.proposalStatus = proposalStatus;
 
@@ -64,11 +63,12 @@ export class App {
     const votesRepository = wrapWithTracing(new VotesRepository(anticaptureClient));
     const offchainVotesRepository = wrapWithTracing(new OffchainVotesRepository(anticaptureClient));
 
-    this.initPromise = this.initializeRabbitMQ(rabbitmqUrl, proposalRepository, offchainProposalRepository, votingPowerRepository, thresholdRepository, votesRepository, offchainVotesRepository, triggerInterval, initialTimestamp);
+    this.initPromise = this.initializeRabbitMQ(rabbitmqUrl, anticaptureClient, proposalRepository, offchainProposalRepository, votingPowerRepository, thresholdRepository, votesRepository, offchainVotesRepository, triggerInterval, initialTimestamp);
   }
 
   private async initializeRabbitMQ(
     rabbitmqUrl: string,
+    anticaptureClient: AnticaptureClient,
     proposalRepository: ProposalRepository,
     offchainProposalRepository: OffchainProposalRepository,
     votingPowerRepository: VotingPowerRepository,
@@ -121,9 +121,9 @@ export class App {
 
     this.proposalExecutableTrigger = new ProposalExecutableTrigger(
       proposalRepository,
+      anticaptureClient,
       dispatcherService,
       triggerInterval,
-      this.proposalExecutableOptions,
     );
 
     this.voteConfirmationTrigger = new VoteConfirmationTrigger(

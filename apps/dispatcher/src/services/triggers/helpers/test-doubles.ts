@@ -71,6 +71,7 @@ export function makeDao(overrides: Partial<DaoInfo> = {}): DaoInfo {
     id: 'test-dao',
     blockTime: 12,
     votingDelay: '1',
+    timelockDelay: '0',
     chainId: 1,
     supportsCalldataReview: false,
     supportsOffchainData: false,

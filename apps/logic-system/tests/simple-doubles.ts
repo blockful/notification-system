@@ -9,6 +9,8 @@ import {
   DispatcherService,
 } from '../src/interfaces/dispatcher.interface';
 import {
+  DaoDataSource,
+  DaoTimelockInfo,
   ListProposalsOptions,
   ProposalDataSource,
   ProposalOnChain,
@@ -42,8 +44,6 @@ export class SimpleProposalDataSource implements ProposalDataSource {
   getByIdResult: ProposalOrNull = null;
   listAllError?: Error;
   getByIdError?: Error;
-  /** DAO ids that should make `listAll` reject, for testing per-DAO fault isolation. */
-  failFor: Set<string> = new Set();
 
   listAllCalls: (ListProposalsOptions | undefined)[] = [];
   getByIdCalls: string[] = [];
@@ -57,10 +57,18 @@ export class SimpleProposalDataSource implements ProposalDataSource {
   async listAll(options?: ListOffchainProposalsOptions): Promise<ProposalOnChain[]> {
     this.listAllCalls.push(options as ListProposalsOptions | undefined);
     if (this.listAllError) throw this.listAllError;
-    if (options?.daoId && this.failFor.has(options.daoId)) {
-      throw new Error(`listAll failed for dao ${options.daoId}`);
-    }
     return this.listAllResult;
+  }
+}
+
+export class SimpleDaoDataSource implements DaoDataSource {
+  getDAOsCalls = 0;
+
+  constructor(public daos: DaoTimelockInfo[] = []) {}
+
+  async getDAOs(): Promise<DaoTimelockInfo[]> {
+    this.getDAOsCalls++;
+    return this.daos;
   }
 }
 

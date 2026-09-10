@@ -1,96 +1,64 @@
 import { Trigger } from './base-trigger';
 import { DispatcherService, DispatcherMessage } from '../interfaces/dispatcher.interface';
-import { ProposalDataSource, ProposalOnChain, ProposalExecutableNotification } from '../interfaces/proposal.interface';
+import {
+  DaoDataSource,
+  ProposalDataSource,
+  ProposalOnChain,
+  ProposalExecutableNotification,
+} from '../interfaces/proposal.interface';
 import { NotificationTypeId } from '@notification-system/messages';
 
-export interface ProposalExecutableTriggerOptions {
-  /** DAOs to watch (the timelock delay below must match them, so keep the list homogeneous). */
-  daoIds: string[];
-  /** Governor timelock delay, in seconds. ENS: 172800 (2 days). */
-  timelockDelaySeconds: number;
-  /** Grace after `endTimestamp + timelockDelay` before emitting, in seconds. Covers the gap
-   *  between the API flagging PENDING_EXECUTION (endTimestamp + delay) and the real on-chain
-   *  eta (queueTime + delay). */
-  marginSeconds: number;
-  /** How far back the cursor starts on boot, in days. */
-  lookbackDays: number;
-  /** Unix seconds; injectable for tests. */
-  now?: () => number;
-}
-
-/** Single source of truth for the trigger's defaults, shared by `App`'s constructor and `env.ts`. */
-export const DEFAULT_PROPOSAL_EXECUTABLE_OPTIONS: ProposalExecutableTriggerOptions = {
-  daoIds: ['ENS'],
-  timelockDelaySeconds: 172800,
-  marginSeconds: 3600,
-  lookbackDays: 3,
-};
+/** Wall-clock tolerance after the on-chain eta: block timestamps can lag `Date.now()` by a few seconds. */
+export const ETA_MARGIN_SECONDS = 60;
 
 /**
- * Detects on-chain proposals that became executable and emits one event per proposal.
+ * Emits one event per on-chain proposal whose timelock eta has passed. Webhook-only
+ * consumer today (the relayer).
  *
- * Webhook-only consumer today (the relayer). Same cursor pattern as ProposalFinishedTrigger:
- * eligibility is `endTimestamp + delay + margin`, and delay/margin are constants, so proposals
- * become eligible in endTimestamp order and an endTimestamp cursor is enough for exactly-once
- * emission within a process lifetime. The dispatcher dedupes across restarts.
+ * The eta is `queuedTimestamp + timelockDelay`, the Governor's own formula, with both
+ * values read from the API (`/{dao}/proposals` and `/daos`), so no per-DAO constants
+ * live here. The API's PENDING_EXECUTION status alone is not enough: it is derived
+ * from `endTimestamp + timelockDelay` and flags a proposal early whenever it was
+ * queued some time after voting ended.
  *
- * The cursor is tracked per DAO: DAOs can have independent indexer lag, so a single shared
- * cursor would let one DAO's emission permanently skip past another DAO's not-yet-eligible
- * proposal. Similarly, DAOs are fetched independently (`Promise.allSettled`) so that one DAO's
- * API error doesn't stall every other DAO's polling cycle.
+ * There is no cursor. Every poll lists the PENDING_EXECUTION proposals of every DAO
+ * and emits the eligible ones; the dispatcher's DB-backed dedupe (one notification
+ * per eventId) makes delivery exactly-once, across restarts too. The set is tiny
+ * (proposals queued but not yet executed), so re-checking it each cycle is cheap.
  */
 export class ProposalExecutableTrigger extends Trigger<ProposalOnChain, void> {
-  private readonly cursors: Map<string, number>;
-  private readonly now: () => number;
-
   constructor(
     private readonly proposalRepository: ProposalDataSource,
+    private readonly daoRepository: DaoDataSource,
     private readonly dispatcherService: DispatcherService,
     interval: number,
-    private readonly triggerOptions: ProposalExecutableTriggerOptions,
+    /** Unix seconds; injectable for tests. */
+    private readonly now: () => number = () => Math.floor(Date.now() / 1000),
   ) {
     super(NotificationTypeId.ProposalExecutable, interval);
-    this.now = triggerOptions.now ?? (() => Math.floor(Date.now() / 1000));
-    const initialCursor = this.now() - triggerOptions.lookbackDays * 86_400;
-    this.cursors = new Map(triggerOptions.daoIds.map(daoId => [daoId, initialCursor]));
   }
 
   protected async fetchData(): Promise<ProposalOnChain[]> {
-    const results = await Promise.allSettled(
-      this.triggerOptions.daoIds.map(daoId =>
-        this.proposalRepository.listAll({
-          daoId,
-          status: ['PENDING_EXECUTION'],
-          fromEndDate: this.cursors.get(daoId),
-          orderDirection: 'asc',
-          limit: 100,
-        }),
-      ),
-    );
-
-    const batches: ProposalOnChain[][] = [];
-    results.forEach((result, index) => {
-      if (result.status === 'fulfilled') {
-        batches.push(result.value);
-        return;
-      }
-      this.logger.warn(
-        {
-          err: result.reason,
-          daoId: this.triggerOptions.daoIds[index],
-          event: 'proposal_executable.fetch_failed',
-        },
-        'failed to fetch PENDING_EXECUTION proposals for dao; skipping this cycle',
-      );
-    });
-    return batches.flat();
+    return this.proposalRepository.listAll({ status: ['PENDING_EXECUTION'], limit: 100 });
   }
 
   async process(data: ProposalOnChain[]): Promise<void> {
-    const eligibleAt = this.now() - this.triggerOptions.timelockDelaySeconds - this.triggerOptions.marginSeconds;
+    if (data.length === 0) {
+      return;
+    }
+
+    const daos = await this.daoRepository.getDAOs();
+    const timelockDelayByDao = new Map(daos.map(dao => [dao.id, Number(dao.timelockDelay)]));
+    const now = this.now();
 
     const events: ProposalExecutableNotification[] = data
-      .filter(p => p?.endTimestamp != null && Number(p.endTimestamp) <= eligibleAt)
+      .filter(p => {
+        const timelockDelay = timelockDelayByDao.get(p.daoId);
+        if (p.queuedTimestamp == null || timelockDelay === undefined) {
+          return false;
+        }
+        return Number(p.queuedTimestamp) + timelockDelay + ETA_MARGIN_SECONDS <= now;
+      })
       .map(p => ({
         id: p.id,
         daoId: p.daoId,
@@ -107,20 +75,5 @@ export class ProposalExecutableTrigger extends Trigger<ProposalOnChain, void> {
       events,
     };
     await this.dispatcherService.sendMessage(message);
-
-    // Advance only the cursor of each DAO that emitted, past the highest endTimestamp
-    // emitted for that DAO. A later proposal still inside the margin, or a proposal
-    // from a DAO that emitted nothing this cycle, must come back on the next poll.
-    const maxEndTimestampByDao = new Map<string, number>();
-    for (const event of events) {
-      const current = maxEndTimestampByDao.get(event.daoId);
-      if (current === undefined || event.endTimestamp > current) {
-        maxEndTimestampByDao.set(event.daoId, event.endTimestamp);
-      }
-    }
-    for (const [daoId, maxEndTimestamp] of maxEndTimestampByDao) {
-      const current = this.cursors.get(daoId) ?? -Infinity;
-      this.cursors.set(daoId, Math.max(current, maxEndTimestamp + 1));
-    }
   }
 }

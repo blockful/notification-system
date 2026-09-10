@@ -1,142 +1,77 @@
 import { describe, it, expect, beforeEach } from 'vitest';
 import { NotificationTypeId } from '@notification-system/messages';
-import { ProposalExecutableTrigger } from '../src/triggers/proposal-executable-trigger';
+import { ProposalExecutableTrigger, ETA_MARGIN_SECONDS } from '../src/triggers/proposal-executable-trigger';
 import { createProposal, DEFAULT_INTERVAL } from './fixtures';
-import { SimpleDispatcherService, SimpleProposalDataSource } from './simple-doubles';
+import { SimpleDaoDataSource, SimpleDispatcherService, SimpleProposalDataSource } from './simple-doubles';
 
-const DAY = 86_400;
-const TIMELOCK = 2 * DAY;
-const MARGIN = 3_600;
+const ENS_TIMELOCK = 172_800;
+const UNI_TIMELOCK = 172_800 * 2;
 const NOW = 1_700_000_000;
 
-const pending = (id: string, endTimestamp: number, daoId = 'ens') =>
-  createProposal({ id, daoId, status: 'PENDING_EXECUTION', endTimestamp: String(endTimestamp) });
+const pending = (id: string, queuedTimestamp: number | null, daoId = 'ENS') =>
+  createProposal({ id, daoId, status: 'PENDING_EXECUTION', queuedTimestamp, endTimestamp: 1_699_000_000 });
 
 describe('ProposalExecutableTrigger', () => {
   let trigger: ProposalExecutableTrigger;
   let dispatcher: SimpleDispatcherService;
-  let repo: SimpleProposalDataSource;
+  let proposals: SimpleProposalDataSource;
+  let daos: SimpleDaoDataSource;
 
   beforeEach(() => {
     dispatcher = new SimpleDispatcherService();
-    repo = new SimpleProposalDataSource();
-    trigger = new ProposalExecutableTrigger(repo, dispatcher, DEFAULT_INTERVAL, {
-      daoIds: ['ens'],
-      timelockDelaySeconds: TIMELOCK,
-      marginSeconds: MARGIN,
-      lookbackDays: 3,
-      now: () => NOW,
-    });
+    proposals = new SimpleProposalDataSource();
+    daos = new SimpleDaoDataSource([
+      { id: 'ENS', timelockDelay: String(ENS_TIMELOCK) },
+      { id: 'UNI', timelockDelay: String(UNI_TIMELOCK) },
+    ]);
+    trigger = new ProposalExecutableTrigger(proposals, daos, dispatcher, DEFAULT_INTERVAL, () => NOW);
   });
 
   describe('fetchData', () => {
-    it('queries PENDING_EXECUTION per DAO from the lookback cursor, oldest first', async () => {
+    it('queries PENDING_EXECUTION proposals across all DAOs, no cursor', async () => {
       await trigger['fetchData']();
 
-      expect(repo.listAllCalls).toEqual([{
-        daoId: 'ens',
-        status: ['PENDING_EXECUTION'],
-        fromEndDate: NOW - 3 * DAY,
-        orderDirection: 'asc',
-        limit: 100,
-      }]);
-    });
-
-    it('queries every configured DAO', async () => {
-      trigger = new ProposalExecutableTrigger(repo, dispatcher, DEFAULT_INTERVAL, {
-        daoIds: ['ens', 'uni'], timelockDelaySeconds: TIMELOCK, marginSeconds: MARGIN, lookbackDays: 3, now: () => NOW,
-      });
-      await trigger['fetchData']();
-      expect(repo.listAllCalls.map(c => c?.daoId)).toEqual(['ens', 'uni']);
-    });
-
-    it("keeps processing other DAOs when one DAO's query fails", async () => {
-      trigger = new ProposalExecutableTrigger(repo, dispatcher, DEFAULT_INTERVAL, {
-        daoIds: ['ens', 'uni'], timelockDelaySeconds: TIMELOCK, marginSeconds: MARGIN, lookbackDays: 3, now: () => NOW,
-      });
-      repo.failFor.add('ens');
-      const uniProposal = pending('p1', NOW - TIMELOCK - MARGIN, 'uni');
-      repo.listAllResult = [uniProposal];
-
-      const data = await trigger['fetchData']();
-
-      expect(data).toEqual([uniProposal]);
+      expect(proposals.listAllCalls).toEqual([{ status: ['PENDING_EXECUTION'], limit: 100 }]);
     });
   });
 
   describe('process', () => {
-    it('emits a proposal once its eta plus margin has passed', async () => {
-      const endTimestamp = NOW - TIMELOCK - MARGIN; // exactly eligible
-      await trigger.process([pending('p1', endTimestamp)]);
+    it('emits a proposal once queuedTimestamp + timelockDelay + margin has passed', async () => {
+      const queuedTimestamp = NOW - ENS_TIMELOCK - ETA_MARGIN_SECONDS; // exactly eligible
+      await trigger.process([pending('p1', queuedTimestamp)]);
 
       expect(dispatcher.sentMessages).toEqual([{
         triggerId: NotificationTypeId.ProposalExecutable,
-        events: [{ id: 'p1', daoId: 'ens', status: 'PENDING_EXECUTION', endTimestamp }],
+        events: [{ id: 'p1', daoId: 'ENS', status: 'PENDING_EXECUTION', endTimestamp: 1_699_000_000 }],
       }]);
     });
 
-    it('does not emit a proposal still inside the margin', async () => {
-      await trigger.process([pending('p1', NOW - TIMELOCK - MARGIN + 1)]);
+    it('does not emit a proposal whose eta has not passed yet', async () => {
+      await trigger.process([pending('p1', NOW - ENS_TIMELOCK - ETA_MARGIN_SECONDS + 1)]);
       expect(dispatcher.sentMessages).toEqual([]);
     });
 
-    it('advances the cursor over emitted proposals only', async () => {
-      const eligible = NOW - TIMELOCK - MARGIN - 10;
-      const tooSoon = NOW - TIMELOCK; // PENDING_EXECUTION per API, but margin not elapsed
-      await trigger.process([pending('old', eligible), pending('new', tooSoon)]);
+    it("uses each DAO's own timelock delay", async () => {
+      const queuedTimestamp = NOW - ENS_TIMELOCK - ETA_MARGIN_SECONDS; // eligible for ENS, not for UNI
+      await trigger.process([pending('ens-1', queuedTimestamp, 'ENS'), pending('uni-1', queuedTimestamp, 'UNI')]);
 
-      expect(dispatcher.sentMessages[0].events.map((e: { id: string }) => e.id)).toEqual(['old']);
-      expect(trigger['cursors'].get('ens')).toBe(eligible + 1);
-
-      // next poll must still see 'new'
-      await trigger['fetchData']();
-      expect(repo.listAllCalls.at(-1)?.fromEndDate).toBe(eligible + 1);
+      expect(dispatcher.sentMessages[0].events.map((e: { id: string }) => e.id)).toEqual(['ens-1']);
     });
 
-    it('does not move the cursor when nothing is emitted', async () => {
-      const before = trigger['cursors'].get('ens');
-      await trigger.process([pending('p1', NOW - TIMELOCK)]);
-      expect(trigger['cursors'].get('ens')).toBe(before);
+    it('skips proposals that were never queued', async () => {
+      await trigger.process([pending('p1', null)]);
       expect(dispatcher.sentMessages).toEqual([]);
     });
 
-    it('advances only the cursor of the DAO that emitted', async () => {
-      trigger = new ProposalExecutableTrigger(repo, dispatcher, DEFAULT_INTERVAL, {
-        daoIds: ['ens', 'uni'], timelockDelaySeconds: TIMELOCK, marginSeconds: MARGIN, lookbackDays: 3, now: () => NOW,
-      });
-      const initialCursor = NOW - 3 * DAY;
-      const eligible = NOW - TIMELOCK - MARGIN;
-
-      await trigger.process([pending('p1', eligible, 'ens')]);
-
-      expect(trigger['cursors'].get('ens')).toBe(eligible + 1);
-      expect(trigger['cursors'].get('uni')).toBe(initialCursor);
-
-      // next poll must still send the untouched lookback cursor for 'uni'
-      await trigger['fetchData']();
-      const uniCall = repo.listAllCalls.find(c => c?.daoId === 'uni');
-      expect(uniCall?.fromEndDate).toBe(initialCursor);
-    });
-
-    it('never moves the cursor backwards', async () => {
-      // Simulate a cursor that has already advanced past this batch's proposal
-      // (e.g. a previous cycle already emitted something newer for this DAO).
-      const eligible = NOW - TIMELOCK - MARGIN - 100;
-      trigger['cursors'].set('ens', eligible + 50);
-
-      await trigger.process([pending('old', eligible)]);
-
-      expect(trigger['cursors'].get('ens')).toBe(eligible + 50);
+    it('skips proposals of a DAO the API does not list', async () => {
+      await trigger.process([pending('p1', NOW - 10 * ENS_TIMELOCK, 'UNKNOWN')]);
+      expect(dispatcher.sentMessages).toEqual([]);
     });
 
     it('does not send a message for an empty batch', async () => {
       await trigger.process([]);
       expect(dispatcher.sentMessages).toEqual([]);
-    });
-
-    it('skips proposals without an endTimestamp', async () => {
-      await trigger.process([createProposal({ id: 'x', status: 'PENDING_EXECUTION', endTimestamp: null })]);
-      expect(dispatcher.sentMessages).toEqual([]);
+      expect(daos.getDAOsCalls).toBe(0);
     });
   });
 });
