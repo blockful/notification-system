@@ -42,6 +42,12 @@ export class ProposalFinishedTriggerHandler extends BaseTriggerHandler<ProposalF
         notificationMessage,
         eventId,
         proposal.daoId,
+        {
+          triggerType: 'proposalFinished',
+          daoId: proposal.daoId,
+          proposalId: proposal.id,
+          status: proposal.status,
+        },
       );
     }
 

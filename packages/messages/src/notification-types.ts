@@ -11,6 +11,7 @@ export enum NotificationTypeId {
   OffchainVoteCast = 'offchain-vote-cast',
   OffchainProposalFinished = 'offchain-proposal-finished',
   OffchainVotingReminder50 = 'offchain-voting-reminder-50',
+  ProposalExecutable = 'proposal-executable',
 }
 
 export const NOTIFICATION_TYPES: Record<NotificationTypeId, string> = {
@@ -26,4 +27,13 @@ export const NOTIFICATION_TYPES: Record<NotificationTypeId, string> = {
   [NotificationTypeId.OffchainVoteCast]: 'Offchain Vote',
   [NotificationTypeId.OffchainProposalFinished]: 'Offchain Proposal Finished',
   [NotificationTypeId.OffchainVotingReminder50]: 'Offchain Vote Reminder 50%',
+  [NotificationTypeId.ProposalExecutable]: 'Proposal Executable',
 };
+
+/** Types that only machine (webhook) subscribers consume; hidden from Telegram/Slack settings. */
+const INTERNAL_NOTIFICATION_TYPES: ReadonlySet<NotificationTypeId> = new Set([
+  NotificationTypeId.ProposalExecutable,
+]);
+
+export const USER_FACING_NOTIFICATION_TYPES: readonly NotificationTypeId[] =
+  Object.values(NotificationTypeId).filter(id => !INTERNAL_NOTIFICATION_TYPES.has(id));

@@ -74,12 +74,16 @@ export const offchainProposalsByDaoResolver =
 // getDaos gates which DAOs ever get polled: a DAO absent from this response
 // stays invisible no matter what proposals or votes are seeded for it. Use
 // this when a test introduces a DAO id outside the default `testDaos` set.
+// Governor timelock delay advertised for every test DAO (ENS mainnet value: 2 days).
+// The ProposalExecutable trigger reads it to compute `queuedTimestamp + timelockDelay`.
+export const TEST_TIMELOCK_DELAY = '172800';
+
 type WithDao = { daoId: string } | { spaceId: string };
 const idOf = (p: WithDao) => ('daoId' in p ? p.daoId : p.spaceId);
 export const daosFromItems = (items: ReadonlyArray<WithDao>) => {
   const ids = Array.from(new Set(items.map(idOf)));
   return daosHandler({
-    items: ids.map(id => ({ id, votingDelay: '0', supportsOffchainData: true })),
+    items: ids.map(id => ({ id, votingDelay: '0', timelockDelay: TEST_TIMELOCK_DELAY, supportsOffchainData: true })),
     totalCount: ids.length,
   });
 };
@@ -90,6 +94,7 @@ const emptyThreshold = { threshold: 0 };
 const testDaos = Object.values(testConstants.daoIds).map(id => ({
   id,
   votingDelay: '0',
+  timelockDelay: TEST_TIMELOCK_DELAY,
   supportsOffchainData: true
 }));
 

@@ -9,6 +9,8 @@ import {
   DispatcherService,
 } from '../src/interfaces/dispatcher.interface';
 import {
+  DaoDataSource,
+  DaoTimelockInfo,
   ListProposalsOptions,
   ProposalDataSource,
   ProposalOnChain,
@@ -56,6 +58,17 @@ export class SimpleProposalDataSource implements ProposalDataSource {
     this.listAllCalls.push(options as ListProposalsOptions | undefined);
     if (this.listAllError) throw this.listAllError;
     return this.listAllResult;
+  }
+}
+
+export class SimpleDaoDataSource implements DaoDataSource {
+  getDAOsCalls = 0;
+
+  constructor(public daos: DaoTimelockInfo[] = []) {}
+
+  async getDAOs(): Promise<DaoTimelockInfo[]> {
+    this.getDAOsCalls++;
+    return this.daos;
   }
 }
 

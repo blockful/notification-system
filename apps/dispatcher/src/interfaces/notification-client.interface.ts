@@ -45,3 +45,11 @@ export interface ProposalFinishedNotification {
   againstVotes: string;
   abstainVotes: string;
 }
+
+/** Emitted by logic-system once an on-chain proposal's timelock eta (plus margin) has passed. */
+export interface ProposalExecutableNotification {
+  id: string;
+  daoId: string;
+  status: string;
+  endTimestamp: number;
+}
