@@ -1,4 +1,4 @@
-import { NOTIFICATION_TYPES, NotificationTypeId } from '@notification-system/messages';
+import { NOTIFICATION_TYPES, NotificationTypeId, USER_FACING_NOTIFICATION_TYPES } from '@notification-system/messages';
 import type { KnownBlock } from '@slack/web-api';
 import { BaseSettingsService } from './base-settings.service';
 import { SubscriptionAPIService } from '../subscription-api.service';
@@ -19,7 +19,7 @@ export class SlackSettingsService extends BaseSettingsService {
    * a dropdown, so neither gives a friendly, fully-visible list — buttons do.)
    */
   private buildSettingsBlocks(preferences: Record<NotificationTypeId, boolean>): KnownBlock[] {
-    const rows = Object.values(NotificationTypeId).map((id) => ({
+    const rows = USER_FACING_NOTIFICATION_TYPES.map((id) => ({
       type: 'section' as const,
       text: { type: 'mrkdwn' as const, text: NOTIFICATION_TYPES[id] },
       accessory: {
@@ -129,7 +129,7 @@ export class SlackSettingsService extends BaseSettingsService {
       await ctx.ack();
 
       const preferences = await this.loadPreferences(fullUserId);
-      const enabled = Object.values(NotificationTypeId)
+      const enabled = USER_FACING_NOTIFICATION_TYPES
         .filter(id => preferences[id])
         .map(id => NOTIFICATION_TYPES[id]);
 

@@ -9,6 +9,7 @@ import { NewOffchainProposalTriggerHandler } from './services/triggers/new-offch
 import { OffchainProposalFinishedTriggerHandler } from './services/triggers/offchain-proposal-finished-trigger.service';
 import { VotingPowerTriggerHandler } from './services/triggers/voting-power-trigger.service';
 import { ProposalFinishedTriggerHandler } from './services/triggers/proposal-finished-trigger.service';
+import { ProposalExecutableTriggerHandler } from './services/triggers/proposal-executable-trigger.service';
 import { NonVotingHandler } from './services/triggers/non-voting-handler.service';
 import { VoteConfirmationTriggerHandler } from './services/triggers/vote-confirmation-trigger.service';
 import { OffchainVoteCastTriggerHandler } from './services/triggers/offchain-vote-cast-trigger.service';
@@ -94,6 +95,11 @@ export class App {
     triggerProcessorService.addHandler(
       NotificationTypeId.ProposalFinished,
       wrapWithTracing(new NonVotingHandler(subscriptionClient, notificationFactory, anticaptureClient, logger))
+    );
+
+    triggerProcessorService.addHandler(
+      NotificationTypeId.ProposalExecutable,
+      wrapWithTracing(new ProposalExecutableTriggerHandler(subscriptionClient, notificationFactory))
     );
 
     triggerProcessorService.addHandler(

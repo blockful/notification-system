@@ -3,9 +3,19 @@ import { ZodTypeProvider } from 'fastify-type-provider-zod';
 import { z } from 'zod';
 import { WebhookService } from './webhook.service';
 
-const webhookBodySchema = z.object({
-  url: z.string().url().refine((url) => url.startsWith('https://'), {
-    message: 'Webhook URL must use HTTPS',
+/** Plain http is allowed only for exact hostnames on the allowlist (Railway's private network, which has no TLS). */
+const isPrivateNetworkUrl = (url: string, allowedHosts: string[]): boolean => {
+  try {
+    const { protocol, hostname } = new URL(url);
+    return protocol === 'http:' && allowedHosts.includes(hostname);
+  } catch {
+    return false;
+  }
+};
+
+const buildWebhookBodySchema = (allowedPrivateHosts: string[]) => z.object({
+  url: z.string().url().refine((url) => url.startsWith('https://') || isPrivateNetworkUrl(url, allowedPrivateHosts), {
+    message: 'Webhook URL must use HTTPS (plain HTTP is only allowed for hosts listed in WEBHOOK_ALLOWED_PRIVATE_HOSTS)',
   }),
 });
 
@@ -15,8 +25,15 @@ const VERIFICATION_RECIPE = `Deliveries are signed with HMAC-SHA256: HMAC-SHA256
   'comparison (`crypto.timingSafeEqual`), and reject requests where the timestamp is more than 5 ' +
   'minutes old to prevent replay attacks.';
 
+/** What the controller needs from WebhookService; lets tests pass a plain typed stub. */
+export type WebhookRegistrar = Pick<WebhookService, 'registerWebhook' | 'deactivateWebhook'>;
+
 export class WebhookController {
-  constructor(private webhookService: WebhookService) {}
+  private readonly webhookBodySchema: ReturnType<typeof buildWebhookBodySchema>;
+
+  constructor(private webhookService: WebhookRegistrar, allowedPrivateHosts: string[] = []) {
+    this.webhookBodySchema = buildWebhookBodySchema(allowedPrivateHosts);
+  }
 
   async register(app: FastifyInstance): Promise<void> {
     const typedApp = app.withTypeProvider<ZodTypeProvider>();
@@ -27,7 +44,7 @@ export class WebhookController {
           'registration, returns a one-time HMAC secret used to verify delivery signatures — it is ' +
           'never shown again, so store it immediately. Re-registering an already-active webhook ' +
           `returns success without a secret.\n\n${VERIFICATION_RECIPE}`,
-        body: webhookBodySchema,
+        body: this.webhookBodySchema,
         response: {
           201: z.union([
             z.object({
@@ -56,7 +73,7 @@ export class WebhookController {
       schema: {
         tags: ['webhooks'],
         description: 'Deactivates a previously registered webhook URL, stopping further deliveries.',
-        body: webhookBodySchema,
+        body: this.webhookBodySchema,
         response: {
           200: z.object({ success: z.literal(true) }),
           404: z.object({ error: z.string() }),

@@ -1,4 +1,4 @@
-import { NOTIFICATION_TYPES, NotificationTypeId } from '@notification-system/messages';
+import { NOTIFICATION_TYPES, NotificationTypeId, USER_FACING_NOTIFICATION_TYPES } from '@notification-system/messages';
 import { BaseSettingsService } from './base-settings.service';
 import { SubscriptionAPIService } from '../subscription-api.service';
 import { ContextWithSession } from '../../interfaces/bot.interface';
@@ -60,7 +60,7 @@ export class TelegramSettingsService extends BaseSettingsService {
     const rows: Array<Array<{ text: string; callback_data: string }>> = [];
 
     // 1 button per row for full-width display
-    const notificationTypeIds = Object.values(NotificationTypeId);
+    const notificationTypeIds = USER_FACING_NOTIFICATION_TYPES;
     for (const id of notificationTypeIds) {
       const prefix = selections[id] ? '✅' : '❌';
       rows.push([{

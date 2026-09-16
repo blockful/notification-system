@@ -76,7 +76,7 @@ export interface AnticaptureClientConfig {
 export type VoteWithDaoId = OnchainVote & { daoId: string };
 export type OffchainVoteWithDaoId = OffchainVote & { daoId: string };
 
-export type DaoInfo = { id: string; blockTime: number; votingDelay: string; chainId: number; supportsCalldataReview: boolean; supportsOffchainData: boolean };
+export type DaoInfo = { id: string; blockTime: number; votingDelay: string; timelockDelay: string; chainId: number; supportsCalldataReview: boolean; supportsOffchainData: boolean };
 
 /**
  * Public surface of AnticaptureClient — used for dependency injection and mocking.
@@ -140,6 +140,7 @@ export class AnticaptureClient implements IAnticaptureClient {
         id: d.id,
         blockTime: 12,
         votingDelay: d.votingDelay ?? '0',
+        timelockDelay: d.timelockDelay ?? '0',
         chainId: d.chainId ?? 1,
         supportsCalldataReview: d.supportsCalldataReview ?? false,
         supportsOffchainData: d.supportsOffchainData ?? false,

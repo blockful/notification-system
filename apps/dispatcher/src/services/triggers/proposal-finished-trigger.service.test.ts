@@ -135,5 +135,21 @@ describe('ProposalFinishedTriggerHandler', () => {
       });
       expect(Number.isNaN(Date.parse(result.timestamp))).toBe(false);
     });
+
+    it('carries proposal identity in metadata for machine consumers', async () => {
+      subscriptionClient.daoSubscribersByDao.set('dao123', [userA]);
+
+      await handler.handleMessage({
+        triggerId: NotificationTypeId.ProposalFinished,
+        events: [{ ...baseProposal, status: 'SUCCEEDED' }],
+      });
+
+      expect(notificationFactory.client.sentPayloads[0].metadata).toEqual({
+        triggerType: 'proposalFinished',
+        daoId: 'dao123',
+        proposalId: 'prop456',
+        status: 'SUCCEEDED',
+      });
+    });
   });
 });
