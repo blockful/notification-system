@@ -1,3 +1,5 @@
 import { createObservabilityProvider } from '@anticapture/observability';
 
-createObservabilityProvider('logic-system');
+const observability = createObservabilityProvider('logic-system');
+
+export const exporter = observability.exporter;
