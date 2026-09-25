@@ -1,11 +1,13 @@
 import fastify, { type FastifyInstance } from 'fastify';
 import { validatorCompiler, serializerCompiler, ZodTypeProvider } from 'fastify-type-provider-zod';
 import { z } from 'zod';
+import { registerMetrics } from './metrics';
 
 export async function startServer(port: number): Promise<FastifyInstance> {
   const server = fastify();
   server.setValidatorCompiler(validatorCompiler);
   server.setSerializerCompiler(serializerCompiler);
+  registerMetrics(server);
 
   server.withTypeProvider<ZodTypeProvider>().get('/health', {
     schema: {
