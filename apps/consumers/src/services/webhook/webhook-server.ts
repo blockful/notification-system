@@ -6,6 +6,7 @@ import fastifySwaggerUi from '@fastify/swagger-ui';
 import { z } from 'zod';
 import { WebhookController } from './webhook.controller';
 import { createLogger, type Logger } from '@anticapture/observability';
+import { registerMetrics } from '../../metrics';
 
 export class WebhookServer {
   private server: FastifyInstance;
@@ -20,6 +21,7 @@ export class WebhookServer {
     this.server.setValidatorCompiler(validatorCompiler);
     this.server.setSerializerCompiler(serializerCompiler);
     this.server.register(fastifyCors, { origin: '*' });
+    registerMetrics(this.server);
 
     this.server.register(fastifySwagger, {
       openapi: {
@@ -47,7 +49,7 @@ export class WebhookServer {
   }
 
   async start(port: number): Promise<void> {
-    await this.server.listen({ port, host: '0.0.0.0' });
+    await this.server.listen({ port, host: '::' });
     this.logger.info({ port, event: 'webhook_server.started' }, 'webhook HTTP server running');
   }
 
