@@ -79,7 +79,7 @@ export class App {
   }
 
   async start(): Promise<void> {
-    await this.server.listen({ port: this.port, host: '0.0.0.0' });
+    await this.server.listen({ port: this.port, host: '::' });
     logger.info({ port: this.port }, 'subscription-server listening');
   }
 

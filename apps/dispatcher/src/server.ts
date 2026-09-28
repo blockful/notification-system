@@ -16,7 +16,7 @@ export async function startServer(port: number): Promise<FastifyInstance> {
     },
   }, () => ({ status: 'ok', timestamp: new Date().toISOString() }));
 
-  await server.listen({ port, host: '0.0.0.0' });
+  await server.listen({ port, host: '::' });
 
   return server;
 }

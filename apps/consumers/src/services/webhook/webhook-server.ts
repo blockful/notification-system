@@ -49,7 +49,7 @@ export class WebhookServer {
   }
 
   async start(port: number): Promise<void> {
-    await this.server.listen({ port, host: '0.0.0.0' });
+    await this.server.listen({ port, host: '::' });
     this.logger.info({ port, event: 'webhook_server.started' }, 'webhook HTTP server running');
   }
 
